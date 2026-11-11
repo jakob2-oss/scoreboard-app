@@ -18,7 +18,7 @@ Stärken pro Spiel, Vergleiche.
 - Keine Spieldaten und keine Secrets im Repo.
 
 ## Phasen
-1. Grundgerüst: Repo-Setup, Auto-Deployment, leere installierbare PWA.
+1. ✅ Grundgerüst: Repo-Setup, Auto-Deployment, leere installierbare PWA.
 2. Core (offline): Spieler, Runden flexibel/fest, Gewinner hoch/niedrig, Spielende Ziel/Runden,
    Kategorien-Zettel, Schnellzähler +/−, Rückgängig, Vorlagen.
 3. Lokale Historie & Statistik: Partien mit Ort/Anlass, Siegquoten, direkter Vergleich.

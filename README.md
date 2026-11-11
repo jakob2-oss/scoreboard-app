@@ -1,11 +1,30 @@
 # scoreboard-app
 
-Spiele-Tracker als PWA: digitaler Punktezettel für (fast) jedes Spiel, später mit Historie, Statistik und Community.
+Punktezettel: digitaler Block für Spieleabende, als installierbare Web-App (PWA).
+Später mit Historie, Statistik und Gruppen.
+
+## App
+
+- Live (nach Merge auf `main`): https://jakob2-oss.github.io/scoreboard-app/
+- Installieren am iPhone: Link in Safari öffnen → Teilen → **Zum Home-Bildschirm**
+- Stack: React + TypeScript + Vite, PWA über `vite-plugin-pwa`, Tests mit Vitest
+- Jeder Push auf `main` baut, testet und veröffentlicht automatisch (`.github/workflows/deploy.yml`)
+
+```bash
+npm install
+npm run dev      # Entwicklungsserver
+npm test         # Tests der Rechenregeln
+npm run build    # Produktions-Build nach dist/
+```
+
+## Dokumente
 
 - Briefing & Phasenplan: [docs/BRIEFING.md](docs/BRIEFING.md)
-- Spielvorlagen & Bausteine: [docs/VORLAGEN.md](docs/VORLAGEN.md)
+- Design (festgeschrieben): [docs/DESIGN.md](docs/DESIGN.md)
 - Datenmodell: [docs/DATENMODELL.md](docs/DATENMODELL.md)
-- Klick-Prototyp des Punktezettels: [prototype/punktezettel.html](prototype/punktezettel.html)
-  (eigenständige HTML-Datei, keine Abhängigkeiten außer Google Fonts)
+- Spielvorlagen & Bausteine: [docs/VORLAGEN.md](docs/VORLAGEN.md)
+- Klick-Prototyp (Referenz für UI und Abläufe): [prototype/punktezettel.html](prototype/punktezettel.html)
 
-Stand: Prototyp zur UI-Klärung. Phase 1 (React + TypeScript + Vite, PWA, GitHub Pages) folgt.
+## Stand
+
+Phase 1 (Grundgerüst) fertig. Als Nächstes: Prototyp in die App übertragen (Phase 2).
