@@ -1,0 +1,205 @@
+import type { Entry, Game, Player, Round, Template } from '../model/types';
+import type { Clock } from '../lib/id';
+
+/** Alles, was zu einer Partie gehört. Reine Daten, keine Oberfläche. */
+export interface GameState {
+  game: Game;
+  players: Player[];
+  rounds: Round[];
+  entries: Entry[];
+}
+
+/** Ziel einer Eingabe: bestehende Runde oder eine neue, die beim ersten Wert entsteht. */
+export type RoundRef = string | 'new';
+
+const alive = <T extends { deletedAt?: string | null }>(x: T) => !x.deletedAt;
+
+// ---------------------------------------------------------------- Lesen
+
+/** Spieler in Sitzreihenfolge. */
+export function seated(s: GameState): Player[] {
+  return [...s.game.seats].sort((a, b) => a.seat - b.seat)
+    .map(seat => s.players.find(p => p.id === seat.playerId))
+    .filter((p): p is Player => !!p);
+}
+
+export function liveRounds(s: GameState): Round[] {
+  return s.rounds.filter(alive).sort((a, b) => a.index - b.index);
+}
+
+function entryOf(s: GameState, roundId: string, playerId: string): Entry | undefined {
+  return s.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
+}
+
+export function scoreOf(s: GameState, roundId: string, playerId: string): number | null {
+  const e = entryOf(s, roundId, playerId);
+  return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
+}
+
+export function roundFull(s: GameState, roundId: string): boolean {
+  return seated(s).every(p => scoreOf(s, roundId, p.id) !== null);
+}
+
+export function anyScore(s: GameState): boolean {
+  return liveRounds(s).some(r => seated(s).some(p => scoreOf(s, r.id, p.id) !== null));
+}
+
+export function totals(s: GameState): Record<string, number> {
+  const t: Record<string, number> = {};
+  const rounds = liveRounds(s);
+  for (const p of seated(s)) t[p.id] = rounds.reduce((sum, r) => sum + (scoreOf(s, r.id, p.id) ?? 0), 0);
+  return t;
+}
+
+export interface Rank { player: Player; total: number; place: number }
+
+/** Rangliste mit geteilten Plätzen bei Gleichstand. */
+export function ranking(s: GameState): Rank[] {
+  const t = totals(s);
+  const high = s.game.rules.win === 'high';
+  const arr = seated(s).map(player => ({ player, total: t[player.id], place: 0 }))
+    .sort((a, b) => (high ? b.total - a.total : a.total - b.total));
+  let place = 0; let last: number | null = null;
+  arr.forEach((x, i) => { if (x.total !== last) { place = i + 1; last = x.total; } x.place = place; });
+  return arr;
+}
+
+/** Index der laufenden Runde: erste unvollständige, sonst die letzte. */
+export function currentRoundIndex(s: GameState): number {
+  const rounds = liveRounds(s);
+  const i = rounds.findIndex(r => !roundFull(s, r.id));
+  return i === -1 ? Math.max(0, rounds.length - 1) : i;
+}
+
+export interface EndState { done: boolean; text: string }
+
+export function endState(s: GameState): EndState | null {
+  const end = s.game.rules.end;
+  const rounds = liveRounds(s);
+  if (end.type === 'rounds') {
+    const done = rounds.length >= end.value && rounds.slice(0, end.value).every(r => roundFull(s, r.id));
+    return done ? { done: true, text: `${end.value} Runden gespielt` } : null;
+  }
+  if (end.type === 'target') {
+    const t = totals(s);
+    const hit = seated(s).filter(p => t[p.id] >= end.value);
+    if (!hit.length) return null;
+    const last = rounds[rounds.length - 1];
+    const full = !!last && roundFull(s, last.id);
+    return { done: full, text: `${hit.map(p => p.name).join(', ')} über ${end.value}` + (full ? '' : ' · Runde zu Ende eintragen') };
+  }
+  return null;
+}
+
+export function canAddRound(s: GameState): boolean {
+  const end = s.game.rules.end;
+  if (end.type === 'rounds' && liveRounds(s).length >= end.value) return false;
+  const e = endState(s);
+  return !(e && e.done);
+}
+
+/** Standardziel einer Spielerseite: erste Runde ohne Wert, sonst neue Runde, sonst die letzte. */
+export function defaultRef(s: GameState, playerId: string): RoundRef {
+  const open = liveRounds(s).find(r => scoreOf(s, r.id, playerId) === null);
+  if (open) return open.id;
+  if (canAddRound(s)) return 'new';
+  const rounds = liveRounds(s);
+  return rounds.length ? rounds[rounds.length - 1].id : 'new';
+}
+
+export type NextStep =
+  | { kind: 'round'; ref: RoundRef; roundNo: number; playerIndex: number }
+  | { kind: 'result' };
+
+/** Was als Nächstes eingetragen wird (für den Knopf im Überblick). */
+export function nextStep(s: GameState): NextStep {
+  const e = endState(s);
+  if (e && e.done) return { kind: 'result' };
+  const rounds = liveRounds(s);
+  const players = seated(s);
+  const i = rounds.findIndex(r => !roundFull(s, r.id));
+  if (i >= 0) {
+    const r = rounds[i];
+    return { kind: 'round', ref: r.id, roundNo: i + 1, playerIndex: players.findIndex(p => scoreOf(s, r.id, p.id) === null) };
+  }
+  if (canAddRound(s)) return { kind: 'round', ref: 'new', roundNo: rounds.length + 1, playerIndex: 0 };
+  return { kind: 'result' };
+}
+
+export function roundNumber(s: GameState, ref: RoundRef): number {
+  if (ref === 'new') return liveRounds(s).length + 1;
+  return liveRounds(s).findIndex(r => r.id === ref) + 1;
+}
+
+// ---------------------------------------------------------------- Ändern (rein, liefert neuen Zustand)
+
+export function createGame(rules: Template, players: Player[], clock: Clock): GameState {
+  const t = clock.now();
+  const game: Game = {
+    id: clock.uid(), createdAt: t, updatedAt: t, rules: structuredClone(rules), status: 'running', startedAt: t,
+    seats: players.map((p, i) => ({ playerId: p.id, seat: i }))
+  };
+  const n = rules.end.type === 'rounds' ? rules.end.value : 1;
+  const rounds: Round[] = Array.from({ length: n }, (_, index) => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: game.id, index }));
+  return { game, players: players.map(p => ({ ...p })), rounds, entries: [] };
+}
+
+function touch(s: GameState, clock: Clock): Game {
+  return { ...s.game, updatedAt: clock.now() };
+}
+
+export function addRound(s: GameState, clock: Clock): { state: GameState; roundId: string } {
+  const t = clock.now();
+  const index = liveRounds(s).reduce((m, r) => Math.max(m, r.index + 1), 0);
+  const r: Round = { id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, index };
+  return { state: { ...s, game: touch(s, clock), rounds: [...s.rounds, r] }, roundId: r.id };
+}
+
+/**
+ * Wert setzen (oder mit null löschen). Bei ref 'new' entsteht die Runde erst mit dem ersten Wert.
+ * Löschen markiert den Eintrag (deletedAt), damit es später synchronisiert werden kann.
+ */
+export function setScore(s: GameState, ref: RoundRef, playerId: string, value: number | null, clock: Clock): { state: GameState; roundId: string | null } {
+  let state = s; let roundId: string | null = ref === 'new' ? null : ref;
+  if (ref === 'new') {
+    if (value === null) return { state: s, roundId: null };
+    const added = addRound(state, clock); state = added.state; roundId = added.roundId;
+  }
+  const t = clock.now();
+  const existing = state.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
+  let entries: Entry[];
+  if (existing) {
+    entries = state.entries.map(e => e !== existing ? e
+      : value === null ? { ...e, updatedAt: t, deletedAt: t } : { ...e, updatedAt: t, values: { score: value } });
+  } else if (value !== null) {
+    entries = [...state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId, values: { score: value } }];
+  } else entries = state.entries;
+  return { state: { ...state, game: touch(state, clock), entries }, roundId };
+}
+
+export function setWin(s: GameState, win: 'high' | 'low', clock: Clock): GameState {
+  return { ...s, game: { ...touch(s, clock), rules: { ...s.game.rules, win } } };
+}
+
+export function finish(s: GameState, clock: Clock): GameState {
+  const t = clock.now();
+  return { ...s, game: { ...s.game, status: 'finished', finishedAt: t, updatedAt: t } };
+}
+
+/**
+ * Rückgängig: früheren Zustand wiederherstellen, aber sync-fähig.
+ * Was seitdem neu entstanden ist, wird als gelöscht markiert; geänderte Datensätze bekommen einen neuen Zeitstempel.
+ */
+export function restore(current: GameState, prev: GameState, clock: Clock): GameState {
+  const t = clock.now();
+  const merge = <T extends { id: string; updatedAt: string; deletedAt?: string | null }>(cur: T[], old: T[]): T[] => {
+    const oldIds = new Set(old.map(x => x.id));
+    const restored = old.map(o => {
+      const c = cur.find(x => x.id === o.id);
+      return c && JSON.stringify(c) !== JSON.stringify(o) ? { ...o, updatedAt: t } : o;
+    });
+    const removed = cur.filter(c => !oldIds.has(c.id) && !c.deletedAt).map(c => ({ ...c, updatedAt: t, deletedAt: t }));
+    return [...restored, ...removed];
+  };
+  return { ...prev, game: { ...prev.game, updatedAt: t }, rounds: merge(current.rounds, prev.rounds), entries: merge(current.entries, prev.entries) };
+}

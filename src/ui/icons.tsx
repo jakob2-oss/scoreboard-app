@@ -1,0 +1,11 @@
+const P = { viewBox: '0 0 24 24' } as const;
+export const IconBack = () => <svg {...P}><path d="M15 18l-6-6 6-6" /></svg>;
+export const IconDots = () => <svg {...P}><circle cx="5" cy="12" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="19" cy="12" r="1.2" /></svg>;
+export const IconUndo = () => <svg {...P}><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 010 11H11" /></svg>;
+export const IconBackspace = () => <svg {...P}><path d="M21 5H9l-6 7 6 7h12z" /><path d="M17 9l-5 6M12 9l5 6" /></svg>;
+export const IconClose = () => <svg {...P}><path d="M6 6l12 12M18 6L6 18" /></svg>;
+export const IconMoon = () => <svg {...P}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>;
+export const IconSun = () => <svg {...P}><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" /></svg>;
+export const IconGrid = () => <svg className="ov-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M3 15h18M9 3v18M15 3v18" /></svg>;
+export const Chevron = () => <svg className="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5" /></svg>;
+export const Crown = () => <svg className="crown" viewBox="0 0 16 13" aria-hidden="true"><path d="M1.6 11.6 1 3.2l4.1 3.4L8 1.4l2.9 5.2L15 3.2l-.6 8.4z" fill="#f0b13e" /></svg>;
