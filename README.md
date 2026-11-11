@@ -13,8 +13,10 @@ Später mit Historie, Statistik und Gruppen.
 ```bash
 npm install
 npm run dev      # Entwicklungsserver
-npm test         # Tests der Rechenregeln
+npm test         # Tests: Spiel-Logik, Speicherung, Abläufe
 npm run build    # Produktions-Build nach dist/
+npx vite preview --port 4173 &   # gebaute App lokal starten
+npm run e2e      # Klicktest im Browser (Playwright)
 ```
 
 ## Dokumente
@@ -27,4 +29,7 @@ npm run build    # Produktions-Build nach dist/
 
 ## Stand
 
-Phase 1 (Grundgerüst) fertig. Als Nächstes: Prototyp in die App übertragen (Phase 2).
+- Phase 1 (Grundgerüst) fertig.
+- Phase 2, Paket 1 (Spieler & Partie-Kern) fertig: Spieler anlegen, freie Zettel, Überblick,
+  Spielerseiten, Ziffernblock, Rückgängig, Speicherung auf dem Gerät.
+- Als Nächstes: Paket 2 (Spiele-Vorlagen mit eigenen Regeln), dann Paket 3 (Historie & Statistik).
