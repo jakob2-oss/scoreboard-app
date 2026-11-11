@@ -436,6 +436,81 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
 .ph-now b { font-weight: 600; font-size: 17px; }
 .ph-toggle { min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--fill); font-weight: 600; font-size: 15px; white-space: nowrap; }
 .ph-toggle[aria-pressed="true"] { background: var(--c); color: var(--on, #fff); }
+
+/* ---------- Spielerklärung ---------- */
+.rule-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+.rule-card p { margin: 0; font-size: 16px; line-height: 1.6; font-weight: 400; }
+.rule-card p b { font-weight: 600; background: linear-gradient(transparent 58%, color-mix(in srgb, var(--acc) 30%, transparent) 58%); padding: 0 1px; }
+.rule-ex { display: flex; align-items: stretch; gap: 6px; }
+.rule-ex .lbl { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.ex-t { flex: 1; background: var(--fill); border-radius: 16px; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.ex-t b { font-size: 22px; font-weight: 600; line-height: 1.1; }
+.ex-t small { font-size: 11px; color: var(--muted); font-weight: 500; }
+.ex-t:last-child { background: var(--acc); color: #fff; }
+.ex-t:last-child small { color: rgba(255, 255, 255, .85); }
+.ex-op { align-self: center; color: var(--faint); font-weight: 600; }
+
+/* ---------- Spieler auf der Startseite ---------- */
+.prof-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 6px; }
+.prof-row::-webkit-scrollbar { display: none; }
+.prof-chip { flex: none; width: 86px; background: var(--surface); border-radius: 20px; box-shadow: var(--soft); padding: 12px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.prof-chip b { font-weight: 600; font-size: 15px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-chip small { font-size: 12px; color: var(--muted); }
+.link-btn { align-self: flex-start; color: var(--primary); font-weight: 600; font-size: 14px; padding: 6px 4px; }
+
+/* ---------- Profil ---------- */
+.pf-body { display: flex; flex-direction: column; gap: 20px; padding-block: 4px 28px; }
+.pf-hero { display: flex; align-items: center; gap: 14px; }
+.pf-hero .av.big { width: 64px; height: 64px; font-size: 28px; }
+.pf-hero h1 { font-size: 30px; font-weight: 600; letter-spacing: .02em; }
+.pf-hero small { color: var(--muted); font-size: 14px; }
+.fchips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -10px -16px 0; padding: 2px 16px; }
+.fchips::-webkit-scrollbar { display: none; }
+.fchip { flex: none; display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.fchip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tiles.two { grid-template-columns: repeat(2, 1fr); }
+.tile { background: var(--surface); border-radius: 20px; box-shadow: var(--soft); padding: 10px 8px 12px; text-align: center; display: flex; flex-direction: column; }
+.tile small { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.tile b { font-size: 34px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); }
+.tile.accent { background: var(--c); color: var(--on); }
+.tile.accent small, .tile.accent span { color: inherit; opacity: .85; }
+.wl { display: flex; flex-direction: column; gap: 6px; margin-top: -6px; }
+.wl-bar { display: flex; gap: 4px; height: 14px; }
+.wl-bar i { border-radius: 999px; background: var(--fill-2); min-width: 14px; }
+.wl-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.wl-lbl b { color: var(--fg); font-weight: 600; }
+.gi { width: 36px; height: 36px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; }
+.gi svg { width: 26px; height: 26px; }
+.gi.xs { width: 22px; height: 22px; margin-left: -8px; }
+.gi.xs svg { width: 17px; height: 17px; }
+.gi.plain { background: var(--fill-2); }
+.mini-bar { width: 56px; height: 8px; border-radius: 999px; background: var(--fill-2); overflow: hidden; flex: none; }
+.mini-bar i { display: block; height: 100%; border-radius: 999px; }
+.mini-pct { width: 38px; text-align: right; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+.card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.card.empty { align-items: center; text-align: center; padding: 24px 18px; }
+.card.empty p { margin: 0; color: var(--muted); }
+.vs-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.vs-p { display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--fill); font-weight: 500; font-size: 14px; min-height: 36px; }
+.vs-p .av { opacity: .5; }
+.vs-p[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.vs-p[aria-pressed="true"] .av { opacity: 1; }
+.vs-sum { margin: 0; font-size: 14px; color: var(--muted); }
+.vs-bars { display: flex; flex-direction: column; gap: 8px; }
+.vs-row { display: flex; align-items: center; gap: 8px; }
+.vs-n { width: 54px; font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-bar { flex: 1; height: 12px; border-radius: 999px; background: var(--fill); overflow: hidden; }
+.vs-bar i { display: block; height: 100%; border-radius: 999px; }
+.vs-row b { width: 32px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.place-badge { display: inline-flex; align-items: center; gap: 3px; min-width: 38px; justify-content: center; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--fill); font-weight: 600; font-size: 13px; }
+.place-badge.win { background: var(--c); color: var(--on); }
+.place-badge .crown { width: 13px; height: 11px; }
+.pts-sm { width: 42px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Ergebnis: Anlass */
+.event-row { display: flex; gap: 6px; flex-wrap: wrap; }
 </style>
 
 <!-- ================= Start ================= -->
@@ -511,6 +586,7 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
       </div>
       <div class="home-body">
         <div id="resume-slot"></div>
+        <div id="players-slot"></div>
         <div class="group">
           <div class="eyebrow">Spiele</div>
           <div class="list" id="tpl-list"></div>
@@ -535,6 +611,15 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
     <div class="gutter tpl-body" id="tpl-body"></div>
   </div>
   <div class="dock gutter" id="tpl-dock"></div>
+</section>
+
+<!-- ================= Profil ================= -->
+<section id="s-profile" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="grow"><h2 id="pf-title">Profil</h2><div class="sub">Statistik</div></div>
+  </div>
+  <div class="scroll"><div class="gutter pf-body" id="pf-body"></div></div>
 </section>
 
 <!-- ================= Spieler ================= -->
@@ -808,19 +893,18 @@ const SCENE = {
   </svg>`
 };
 
+// Spielerklärung: kurzer Fließtext mit Textmarker-Stellen und ein Rechenbeispiel als Kacheln
 const RULES = {
-  wizard: [
-    'Jede Runde eine Karte mehr. Rundenzahl = 60 Karten ÷ Spieler.',
-    'Vor dem Spielen sagt jeder an, wie viele Stiche er macht.',
-    'Richtig angesagt: 20 Punkte + 10 je Stich. Daneben: −10 je Stich Abweichung.',
-    'Die App führt durch Ansagen und Stiche: ein Tipp pro Spieler.'
-  ],
-  romme: [
-    'Wer zuerst alle Karten ablegt, ist raus und schreibt 0.',
-    'Alle anderen notieren die Punkte ihrer Handkarten, z. B. Bild 10, Ass 11, Joker 20.',
-    'Hand-Rommé (alles auf einmal abgelegt): Die Punkte der anderen zählen doppelt, dafür gibt es die Taste ×2.',
-    'Erreicht jemand die Grenze, endet das Spiel. Die wenigsten Punkte gewinnen.'
-  ]
+  wizard: { acc: '#7a5cc9', text: 'Jede Runde gibt es <b>eine Karte mehr</b>. Bevor gespielt wird, sagt jeder an, wie viele Stiche er holt. Wer <b>genau richtig liegt</b>, bekommt <b>20 Punkte plus 10 pro Stich</b>. Wer danebenliegt, verliert <b>10 Punkte pro Stich Abweichung</b>.',
+    ex: [['2', 'angesagt'], ['2', 'geholt'], ['+40', 'Punkte']] },
+  romme: { acc: '#e8684f', text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Erreicht jemand die Grenze, ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    ex: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']] },
+  kniffel: { acc: '#2f8f86', text: 'Pro Zug hat jeder bis zu <b>drei Würfe</b> und trägt das Ergebnis in ein freies Feld ein. Oben zählen nur die passenden Augen. Wer dort <b>63 Punkte</b> schafft, bekommt <b>35 Bonus</b> dazu. Passt gar nichts, wird ein Feld <b>gestrichen</b>.',
+    ex: [['3×', 'Vierer'], ['12', 'bei Vierern'], ['+35', 'ab 63 oben']] },
+  skyjo: { acc: '#4aa3d8', text: 'Am Ende jeder Runde zählt jeder seine Karten zusammen, von <b>−2 bis 12</b>. Wer die Runde beendet, aber nicht am wenigsten hat, zählt <b>doppelt</b>. Bei <b>100 Punkten</b> ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    ex: [['18', 'beendet'], ['×2', 'nicht niedrigster'], ['36', 'Punkte']] },
+  phase10: { acc: '#f2a33a', text: 'Jeder arbeitet sich durch <b>zehn Phasen</b>. Schaffst du deine, setzt du einen <b>Haken</b> und bist nächste Runde eine Stufe weiter. Karten auf der Hand sind <b>Strafpunkte</b>. Wer zuerst <b>Phase 10</b> schafft, gewinnt.',
+    ex: [['3', 'Phase'], ['✓', 'geschafft'], ['4', 'nächste Runde']] }
 };
 
 function renderTplPage() {
@@ -833,7 +917,8 @@ function renderTplPage() {
     <div class="tpl-badge" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</div>
     <div><h1>${esc(t.name)}</h1><p class="lead">${esc(t.sub || describe(t))}</p></div>
     <div class="group"><div class="eyebrow">So wird gezählt</div>
-      <ul class="rules">${RULES[t.scene].map((x, k) => `<li style="--c:${COLORS[k % COLORS.length]}">${esc(x)}</li>`).join('')}</ul></div>
+      <div class="rule-card" style="--acc:${RULES[t.scene].acc}"><p>${RULES[t.scene].text}</p>
+        <div class="rule-ex"><span class="lbl">Beispiel</span>${RULES[t.scene].ex.map(([v, l]) => `<div class="ex-t"><b>${v}</b><small>${l}</small></div>`).join('<span class="ex-op">→</span>')}</div></div></div>
     ${opts}`;
   const last = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n));
   const ok = last.length >= (t.min || 1) && last.length <= (t.max || 99);
@@ -941,13 +1026,160 @@ function phaseCard(g, i, ref) {
   </div>`;
 }
 
+/* ---------------- Historie & Spielerprofile ---------------- */
+// Archiv abgeschlossener Partien (nur lokal). Spieler werden im Prototyp über den Namen erkannt.
+const hist = () => store.get('history', []);
+const GAME_META = { wizard: 'Wizard', romme: 'Rommé', dice: 'Kniffel', skyjo: 'Skyjo', phase10: 'Phase 10' };
+const tplOf = id => BUILTIN.find(t => t.id === id);
+function colorFor(name) {
+  const all = allPlayerNames(), i = all.indexOf(name);
+  return COLORS[(i < 0 ? 0 : i) % COLORS.length];
+}
+function allPlayerNames() {
+  const set = new Set(S.known);
+  hist().forEach(e => e.players.forEach(p => set.add(p.name)));
+  return [...set];
+}
+// Spielspezifische Kennzahlen je Spieler beim Speichern
+function extraStats(g, p) {
+  const played = g.rounds.filter(r => typeof r.s[p.id] === 'number').length;
+  if (isBids(g)) return { hits: g.rounds.filter(r => fv(r, 'bid', p.id) !== null && fv(r, 'bid', p.id) === fv(r, 'tricks', p.id)).length, rounds: played };
+  if (g.kind === 'cats') return { bonus: upper(g, p.id) >= BONUS_AT };
+  if (isP10(g)) return { phase: phDone(g, p.id), rounds: played };
+  return { rounds: played };
+}
+function archiveGame(g, eventName) {
+  const rk = ranking(g);
+  const e = { id: g.id, templateId: g.templateId, name: g.name, startedAt: g.createdAt, finishedAt: now(), event: eventName || null,
+    players: rk.map(x => ({ name: x.p.name, color: x.p.color, total: x.t, place: x.place, extra: extraStats(g, x.p) })) };
+  store.set('history', [e].concat(hist().filter(h => h.id !== e.id)));
+  if (eventName) store.set('lastEvent', eventName);
+}
+
+// Beispieldaten zum Ausprobieren (klar markiert, jederzeit entfernbar)
+function seedExamples() {
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const names = ['Anna', 'Ben', 'Clara', 'David'], skill = { Anna: .62, Ben: .5, Clara: .55, David: .4 };
+  const games = ['wizard', 'romme', 'dice', 'skyjo', 'phase10'], out = [], DAY = 864e5, t0 = Date.now();
+  names.forEach(n => { if (!S.known.includes(n)) S.known.push(n); }); store.set('known', S.known);
+  for (let k = 0; k < 28; k++) {
+    const tid = games[Math.floor(rnd() * games.length)];
+    const ps = names.filter(() => rnd() > .25); if (ps.length < 2) ps.push(names.find(n => !ps.includes(n)));
+    if (tid === 'wizard' && ps.length < 3) ps.push(names.find(n => !ps.includes(n)));
+    const ago = Math.floor(rnd() * 300) + 1, d = new Date(t0 - ago * DAY);
+    const ev = ago > 200 && ago < 230 ? 'Südamerika 2026' : null;
+    const low = tid === 'romme' || tid === 'skyjo' || tid === 'phase10';
+    const sc = ps.map(n => ({ n, s: skill[n] + rnd() * .6 })).sort((a, b) => b.s - a.s);
+    const players = sc.map((x, i) => {
+      const rounds = tid === 'wizard' ? Math.floor(60 / ps.length) : tid === 'dice' ? 13 : 6 + Math.floor(rnd() * 6);
+      let total = tid === 'wizard' ? Math.round((80 + x.s * 160) / 10) * 10 : tid === 'dice' ? Math.round(150 + x.s * 140)
+        : tid === 'phase10' ? Math.round(60 + i * 40 + rnd() * 30) : Math.round(40 + i * 45 + rnd() * 40);
+      const extra = tid === 'wizard' ? { hits: Math.round(rounds * (.3 + x.s * .5)), rounds } : tid === 'dice' ? { bonus: x.s > .75 }
+        : tid === 'phase10' ? { phase: i === 0 ? 10 : Math.max(4, 9 - i - Math.floor(rnd() * 2)), rounds } : { rounds };
+      return { name: x.n, color: colorFor(x.n), total, place: i + 1, extra };
+    });
+    if (low && tid !== 'phase10') players.sort((a, b) => a.total - b.total).forEach((p, i) => p.place = i + 1);
+    out.push({ id: uid(), templateId: tid, name: GAME_META[tid], startedAt: d.toISOString(), finishedAt: d.toISOString(), event: ev, example: true, players });
+  }
+  store.set('history', hist().concat(out).sort((a, b) => b.finishedAt.localeCompare(a.finishedAt)));
+}
+
+// Filterzustand der Profilseite
+const PF = { name: null, time: 'all', game: 'all', vs: [] };
+function filtered(name) {
+  const t = Date.now(), y = new Date().getFullYear();
+  return hist().filter(e => e.players.some(p => p.name === name))
+    .filter(e => PF.time === 'all' || (PF.time === '30' ? t - new Date(e.finishedAt) < 30 * 864e5 : PF.time === 'year' ? new Date(e.finishedAt).getFullYear() === y : e.event === PF.time))
+    .filter(e => PF.game === 'all' || e.templateId === PF.game);
+}
+const me = (e, n) => e.players.find(p => p.name === n);
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+function gameIcon(id, size = 'sm') { const t = tplOf(id); return t && t.icon ? `<span class="gi ${size}" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</span>` : `<span class="gi ${size} plain"></span>`; }
+
+function renderPlayersRow() {
+  const names = allPlayerNames();
+  return `<div class="group"><div class="eyebrow">Spieler</div>
+    <div class="prof-row">${names.map(n => { const games = hist().filter(e => e.players.some(p => p.name === n)), w = games.filter(e => me(e, n).place === 1).length;
+      return `<button class="prof-chip" data-act="open-profile" data-name="${esc(n)}">${av({ name: n, color: colorFor(n) }, true)}<b>${esc(n)}</b><small>${games.length ? w + (w === 1 ? ' Sieg' : ' Siege') : 'neu'}</small></button>`; }).join('')}</div>
+    ${hist().length >= 5 || hist().some(e => e.example) ? '' : '<button class="link-btn" data-act="seed">Beispieldaten laden, um die Statistik auszuprobieren</button>'}</div>`;
+}
+
+function renderProfile() {
+  const n = PF.name, col = colorFor(n), all = hist().filter(e => e.players.some(p => p.name === n));
+  show('s-profile');
+  const games = filtered(n), wins = games.filter(e => me(e, n).place === 1).length, losses = games.length - wins;
+  const events = [...new Set(all.map(e => e.event).filter(Boolean))];
+  const playedGames = [...new Set(all.map(e => e.templateId))];
+  const chip = (grp, v, label, extra = '') => `<button class="fchip" data-act="pf-filter" data-g="${grp}" data-v="${esc(v)}" aria-pressed="${PF[grp] === v}">${extra}${esc(label)}</button>`;
+  const since = all.length ? new Date(all[all.length - 1].finishedAt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) : '';
+
+  // Spiele-Übersicht oder spielspezifische Werte
+  let detail = '';
+  if (PF.game === 'all') {
+    const by = playedGames.map(id => { const gs = games.filter(e => e.templateId === id); return { id, n: gs.length, w: gs.filter(e => me(e, n).place === 1).length }; })
+      .filter(x => x.n).sort((a, b) => pct(b.w, b.n) - pct(a.w, a.n) || b.n - a.n);
+    if (by.length) detail = `<div class="group"><div class="eyebrow">Worin ${esc(n)} gut ist</div><div class="list">${by.map(x => `
+      <button class="row" data-act="pf-filter" data-g="game" data-v="${x.id}">${gameIcon(x.id)}<span class="t"><b>${esc(GAME_META[x.id] || x.id)}</b><small>${x.w} von ${x.n} gewonnen</small></span>
+      <span class="mini-bar"><i style="width:${pct(x.w, x.n)}%;background:${col}"></i></span><span class="mini-pct">${pct(x.w, x.n)}%</span></button>`).join('')}</div></div>`;
+  } else if (games.length) {
+    const mine = games.map(e => me(e, n)), avg = a => a.length ? Math.round(a.reduce((s, x) => s + x, 0) / a.length) : 0;
+    const low = ['romme', 'skyjo'].includes(PF.game);
+    let tiles = [];
+    if (PF.game === 'wizard') { const h = mine.reduce((s, p) => s + (p.extra.hits || 0), 0), r = mine.reduce((s, p) => s + (p.extra.rounds || 0), 0);
+      tiles = [['Ansage-Treffer', pct(h, r) + '%', `${h} von ${r} Runden`], ['Beste Partie', Math.max(...mine.map(p => p.total)), 'Punkte']]; }
+    else if (PF.game === 'dice') tiles = [['Bonus geschafft', pct(mine.filter(p => p.extra.bonus).length, mine.length) + '%', 'oben 63+'], ['Bestwert', Math.max(...mine.map(p => p.total)), `Ø ${avg(mine.map(p => p.total))}`]];
+    else if (PF.game === 'phase10') tiles = [['Ø erreichte Phase', (mine.reduce((s, p) => s + (p.extra.phase || 0), 0) / mine.length).toFixed(1).replace('.', ','), 'von 10'], ['Ø Strafpunkte', avg(mine.map(p => p.total)), 'pro Partie']];
+    else if (low) tiles = [['Ø pro Runde', (mine.reduce((s, p) => s + p.total / Math.max(1, p.extra.rounds || 1), 0) / mine.length).toFixed(1).replace('.', ','), 'Strafpunkte'], ['Beste Partie', Math.min(...mine.map(p => p.total)), 'Punkte']];
+    else tiles = [['Ø Punkte', avg(mine.map(p => p.total)), 'pro Partie'], ['Beste Partie', Math.max(...mine.map(p => p.total)), 'Punkte']];
+    detail = `<div class="group"><div class="eyebrow">Nur ${esc(GAME_META[PF.game] || '')}</div><div class="tiles two">${tiles.map(([l, v, s]) => `<div class="tile"><small>${l}</small><b>${v}</b><span>${s}</span></div>`).join('')}</div></div>`;
+  }
+
+  // Direktvergleich
+  const others = allPlayerNames().filter(x => x !== n && all.some(e => e.players.some(p => p.name === x)));
+  PF.vs = PF.vs.filter(x => others.includes(x));
+  let vs = '';
+  if (PF.vs.length) {
+    const group = [n, ...PF.vs], shared = games.filter(e => group.every(g => e.players.some(p => p.name === g)));
+    const best = Object.fromEntries(group.map(g => [g, 0]));
+    shared.forEach(e => { const m = Math.min(...group.map(g => me(e, g).place)); group.forEach(g => { if (me(e, g).place === m) best[g]++; }); });
+    const max = Math.max(1, ...Object.values(best));
+    vs = shared.length ? `<p class="vs-sum">${shared.length} gemeinsame ${shared.length === 1 ? 'Partie' : 'Partien'}. Wer lag am häufigsten vorn?</p>
+      <div class="vs-bars">${group.sort((a, b) => best[b] - best[a]).map(g => `<div class="vs-row">${av({ name: g, color: colorFor(g) })}<span class="vs-n">${esc(g)}</span>
+        <span class="vs-bar"><i style="width:${best[g] / max * 100}%;background:${colorFor(g)}"></i></span><b>${best[g]}×</b></div>`).join('')}</div>`
+      : '<p class="vs-sum">Im gewählten Zeitraum keine gemeinsamen Partien.</p>';
+  }
+
+  $('#pf-body').innerHTML = `
+    <div class="pf-hero">${av({ name: n, color: col }, true)}<div><h1>${esc(n)}</h1><small>${all.length ? `${all.length} Partien seit ${since}` : 'Noch keine gespeicherten Partien'}</small></div></div>
+    ${all.length ? `
+    <div class="fchips">${chip('time', 'all', 'Immer')}${chip('time', '30', '30 Tage')}${chip('time', 'year', 'Dieses Jahr')}${events.map(ev => chip('time', ev, ev)).join('')}</div>
+    <div class="fchips">${chip('game', 'all', 'Alle Spiele')}${playedGames.map(id => chip('game', id, GAME_META[id] || id, gameIcon(id, 'xs'))).join('')}</div>
+    <div class="tiles">
+      <div class="tile accent" style="--c:${col};--on:${onColor(col)}"><small>Siege</small><b>${wins}</b><span>von ${games.length}</span></div>
+      <div class="tile"><small>Siegquote</small><b>${pct(wins, games.length)}%</b><span>&nbsp;</span></div>
+      <div class="tile"><small>Partien</small><b>${games.length}</b><span>&nbsp;</span></div>
+    </div>
+    <div class="wl"><div class="wl-bar"><i style="flex:${wins || .0001};background:${col}"></i><i style="flex:${losses || .0001}"></i></div>
+      <div class="wl-lbl"><span><b>${wins}</b> ${wins === 1 ? 'Sieg' : 'Siege'}</span><span><b>${losses}</b> ${losses === 1 ? 'Niederlage' : 'Niederlagen'}</span></div></div>
+    ${detail}
+    <div class="group"><div class="eyebrow">Direktvergleich</div>
+      <div class="card"><div class="vs-pick">${others.map(o => `<button class="vs-p" data-act="pf-vs" data-name="${esc(o)}" aria-pressed="${PF.vs.includes(o)}">${av({ name: o, color: colorFor(o) })}<span>${esc(o)}</span></button>`).join('')}</div>
+      ${vs || '<p class="vs-sum">Wähle einen oder mehrere Mitspieler.</p>'}</div></div>
+    <div class="group"><div class="eyebrow">Letzte Partien</div><div class="list">${games.slice(0, 6).map(e => { const p = me(e, n);
+      return `<div class="row">${gameIcon(e.templateId)}<span class="t"><b>${esc(e.name)}</b><small>${new Date(e.finishedAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })}${e.event ? ' · ' + esc(e.event) : ''}${e.example ? ' · Beispiel' : ''}</small></span>
+        <span class="place-badge ${p.place === 1 ? 'win' : ''}" style="--c:${col};--on:${onColor(col)}">${p.place === 1 ? ICON.crown : ''}${p.place}.</span><span class="pts-sm">${fmt(p.total)}</span></div>`; }).join('') || '<div class="row"><span class="t"><small>Keine Partien für diesen Filter.</small></span></div>'}</div></div>
+    ${all.some(e => e.example) ? '<button class="link-btn" data-act="unseed">Beispieldaten entfernen</button>' : ''}`
+    : `<div class="card empty"><p>Sobald eine Partie mit ${esc(n)} gespeichert ist, erscheinen hier Siege, Bilanz und Vergleiche.</p>
+       <button class="secondary" data-act="seed">Beispieldaten laden</button></div>`}`;
+}
+
 /* ---------------- Hell / Dunkel ---------------- */
 const curTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 function renderThemeBtn() { const b = $('#theme-btn'); if (b) b.innerHTML = curTheme() === 'dark' ? ICON.sun : ICON.moon; }
 { const t = store.get('theme', null); if (t) document.documentElement.dataset.theme = t; }
 
 /* ---------------- Navigation ---------------- */
-function show(id) { ['s-home', 's-tpl', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
+function show(id) { ['s-home', 's-tpl', 's-profile', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
 
 function renderHome() {
   show('s-home'); renderThemeBtn();
@@ -966,6 +1198,7 @@ function renderHome() {
       <span class="t"><b>${esc(t.name)}</b><small>${esc(describe(t))}</small></span>
       ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : CHEV}
     </button>`;
+  $('#players-slot').innerHTML = renderPlayersRow();
   const all = templates(), games = all.filter(t => t.page || t.game);
   $('#tpl-list').innerHTML = games.map(row).join('');
   $('#tpl-list2').innerHTML = all.filter(t => !games.includes(t)).map((t, k) => row(t, k + 2)).join('');
@@ -1438,18 +1671,19 @@ function openMenu() {
 }
 
 function openResult() {
-  const g = S.game, rk = ranking(g);
+  const g = S.game, rk = ranking(g), last = store.get('lastEvent', '');
   openSheet(`
     <div class="eyebrow">${esc(g.name)} · ${new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
     <h3>${anyScore(g) ? esc(rk.filter(x => x.place === 1).map(x => x.p.name).join(' & ')) + ' gewinnt' : 'Noch keine Punkte'}</h3>
     <div class="podium">${rk.map(x => `<div class="prow ${x.place === 1 && anyScore(g) ? 'win' : ''}">
-      <span class="place">${x.place}</span><span class="dot" style="--c:${x.p.color}"></span>
+      <span class="place">${x.place}</span>${av(x.p)}
       <span class="nm">${esc(x.p.name)}</span><span class="pts">${fmt(x.t)}</span></div>`).join('')}</div>
-    <p class="note">Im echten Produkt landet die Partie hier in der Historie, mit Ort und Anlass (z. B. „Südamerika 2026“).</p>
+    <div class="field"><label for="ev-name">Anlass (optional)</label><input id="ev-name" placeholder="z. B. Südamerika 2026" maxlength="32" value="${esc(last)}" autocomplete="off"></div>
     <div class="pad-actions">
       <button class="secondary" data-act="close-sheet">Weiterspielen</button>
-      <button class="primary" data-act="rematch">Revanche</button>
-    </div>`, 'Ergebnis');
+      <button class="primary" data-act="save-game">Speichern</button>
+    </div>
+    <button class="link-btn" data-act="save-rematch" style="align-self:center">Speichern & Revanche</button>`, 'Ergebnis');
 }
 
 const CFG = { name: '', win: 'high', end: 'none', val: 500 };
@@ -1611,6 +1845,18 @@ const A = {
     store.set('tpls', list); closeSheet(); toast('Vorlage gespeichert');
   },
   result() { if (S.pad) { commitPad(); closePad(); } openResult(); },
+  'save-game'() {
+    archiveGame(S.game, ($('#ev-name').value || '').trim());
+    S.game = null; S.undo = []; store.del('game'); closeSheet(); renderHome(); toast('Partie gespeichert');
+  },
+  'save-rematch'() {
+    const g = S.game; archiveGame(g, ($('#ev-name').value || '').trim()); A.rematch(); toast('Gespeichert · Revanche läuft');
+  },
+  'open-profile'(el) { Object.assign(PF, { name: el.dataset.name, time: 'all', game: 'all', vs: [] }); renderProfile(); $('#s-profile .scroll').scrollTop = 0; },
+  'pf-filter'(el) { PF[el.dataset.g] = el.dataset.v; renderProfile(); },
+  'pf-vs'(el) { const n = el.dataset.name, i = PF.vs.indexOf(n); if (i >= 0) PF.vs.splice(i, 1); else PF.vs.push(n); renderProfile(); },
+  seed() { seedExamples(); if (!$('#s-profile').hidden) renderProfile(); else renderHome(); toast('Beispieldaten geladen'); },
+  unseed() { store.set('history', hist().filter(e => !e.example)); renderProfile(); toast('Beispieldaten entfernt'); },
   rematch() {
     const g = S.game, t = templates().find(x => x.id === g.templateId) || { ...g, id: g.templateId };
     closeSheet(); enterGame(newGame({ ...t, win: g.win }, g.players.map(p => p.name))); toast('Neue Partie, gleiche Runde');
