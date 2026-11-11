@@ -19,7 +19,7 @@ Wizard, Skyjo, Uno und Skip-Bo liegen in Shop-Bestsellerlisten weit vorn
 
 | Spiel | B/N/C | Was die Vorlage können muss |
 |---|---|---|
-| Rommé | 3/3/3 | Minuspunkte der Handkarten pro Runde, „Hand-Rommé“ zählt doppelt, Spielende bei Zielwert (z. B. 500) – niedrig gewinnt |
+| Rommé ✅ (im Prototyp) | 3/3/3 | Minuspunkte der Handkarten pro Runde, „Hand-Rommé“ zählt doppelt, Spielende bei Zielwert (z. B. 500) – niedrig gewinnt |
 | Wizard ✅ (im Prototyp) | 3/3/3 | **Ansage vor der Runde**, Stiche nach der Runde; Treffer = 20 + 10 je Stich, sonst −10 je Abweichung; Rundenzahl = 60 ÷ Spieler; Hinweis, wenn Summe der Ansagen = Kartenzahl |
 | Skat | 3/3/3 | Skatliste: Alleinspieler, Spielart, Spielwert, gewonnen/verloren (verloren = doppelt minus), Seeger-Fabian-Abrechnung (+50 / Gegnerpunkte) |
 | Doppelkopf | 3/3/3 | Re/Kontra-Parteien **wechseln jede Runde**, Spielwert inkl. Ansagen und Sonderpunkte, Soli, Nullsumme pro Runde, Bock-Runden |

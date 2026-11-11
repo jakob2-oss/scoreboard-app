@@ -404,6 +404,26 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
 .primary { border-radius: 999px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 16px; }
 .secondary { border-radius: 999px; }
 .resume .go-pill { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 7px 14px; }
+
+/* ---------- Spielseiten ---------- */
+.tpl-hero { position: relative; height: 240px; overflow: hidden; border-radius: 0 0 34px 34px; flex: none; }
+.tpl-hero .scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tpl-back { position: absolute; top: 10px; left: max(12px, env(safe-area-inset-left, 0px)); width: 42px; height: 42px; border-radius: 50%; background: rgba(255, 255, 255, .92); color: #2e2b4f; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+.tpl-back svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.tpl-body { display: flex; flex-direction: column; gap: 20px; padding-block: 0 24px; }
+.tpl-body > div:nth-child(2) { text-align: center; }
+.tpl-badge { width: 88px; height: 88px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 0 6px var(--bg), var(--soft); display: grid; place-items: center; margin: -44px auto 0; position: relative; }
+.tpl-badge svg { width: 62px; height: 62px; }
+.tpl-body h1 { font-size: 32px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; padding-left: .14em; }
+.tpl-body .lead { color: var(--muted); margin: 4px 0 0; }
+.rules { list-style: none; margin: 0; padding: 4px 16px; background: var(--surface); border-radius: var(--r); box-shadow: var(--soft); }
+.rules li { position: relative; padding: 12px 0 12px 24px; font-size: 15px; line-height: 1.4; }
+.rules li + li { border-top: 1px solid var(--sep); }
+.rules li::before { content: ""; position: absolute; left: 2px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.ticon { width: 44px; height: 44px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; margin-left: -4px; }
+.ticon svg { width: 32px; height: 32px; }
+.top .g-ic { width: 34px; height: 34px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; margin-right: 6px; }
+.top .g-ic svg { width: 26px; height: 26px; }
 </style>
 
 <!-- ================= Start ================= -->
@@ -438,15 +458,20 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
           <ellipse cx="164" cy="208" rx="112" ry="7" fill="#000" opacity=".12"/>
           <g transform="rotate(-6 130 140)">
             <rect x="82" y="80" width="98" height="120" rx="12" style="fill:var(--i-paper)"/>
-            <path d="M82 92a12 12 0 0 1 12-12h74a12 12 0 0 1 12 12v12H82z" style="fill:var(--i-coral)"/>
-            <g fill="#fff" opacity=".85"><circle cx="96" cy="92" r="2.5"/><circle cx="104" cy="92" r="2.5"/><circle cx="112" cy="92" r="2.5"/></g>
-            <path d="M131 122v40" stroke="#3fb39b" stroke-width="6" stroke-linecap="round"/>
-            <g>
-              <circle cx="105" cy="122" r="7" fill="#ef7a5c"/><circle cx="131" cy="122" r="7" fill="#3fb39b"/><circle cx="157" cy="122" r="7" fill="#f0b13e"/>
-              <circle cx="105" cy="142" r="7" fill="#e2709a"/><circle cx="131" cy="142" r="7" fill="#3fb39b"/><circle cx="157" cy="142" r="7" fill="#f0b13e"/>
-              <circle cx="105" cy="162" r="7" fill="#e2709a"/><circle cx="131" cy="162" r="7" fill="#3fb39b"/><circle cx="157" cy="162" r="7" fill="#ef7a5c"/>
-              <circle cx="105" cy="182" r="7" fill="#f0b13e"/><circle cx="131" cy="182" r="7" fill="#5fa8d3"/><circle cx="157" cy="182" r="7" fill="#ef7a5c"/>
+            <path d="M82 92a12 12 0 0 1 12-12h74a12 12 0 0 1 12 12v8H82z" style="fill:var(--i-coral)"/>
+            <text x="131" y="95" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="8.5" letter-spacing="2.2" fill="#fff">PUNKTE</text>
+            <circle cx="108" cy="110" r="4.5" fill="#ef7a5c"/><circle cx="131" cy="110" r="4.5" fill="#3fb39b"/><circle cx="154" cy="110" r="4.5" fill="#f0b13e"/>
+            <g style="stroke:var(--i-line)" stroke-width="1.5"><path d="M90 118h82M90 134h82M90 150h82M90 166h82"/><path d="M119.5 104v72M142.5 104v72"/></g>
+            <g font-family="Jost, sans-serif" font-size="11" font-weight="500" text-anchor="middle" style="fill:var(--i-ink)">
+              <text x="108" y="130">12</text><text x="131" y="130">8</text><text x="154" y="130">15</text>
+              <text x="108" y="146">20</text><text x="131" y="146">14</text><text x="154" y="146">9</text>
+              <text x="108" y="162">7</text><text x="131" y="162">22</text><text x="154" y="162">11</text>
             </g>
+            <path d="M90 173.5h82M90 176.5h82" style="stroke:var(--i-ink)" stroke-width="1.3"/>
+            <g font-family="Jost, sans-serif" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--i-ink)">
+              <text x="108" y="192">39</text><text x="131" y="192">44</text><text x="154" y="192">35</text>
+            </g>
+            <ellipse cx="131" cy="188" rx="11" ry="9.5" fill="none" stroke="#ef7a5c" stroke-width="1.8" transform="rotate(-8 131 188)"/>
           </g>
           <g transform="translate(216 118) rotate(124)">
             <rect x="-70" y="-11" width="18" height="22" rx="7" style="fill:var(--i-eraser)"/>
@@ -475,8 +500,12 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
       <div class="home-body">
         <div id="resume-slot"></div>
         <div class="group">
-          <div class="eyebrow">Neue Partie</div>
+          <div class="eyebrow">Spiele</div>
           <div class="list" id="tpl-list"></div>
+        </div>
+        <div class="group">
+          <div class="eyebrow">Freie Zettel</div>
+          <div class="list" id="tpl-list2"></div>
         </div>
         <div class="list">
           <button class="row add-tpl" data-act="open-config"><span class="t"><b>Eigene Regeln bauen</b><small>Gewinner, Spielende, Rundenzahl</small></span><svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg></button>
@@ -487,10 +516,19 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
   </div>
 </section>
 
+<!-- ================= Spielseite ================= -->
+<section id="s-tpl" class="screen" hidden>
+  <div class="scroll">
+    <div class="tpl-hero" id="tpl-hero"></div>
+    <div class="gutter tpl-body" id="tpl-body"></div>
+  </div>
+  <div class="dock gutter" id="tpl-dock"></div>
+</section>
+
 <!-- ================= Spieler ================= -->
 <section id="s-players" class="screen" hidden>
   <div class="top gutter">
-    <button class="icon-btn" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="icon-btn" data-act="pl-back" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div class="grow"><h2>Wer spielt mit?</h2><div class="sub" id="pl-sub"></div></div>
   </div>
   <div class="scroll">
@@ -516,7 +554,7 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
 <section id="s-game" class="screen" hidden>
   <div class="top gutter">
     <button class="icon-btn" data-act="go-home" aria-label="Zum Start"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
+    <span class="g-ic" id="g-ic" hidden></span><div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
     <button class="icon-btn" data-act="open-menu" aria-label="Menü"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
   </div>
   <div class="sheet-wrap pp-mode" id="sheet"></div>
@@ -565,12 +603,16 @@ const ICON = {
 
 /* ---------------- Vorlagen ---------------- */
 const BUILTIN = [
+  { id: 'wizard', name: 'Wizard', kind: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, view: 'players', min: 3, max: 6,
+    page: true, icon: 'wizard', scene: 'wizard', tint: '#ece6fb', sub: 'Ansage & Stiche · 3–6 Spieler' },
+  { id: 'romme', name: 'Rommé', kind: 'rounds', win: 'low', end: { type: 'target', value: 500 }, view: 'players', min: 2, max: 6, quick: 'romme',
+    page: true, icon: 'romme', scene: 'romme', tint: '#fde6df', sub: 'Strafpunkte · wenigste Punkte gewinnen',
+    options: [{ key: 'end', label: 'Spielende', choices: [{ l: 'Bei 500', v: { type: 'target', value: 500 } }, { l: 'Bei 1000', v: { type: 'target', value: 1000 } }, { l: 'Offen', v: { type: 'none' } }] }] },
+  { id: 'dice', glyph: '⚄', name: 'Würfel-Kategorien', kind: 'cats', win: 'high', end: { type: 'cats' }, game: true },
   { id: 'free', glyph: '∞', name: 'Freie Runden', kind: 'rounds', win: 'high', end: { type: 'none' } },
-  { id: 'wizard', glyph: 'W', name: 'Wizard', kind: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, view: 'players', min: 3, max: 6 },
   { id: 't500', glyph: '500', name: 'Bis 500 Punkte', kind: 'rounds', win: 'high', end: { type: 'target', value: 500 } },
   { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
   { id: 'low9', glyph: '↓9', name: 'Wenig gewinnt', kind: 'rounds', win: 'low', end: { type: 'rounds', value: 9 } },
-  { id: 'dice', glyph: '⚄', name: 'Würfel-Kategorien', kind: 'cats', win: 'high', end: { type: 'cats' } },
   { id: 'count', glyph: '±', name: 'Schnellzähler', kind: 'rounds', win: 'high', end: { type: 'none' }, view: 'players' }
 ];
 const DICE = [
@@ -591,6 +633,7 @@ const DICE = [
 const BONUS_AT = 63, BONUS = 35;
 
 function describe(t) {
+  if (t.sub) return t.sub;
   if (t.kind === 'cats') return '13 Felder · Bonus ab 63';
   if (t.kind === 'bids') return 'Ansage & Stiche · 3–6 Spieler';
   if (t.view === 'players') return 'Eine Seite pro Spieler · +/− Tasten';
@@ -665,13 +708,124 @@ function endState(g) {
   return null;
 }
 
+/* ---------------- Spielseiten: Icons & Szenen (flache, geometrische Illustrationen) ---------------- */
+// 4-zackiger Stern als Pfad
+const st = (x, y, r) => `M${x} ${y - r}l${r * .3} ${r * .7} ${r * .7} ${r * .3}-${r * .7} ${r * .3}-${r * .3} ${r * .7}-${r * .3}-${r * .7}-${r * .7}-${r * .3} ${r * .7}-${r * .3}z`;
+const SUIT = {
+  heart: 'M0-5C0-13-12-13-12-4c0 8 12 13 12 18 0-5 12-10 12-18 0-9-12-9-12-1z',
+  spade: 'M0-14C-2-6-12-2-12 5c0 6 7 8 11 3l-3 8h8l-3-8c4 5 11 3 11-3 0-7-10-11-12-19z',
+  diamond: 'M0-14L10 0 0 14-10 0z',
+  club: 'M0-13a6 6 0 0 1 5.5 8.4A6 6 0 1 1 2.5 6L5 14h-10l2.5-8A6 6 0 1 1-5.5-4.6 6 6 0 0 1 0-13z'
+};
+const suit = (k, x, y, s, rot, fill, op = 1) => `<path d="${SUIT[k]}" transform="translate(${x} ${y}) rotate(${rot || 0}) scale(${s})" fill="${fill}" opacity="${op}"/>`;
+
+const GAME_ICON = {
+  wizard: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="32" cy="51" rx="25" ry="6.5" fill="#5a46a3"/>
+    <path d="M13 51c9-4 13-21 18-42 6 13 12 31 20 42z" fill="#7a5cc9"/>
+    <path d="M17 47c9-3 21-3 30 0l2 4c-11-3-22-3-34 0z" fill="#f6d27a"/>
+    <path d="${st(33, 31, 6)}" fill="#f6d27a"/>
+    <path d="${st(51, 15, 4.5)}" fill="#f6d27a"/><circle cx="13" cy="22" r="2.2" fill="#a99be8"/><circle cx="47" cy="30" r="1.6" fill="#f6d27a"/>
+  </svg>`,
+  romme: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <g transform="translate(32 57)">
+      <rect x="-13" y="-46" width="26" height="36" rx="4" fill="#e8684f" transform="rotate(-24)"/>
+      <rect x="-13" y="-48" width="26" height="36" rx="4" fill="#2f6f62"/>
+      <g transform="rotate(24)"><rect x="-13" y="-46" width="26" height="36" rx="4" fill="#fbf3e6"/>${suit('heart', 0, -29, .62, 0, '#e8684f')}</g>
+    </g>
+  </svg>`
+};
+
+const SCENE = {
+  wizard: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#2f2563"/>
+    <circle cx="80" cy="30" r="120" fill="#382c74"/>
+    <g fill="#f7eedc">
+      <circle cx="30" cy="40" r="1.8" opacity=".7"/><circle cx="140" cy="28" r="1.5" opacity=".6"/><circle cx="210" cy="50" r="2" opacity=".7"/>
+      <circle cx="360" cy="120" r="1.6" opacity=".6"/><circle cx="250" cy="22" r="1.4" opacity=".5"/><circle cx="110" cy="80" r="1.4" opacity=".5"/>
+      <path d="${st(180, 26, 6)}"/><path d="${st(42, 96, 4.5)}" opacity=".8"/><path d="${st(352, 34, 4)}" opacity=".8"/>
+    </g>
+    <circle cx="305" cy="70" r="34" fill="#f6d27a"/><circle cx="322" cy="58" r="30" fill="#2f2563"/>
+    <path d="M0 190l55-48 50 32 62-56 72 60 58-44 93 50v66H0z" fill="#45388a"/>
+    <path d="M0 214c70-26 130-28 190-10s120 10 200-6v52H0z" fill="#5a46a3"/>
+    <rect x="52" y="118" width="34" height="98" fill="#241c4f"/>
+    <path d="M45 121l24-46 24 46z" fill="#7a5cc9"/><path d="M69 75v-14l12 5-12 5" fill="#f6d27a"/>
+    <rect x="64" y="138" width="10" height="14" rx="5" fill="#f6d27a"/><rect x="64" y="168" width="10" height="14" rx="5" fill="#f6d27a" opacity=".6"/>
+    <path d="M0 234c110-22 220-18 300-4s70 0 90-4v24H0z" fill="#241c4f"/>
+    <path d="M92 98c40-60 100-60 112-20" fill="none" stroke="#f6d27a" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0 12"/>
+    <g transform="translate(206 128) rotate(-14)">
+      <rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#7a5cc9"/>
+      <path d="${st(0, 0, 13)}" fill="#f6d27a"/>
+    </g>
+    <g transform="translate(258 116) rotate(12)">
+      <rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#3fb5a3"/>
+      <circle cx="0" cy="-4" r="9" fill="#f7eedc"/><path d="M-11 14q11-10 22 0" fill="none" stroke="#f7eedc" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <path d="${st(236, 72, 6)}" fill="#f6d27a"/><circle cx="292" cy="160" r="2.5" fill="#f6d27a"/><circle cx="178" cy="170" r="2" fill="#a99be8"/>
+  </svg>`,
+  romme: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#e8684f"/>
+    <path d="M-20 70L130-20h90L-20 140z" fill="#df5c45"/><path d="M170 250L390 110v80l-100 60z" fill="#df5c45"/>
+    <circle cx="322" cy="54" r="30" fill="#f6c565"/>
+    ${suit('heart', 58, 72, 2.4, -14, '#fbf3e6', .95)}
+    ${suit('spade', 340, 150, 1.7, 14, '#2f3a5c')}
+    ${suit('diamond', 128, 140, 1.25, 8, '#f6c565')}
+    ${suit('club', 236, 40, 1.35, -10, '#2f6f62')}
+    <circle cx="190" cy="92" r="3" fill="#fbf3e6" opacity=".7"/><circle cx="24" cy="170" r="2.5" fill="#fbf3e6" opacity=".7"/><circle cx="286" cy="110" r="2.5" fill="#2f3a5c" opacity=".6"/>
+    <path d="M0 192q195-40 390 0v58H0z" fill="#2f6f62"/>
+    <path d="M0 192q195-40 390 0" fill="none" stroke="#3f8a7a" stroke-width="7"/>
+    <ellipse cx="195" cy="203" rx="80" ry="8" fill="#000" opacity=".15"/>
+    ${[['A', 'heart', '#e8684f', -30], ['K', 'spade', '#2f3a5c', -10], ['D', 'diamond', '#e8684f', 10], ['B', 'club', '#2f6f62', 30]].map(([l, k, c, a]) => `
+    <g transform="translate(195 206) rotate(${a})">
+      <rect x="-25" y="-96" width="50" height="72" rx="8" fill="#fbf3e6"/>
+      <text x="-19" y="-80" font-family="Jost, sans-serif" font-weight="600" font-size="13" fill="${c}">${l}</text>
+      ${suit(k, -14, -64, .42, 0, c)}
+    </g>`).join('')}
+  </svg>`
+};
+
+const RULES = {
+  wizard: [
+    'Jede Runde eine Karte mehr. Rundenzahl = 60 Karten ÷ Spieler.',
+    'Vor dem Spielen sagt jeder an, wie viele Stiche er macht.',
+    'Richtig angesagt: 20 Punkte + 10 je Stich. Daneben: −10 je Stich Abweichung.',
+    'Die App führt durch Ansagen und Stiche: ein Tipp pro Spieler.'
+  ],
+  romme: [
+    'Wer zuerst alle Karten ablegt, ist raus und schreibt 0.',
+    'Alle anderen notieren die Punkte ihrer Handkarten, z. B. Bild 10, Ass 11, Joker 20.',
+    'Hand-Rommé (alles auf einmal abgelegt): Die Punkte der anderen zählen doppelt, dafür gibt es die Taste ×2.',
+    'Erreicht jemand die Grenze, endet das Spiel. Die wenigsten Punkte gewinnen.'
+  ]
+};
+
+function renderTplPage() {
+  const t = S.tpl;
+  show('s-tpl');
+  $('#tpl-hero').innerHTML = SCENE[t.scene]() + `<button class="tpl-back" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>`;
+  const opts = (t.options || []).map(o => `<div class="field"><label>${esc(o.label)}</label><div class="seg">${o.choices.map((c, k) =>
+    `<button data-act="tpl-opt" data-o="${o.key}" data-k="${k}" aria-pressed="${JSON.stringify(t[o.key]) === JSON.stringify(c.v)}">${esc(c.l)}</button>`).join('')}</div></div>`).join('');
+  $('#tpl-body').innerHTML = `
+    <div class="tpl-badge" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</div>
+    <div><h1>${esc(t.name)}</h1><p class="lead">${esc(t.sub || describe(t))}</p></div>
+    <div class="group"><div class="eyebrow">So wird gezählt</div>
+      <ul class="rules">${RULES[t.scene].map((x, k) => `<li style="--c:${COLORS[k % COLORS.length]}">${esc(x)}</li>`).join('')}</ul></div>
+    ${opts}`;
+  const last = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n));
+  const ok = last.length >= (t.min || 1) && last.length <= (t.max || 99);
+  $('#tpl-dock').innerHTML = ok
+    ? `<button class="secondary" data-act="tpl-players">Spieler</button><button class="primary" data-act="tpl-start">Los · ${last.length} Spieler</button>`
+    : `<button class="primary" data-act="tpl-players">Spieler wählen</button>`;
+  $('#s-tpl .scroll').scrollTop = 0;
+}
+
 /* ---------------- Hell / Dunkel ---------------- */
 const curTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 function renderThemeBtn() { const b = $('#theme-btn'); if (b) b.innerHTML = curTheme() === 'dark' ? ICON.sun : ICON.moon; }
 { const t = store.get('theme', null); if (t) document.documentElement.dataset.theme = t; }
 
 /* ---------------- Navigation ---------------- */
-function show(id) { ['s-home', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
+function show(id) { ['s-home', 's-tpl', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
 
 function renderHome() {
   show('s-home'); renderThemeBtn();
@@ -683,12 +837,16 @@ function renderHome() {
       <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind !== 'cats' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></span>
       <span class="go-pill">Weiter</span>
     </button></div>` : '';
-  $('#tpl-list').innerHTML = templates().map((t, k) => `
+  const CHEV = '<svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
+  const row = (t, k) => `
     <button class="row tpl" data-act="pick-tpl" data-id="${t.id}">
-      <span class="tdot" style="--c:${COLORS[k % COLORS.length]}"></span>
+      ${t.icon ? `<span class="ticon" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</span>` : `<span class="tdot" style="--c:${COLORS[k % COLORS.length]}"></span>`}
       <span class="t"><b>${esc(t.name)}</b><small>${esc(describe(t))}</small></span>
-      ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : '<svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>'}
-    </button>`).join('');
+      ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : CHEV}
+    </button>`;
+  const all = templates(), games = all.filter(t => t.page || t.game);
+  $('#tpl-list').innerHTML = games.map(row).join('');
+  $('#tpl-list2').innerHTML = all.filter(t => !games.includes(t)).map((t, k) => row(t, k + 2)).join('');
 }
 
 function renderPlayers() {
@@ -708,7 +866,7 @@ function renderPlayers() {
 function newGame(t, names) {
   const g = {
     id: uid(), createdAt: now(), updatedAt: now(), templateId: t.id, name: t.name,
-    kind: t.kind, win: t.win, end: { ...t.end }, view: t.view || 'grid',
+    kind: t.kind, win: t.win, end: { ...t.end }, view: t.view || 'grid', quick: t.quick || null,
     players: names.map((n, i) => ({ id: uid(), name: n, color: COLORS[i % COLORS.length] })),
     rounds: [], cells: {}
   };
@@ -724,8 +882,9 @@ function newGame(t, names) {
 
 /* ---------------- Spiel-Ansicht ---------------- */
 function renderHead() {
-  const g = S.game;
+  const g = S.game, bt = BUILTIN.find(t => t.id === g.templateId && t.icon), ic = $('#g-ic');
   $('#g-title').textContent = g.name;
+  ic.hidden = !bt; if (bt) { ic.style.setProperty('--tc', bt.tint); ic.innerHTML = GAME_ICON[bt.icon]; }
   const e = g.end.type === 'target' ? ` · Ziel ${g.end.value}` : g.end.type === 'rounds' ? ` von ${g.end.value}` : '';
   if (isBids(g)) { const ri = curRoundIdx(g); $('#g-sub').textContent = `Runde ${ri + 1} von ${g.end.value} · ${wizPhase(g, g.rounds[ri]) === 'bid' ? 'Ansagen' : 'Stiche'}`; return; }
   $('#g-sub').textContent = g.kind === 'cats' ? `Bonus ab 63 · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}` :
@@ -939,6 +1098,8 @@ function renderPanel() {
     const c = DICE.find(x => x.id === P.ref);
     const vals = c ? (c.quick || (c.fixed ? [c.fixed] : [])).filter(x => x !== 0) : [];
     quick = `<div class="quick">${vals.map(x => `<button data-act="pp-set" data-v="${x}" ${off}>${x}</button>`).join('')}<button class="strike" data-act="pp-set" data-v="0" ${off}>Streichen · 0</button></div>`;
+  } else if (g.quick === 'romme') {
+    quick = `<div class="quick"><button class="strike" data-act="pp-set" data-v="0" ${off}>Raus · 0</button>${[5, 10, 20].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>+${d}</button>`).join('')}<button data-act="pp-mul" ${off}>×2</button></div>`;
   } else if (isBids(g)) {
     const cards = g.rounds.findIndex(r => r.id === P.ref) + 1;
     quick = `<div class="quick">${Array.from({ length: cards + 1 }, (_, k) => `<button data-act="pp-set" data-v="${k}" data-go="1">${k}</button>`).join('')}</div>`;
@@ -1186,11 +1347,19 @@ function toast(msg) {
 const A = {
   'pick-tpl'(el, ev) {
     if (ev.target.closest('[data-act="del-tpl"]')) return A['del-tpl'](ev.target.closest('[data-act="del-tpl"]'));
-    S.tpl = templates().find(t => t.id === el.dataset.id);
+    S.tpl = { ...templates().find(t => t.id === el.dataset.id) };
+    if (S.tpl.page) return renderTplPage();
     const last = store.get('lastPlayers', null);
     S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : [];
     renderPlayers();
   },
+  'tpl-opt'(el) {
+    const o = S.tpl.options.find(x => x.key === el.dataset.o); S.tpl[o.key] = o.choices[+el.dataset.k].v; renderTplPage();
+  },
+  'tpl-players'() { const last = store.get('lastPlayers', null); S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : []; renderPlayers(); },
+  'tpl-start'() { S.sel = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n)); A.start(); },
+  'pl-back'() { if (S.tpl && S.tpl.page) renderTplPage(); else renderHome(); },
+  'pp-mul'() { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) * 2); P.fresh = false; ppWrite(); ppUpdate(); },
   'del-tpl'(el) {
     store.set('tpls', store.get('tpls', []).filter(t => t.id !== el.dataset.id)); renderHome(); toast('Vorlage gelöscht');
   },
