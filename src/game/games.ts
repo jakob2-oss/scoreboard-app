@@ -67,19 +67,19 @@ GAMES.push(
     template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
       params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
     acc: '#f0b13e', tint: '#fbecc9', group: 'result',
-    text: 'Gezählt wird im Spiel. Hier haltet ihr nur fest, <b>wie viele Siegpunkte</b> jeder am Ende hatte, damit die Partie in eure Bilanz einfließt.'
+    text: 'Am Ende trägt jeder seine <b>Siegpunkte</b> ein.'
   },
   {
     template: { key: 'monopoly', version: 1, name: 'Monopoly', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
     acc: '#3fb39b', tint: '#daf1e6', group: 'result',
-    text: 'Hier zählt nur die <b>Platzierung</b>: Wer zuletzt übrig bleibt, ist Erster. Tragt für jeden den Platz ein, dann landet die Partie in eurer Bilanz.'
+    text: 'Am Ende trägt jeder seinen <b>Platz</b> ein. Wer zuletzt übrig bleibt, ist Erster.'
   },
   {
     template: { key: 'ergebnis', version: 1, name: 'Anderes Spiel', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
     acc: '#9a7ad6', tint: '#e7e4f7', group: 'result',
-    text: 'Für jedes Spiel, bei dem ihr nichts mitschreiben müsst: Tragt am Ende nur die <b>Platzierung</b> ein.'
+    text: 'Am Ende trägt jeder seinen <b>Platz</b> ein.'
   }
 );
 

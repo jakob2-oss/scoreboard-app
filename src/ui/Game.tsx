@@ -147,7 +147,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
         </thead>
         <tbody>
           {rounds.map((r, ri) => (
-            <tr key={r.id} data-ro={isResultOnly(g) || undefined} className={isBids(g) && ri === currentRoundIndex(g) ? 'cur' : ''}>
+            <tr key={r.id} className={isBids(g) && ri === currentRoundIndex(g) ? 'cur' : ''}>
               <th className="rn">{ri + 1}</th>
               {players.map(p => {
                 const v = scoreOf(g, r.id, p.id);
@@ -194,7 +194,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
-        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field === 'bid' ? `Ansagen Runde ${step.roundNo}` : step.field === 'tricks' ? `Stiche Runde ${step.roundNo}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`} →</button>}
+        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field === 'bid' ? `Ansagen Runde ${step.roundNo}` : step.field === 'tricks' ? `Stiche Runde ${step.roundNo}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
   );
 }
@@ -217,7 +217,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         <div className="score-pill"><small>Punkte</small><b>{fmt(t[p.id])}</b></div>
       </div>
       {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : <div className="pp-entry">
-        <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : <><div className="lbl">Runde {roundNumber(g, ref)}</div><small>{ref === 'new' ? 'neue Runde' : 'Punkte dieser Runde'}</small></>}</div>
+        <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : <><div className="lbl">Runde {roundNumber(g, ref)}</div></>}</div>
         <span className={'val' + (value === null ? ' ph' : '') + (value !== null && value < 0 ? ' neg' : '')}>
           {value === null ? (edit?.buf === '-' ? '−' : '0') : fmt(value)}
         </span>
@@ -229,9 +229,9 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
           if (isBids(g)) {
             const b = fieldOf(g, r.id, p.id, 'bid'), t2 = fieldOf(g, r.id, p.id, 'tricks');
             if (k > currentRoundIndex(g) && b === null) return null;
-            return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1} {b ?? '–'}/{t2 ?? '–'}</small><b>{v === null ? '·' : (v > 0 ? '+' : '') + fmt(v)}</b></button>;
+            return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1} {b ?? '–'}/{t2 ?? '–'}</small><b>{v === null ? '–' : (v > 0 ? '+' : '') + fmt(v)}</b></button>;
           }
-          return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1}</small><b>{v === null ? '·' : fmt(v)}</b></button>;
+          return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1}</small><b>{v === null ? '–' : fmt(v)}</b></button>;
         })}
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
       </div>

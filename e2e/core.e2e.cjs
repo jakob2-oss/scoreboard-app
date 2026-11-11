@@ -97,7 +97,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Punkt springt zu Ben', (await page()) === 1);
   check('Ben: neue Runde 2', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 2');
   await p.click('section[aria-label="Ben"] .pp-hist button >> nth=0');
-  check('Verlauf R1 antippen → Runde 1', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 1');
+  check('Verlauf R1 antippen öffnet Runde 1', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 1');
   await p.evaluate(() => { const s = document.querySelector('.pp-swipe'); s.scrollLeft = s.clientWidth * 3; });
   await p.waitForTimeout(500);
   check('Wischen zu Clara übernimmt Seite', (await page()) === 2);

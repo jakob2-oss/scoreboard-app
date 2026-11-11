@@ -16,6 +16,9 @@ Gespräche hinaus gelten muss. Details stehen in `docs/`.
 - Keine Trennpunkte „·“ zwischen Textteilen. Lieber ganze Wörter: „Los mit 3 Spielern“, „Runde 2 von 10“.
 - Keine Untertitel, die nur beschreiben, was ohnehin sichtbar ist.
 - Regeln als kurzer Fließtext mit Hervorhebungen, nicht als Stichpunktliste.
+- Keine Pfeile „→“ in Knöpfen, keine Funkel-Sterne als Deko, keine Etiketten wie „Beispiel“.
+- Leere Zustände knapp benennen („Noch niemand ausgewählt“), nicht erklären, was zu tun ist.
+- Keine Sätze, die den Nutzen der App erklären („damit die Partie in eure Bilanz einfließt“).
 
 ## Design
 Festgeschrieben in `docs/DESIGN.md`: Hell „Papier & Indigo“, Dunkel „Mitternacht“, Schrift Jost,

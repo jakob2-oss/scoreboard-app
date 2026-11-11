@@ -21,10 +21,9 @@ export function GameInfo() {
       <div className="rule-card" style={{ ['--acc' as string]: def.acc }}>
         <p dangerouslySetInnerHTML={{ __html: def.text }} />
         {def.example && <div className="rule-ex">
-          <span className="lbl">Beispiel</span>
           {def.example.map(([v, l], i) => (
             <Fragment key={l}>
-              {i > 0 && <span className="ex-op">→</span>}
+              {i > 0 && <span className="ex-op" aria-hidden="true" />}
               <div className="ex-t"><b>{v}</b><small>{l}</small></div>
             </Fragment>
           ))}

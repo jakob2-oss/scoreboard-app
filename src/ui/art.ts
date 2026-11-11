@@ -11,7 +11,7 @@ export const FREE_ICON = `<svg viewBox="0 0 64 64" aria-hidden="true">
     <path d="M19 36h22M19 42h22M19 48h22" stroke="#dcd6e8" stroke-width="2" stroke-linecap="round"/>
   </g>
   <g transform="translate(46 40) rotate(130)"><rect x="-17" y="-4.5" width="6" height="9" rx="2.5" fill="#f19aa9"/><rect x="-12" y="-4.5" width="22" height="9" fill="#f0b13e"/><path d="M10-4.5l8 4.5-8 4.5z" fill="#f6dcb0"/><path d="M15.5-1.4l2.5 1.4-2.5 1.4z" fill="#2e2b4f"/></g>
-  <path d="${st(51, 12, 5)}" fill="#f0b13e"/><circle cx="10" cy="14" r="2" fill="#9a7ad6"/>
+  <circle cx="51" cy="13" r="3" fill="#f0b13e"/><circle cx="10" cy="14" r="2" fill="#9a7ad6"/>
 </svg>`;
 
 /** Szene „Freies Spiel“: leere Zettel auf Indigo mit Farbpunkten */
@@ -19,7 +19,7 @@ export const FREE_SCENE = `<svg class="scene" viewBox="0 0 390 250" preserveAspe
   <rect width="390" height="250" fill="#e4def2"/>
   <path d="M-20 60L110-20h70L-20 120z" fill="#ece7f7"/><path d="M250 270L410 100v70L320 270z" fill="#ece7f7"/>
   <circle cx="195" cy="270" r="175" fill="#d9d1ef"/><circle cx="195" cy="270" r="125" fill="#cfc5ea"/>
-  <g fill="#ffffff" opacity=".85"><path d="${st(48, 46, 6)}"/><path d="${st(338, 58, 5)}"/><path d="${st(300, 22, 4)}"/></g>
+  <g fill="#ffffff" opacity=".85"><circle cx="48" cy="46" r="3.5"/><circle cx="338" cy="58" r="3"/><circle cx="300" cy="22" r="2.5"/></g>
   <g><circle cx="86" cy="104" r="7" fill="#ef7a5c"/><circle cx="62" cy="150" r="5" fill="#f0b13e"/><circle cx="110" cy="62" r="4" fill="#3fb39b"/>
     <circle cx="318" cy="118" r="7" fill="#3fb39b"/><circle cx="344" cy="160" r="5" fill="#e2709a"/><circle cx="276" cy="70" r="4" fill="#f0b13e"/>
     <circle cx="150" cy="30" r="3.5" fill="#5fa8d3"/><circle cx="236" cy="28" r="3.5" fill="#e2709a"/></g>
@@ -104,7 +104,7 @@ export const GAME_ART: Record<string, { icon: string; scene: string }> = {
 const ICON = (body: string) => `<svg viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`;
 const sky = (bg: string, band: string, ground: string, sun: string) => `${SCENE_OPEN}<rect width="390" height="250" fill="${bg}"/>
   <path d="M-20 70L130-20h90L-20 140z" fill="${band}"/><path d="M190 270L410 90v80L300 270z" fill="${band}"/><circle cx="318" cy="56" r="28" fill="${sun}"/>
-  <g fill="#fff" opacity=".8"><path d="${st(60, 44, 5)}"/><path d="${st(250, 30, 4)}"/><circle cx="150" cy="60" r="2.5"/><circle cx="350" cy="130" r="2.5"/></g>
+  <g fill="#fff" opacity=".8"><circle cx="60" cy="44" r="3"/><circle cx="250" cy="30" r="2.5"/><circle cx="150" cy="60" r="2.5"/><circle cx="350" cy="130" r="2.5"/></g>
   <path d="M0 200q195-36 390 0v50H0z" fill="${ground}"/><ellipse cx="195" cy="212" rx="110" ry="8" fill="#000" opacity=".14"/>`;
 const unoCard = (x: number, y: number, rot: number, c: string, t: string, w = 46) => `<g transform="translate(${x} ${y}) rotate(${rot})">
   <rect x="${-w / 2}" y="${-w * .75}" width="${w}" height="${w * 1.5}" rx="${w * .16}" fill="#fbf6ec"/><rect x="${-w / 2 + 4}" y="${-w * .75 + 4}" width="${w - 8}" height="${w * 1.5 - 8}" rx="${w * .12}" fill="${c}"/>
