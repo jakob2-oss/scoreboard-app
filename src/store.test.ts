@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { liveRounds, seated, totals } from './game/engine';
+import { endState, liveRounds, ranking, seated, totals } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Template } from './model/types';
@@ -299,5 +299,44 @@ describe('Wizard', () => {
     a.openPad(liveRounds(st.get().game!)[0].id, 'id3');
     expect(st.get().pad).toBe(false);
     expect(st.get().page).toBe(2);
+  });
+});
+
+describe('Weitere Spiele', () => {
+  async function play(key: string, names = ['A', 'B', 'C']) {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); a.toPlayers();
+    for (const n of names) await a.addPlayer(n);
+    a.start();
+    return { st, a };
+  }
+  it('alle festen Spiele haben eindeutige Schlüssel und gültige Spielerzahlen', () => {
+    const keys = GAMES.map(g => g.template.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const g of GAMES) expect(g.template.players.min).toBeLessThanOrEqual(g.template.players.max);
+  });
+  it('Monopoly: nur Platzierung, eine Eingabe je Spieler, dann Ergebnis', async () => {
+    const { st, a } = await play('monopoly');
+    expect(liveRounds(st.get().game!)).toHaveLength(1);
+    a.roundGo(); a.setValue(2); a.next(); a.setValue(1); a.next(); a.setValue(3); a.next();
+    expect(st.get().toast?.text).toBe('Ergebnis komplett');
+    expect(ranking(st.get().game!).map(r => r.player.name)).toEqual(['B', 'A', 'C']);
+    expect(endState(st.get().game!)?.done).toBe(true);
+    a.roundGo();
+    expect(st.get().sheet).toBe('result');
+  });
+  it('Siedler: höchste Siegpunkte gewinnen', async () => {
+    const { st, a } = await play('siedler');
+    a.roundGo(); a.setValue(10); a.next(); a.add(2); a.add(2); a.add(1); a.next(); a.digit(7); a.next();
+    expect(totals(st.get().game!)).toEqual({ id1: 10, id2: 5, id3: 7 });
+    expect(ranking(st.get().game!)[0].player.name).toBe('A');
+  });
+  it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
+    const u = await play('uno', ['A', 'B']);
+    u.a.roundGo(); u.a.digit(5); u.a.digit(0); u.a.digit(0); u.a.next(); u.a.digit(0); u.a.next();
+    expect(endState(u.st.get().game!)?.done).toBe(true);
+    const s = await play('scrabble', ['A', 'B']);
+    s.a.roundGo(); s.a.add(10); s.a.add(1); s.a.add(1); s.a.mul(3);
+    expect(totals(s.st.get().game!).id1).toBe(36);
   });
 });

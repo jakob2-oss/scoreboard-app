@@ -32,6 +32,10 @@ function entryOf(s: GameState, roundId: string, playerId: string): Entry | undef
   return s.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
 }
 
+/** Spiele, bei denen nur das Endergebnis notiert wird */
+export const isResultOnly = (s: GameState) => !!s.game.rules.params?.resultOnly;
+export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
+
 export type BidField = 'bid' | 'tricks';
 export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
 

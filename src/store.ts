@@ -4,7 +4,7 @@ import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/tem
 import { realClock, type Clock } from './lib/id';
 import { PLAYER_COLORS } from './lib/color';
 import {
-  bidPhase, createGame, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  bidPhase, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -219,7 +219,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const done = e.ref !== 'new' && roundFull(g, e.ref);
       if (state.pad) { set({ pad: false, edit: null }); return; }
       set({ page: -1, edit: null });
-      if (done) toast(`Runde ${no} komplett`);
+      if (done) toast(isResultOnly(g) ? 'Ergebnis komplett' : `Runde ${no} komplett`);
     },
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;

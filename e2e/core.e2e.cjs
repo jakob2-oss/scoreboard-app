@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('Wizard, Rommé, Skyjo und Freies Spiel, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 4 && !(await p.isVisible('#my-games')));
+  check('neun Einträge (acht Spiele und Freies Spiel), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 9 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
   // Freies Spiel einrichten
@@ -197,6 +197,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Wizard: weiter mit Ansagen Runde 2', (await raw('#round-go')).startsWith('Ansagen Runde 2'));
   await shot('14-wizard-ov');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+
+  // Nur Ergebnis: Monopoly mit Platzierung
+  for (const k of ['uno', 'scrabble', 'siedler', 'ergebnis']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
+  await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
+  check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
+  check('Monopoly: Untertitel „Endstand“', (await raw('.top .sub')) === 'Endstand');
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
+  await shot('21-monopoly-page');
+  for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
+  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b') && (await raw('.dock .primary')) === 'Ergebnis');
+  await shot('22-monopoly-ov');
+  await p.click('.dock .primary');
+  check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
+  await p.click('.bsheet .primary'); await p.waitForTimeout(300);
 
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 

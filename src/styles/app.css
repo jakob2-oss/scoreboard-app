@@ -61,3 +61,4 @@ body { margin: 0; }
 .wz-hint.warn { color: var(--danger); font-weight: 600; }
 .grid td.cell.pend { background: var(--surface); }
 .pp-panel .quick.bids { justify-content: flex-start; }
+.pp-hist.hide { display: none; }

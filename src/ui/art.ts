@@ -99,3 +99,44 @@ export const GAME_ART: Record<string, { icon: string; scene: string }> = {
       ${numCard(84, 138, -16, -2, '#3b4fa8')}${numCard(142, 112, -6, 0, '#4aa3d8')}${numCard(200, 132, 4, 5, '#4fae5e')}${numCard(258, 108, 12, 9, '#f2b93b')}${numCard(312, 140, 20, 12, '#e0543a')}</svg>`
   }
 };
+
+// ---------------------------------------------------------------- Weitere Spiele (kompakte Szenen)
+const ICON = (body: string) => `<svg viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`;
+const sky = (bg: string, band: string, ground: string, sun: string) => `${SCENE_OPEN}<rect width="390" height="250" fill="${bg}"/>
+  <path d="M-20 70L130-20h90L-20 140z" fill="${band}"/><path d="M190 270L410 90v80L300 270z" fill="${band}"/><circle cx="318" cy="56" r="28" fill="${sun}"/>
+  <g fill="#fff" opacity=".8"><path d="${st(60, 44, 5)}"/><path d="${st(250, 30, 4)}"/><circle cx="150" cy="60" r="2.5"/><circle cx="350" cy="130" r="2.5"/></g>
+  <path d="M0 200q195-36 390 0v50H0z" fill="${ground}"/><ellipse cx="195" cy="212" rx="110" ry="8" fill="#000" opacity=".14"/>`;
+const unoCard = (x: number, y: number, rot: number, c: string, t: string, w = 46) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-w * .75}" width="${w}" height="${w * 1.5}" rx="${w * .16}" fill="#fbf6ec"/><rect x="${-w / 2 + 4}" y="${-w * .75 + 4}" width="${w - 8}" height="${w * 1.5 - 8}" rx="${w * .12}" fill="${c}"/>
+  <ellipse rx="${w * .34}" ry="${w * .5}" transform="rotate(30)" fill="#fbf6ec"/><text y="${w * .14}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="${w * .42}" fill="${c}">${t}</text></g>`;
+const tile = (x: number, y: number, rot: number, l: string, s = 40) => `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s * 1.08}" rx="${s * .16}" fill="#d9b98a"/>
+  <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .16}" fill="#f6e3bf"/><text y="${s * .2}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="${s * .56}" fill="#3a2f22">${l}</text></g>`;
+const hex = (x: number, y: number, r: number, c: string) => `<path d="M${x} ${y - r}l${r * .87} ${r * .5}v${r}l${-r * .87} ${r * .5}l${-r * .87} ${-r * .5}v${-r}z" fill="${c}"/>`;
+const house = (x: number, y: number, s: number, c: string, roof: string) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-12" y="-8" width="24" height="18" fill="${c}"/><path d="M-16-8L0-22 16-8z" fill="${roof}"/></g>`;
+const podium = (x: number, y: number, k: number) => `<g transform="translate(${x} ${y}) scale(${k})"><rect x="-30" y="-34" width="60" height="64" rx="6" fill="#f0b13e"/><rect x="-92" y="-14" width="60" height="44" rx="6" fill="#3fb39b"/><rect x="32" y="0" width="60" height="30" rx="6" fill="#ef7a5c"/>
+  <g font-family="Jost, sans-serif" font-weight="700" font-size="26" fill="#fff" text-anchor="middle"><text x="0" y="6">1</text><text x="-62" y="18">2</text><text x="62" y="24">3</text></g></g>`;
+
+Object.assign(GAME_ART, {
+  uno: {
+    icon: ICON(unoCard(22, 34, -14, '#3b6fc4', '7', 24) + unoCard(40, 32, 12, '#e0543a', '2', 24)),
+    scene: sky('#e0543a', '#d74a31', '#b93a24', '#f2c14e') + unoCard(120, 150, -22, '#3b6fc4', '7') + unoCard(170, 134, -8, '#4fae5e', '3') + unoCard(222, 134, 8, '#f2c14e', '9') + unoCard(272, 152, 22, '#e0543a', '0') + '</svg>'
+  },
+  scrabble: {
+    icon: ICON(tile(22, 32, -10, 'A', 24) + tile(42, 34, 8, 'Z', 24)),
+    scene: sky('#2f8f6a', '#379a74', '#236e52', '#f6c565') + ['W', 'O', 'R', 'T'].map((l, i) => tile(126 + i * 46, 168 - (i % 2) * 8, (i - 1.5) * 6, l)).join('') + tile(196, 108, -8, '★', 34) + '</svg>'
+  },
+  siedler: {
+    icon: ICON(hex(32, 22, 14, '#f0b13e') + hex(20, 43, 14, '#4fae5e') + hex(44, 43, 14, '#c9713f')),
+    scene: sky('#6fb7dd', '#7cc0e3', '#3f8fb5', '#f8d77a') + hex(150, 118, 34, '#f0b13e') + hex(210, 118, 34, '#4fae5e') + hex(180, 170, 34, '#c9713f') + hex(240, 170, 34, '#8aa0b4') + hex(120, 170, 34, '#7cb85a')
+      + house(150, 126, 1, '#e0543a', '#b93a24') + house(214, 178, .9, '#fbf6ec', '#3b6fc4') + '</svg>'
+  },
+  monopoly: {
+    icon: ICON(house(22, 38, 1, '#4fae5e', '#2f8f4a') + house(42, 38, 1.15, '#e0543a', '#b93a24')),
+    scene: sky('#2f9a6f', '#37a67a', '#1f7350', '#f6c565') + house(120, 186, 1.6, '#4fae5e', '#2f8f4a') + house(168, 180, 2, '#4fae5e', '#2f8f4a') + house(232, 172, 2.6, '#e0543a', '#b93a24')
+      + '<circle cx="290" cy="170" r="20" fill="#f6c565"/><text x="290" y="179" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="24" fill="#8a5a10">€</text></svg>'
+  },
+  ergebnis: {
+    icon: ICON(podium(32, 38, .3)),
+    scene: sky('#4644a6', '#4f4db5', '#34328a', '#f5c25b') + podium(195, 172, 1) + '</svg>'
+  }
+});

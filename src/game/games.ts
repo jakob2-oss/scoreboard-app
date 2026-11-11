@@ -9,7 +9,9 @@ export interface GameDef {
   /** Kurzer Fließtext, <b> markiert Kernpunkte */
   text: string;
   /** Rechenbeispiel als Kacheln: [Wert, Beschriftung] */
-  example: [string, string][];
+  example?: [string, string][];
+  /** Gruppe auf der Startseite: Rundenspiele oder Spiele, bei denen nur das Ergebnis zählt */
+  group?: 'result';
   endOptions?: { label: string; end: End }[];
 }
 
@@ -41,5 +43,44 @@ export const GAMES: GameDef[] = [
     endOptions: [{ label: 'Bei 100', end: { type: 'target', value: 100 } }, { label: 'Offen', end: { type: 'none' } }]
   }
 ];
+
+const add = (label: string, v: number) => ({ label, op: 'add' as const, v });
+const place = (n: number) => Array.from({ length: n }, (_, k) => ({ label: `${k + 1}.`, op: 'set' as const, v: k + 1 }));
+
+GAMES.push(
+  {
+    template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'target', value: 500 }, players: { min: 2, max: 8 },
+      params: { quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+    acc: '#e0543a', tint: '#fde2dc',
+    text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
+    example: [['7 + 20', 'Karten der anderen'], ['+50', 'schwarze Karte'], ['77', 'für den Sieger']],
+    endOptions: [{ label: 'Bei 500', end: { type: 'target', value: 500 } }, { label: 'Offen', end: { type: 'none' } }]
+  },
+  {
+    template: { key: 'scrabble', version: 1, name: 'Scrabble', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 4 },
+      params: { quick: [add('\u22121', -1), add('+1', 1), add('+10', 10), add('+50', 50), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }] } },
+    acc: '#2f8f6a', tint: '#dcf1e7',
+    text: 'Nach jedem Zug werden die <b>Buchstabenwerte des Worts</b> notiert, samt Prämienfeldern für doppelten oder dreifachen Wert. Wer alle sieben Steine auf einmal legt, bekommt <b>50 Punkte extra</b>. Am Ende zählen übrige Steine als Abzug.',
+    example: [['12', 'Wortwert'], ['×3', 'Prämienfeld'], ['36', 'Punkte']]
+  },
+  {
+    template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
+      params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
+    acc: '#d9952a', tint: '#fbecc9', group: 'result',
+    text: 'Gezählt wird im Spiel. Hier haltet ihr nur fest, <b>wie viele Siegpunkte</b> jeder am Ende hatte, damit die Partie in eure Bilanz einfließt.'
+  },
+  {
+    template: { key: 'monopoly', version: 1, name: 'Monopoly', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
+      params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
+    acc: '#2f9a6f', tint: '#daf1e6', group: 'result',
+    text: 'Hier zählt nur die <b>Platzierung</b>: Wer zuletzt übrig bleibt, ist Erster. Tragt für jeden den Platz ein, dann landet die Partie in eurer Bilanz.'
+  },
+  {
+    template: { key: 'ergebnis', version: 1, name: 'Anderes Spiel', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
+      params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
+    acc: '#4644a6', tint: '#e7e4f7', group: 'result',
+    text: 'Für jedes Spiel, bei dem ihr nichts mitschreiben müsst: Tragt am Ende nur die <b>Platzierung</b> ein.'
+  }
+);
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

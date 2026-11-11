@@ -47,7 +47,7 @@ export function Home() {
             <div className="group">
               <div className="eyebrow">Neues Spiel</div>
               <div className="list">
-                {GAMES.map(d => (
+                {GAMES.filter(d => !d.group).map(d => (
                   <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
                     <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
                     <span className="t"><b>{d.template.name}</b></span>
@@ -59,6 +59,18 @@ export function Home() {
                   <span className="t"><b>Freies Spiel</b></span>
                   <Chevron />
                 </button>
+              </div>
+            </div>
+            <div className="group">
+              <div className="eyebrow">Nur das Ergebnis</div>
+              <div className="list">
+                {GAMES.filter(d => d.group === 'result').map(d => (
+                  <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
+                    <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
+                    <span className="t"><b>{d.template.name}</b></span>
+                    <Chevron />
+                  </button>
+                ))}
               </div>
             </div>
             {templates.length > 0 && (

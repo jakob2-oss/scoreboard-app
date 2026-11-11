@@ -20,7 +20,7 @@ export function GameInfo() {
         : <button className="primary" id="to-players" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
       <div className="rule-card" style={{ ['--acc' as string]: def.acc }}>
         <p dangerouslySetInnerHTML={{ __html: def.text }} />
-        <div className="rule-ex">
+        {def.example && <div className="rule-ex">
           <span className="lbl">Beispiel</span>
           {def.example.map(([v, l], i) => (
             <Fragment key={l}>
@@ -28,7 +28,7 @@ export function GameInfo() {
               <div className="ex-t"><b>{v}</b><small>{l}</small></div>
             </Fragment>
           ))}
-        </div>
+        </div>}
       </div>
       {def.endOptions && (
         <div className="field">

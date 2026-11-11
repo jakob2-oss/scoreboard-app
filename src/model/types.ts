@@ -52,6 +52,10 @@ export interface TemplateParams {
   steps?: number[];
   /** Eigene Schnelltasten eines Spiels; ersetzt die aus steps abgeleiteten */
   quick?: QuickKey[];
+  /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
+  resultOnly?: boolean;
+  /** Was eingetragen wird, z. B. „Siegpunkte“ oder „Platz“ */
+  unit?: string;
   [key: string]: unknown;
 }
 
