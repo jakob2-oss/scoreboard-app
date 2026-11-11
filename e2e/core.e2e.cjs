@@ -37,6 +37,19 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const n of ['Anna', 'Ben', 'Clara']) { await p.fill('#add-name', n); await p.press('#add-name', 'Enter'); }
   await p.fill('#add-name', 'anna'); await p.press('#add-name', 'Enter');
   check('Doppelter Name wird nicht neu angelegt', (await p.locator('.chip').count()) === 3);
+  // Reihenfolge per Ziehen am Griff ändern und zurück
+  const order = async () => (await p.locator('.order-row .nm').allTextContents()).join(',');
+  const dragRow = async (i, rows) => {
+    const g = await p.locator('.order-row .grip').nth(i).boundingBox();
+    const h = (await p.locator('.order-row').nth(i).boundingBox()).height;
+    await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await p.mouse.down();
+    for (let k = 1; k <= 8; k++) await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + (rows * h * 1.05) * k / 8);
+    await p.mouse.up(); await p.waitForTimeout(100);
+  };
+  await dragRow(0, 2);
+  check('Ziehen: Anna ans Ende', (await order()) === 'Ben,Clara,Anna', await order());
+  await dragRow(2, -2);
+  check('Ziehen zurück: Anna vorn', (await order()) === 'Anna,Ben,Clara', await order());
   check('Startknopf zeigt 3 Spieler', (await raw('#start-btn')) === 'Los mit 3 Spielern');
   await shot('02-players');
   await p.click('#start-btn');

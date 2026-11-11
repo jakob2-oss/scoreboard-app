@@ -121,6 +121,17 @@ describe('Rückgängig', () => {
 });
 
 describe('Spieler', () => {
+  it('ändert die Reihenfolge am Tisch und startet in dieser Reihenfolge', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free);
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.moveSelected(0, 2);
+    expect(st.get().selected).toEqual(['id2', 'id3', 'id1']);
+    a.moveSelected(2, 0); a.moveSelected(1, 1); a.moveSelected(5, 0);
+    expect(st.get().selected).toEqual(['id1', 'id2', 'id3']);
+    a.moveSelected(2, 1); a.start();
+    expect(seated(st.get().game!).map(p => p.name)).toEqual(['A', 'C', 'B']);
+  });
   it('erkennt Namen ohne Groß-/Kleinschreibung und vergibt feste Farben', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
     await a.init(); a.pickTemplate(TPL.free);

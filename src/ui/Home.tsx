@@ -5,6 +5,9 @@ import { PLAYER_COLORS } from '../lib/color';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
+import { GameIcon } from './GamePage';
+import { FREE_ICON } from './art';
+import { FREE_TINT } from './Setup';
 
 /** „Anna, Ben und Clara“ */
 export function names(list: string[]): string {
@@ -44,7 +47,7 @@ export function Home() {
               <div className="eyebrow">Neues Spiel</div>
               <div className="list">
                 <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
-                  <span className="tdot plus" aria-hidden="true">+</span>
+                  <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
                   <span className="t"><b>Freies Spiel</b></span>
                   <Chevron />
                 </button>

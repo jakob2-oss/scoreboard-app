@@ -112,6 +112,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const known = new Set(state.players.map(p => p.id));
       set({ template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'players' });
     },
+    /** Reihenfolge am Tisch ändern (Drag-and-drop) */
+    moveSelected(from: number, to: number) {
+      const sel = [...state.selected];
+      if (from < 0 || from >= sel.length || to < 0 || to >= sel.length || from === to) return;
+      const [x] = sel.splice(from, 1); sel.splice(to, 0, x);
+      set({ selected: sel });
+    },
     toggleSelect(id: string) {
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
       set({ selected: sel });

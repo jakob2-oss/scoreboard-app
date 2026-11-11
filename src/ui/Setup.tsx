@@ -1,7 +1,10 @@
 import { act, useApp } from '../store';
 import { MAX_STEPS, STEP_CHOICES, fallbackName } from '../game/templates';
 import type { End } from '../model/types';
-import { IconBack } from './icons';
+import { GamePage } from './GamePage';
+import { FREE_ICON, FREE_SCENE } from './art';
+
+export const FREE_TINT = '#e7e4f7';
 
 /** Freies Spiel: Gewinner, Ende und Zählschritte festlegen */
 export function Setup() {
@@ -22,13 +25,9 @@ export function Setup() {
   const valid = endKind === 'none' || endValue > 0;
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
   return (
-    <section className="screen" id="s-setup">
-      <div className="top gutter">
-        <button className="icon-btn" onClick={() => a.goHome()} aria-label="Zurück"><IconBack /></button>
-        <div className="grow"><h2>Freies Spiel</h2></div>
-      </div>
-      <div className="scroll">
-        <div className="gutter setup-body">
+    <GamePage id="s-setup" scene={FREE_SCENE} icon={FREE_ICON} tint={FREE_TINT} title="Freies Spiel" onBack={() => a.goHome()}
+      dock={<button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>}>
+        <div className="setup-body">
           <div className="field">
             <label htmlFor="setup-name">Name</label>
             <input id="setup-name" value={setup.name} maxLength={28} autoComplete="off" placeholder={fallbackName()}
@@ -69,10 +68,6 @@ export function Setup() {
             <span className="t"><b>Als Vorlage speichern</b></span>
           </label>
         </div>
-      </div>
-      <div className="dock gutter">
-        <button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>
-      </div>
-    </section>
+    </GamePage>
   );
 }

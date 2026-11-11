@@ -31,3 +31,16 @@ body { margin: 0; }
 .switch-row small { color: var(--muted); font-size: 13px; }
 .top .text-btn { color: var(--primary); font-weight: 600; font-size: 15px; padding: 10px 6px; }
 @media (prefers-reduced-motion: reduce) { .switch-row input, .switch-row input::after { transition: none; } }
+
+/* Spielerreihenfolge per Drag-and-drop */
+.order { overflow: visible; }
+.order-row .grip { width: 36px; height: 40px; margin-left: -8px; display: grid; place-items: center; color: var(--muted); cursor: grab; touch-action: none; flex: none; }
+.order-row .grip svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; fill: none; }
+.order-row.dragging { position: relative; z-index: 2; background: var(--surface); border-radius: var(--r); box-shadow: 0 12px 28px -10px rgba(0, 0, 0, .35); }
+.order-row.dragging .grip { cursor: grabbing; }
+.order-row.dragging::before, .order-row.dragging + .row::before { opacity: 0; }
+
+/* Spielseiten */
+.tpl-title { text-align: center; }
+.tpl-body .setup-body { padding-top: 0; }
+.field input::placeholder { color: var(--muted); opacity: .7; }

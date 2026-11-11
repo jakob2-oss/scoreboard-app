@@ -21,6 +21,11 @@ npm run e2e      # Klicktest im Browser (Playwright)
 
 ## Dokumente
 
+- Arbeitsanweisungen für Claude: [CLAUDE.md](CLAUDE.md)
+- Stand & nächste Schritte: [docs/STATUS.md](docs/STATUS.md)
+- Entscheidungen: [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md)
+- Spielseiten: [docs/SPIELSEITEN.md](docs/SPIELSEITEN.md)
+
 - Briefing & Phasenplan: [docs/BRIEFING.md](docs/BRIEFING.md)
 - Design (festgeschrieben): [docs/DESIGN.md](docs/DESIGN.md)
 - Datenmodell: [docs/DATENMODELL.md](docs/DATENMODELL.md)
