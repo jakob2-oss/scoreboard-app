@@ -1,0 +1,1903 @@
+<title>Punktezettel Prototyp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap">
+<style>
+/* Konzept „Spieleabend“ im Stil flacher, geometrischer Illustrationen: ruhige Flächen,
+   keine Konturen, weiche Schatten. Hell = Papier & Indigo, Dunkel = Mitternacht.
+   Umschalter in der App setzt data-theme; ohne Wahl folgt die App dem System. */
+:root {
+  --bg: #f3f0ea; --surface: #ffffff;
+  --fill: rgba(46, 43, 79, .05); --fill-2: rgba(46, 43, 79, .10); --sep: rgba(46, 43, 79, .09);
+  --edge: transparent; --ink: #2e2b4f;
+  --fg: #2e2b4f; --muted: #7c7896; --faint: #d6d2e0;
+  --primary: #4644a6; --on-primary: #ffffff;
+  --sun: #f5c25b; --on-sun: #2e2b4f; --sky: #5fa8d3;
+  --good: #2f9a6f; --danger: #d9534a;
+  --scrim: rgba(46, 43, 79, .3);
+  --soft: 0 1px 2px rgba(46, 43, 79, .05), 0 8px 22px -10px rgba(46, 43, 79, .22);
+  --i-blob: #e4def2; --i-hill1: #cfe7df; --i-hill2: #a9d8c9; --i-tree: #6fbfa8; --i-star: #ffffff; --i-sun: #f5c25b;
+  --i-paper: #ffffff; --i-coral: #ef7a5c; --i-pencil: #ef7a5c; --i-pencil-2: #d9634a; --i-wood: #f6dcb0; --i-ink: #2e2b4f;
+  --i-eraser: #f19aa9; --i-metal: #c9c6dc; --i-die: #4644a6; --i-die-2: #34328a; --i-pip: #ffffff; --i-pawn: #3fb39b; --i-pawn-2: #2f9a84;
+  --f-body: "Nunito", -apple-system, system-ui, sans-serif;
+  --f-display: "Fredoka", "Nunito", -apple-system, system-ui, sans-serif;
+  --f-num: "Fredoka", "Nunito", -apple-system, system-ui, sans-serif;
+  --r: 16px; --r-lg: 24px;
+  --stick: var(--soft);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #272748; --surface: #33335c;
+    --fill: rgba(255, 255, 255, .07); --fill-2: rgba(255, 255, 255, .13); --sep: rgba(255, 255, 255, .08);
+    --ink: #1b1b33; --fg: #f7eedc; --muted: #a9a6c8; --faint: #4f4e7c;
+    --primary: #f07a4f; --on-primary: #ffffff; --sun: #f3b847; --on-sun: #2b2236; --sky: #5fb3c9;
+    --good: #6fcf97; --danger: #ff8a7a; --scrim: rgba(0, 0, 0, .6);
+    --soft: 0 1px 2px rgba(0, 0, 0, .15), 0 10px 24px -12px rgba(0, 0, 0, .55);
+    --i-blob: #34346a; --i-hill1: #2c5f73; --i-hill2: #2f8f86; --i-tree: #1f6b66; --i-star: #f7eedc; --i-sun: #f3b847;
+    --i-paper: #f7eedc; --i-coral: #f07a4f; --i-pencil: #f07a4f; --i-pencil-2: #d8603a; --i-wood: #f3d3a4; --i-ink: #1b1b33;
+    --i-eraser: #ee8aa0; --i-metal: #b9b6d6; --i-die: #3fb5a3; --i-die-2: #2f9384; --i-pip: #f7eedc; --i-pawn: #a99be8; --i-pawn-2: #8c7fd0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #272748; --surface: #33335c;
+  --fill: rgba(255, 255, 255, .07); --fill-2: rgba(255, 255, 255, .13); --sep: rgba(255, 255, 255, .08);
+  --ink: #1b1b33; --fg: #f7eedc; --muted: #a9a6c8; --faint: #4f4e7c;
+  --primary: #f07a4f; --on-primary: #ffffff; --sun: #f3b847; --on-sun: #2b2236; --sky: #5fb3c9;
+  --good: #6fcf97; --danger: #ff8a7a; --scrim: rgba(0, 0, 0, .6);
+  --soft: 0 1px 2px rgba(0, 0, 0, .15), 0 10px 24px -12px rgba(0, 0, 0, .55);
+  --i-blob: #34346a; --i-hill1: #2c5f73; --i-hill2: #2f8f86; --i-tree: #1f6b66; --i-star: #f7eedc; --i-sun: #f3b847;
+  --i-paper: #f7eedc; --i-coral: #f07a4f; --i-pencil: #f07a4f; --i-pencil-2: #d8603a; --i-wood: #f3d3a4; --i-ink: #1b1b33;
+  --i-eraser: #ee8aa0; --i-metal: #b9b6d6; --i-die: #3fb5a3; --i-die-2: #2f9384; --i-pip: #f7eedc; --i-pawn: #a99be8; --i-pawn-2: #8c7fd0;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.35; font-weight: 600;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+button:disabled { cursor: default; }
+.screen { height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; font-weight: 600; }
+.eyebrow { font-family: var(--f-display); font-size: 15px; color: var(--muted); font-weight: 500; padding-left: 4px; }
+
+/* ---------- Topbar ---------- */
+.top { display: flex; align-items: center; gap: 4px; padding-block: 6px; min-height: 56px; }
+.top .grow { flex: 1; min-width: 0; }
+.top h2 { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: none; margin-left: -8px; }
+.top .icon-btn:last-child { margin-left: 0; margin-right: -8px; }
+.icon-btn:active { background: var(--fill-2); }
+.icon-btn svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Karten & Listen (Sticker) ---------- */
+.list { background: var(--surface); border-radius: var(--r); border: 0; box-shadow: var(--stick); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; min-height: 58px; padding: 10px 16px; position: relative; }
+.row + .row { border-top: 1px solid var(--sep); }
+.row:active { background: var(--fill); }
+.row .t { flex: 1; min-width: 0; }
+.row .t b { display: block; font-family: var(--f-display); font-weight: 600; font-size: 17px; }
+.row .t small { display: block; color: var(--muted); font-size: 13px; font-weight: 600; }
+.chev { width: 9px; height: 14px; flex: none; stroke: var(--muted); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Start ---------- */
+.brand { padding-block: 14px 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.brand .hero-ill { width: 260px; max-width: 80%; height: auto; display: block; }
+.brand h1 { font-size: 36px; font-weight: 700; line-height: 1.05; margin-top: 4px; }
+.brand p { margin: 0; color: var(--muted); font-size: 15px; }
+.home-body { display: flex; flex-direction: column; gap: 22px; padding-block: 18px 32px; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.resume { display: flex; align-items: center; gap: 14px; text-align: left; width: 100%; background: var(--sun); color: var(--on-sun); border-radius: var(--r); padding: 14px 16px; border: 0; box-shadow: var(--stick); }
+.resume:active { transform: translateY(1px); box-shadow: var(--soft); }
+.resume .t { flex: 1; min-width: 0; }
+.resume small { display: block; font-size: 13px; opacity: .75; }
+.resume b { display: block; font-family: var(--f-display); font-size: 19px; font-weight: 600; }
+.resume .go-pill { flex: none; background: rgba(255, 255, 255, .92); color: #2e2b4f; border: 0; border-radius: 999px; padding: 6px 14px; font-family: var(--f-display); font-weight: 600; }
+.tpl .del { color: var(--danger); font-size: 14px; padding: 8px; margin: -8px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; text-align: center; }
+
+/* ---------- Spieler wählen ---------- */
+.players-body { display: flex; flex-direction: column; gap: 22px; padding-block: 8px 24px; }
+.order { display: flex; flex-direction: column; }
+.order .row { min-height: 52px; }
+.order-row .pos { font-family: var(--f-num); color: var(--muted); width: 16px; }
+.order-row .nm { flex: 1; font-family: var(--f-display); font-weight: 500; font-size: 17px; }
+.order-row .rm { color: var(--muted); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; margin-right: -6px; }
+.empty-order { color: var(--muted); font-size: 15px; padding: 16px; }
+.dot { width: 13px; height: 13px; border-radius: 50%; flex: none; background: var(--c, var(--muted)); border: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 0 16px; border-radius: 999px; background: var(--surface); border: 2px solid var(--edge); min-height: 42px; font-family: var(--f-display); font-weight: 500; font-size: 16px; }
+.chip[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); box-shadow: var(--soft); }
+.add-row { display: flex; gap: 8px; }
+.add-row input { flex: 1; min-width: 0; height: 48px; border-radius: 14px; border: 2px solid var(--edge); background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; }
+.add-row input::placeholder { color: var(--muted); }
+.add-row button { height: 48px; padding: 0 16px; border-radius: 14px; background: var(--surface); border: 2px solid var(--edge); font-family: var(--f-display); font-weight: 600; }
+
+/* ---------- Knöpfe ---------- */
+.dock { padding-block: 10px 12px; background: var(--bg); display: flex; gap: 10px; }
+.primary {
+  flex: 1; min-height: 54px; border-radius: var(--r); background: var(--primary); color: var(--on-primary);
+  font-family: var(--f-display); font-weight: 600; font-size: 19px; padding: 0 16px;
+  border: 0; box-shadow: var(--stick);
+}
+.primary:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--soft); }
+.primary:disabled { opacity: .4; box-shadow: none; }
+.primary, .pp-keys .go { box-shadow: 0 10px 20px -12px var(--primary); }
+.secondary { min-height: 54px; min-width: 54px; border-radius: var(--r); background: var(--surface); border: 0; box-shadow: var(--stick); font-family: var(--f-display); font-weight: 600; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.secondary:active:not(:disabled) { transform: translateY(1px); box-shadow: var(--soft); }
+.secondary:disabled { opacity: .4; box-shadow: none; }
+.secondary svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .primary:active, .secondary:active, .resume:active { transform: none; } }
+
+/* ---------- Zettel (Überblick) ---------- */
+.sheet-wrap { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; position: relative; }
+body.pad-open #g-dock, body.pad-open #banner { display: none !important; }
+table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user-select: none; -webkit-user-select: none; }
+.grid th, .grid td { border-bottom: 1px solid var(--sep); }
+.grid thead th { position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 8px 4px 10px; min-width: 72px; cursor: pointer; border-bottom: 1px solid var(--sep); }
+.grid thead th .pn { display: flex; align-items: center; justify-content: center; gap: 6px; font-family: var(--f-display); font-weight: 600; font-size: 15px; }
+.grid thead th .pn span { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grid thead th .bar { width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 0; flex: none; order: -1; }
+.grid .corner, .grid .rn, .grid .cat, .grid tfoot th { position: sticky; left: 0; z-index: 2; background: var(--bg); }
+.grid thead .corner { z-index: 4; min-width: 40px; color: var(--muted); cursor: default; font-family: var(--f-display); }
+.grid .rn { width: 40px; min-width: 40px; text-align: center; color: var(--muted); font-family: var(--f-num); font-size: 15px; font-weight: 500; }
+.grid .cat { text-align: left; font-family: var(--f-display); font-weight: 500; font-size: 16px; padding: 0 8px 0 max(16px, env(safe-area-inset-left, 0px)); min-width: 128px; white-space: nowrap; }
+.grid .cat small { display: block; color: var(--muted); font-family: var(--f-body); font-size: 12px; }
+.grid td.cell { height: 52px; text-align: center; font-family: var(--f-num); font-size: 22px; font-weight: 500; cursor: pointer; position: relative; }
+.grid td.cell:active { background: var(--fill); }
+.grid td.cell.empty::after { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--faint); vertical-align: middle; }
+.grid td.cell.neg { color: var(--danger); }
+.grid td.cell.zero { color: var(--muted); }
+.grid td.cell.active { background: var(--surface); box-shadow: inset 0 0 0 3px var(--sky); border-radius: 12px; }
+.grid td.cell small { display: block; font-family: var(--f-body); font-size: 11px; color: var(--muted); font-weight: 700; line-height: 1.1; }
+.grid td.cell.pend::after { content: none; }
+.grid tr.cur th, .grid tr.cur td { background: var(--fill); }
+.grid tr.cur th.rn { color: var(--fg); }
+.grid tr.calc th, .grid tr.calc td { height: 38px; font-size: 13px; color: var(--muted); }
+.grid tr.calc td { text-align: center; font-family: var(--f-num); font-size: 14px; }
+.grid tr.calc td.hit { color: var(--good); font-weight: 600; }
+.grid tr.sep th, .grid tr.sep td { border-top: 1px solid var(--sep); }
+.grid tfoot th, .grid tfoot td { position: sticky; bottom: 0; z-index: 2; background: var(--surface); border-bottom: 0; border-top: 1px solid var(--sep); }
+.grid tfoot th { z-index: 3; font-family: var(--f-display); font-size: 20px; text-align: center; }
+.grid tfoot td { text-align: center; padding: 8px 4px 10px; }
+.grid tfoot .tot { font-family: var(--f-num); font-size: 26px; font-weight: 600; display: block; line-height: 1.1; }
+.grid tfoot .meta { font-size: 12px; color: var(--muted); display: flex; justify-content: center; align-items: center; gap: 3px; margin-top: 2px; }
+.grid tfoot td.lead .meta { color: var(--fg); font-weight: 800; }
+.crown { width: 16px; height: 13px; flex: none; }
+.ov-hint { color: var(--muted); font-size: 13px; text-align: center; margin: 0; padding-block: 20px; }
+
+.banner { display: flex; align-items: center; gap: 12px; padding-block: 10px; background: var(--sun); color: var(--on-sun); border-top: 1px solid var(--sep); font-size: 14px; }
+.banner .grow { flex: 1; min-width: 0; }
+.banner b { font-family: var(--f-display); font-weight: 600; font-size: 16px; }
+.banner span { color: inherit !important; opacity: .75; }
+.banner button { background: var(--surface); color: var(--fg); border: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .14); border-radius: 999px; padding: 7px 14px; font-family: var(--f-display); font-weight: 600; flex: none; }
+
+/* ---------- Seitenleiste ---------- */
+.pp-page.ov { padding: 0; overflow: hidden; }
+.pp-page > .ov-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+.sheet-wrap.pp-mode { overflow: hidden; display: flex; flex-direction: column; }
+.pp-tabs { display: flex; justify-content: center; align-items: center; padding-block: 0 4px; flex: none; overflow-x: auto; scrollbar-width: none; }
+.pp-tabs::-webkit-scrollbar, .pp-swipe::-webkit-scrollbar { display: none; }
+.pp-tab { flex: none; display: grid; place-items: center; width: 26px; height: 28px; color: var(--faint); }
+.pp-tab .ov-ic { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; }
+.pp-tab .dot { width: 10px; height: 10px; background: var(--faint); border: 0; border-radius: 6px; transition: width .2s, background .2s; }
+.pp-tab[aria-current="true"] { color: var(--fg); }
+.pp-tab[aria-current="true"] .dot { width: 20px; background: var(--c); }
+@media (prefers-reduced-motion: reduce) { .pp-tab .dot { transition: none; } }
+
+/* ---------- Spielerseiten ---------- */
+.pp-swipe { flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.pp-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-block: 6px 16px; }
+.pp-page > * { flex: none; }
+.pp-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-inline: 2px; }
+.pp-hero > div { min-width: 0; }
+.pp-hero h3 { font-size: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 10px; }
+.pp-hero h3::before { content: ""; width: 16px; height: 16px; border-radius: 50%; background: var(--c); border: 0; flex: none; }
+.pp-hero .place { color: var(--muted); font-size: 14px; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.pp-hero .total { font-family: var(--f-num); font-size: 56px; font-weight: 600; line-height: .95; flex: none; }
+.pp-entry {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface);
+  border-radius: var(--r-lg); padding: 14px 16px; border: 0; box-shadow: 0 0 0 2px var(--c), var(--soft);
+}
+.pp-entry .lbl { font-family: var(--f-display); font-weight: 600; font-size: 18px; }
+.pp-entry small { color: var(--muted); font-size: 13px; }
+.pp-entry .val { font-family: var(--f-num); font-size: 44px; font-weight: 600; line-height: 1; }
+.pp-entry .val.ph { color: var(--faint); }
+.pp-entry .val.neg { color: var(--danger); }
+.pp-hist { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-hist button { min-width: 56px; padding: 5px 10px; border-radius: 12px; background: var(--surface); border: 2px solid var(--edge); display: flex; flex-direction: column; align-items: center; }
+.pp-hist button small { font-size: 11px; color: var(--muted); font-weight: 700; }
+.pp-hist button b { font-family: var(--f-num); font-size: 18px; font-weight: 500; }
+.pp-hist button[aria-current="true"] { box-shadow: 0 0 0 2px var(--c); }
+.pp-cats { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r); border: 0; overflow: hidden; flex: none; }
+.pp-cat { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px; text-align: left; width: 100%; font-family: var(--f-display); font-weight: 500; font-size: 16px; }
+.pp-cat + .pp-cat { border-top: 1px solid var(--sep); }
+.pp-cat small { color: var(--muted); font-family: var(--f-body); font-size: 12px; }
+.pp-cat .v { font-family: var(--f-num); font-size: 20px; }
+.pp-cat[aria-current="true"] { background: var(--fill); box-shadow: inset 4px 0 0 var(--c); }
+.pp-cat.calc { color: var(--muted); font-size: 14px; min-height: 36px; background: var(--fill); }
+.pp-cat.calc.hit { color: var(--good); }
+
+/* Wizard */
+.pp-entry.wz { flex-direction: column; align-items: stretch; gap: 12px; }
+.wz-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.wz-sc { font-family: var(--f-num); font-size: 26px; font-weight: 600; color: var(--good); }
+.wz-sc.neg { color: var(--danger); }
+.wz-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wz-f { background: var(--fill); border: 2px solid transparent; border-radius: var(--r); padding: 8px 14px; display: flex; justify-content: space-between; align-items: center; min-height: 62px; }
+.wz-f small { color: var(--muted); font-family: var(--f-display); font-size: 15px; font-weight: 500; }
+.wz-f b { font-family: var(--f-num); font-size: 36px; font-weight: 600; }
+.wz-f b.ph { color: var(--faint); }
+.wz-f[aria-pressed="true"] { background: var(--surface); border-color: transparent; box-shadow: 0 0 0 2px var(--c); }
+.wz-hint { font-size: 13px; color: var(--muted); }
+.wz-hint .warn { color: var(--danger); font-weight: 800; }
+
+/* ---------- Ziffernblock ---------- */
+.pp-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.quick::-webkit-scrollbar { display: none; }
+.quick button { flex: 1 0 auto; min-width: 44px; min-height: 40px; padding: 0 12px; border-radius: 999px; background: var(--surface); border: 2px solid var(--edge); font-family: var(--f-num); font-weight: 600; font-size: 17px; }
+.quick button:active:not(:disabled) { background: var(--sun); border-color: var(--ink); color: var(--on-sun); }
+.quick button.strike { color: var(--muted); font-family: var(--f-display); font-weight: 500; font-size: 15px; }
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.key { min-height: 50px; border-radius: 14px; background: var(--surface); border: 2px solid var(--edge); box-shadow: 0 2px 0 var(--edge); font-family: var(--f-num); font-size: 26px; font-weight: 500; display: grid; place-items: center; }
+.key:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+.key.q { font-size: 18px; }
+.key.fn { font-size: 20px; color: var(--muted); background: var(--fill); box-shadow: none; }
+.key svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pp-keys .go {
+  grid-column: 4; grid-row: 3 / span 2; background: var(--primary); color: var(--on-primary); border: 0; box-shadow: var(--stick);
+  font-family: var(--f-display); font-size: 19px; font-weight: 600; line-height: 1.15; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.pp-keys .go:active { transform: translateY(1px); box-shadow: var(--soft); }
+.go-to { display: flex; align-items: center; gap: 5px; font-family: var(--f-body); font-size: 12px; font-weight: 700; max-width: 100%; opacity: .95; }
+.go-to i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9); flex: none; }
+.go-to span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-keys .key:disabled, .quick button:disabled { opacity: .35; }
+.pad-actions { display: flex; gap: 10px; }
+@media (prefers-reduced-motion: reduce) { .key:active, .pp-keys .go:active { transform: none; } }
+
+/* ---------- Bottom Sheets ---------- */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; }
+.bsheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  border-top: 0; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-height: 88%; overflow-y: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  animation: up .24s cubic-bezier(.2, .9, .3, 1.2);
+}
+@keyframes up { from { transform: translateY(40px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bsheet { animation: none; } }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--faint); margin: 8px auto 8px; }
+.bsheet h3 { font-size: 24px; }
+.sheet-body { display: flex; flex-direction: column; gap: 12px; padding-block: 2px 4px; }
+#pad .icon-btn { width: 40px; height: 40px; margin: 0; }
+#pad .grab { margin: 6px auto 4px; }
+
+.pad-head { display: flex; align-items: center; gap: 10px; }
+.pad-head .who { flex: 1; min-width: 0; }
+.pad-head .who b { font-family: var(--f-display); font-size: 19px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pad-head .who small { color: var(--muted); font-size: 13px; }
+.pad-head .navs { display: flex; gap: 2px; }
+.pad-display { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 0; border-radius: var(--r); padding: 8px 16px; }
+.pad-display .val { font-family: var(--f-num); font-size: 40px; font-weight: 600; line-height: 1.05; min-width: 0; overflow: hidden; }
+.pad-display .val.ph { color: var(--faint); }
+.pad-display .val.neg { color: var(--danger); }
+.pad-display .after { font-size: 12px; color: var(--muted); text-align: right; flex: none; }
+.pad-display .after b { display: block; font-family: var(--f-num); font-size: 18px; color: var(--fg); font-weight: 600; }
+
+/* ---------- Menü / Formular ---------- */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-family: var(--f-display); font-size: 15px; color: var(--muted); font-weight: 500; padding-left: 4px; }
+.field input { height: 48px; border-radius: 14px; border: 2px solid var(--edge); background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--fill); border-radius: 14px; padding: 3px; gap: 3px; }
+.seg button { min-height: 40px; border-radius: 11px; font-family: var(--f-display); font-weight: 500; font-size: 15px; }
+.seg button[aria-pressed="true"] { background: var(--surface); border: 0; box-shadow: 0 1px 3px rgba(0, 0, 0, .14); }
+.menu-list { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r); border: 0; box-shadow: var(--stick); overflow: hidden; }
+.menu-list button { text-align: left; padding: 14px 16px; min-height: 52px; font-family: var(--f-display); font-weight: 500; font-size: 17px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.menu-list button + button { border-top: 1px solid var(--sep); }
+.menu-list button:active { background: var(--fill); }
+.menu-list button small { color: var(--muted); font-family: var(--f-body); font-size: 14px; }
+.menu-list button.warn { color: var(--danger); }
+
+/* ---------- Ergebnis ---------- */
+.podium { display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r); border: 0; box-shadow: var(--stick); overflow: hidden; }
+.prow { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 56px; }
+.prow + .prow { border-top: 1px solid var(--sep); }
+.prow.win { background: var(--sun); color: var(--on-sun); }
+.prow .place { font-family: var(--f-num); font-size: 20px; font-weight: 600; width: 24px; }
+.prow .nm { flex: 1; font-family: var(--f-display); font-weight: 500; font-size: 18px; min-width: 0; }
+.prow .pts { font-family: var(--f-num); font-size: 22px; font-weight: 600; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); top: calc(60px + env(safe-area-inset-top, 0px)); z-index: 50;
+  background: var(--surface); color: var(--fg); border: 0; box-shadow: var(--stick);
+  padding: 9px 18px; border-radius: 999px; font-family: var(--f-display); font-size: 15px; font-weight: 600; white-space: nowrap;
+}
+.home-top { display: flex; justify-content: flex-end; padding-top: 6px; height: 50px; margin-bottom: -50px; position: relative; z-index: 1; }
+.home-top .icon-btn { margin: 0 -8px 0 0; color: var(--muted); }
+
+/* ---------- Two-Dots-Schicht: geometrische Schrift, Brett statt Tabelle, Punkte als Formsprache ---------- */
+:root { --f-body: "Jost", "Futura", -apple-system, system-ui, sans-serif; --f-display: "Jost", "Futura", -apple-system, system-ui, sans-serif; --f-num: "Jost", "Futura", -apple-system, system-ui, sans-serif; }
+body { font-weight: 500; letter-spacing: .005em; }
+h1, h2, h3 { letter-spacing: .01em; }
+.eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 6px; }
+.wordmark { display: flex; flex-direction: column; align-items: center; font-size: 40px; font-weight: 600; line-height: .92; letter-spacing: .12em; margin-top: 6px; padding-left: .12em; }
+.wordmark .w1 { color: var(--i-coral); }
+.wordmark .w2 { color: var(--fg); }
+.brand p { margin-top: 8px; font-size: 15px; letter-spacing: .02em; }
+.top h2 { font-weight: 600; letter-spacing: .02em; }
+.row .t b { font-weight: 600; font-size: 18px; letter-spacing: .01em; }
+.tdot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); flex: none; }
+.resume b { font-weight: 600; letter-spacing: .01em; }
+
+/* Avatare */
+.av { width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: var(--on, #fff); display: inline-grid; place-items: center; flex: none; font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: 0; line-height: 1; }
+.av.big { width: 46px; height: 46px; font-size: 21px; }
+
+/* Brett */
+table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px)); }
+.grid th, .grid td { border: 0 !important; }
+.grid thead th { padding: 6px 2px 4px; box-shadow: 0 -8px 0 4px var(--bg); }
+.grid thead th .pn { flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; letter-spacing: .03em; }
+.grid thead th .pn span:not(.av) { max-width: 76px; }
+.grid .corner { font-size: 12px; letter-spacing: .1em; }
+.grid .rn, .grid .corner, .grid .cat { box-shadow: -8px 0 0 4px var(--bg); }
+.grid .rn { font-size: 14px; font-weight: 500; width: 30px; min-width: 30px; }
+.grid td.cell { background: var(--surface); border-radius: 16px; height: 50px; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.grid td.cell.empty { background: transparent; box-shadow: inset 0 0 0 2px var(--fill-2); }
+.grid td.cell.empty::after { width: 7px; height: 7px; background: var(--faint); }
+.grid td.cell.active { box-shadow: inset 0 0 0 3px var(--fg); }
+.grid tr.cur td.cell { box-shadow: inset 0 0 0 2px var(--faint); }
+.grid tr.cur th, .grid tr.cur td { background: transparent; }
+.grid tr.cur td.cell:not(.empty) { background: var(--surface); }
+.grid tr.cur th.rn { color: var(--fg); font-weight: 700; }
+.grid tr.calc td { background: transparent; }
+.grid tr.sep th, .grid tr.sep td { border-top: 0 !important; padding-top: 6px; }
+.grid tfoot th, .grid tfoot td { background: var(--bg); box-shadow: 0 8px 0 4px var(--bg); padding: 0; }
+.grid tfoot th { font-size: 18px; }
+.grid tfoot .tt { background: var(--c); color: var(--on, #fff); border-radius: 18px; padding: 8px 4px 9px; display: flex; flex-direction: column; align-items: center; }
+.grid tfoot .tot { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { color: inherit; opacity: .85; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.grid tfoot td.lead .tt { box-shadow: 0 8px 18px -10px var(--c); }
+
+/* Spielerseite */
+.pp-hero { align-items: center; }
+.pp-hero .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pp-hero .who > div { min-width: 0; }
+.pp-hero h3 { font-size: 26px; font-weight: 600; letter-spacing: .01em; }
+.pp-hero h3::before { content: none; }
+.pp-hero .place { font-size: 13px; }
+.score-pill { flex: none; background: var(--surface); border-radius: 20px; padding: 8px 16px 10px; box-shadow: var(--soft); display: flex; flex-direction: column; align-items: center; min-width: 96px; }
+.score-pill small { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.score-pill b { font-family: var(--f-num); font-size: 42px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.pp-entry { border-radius: 22px; }
+.pp-entry .lbl { font-weight: 600; letter-spacing: .02em; }
+.pp-entry .val { font-weight: 500; font-size: 46px; }
+.pp-hist button { border-radius: 16px; }
+.pp-hist button b { font-weight: 500; }
+.wz-f b { font-weight: 500; }
+
+/* Tasten: Punkte und Pillen */
+.quick { justify-content: space-between; gap: 8px; padding: 2px 2px 6px; margin: -2px -2px -4px; }
+.pp-panel .quick button { flex: 0 0 46px; }
+.pp-panel .quick button.strike { flex: 1 0 auto; }
+.quick button { flex: 0 0 46px; width: 46px; height: 46px; min-height: 0; padding: 0; border-radius: 50%; font-weight: 600; font-size: 15px; box-shadow: var(--soft); }
+.quick button.strike { flex: 1 0 auto; width: auto; border-radius: 999px; padding: 0 16px; }
+.key { border-radius: 999px; font-weight: 500; font-size: 26px; min-height: 52px; }
+.key.fn { font-family: var(--f-display); }
+.pp-keys .go { border-radius: 28px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 16px; }
+.go-to { text-transform: none; letter-spacing: .01em; }
+.primary { border-radius: 999px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 16px; }
+.secondary { border-radius: 999px; }
+.resume .go-pill { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 7px 14px; }
+
+/* ---------- Spielseiten ---------- */
+.tpl-hero { position: relative; height: 240px; overflow: hidden; border-radius: 0 0 34px 34px; flex: none; }
+.tpl-hero .scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tpl-back { position: absolute; top: 10px; left: max(12px, env(safe-area-inset-left, 0px)); width: 42px; height: 42px; border-radius: 50%; background: rgba(255, 255, 255, .92); color: #2e2b4f; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+.tpl-back svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.tpl-body { display: flex; flex-direction: column; gap: 20px; padding-block: 0 24px; }
+.tpl-body > div:nth-child(2) { text-align: center; }
+.tpl-badge { width: 88px; height: 88px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 0 6px var(--bg), var(--soft); display: grid; place-items: center; margin: -44px auto 0; position: relative; }
+.tpl-badge svg { width: 62px; height: 62px; }
+.tpl-body h1 { font-size: 32px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; padding-left: .14em; }
+.tpl-body .lead { color: var(--muted); margin: 4px 0 0; }
+.rules { list-style: none; margin: 0; padding: 4px 16px; background: var(--surface); border-radius: var(--r); box-shadow: var(--soft); }
+.rules li { position: relative; padding: 12px 0 12px 24px; font-size: 15px; line-height: 1.4; }
+.rules li + li { border-top: 1px solid var(--sep); }
+.rules li::before { content: ""; position: absolute; left: 2px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.ticon { width: 44px; height: 44px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; margin-left: -4px; }
+.ticon svg { width: 32px; height: 32px; }
+.top .g-ic { width: 34px; height: 34px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; margin-right: 6px; }
+.top .g-ic svg { width: 26px; height: 26px; }
+
+/* Phase 10 */
+.ph-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 12px; align-items: center; }
+.ph-dots { grid-column: 1 / -1; display: flex; gap: 6px; }
+.ph-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--fill-2); }
+.ph-dots i.on { background: var(--c); }
+.ph-dots i.now { background: transparent; box-shadow: inset 0 0 0 2.5px var(--c); }
+.ph-now { min-width: 0; }
+.ph-now small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ph-now b { font-weight: 600; font-size: 17px; }
+.ph-toggle { min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--fill); font-weight: 600; font-size: 15px; white-space: nowrap; }
+.ph-toggle[aria-pressed="true"] { background: var(--c); color: var(--on, #fff); }
+
+/* ---------- Spielerklärung ---------- */
+.rule-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 14px; }
+.rule-card p { margin: 0; font-size: 16px; line-height: 1.6; font-weight: 400; }
+.rule-card p b { font-weight: 600; background: linear-gradient(transparent 58%, color-mix(in srgb, var(--acc) 30%, transparent) 58%); padding: 0 1px; }
+.rule-ex { display: flex; align-items: stretch; gap: 6px; }
+.rule-ex .lbl { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.ex-t { flex: 1; background: var(--fill); border-radius: 16px; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.ex-t b { font-size: 22px; font-weight: 600; line-height: 1.1; }
+.ex-t small { font-size: 11px; color: var(--muted); font-weight: 500; }
+.ex-t:last-child { background: var(--acc); color: #fff; }
+.ex-t:last-child small { color: rgba(255, 255, 255, .85); }
+.ex-op { align-self: center; color: var(--faint); font-weight: 600; }
+
+/* ---------- Spieler auf der Startseite ---------- */
+.prof-row { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 6px; }
+.prof-row::-webkit-scrollbar { display: none; }
+.prof-chip { flex: none; width: 86px; background: var(--surface); border-radius: 20px; box-shadow: var(--soft); padding: 12px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.prof-chip b { font-weight: 600; font-size: 15px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prof-chip small { font-size: 12px; color: var(--muted); }
+.link-btn { align-self: flex-start; color: var(--primary); font-weight: 600; font-size: 14px; padding: 6px 4px; }
+
+/* ---------- Profil ---------- */
+.pf-body { display: flex; flex-direction: column; gap: 20px; padding-block: 4px 28px; }
+.pf-hero { display: flex; align-items: center; gap: 14px; }
+.pf-hero .av.big { width: 64px; height: 64px; font-size: 28px; }
+.pf-hero h1 { font-size: 30px; font-weight: 600; letter-spacing: .02em; }
+.pf-hero small { color: var(--muted); font-size: 14px; }
+.fchips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: -10px -16px 0; padding: 2px 16px; }
+.fchips::-webkit-scrollbar { display: none; }
+.fchip { flex: none; display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.fchip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tiles.two { grid-template-columns: repeat(2, 1fr); }
+.tile { background: var(--surface); border-radius: 20px; box-shadow: var(--soft); padding: 10px 8px 12px; text-align: center; display: flex; flex-direction: column; }
+.tile small { font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.tile b { font-size: 34px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); }
+.tile.accent { background: var(--c); color: var(--on); }
+.tile.accent small, .tile.accent span { color: inherit; opacity: .85; }
+.wl { display: flex; flex-direction: column; gap: 6px; margin-top: -6px; }
+.wl-bar { display: flex; gap: 4px; height: 14px; }
+.wl-bar i { border-radius: 999px; background: var(--fill-2); min-width: 14px; }
+.wl-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.wl-lbl b { color: var(--fg); font-weight: 600; }
+.gi { width: 36px; height: 36px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; }
+.gi svg { width: 26px; height: 26px; }
+.gi.xs { width: 22px; height: 22px; margin-left: -8px; }
+.gi.xs svg { width: 17px; height: 17px; }
+.gi.plain { background: var(--fill-2); }
+.mini-bar { width: 56px; height: 8px; border-radius: 999px; background: var(--fill-2); overflow: hidden; flex: none; }
+.mini-bar i { display: block; height: 100%; border-radius: 999px; }
+.mini-pct { width: 38px; text-align: right; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; }
+.card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.card.empty { align-items: center; text-align: center; padding: 24px 18px; }
+.card.empty p { margin: 0; color: var(--muted); }
+.vs-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.vs-p { display: flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--fill); font-weight: 500; font-size: 14px; min-height: 36px; }
+.vs-p .av { opacity: .5; }
+.vs-p[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.vs-p[aria-pressed="true"] .av { opacity: 1; }
+.vs-sum { margin: 0; font-size: 14px; color: var(--muted); }
+.vs-bars { display: flex; flex-direction: column; gap: 8px; }
+.vs-row { display: flex; align-items: center; gap: 8px; }
+.vs-n { width: 54px; font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-bar { flex: 1; height: 12px; border-radius: 999px; background: var(--fill); overflow: hidden; }
+.vs-bar i { display: block; height: 100%; border-radius: 999px; }
+.vs-row b { width: 32px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.place-badge { display: inline-flex; align-items: center; gap: 3px; min-width: 38px; justify-content: center; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--fill); font-weight: 600; font-size: 13px; }
+.place-badge.win { background: var(--c); color: var(--on); }
+.place-badge .crown { width: 13px; height: 11px; }
+.pts-sm { width: 42px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Ergebnis: Anlass */
+.event-row { display: flex; gap: 6px; flex-wrap: wrap; }
+</style>
+
+<!-- ================= Start ================= -->
+<section id="s-home" class="screen">
+  <div class="scroll">
+    <div class="gutter">
+      <div class="home-top"><button class="icon-btn" id="theme-btn" data-act="toggle-theme" aria-label="Hell oder dunkel"></button></div>
+      <div class="brand">
+        <svg class="hero-ill" viewBox="0 0 320 230" role="img" aria-label="Nachtlandschaft mit Mond und Tannen, davor ein Punktezettel mit verbundenen Farbpunkten, ein Bleistift, ein Würfel und eine Spielfigur">
+          <defs>
+            <clipPath id="blobclip"><path d="M40 120C30 60 90 18 160 20c75 2 140 30 136 98-4 64-60 96-136 94-76-2-110-32-120-92z"/></clipPath>
+          </defs>
+          <path d="M40 120C30 60 90 18 160 20c75 2 140 30 136 98-4 64-60 96-136 94-76-2-110-32-120-92z" style="fill:var(--i-blob)"/>
+          <g style="fill:var(--i-star)">
+            <circle cx="92" cy="58" r="2.2" opacity=".7"/><circle cx="196" cy="40" r="2" opacity=".6"/><circle cx="276" cy="100" r="2" opacity=".6"/><circle cx="120" cy="40" r="1.6" opacity=".5"/>
+            <path d="M150 52l1.8-4.2 1.8 4.2 4.2 1.8-4.2 1.8-1.8 4.2-1.8-4.2-4.2-1.8z" opacity=".85"/>
+            <path d="M70 92l1.4-3.2 1.4 3.2 3.2 1.4-3.2 1.4-1.4 3.2-1.4-3.2-3.2-1.4z" opacity=".7"/>
+            <path d="M206 78l1.2-2.8 1.2 2.8 2.8 1.2-2.8 1.2-1.2 2.8-1.2-2.8-2.8-1.2z" opacity=".7"/>
+          </g>
+          <path d="M58 74l8-8 8 8 8-8 8 8" fill="none" style="stroke:var(--i-star)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".45"/>
+          <circle cx="240" cy="64" r="21" style="fill:var(--i-sun)"/>
+          <circle cx="233" cy="58" r="4.5" fill="#fff" opacity=".28"/><circle cx="247" cy="72" r="3" fill="#fff" opacity=".28"/><circle cx="246" cy="55" r="2" fill="#fff" opacity=".28"/>
+          <g clip-path="url(#blobclip)">
+            <path d="M20 168c50-40 100-34 150-14s100 6 150-18v100H20z" style="fill:var(--i-hill1)"/>
+            <g style="fill:var(--i-tree)">
+              <path d="M252 104l14 34h-28z"/><path d="M252 96l10 22h-20z"/><rect x="250" y="136" width="4" height="8"/>
+              <path d="M276 116l10 26h-20z"/><rect x="274.5" y="140" width="3" height="6"/>
+              <path d="M64 136l11 28h-22z"/><rect x="62.5" y="162" width="3" height="6"/>
+            </g>
+            <path d="M20 192c60-34 120-34 180-12s90 2 120-10v80H20z" style="fill:var(--i-hill2)"/>
+          </g>
+          <ellipse cx="164" cy="208" rx="112" ry="7" fill="#000" opacity=".12"/>
+          <g transform="rotate(-6 130 140)">
+            <rect x="82" y="80" width="98" height="120" rx="12" style="fill:var(--i-paper)"/>
+            <path d="M82 92a12 12 0 0 1 12-12h74a12 12 0 0 1 12 12v8H82z" style="fill:var(--i-coral)"/>
+            <text x="131" y="95" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="8.5" letter-spacing="2.2" fill="#fff">PUNKTE</text>
+            <circle cx="108" cy="110" r="4.5" fill="#ef7a5c"/><circle cx="131" cy="110" r="4.5" fill="#3fb39b"/><circle cx="154" cy="110" r="4.5" fill="#f0b13e"/>
+            <g style="stroke:var(--i-line)" stroke-width="1.5"><path d="M90 118h82M90 134h82M90 150h82M90 166h82"/><path d="M119.5 104v72M142.5 104v72"/></g>
+            <g font-family="Jost, sans-serif" font-size="11" font-weight="500" text-anchor="middle" style="fill:var(--i-ink)">
+              <text x="108" y="130">12</text><text x="131" y="130">8</text><text x="154" y="130">15</text>
+              <text x="108" y="146">20</text><text x="131" y="146">14</text><text x="154" y="146">9</text>
+              <text x="108" y="162">7</text><text x="131" y="162">22</text><text x="154" y="162">11</text>
+            </g>
+            <path d="M90 173.5h82M90 176.5h82" style="stroke:var(--i-ink)" stroke-width="1.3"/>
+            <g font-family="Jost, sans-serif" font-size="12" font-weight="600" text-anchor="middle" style="fill:var(--i-ink)">
+              <text x="108" y="192">39</text><text x="131" y="192">44</text><text x="154" y="192">35</text>
+            </g>
+            <ellipse cx="131" cy="188" rx="11" ry="9.5" fill="none" stroke="#ef7a5c" stroke-width="1.8" transform="rotate(-8 131 188)"/>
+          </g>
+          <g transform="translate(216 118) rotate(124)">
+            <rect x="-70" y="-11" width="18" height="22" rx="7" style="fill:var(--i-eraser)"/>
+            <rect x="-56" y="-11" width="11" height="22" style="fill:var(--i-metal)"/>
+            <rect x="-45" y="-11" width="82" height="22" style="fill:var(--i-pencil)"/>
+            <rect x="-45" y="-11" width="82" height="7" fill="#fff" opacity=".2"/>
+            <rect x="-45" y="4" width="82" height="7" style="fill:var(--i-pencil-2)"/>
+            <path d="M37-11l22 11-22 11z" style="fill:var(--i-wood)"/>
+            <path d="M51-4l8 4-8 4z" style="fill:var(--i-ink)"/>
+          </g>
+          <g transform="rotate(-12 64 172)">
+            <rect x="42" y="150" width="44" height="46" rx="10" style="fill:var(--i-die-2)"/>
+            <rect x="42" y="150" width="44" height="38" rx="10" style="fill:var(--i-die)"/>
+            <g style="fill:var(--i-pip)"><circle cx="53" cy="159" r="4"/><circle cx="64" cy="169" r="4"/><circle cx="75" cy="179" r="4"/></g>
+          </g>
+          <g>
+            <ellipse cx="264" cy="198" rx="19" ry="6" style="fill:var(--i-pawn-2)"/>
+            <path d="M249 197c1-14 5-24 10-30h10c5 6 9 16 10 30z" style="fill:var(--i-pawn)"/>
+            <circle cx="264" cy="156" r="12" style="fill:var(--i-pawn)"/>
+            <circle cx="259.5" cy="151.5" r="3.2" fill="#fff" opacity=".35"/>
+          </g>
+        </svg>
+        <h1 class="wordmark" aria-label="Punktezettel"><span class="w1">PUNKTE</span><span class="w2">ZETTEL</span></h1>
+        <p>Vorlage wählen, Spieler, los.</p>
+      </div>
+      <div class="home-body">
+        <div id="resume-slot"></div>
+        <div id="players-slot"></div>
+        <div class="group">
+          <div class="eyebrow">Spiele</div>
+          <div class="list" id="tpl-list"></div>
+        </div>
+        <div class="group">
+          <div class="eyebrow">Freie Zettel</div>
+          <div class="list" id="tpl-list2"></div>
+        </div>
+        <div class="list">
+          <button class="row add-tpl" data-act="open-config"><span class="t"><b>Eigene Regeln bauen</b><small>Gewinner, Spielende, Rundenzahl</small></span><svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg></button>
+        </div>
+        <p class="note">Prototyp · Daten bleiben nur in diesem Browser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Spielseite ================= -->
+<section id="s-tpl" class="screen" hidden>
+  <div class="scroll">
+    <div class="tpl-hero" id="tpl-hero"></div>
+    <div class="gutter tpl-body" id="tpl-body"></div>
+  </div>
+  <div class="dock gutter" id="tpl-dock"></div>
+</section>
+
+<!-- ================= Profil ================= -->
+<section id="s-profile" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="grow"><h2 id="pf-title">Profil</h2><div class="sub">Statistik</div></div>
+  </div>
+  <div class="scroll"><div class="gutter pf-body" id="pf-body"></div></div>
+</section>
+
+<!-- ================= Spieler ================= -->
+<section id="s-players" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="pl-back" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="grow"><h2>Wer spielt mit?</h2><div class="sub" id="pl-sub"></div></div>
+  </div>
+  <div class="scroll">
+    <div class="gutter players-body">
+      <div class="group">
+        <div class="eyebrow">Reihenfolge am Tisch</div>
+        <div class="list order" id="order"></div>
+      </div>
+      <div class="group">
+        <div class="eyebrow">Bekannte Spieler</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <form class="add-row" id="add-form">
+        <input id="add-name" placeholder="Neuer Name" autocomplete="off" maxlength="18" aria-label="Neuer Spielername">
+        <button type="submit">Hinzufügen</button>
+      </form>
+    </div>
+  </div>
+  <div class="dock gutter"><button class="primary" id="start-btn" data-act="start">Los</button></div>
+</section>
+
+<!-- ================= Spiel ================= -->
+<section id="s-game" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="go-home" aria-label="Zum Start"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <span class="g-ic" id="g-ic" hidden></span><div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
+    <button class="icon-btn" data-act="open-menu" aria-label="Menü"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
+  </div>
+  <div class="sheet-wrap pp-mode" id="sheet"></div>
+  <div class="banner gutter" id="banner" hidden></div>
+  <div class="dock gutter" id="g-dock"></div>
+</section>
+
+<div class="scrim" id="scrim" data-act="scrim" hidden></div>
+<div class="bsheet" id="pad" role="dialog" aria-label="Punkte eingeben" hidden></div>
+<div class="bsheet" id="sheet2" role="dialog" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const now = () => new Date().toISOString();
+const COLORS = ['#ef7a5c', '#3fb39b', '#f0b13e', '#e2709a', '#5fa8d3', '#9a7ad6', '#7cb85a', '#f09a4a'];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Lesbare Schriftfarbe auf einer Spielerfarbe
+function onColor(hex) {
+  const c = parseInt(hex.slice(1), 16), ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const L = .2126 * ch(c >> 16 & 255) + .7152 * ch(c >> 8 & 255) + .0722 * ch(c & 255);
+  return L > .42 ? '#2e2b4f' : '#ffffff';
+}
+const av = (p, big) => `<span class="av${big ? ' big' : ''}" style="--c:${p.color};--on:${onColor(p.color)}" aria-hidden="true">${esc((p.name.trim()[0] || '?').toUpperCase())}</span>`;
+const fmt = n => (n < 0 ? '−' + Math.abs(n) : String(n));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('pz:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('pz:' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('pz:' + k); } catch (e) {} }
+};
+const ICON = {
+  undo: '<svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>',
+  grid: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>',
+  tally: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M17 9l-5 6M12 9l5 6"/></svg>',
+  prev: '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+  next: '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>',
+  crown: '<svg class="crown" viewBox="0 0 16 13" aria-hidden="true"><path d="M1.6 11.6 1 3.2l4.1 3.4L8 1.4l2.9 5.2L15 3.2l-.6 8.4z" fill="#f0b13e"/></svg>',
+  moon: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ---------------- Vorlagen ---------------- */
+const BUILTIN = [
+  { id: 'wizard', name: 'Wizard', kind: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, view: 'players', min: 3, max: 6,
+    page: true, icon: 'wizard', scene: 'wizard', tint: '#ece6fb', sub: 'Ansage & Stiche · 3–6 Spieler' },
+  { id: 'romme', name: 'Rommé', kind: 'rounds', win: 'low', end: { type: 'target', value: 500 }, view: 'players', min: 2, max: 6, quick: 'romme',
+    page: true, icon: 'romme', scene: 'romme', tint: '#fde6df', sub: 'Strafpunkte · wenigste Punkte gewinnen',
+    options: [{ key: 'end', label: 'Spielende', choices: [{ l: 'Bei 500', v: { type: 'target', value: 500 } }, { l: 'Bei 1000', v: { type: 'target', value: 1000 } }, { l: 'Offen', v: { type: 'none' } }] }] },
+  { id: 'dice', name: 'Kniffel', kind: 'cats', win: 'high', end: { type: 'cats' }, page: true, icon: 'kniffel', scene: 'kniffel', tint: '#dff1ee', sub: 'Würfel-Kategorien · Bonus ab 63' },
+  { id: 'skyjo', name: 'Skyjo', kind: 'rounds', win: 'low', end: { type: 'target', value: 100 }, view: 'players', min: 2, max: 8, quick: 'skyjo',
+    page: true, icon: 'skyjo', scene: 'skyjo', tint: '#e1f0fa', sub: 'Bis 100 · wenigste Punkte gewinnen',
+    options: [{ key: 'end', label: 'Spielende', choices: [{ l: 'Bei 100', v: { type: 'target', value: 100 } }, { l: 'Offen', v: { type: 'none' } }] }] },
+  { id: 'phase10', name: 'Phase 10', kind: 'rounds', win: 'low', end: { type: 'none' }, view: 'players', min: 2, max: 6, quick: 'phase10',
+    page: true, icon: 'phase10', scene: 'phase10', tint: '#fdeccc', sub: 'Phasen & Strafpunkte · 2–6 Spieler' },
+  { id: 'free', glyph: '∞', name: 'Freie Runden', kind: 'rounds', win: 'high', end: { type: 'none' } },
+  { id: 't500', glyph: '500', name: 'Bis 500 Punkte', kind: 'rounds', win: 'high', end: { type: 'target', value: 500 } },
+  { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
+  { id: 'low9', glyph: '↓9', name: 'Wenig gewinnt', kind: 'rounds', win: 'low', end: { type: 'rounds', value: 9 } },
+  { id: 'count', glyph: '±', name: 'Schnellzähler', kind: 'rounds', win: 'high', end: { type: 'none' }, view: 'players' }
+];
+const DICE = [
+  { id: 'c1', name: 'Einser', sec: 'up', quick: [0, 1, 2, 3, 4, 5] },
+  { id: 'c2', name: 'Zweier', sec: 'up', quick: [0, 2, 4, 6, 8, 10] },
+  { id: 'c3', name: 'Dreier', sec: 'up', quick: [0, 3, 6, 9, 12, 15] },
+  { id: 'c4', name: 'Vierer', sec: 'up', quick: [0, 4, 8, 12, 16, 20] },
+  { id: 'c5', name: 'Fünfer', sec: 'up', quick: [0, 5, 10, 15, 20, 25] },
+  { id: 'c6', name: 'Sechser', sec: 'up', quick: [0, 6, 12, 18, 24, 30] },
+  { id: 'k3', name: 'Dreierpasch', sec: 'low', hint: 'Augensumme' },
+  { id: 'k4', name: 'Viererpasch', sec: 'low', hint: 'Augensumme' },
+  { id: 'fh', name: 'Full House', sec: 'low', fixed: 25 },
+  { id: 'ks', name: 'Kleine Straße', sec: 'low', fixed: 30 },
+  { id: 'gs', name: 'Große Straße', sec: 'low', fixed: 40 },
+  { id: 'f5', name: 'Fünf Gleiche', sec: 'low', fixed: 50 },
+  { id: 'ch', name: 'Chance', sec: 'low', hint: 'Augensumme' }
+];
+const BONUS_AT = 63, BONUS = 35;
+
+function describe(t) {
+  if (t.sub) return t.sub;
+  if (t.kind === 'cats') return '13 Felder · Bonus ab 63';
+  if (t.kind === 'bids') return 'Ansage & Stiche · 3–6 Spieler';
+  if (t.view === 'players') return 'Eine Seite pro Spieler · +/− Tasten';
+  const w = t.win === 'high' ? 'Höchste Summe gewinnt' : 'Niedrigste Summe gewinnt';
+  const e = t.end.type === 'target' ? `Ziel ${t.end.value} Punkte` : t.end.type === 'rounds' ? `${t.end.value} Runden` : 'offen';
+  return `${w} · ${e}`;
+}
+const templates = () => BUILTIN.concat(store.get('tpls', []));
+
+/* ---------------- Zustand ---------------- */
+const S = {
+  tpl: null,
+  sel: [],                                 // gewählte Spielernamen in Reihenfolge
+  known: store.get('known', ['Anna', 'Ben', 'Clara', 'David']),
+  game: store.get('game', null),
+  undo: [],
+  pad: null,                               // { pid, ref, buf, fresh }
+};
+S.pp = { idx: 0, ref: null, buf: '', fresh: true, dirty: false };
+const NEW = '__new';
+
+function save() { if (S.game) { S.game.updatedAt = now(); store.set('game', S.game); } }
+function snapshot() { S.undo.push(JSON.stringify(S.game)); if (S.undo.length > 100) S.undo.shift(); }
+
+/* ---------------- Berechnung ---------------- */
+function catVal(g, cid, pid) { const v = g.cells[cid] && g.cells[cid][pid]; return typeof v === 'number' ? v : null; }
+function upper(g, pid) { return DICE.filter(c => c.sec === 'up').reduce((a, c) => a + (catVal(g, c.id, pid) || 0), 0); }
+function totals(g) {
+  const t = {};
+  g.players.forEach(p => {
+    if (g.kind === 'cats') {
+      const up = upper(g, p.id);
+      t[p.id] = up + (up >= BONUS_AT ? BONUS : 0) + DICE.filter(c => c.sec === 'low').reduce((a, c) => a + (catVal(g, c.id, p.id) || 0), 0);
+    } else {
+      t[p.id] = g.rounds.reduce((a, r) => a + (typeof r.s[p.id] === 'number' ? r.s[p.id] : 0), 0);
+    }
+  });
+  return t;
+}
+function ranking(g) {
+  const t = totals(g);
+  const arr = g.players.map(p => ({ p, t: t[p.id], ph: isP10(g) ? phDone(g, p.id) : 0 }))
+    .sort((a, b) => (b.ph - a.ph) || (g.win === 'high' ? b.t - a.t : a.t - b.t));
+  let place = 0, last = null;
+  arr.forEach((x, i) => { const key = x.ph + '|' + x.t; if (key !== last) { place = i + 1; last = key; } x.place = place; });
+  return arr;
+}
+function anyScore(g) {
+  return g.kind === 'cats' ? Object.values(g.cells).some(o => Object.keys(o).length) : g.rounds.some(r => Object.keys(r.s).length);
+}
+function roundFull(g, r) { return g.players.every(p => typeof r.s[p.id] === 'number'); }
+function curRoundIdx(g) {
+  const i = g.rounds.findIndex(r => !roundFull(g, r));
+  return i === -1 ? g.rounds.length - 1 : i;
+}
+function endState(g) {
+  if (isP10(g)) {
+    const fin = g.players.filter(p => phDone(g, p.id) >= 10);
+    if (!fin.length) return null;
+    const r = g.rounds[g.rounds.length - 1], full = r && roundFull(g, r);
+    return { done: full, text: `${fin.map(p => p.name).join(', ')} hat Phase 10 geschafft` + (full ? '' : ' · Runde zu Ende eintragen') };
+  }
+  if (g.kind === 'cats') {
+    const done = DICE.every(c => g.players.every(p => catVal(g, c.id, p.id) !== null));
+    return done ? { done: true, text: 'Alle Felder ausgefüllt' } : null;
+  }
+  if (g.end.type === 'rounds') {
+    const done = g.rounds.length >= g.end.value && g.rounds.slice(0, g.end.value).every(r => roundFull(g, r));
+    return done ? { done: true, text: `${g.end.value} Runden gespielt` } : null;
+  }
+  if (g.end.type === 'target') {
+    const t = totals(g);
+    const hit = g.players.filter(p => t[p.id] >= g.end.value);
+    if (!hit.length) return null;
+    const r = g.rounds[g.rounds.length - 1];
+    const full = r && roundFull(g, r);
+    return { done: full, text: `${hit.map(p => p.name).join(', ')} über ${g.end.value}` + (full ? '' : ' · Runde zu Ende spielen') };
+  }
+  return null;
+}
+
+/* ---------------- Spielseiten: Icons & Szenen (flache, geometrische Illustrationen) ---------------- */
+// 4-zackiger Stern als Pfad
+const st = (x, y, r) => `M${x} ${y - r}l${r * .3} ${r * .7} ${r * .7} ${r * .3}-${r * .7} ${r * .3}-${r * .3} ${r * .7}-${r * .3}-${r * .7}-${r * .7}-${r * .3} ${r * .7}-${r * .3}z`;
+const SUIT = {
+  heart: 'M0-5C0-13-12-13-12-4c0 8 12 13 12 18 0-5 12-10 12-18 0-9-12-9-12-1z',
+  spade: 'M0-14C-2-6-12-2-12 5c0 6 7 8 11 3l-3 8h8l-3-8c4 5 11 3 11-3 0-7-10-11-12-19z',
+  diamond: 'M0-14L10 0 0 14-10 0z',
+  club: 'M0-13a6 6 0 0 1 5.5 8.4A6 6 0 1 1 2.5 6L5 14h-10l2.5-8A6 6 0 1 1-5.5-4.6 6 6 0 0 1 0-13z'
+};
+const suit = (k, x, y, s, rot, fill, op = 1) => `<path d="${SUIT[k]}" transform="translate(${x} ${y}) rotate(${rot || 0}) scale(${s})" fill="${fill}" opacity="${op}"/>`;
+
+const GAME_ICON = {
+  wizard: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="32" cy="51" rx="25" ry="6.5" fill="#5a46a3"/>
+    <path d="M13 51c9-4 13-21 18-42 6 13 12 31 20 42z" fill="#7a5cc9"/>
+    <path d="M17 47c9-3 21-3 30 0l2 4c-11-3-22-3-34 0z" fill="#f6d27a"/>
+    <path d="${st(33, 31, 6)}" fill="#f6d27a"/>
+    <path d="${st(51, 15, 4.5)}" fill="#f6d27a"/><circle cx="13" cy="22" r="2.2" fill="#a99be8"/><circle cx="47" cy="30" r="1.6" fill="#f6d27a"/>
+  </svg>`,
+  romme: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <g transform="translate(32 57)">
+      <rect x="-13" y="-46" width="26" height="36" rx="4" fill="#e8684f" transform="rotate(-24)"/>
+      <rect x="-13" y="-48" width="26" height="36" rx="4" fill="#2f6f62"/>
+      <g transform="rotate(24)"><rect x="-13" y="-46" width="26" height="36" rx="4" fill="#fbf3e6"/>${suit('heart', 0, -29, .62, 0, '#e8684f')}</g>
+    </g>
+  </svg>`
+};
+
+const SCENE = {
+  wizard: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#2f2563"/>
+    <circle cx="80" cy="30" r="120" fill="#382c74"/>
+    <g fill="#f7eedc">
+      <circle cx="30" cy="40" r="1.8" opacity=".7"/><circle cx="140" cy="28" r="1.5" opacity=".6"/><circle cx="210" cy="50" r="2" opacity=".7"/>
+      <circle cx="360" cy="120" r="1.6" opacity=".6"/><circle cx="250" cy="22" r="1.4" opacity=".5"/><circle cx="110" cy="80" r="1.4" opacity=".5"/>
+      <path d="${st(180, 26, 6)}"/><path d="${st(42, 96, 4.5)}" opacity=".8"/><path d="${st(352, 34, 4)}" opacity=".8"/>
+    </g>
+    <circle cx="305" cy="70" r="34" fill="#f6d27a"/><circle cx="322" cy="58" r="30" fill="#2f2563"/>
+    <path d="M0 190l55-48 50 32 62-56 72 60 58-44 93 50v66H0z" fill="#45388a"/>
+    <path d="M0 214c70-26 130-28 190-10s120 10 200-6v52H0z" fill="#5a46a3"/>
+    <rect x="52" y="118" width="34" height="98" fill="#241c4f"/>
+    <path d="M45 121l24-46 24 46z" fill="#7a5cc9"/><path d="M69 75v-14l12 5-12 5" fill="#f6d27a"/>
+    <rect x="64" y="138" width="10" height="14" rx="5" fill="#f6d27a"/><rect x="64" y="168" width="10" height="14" rx="5" fill="#f6d27a" opacity=".6"/>
+    <path d="M0 234c110-22 220-18 300-4s70 0 90-4v24H0z" fill="#241c4f"/>
+    <path d="M92 98c40-60 100-60 112-20" fill="none" stroke="#f6d27a" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0 12"/>
+    <g transform="translate(206 128) rotate(-14)">
+      <rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#7a5cc9"/>
+      <path d="${st(0, 0, 13)}" fill="#f6d27a"/>
+    </g>
+    <g transform="translate(258 116) rotate(12)">
+      <rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#3fb5a3"/>
+      <circle cx="0" cy="-4" r="9" fill="#f7eedc"/><path d="M-11 14q11-10 22 0" fill="none" stroke="#f7eedc" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <path d="${st(236, 72, 6)}" fill="#f6d27a"/><circle cx="292" cy="160" r="2.5" fill="#f6d27a"/><circle cx="178" cy="170" r="2" fill="#a99be8"/>
+  </svg>`,
+  romme: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#e8684f"/>
+    <path d="M-20 70L130-20h90L-20 140z" fill="#df5c45"/><path d="M170 250L390 110v80l-100 60z" fill="#df5c45"/>
+    <circle cx="322" cy="54" r="30" fill="#f6c565"/>
+    ${suit('heart', 58, 72, 2.4, -14, '#fbf3e6', .95)}
+    ${suit('spade', 340, 150, 1.7, 14, '#2f3a5c')}
+    ${suit('diamond', 128, 140, 1.25, 8, '#f6c565')}
+    ${suit('club', 236, 40, 1.35, -10, '#2f6f62')}
+    <circle cx="190" cy="92" r="3" fill="#fbf3e6" opacity=".7"/><circle cx="24" cy="170" r="2.5" fill="#fbf3e6" opacity=".7"/><circle cx="286" cy="110" r="2.5" fill="#2f3a5c" opacity=".6"/>
+    <path d="M0 192q195-40 390 0v58H0z" fill="#2f6f62"/>
+    <path d="M0 192q195-40 390 0" fill="none" stroke="#3f8a7a" stroke-width="7"/>
+    <ellipse cx="195" cy="203" rx="80" ry="8" fill="#000" opacity=".15"/>
+    ${[['A', 'heart', '#e8684f', -30], ['K', 'spade', '#2f3a5c', -10], ['D', 'diamond', '#e8684f', 10], ['B', 'club', '#2f6f62', 30]].map(([l, k, c, a]) => `
+    <g transform="translate(195 206) rotate(${a})">
+      <rect x="-25" y="-96" width="50" height="72" rx="8" fill="#fbf3e6"/>
+      <text x="-19" y="-80" font-family="Jost, sans-serif" font-weight="600" font-size="13" fill="${c}">${l}</text>
+      ${suit(k, -14, -64, .42, 0, c)}
+    </g>`).join('')}
+  </svg>`
+};
+
+// Spielerklärung: kurzer Fließtext mit Textmarker-Stellen und ein Rechenbeispiel als Kacheln
+const RULES = {
+  wizard: { acc: '#7a5cc9', text: 'Jede Runde gibt es <b>eine Karte mehr</b>. Bevor gespielt wird, sagt jeder an, wie viele Stiche er holt. Wer <b>genau richtig liegt</b>, bekommt <b>20 Punkte plus 10 pro Stich</b>. Wer danebenliegt, verliert <b>10 Punkte pro Stich Abweichung</b>.',
+    ex: [['2', 'angesagt'], ['2', 'geholt'], ['+40', 'Punkte']] },
+  romme: { acc: '#e8684f', text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Erreicht jemand die Grenze, ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    ex: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']] },
+  kniffel: { acc: '#2f8f86', text: 'Pro Zug hat jeder bis zu <b>drei Würfe</b> und trägt das Ergebnis in ein freies Feld ein. Oben zählen nur die passenden Augen. Wer dort <b>63 Punkte</b> schafft, bekommt <b>35 Bonus</b> dazu. Passt gar nichts, wird ein Feld <b>gestrichen</b>.',
+    ex: [['3×', 'Vierer'], ['12', 'bei Vierern'], ['+35', 'ab 63 oben']] },
+  skyjo: { acc: '#4aa3d8', text: 'Am Ende jeder Runde zählt jeder seine Karten zusammen, von <b>−2 bis 12</b>. Wer die Runde beendet, aber nicht am wenigsten hat, zählt <b>doppelt</b>. Bei <b>100 Punkten</b> ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    ex: [['18', 'beendet'], ['×2', 'nicht niedrigster'], ['36', 'Punkte']] },
+  phase10: { acc: '#f2a33a', text: 'Jeder arbeitet sich durch <b>zehn Phasen</b>. Schaffst du deine, setzt du einen <b>Haken</b> und bist nächste Runde eine Stufe weiter. Karten auf der Hand sind <b>Strafpunkte</b>. Wer zuerst <b>Phase 10</b> schafft, gewinnt.',
+    ex: [['3', 'Phase'], ['✓', 'geschafft'], ['4', 'nächste Runde']] }
+};
+
+function renderTplPage() {
+  const t = S.tpl;
+  show('s-tpl');
+  $('#tpl-hero').innerHTML = SCENE[t.scene]() + `<button class="tpl-back" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>`;
+  const opts = (t.options || []).map(o => `<div class="field"><label>${esc(o.label)}</label><div class="seg">${o.choices.map((c, k) =>
+    `<button data-act="tpl-opt" data-o="${o.key}" data-k="${k}" aria-pressed="${JSON.stringify(t[o.key]) === JSON.stringify(c.v)}">${esc(c.l)}</button>`).join('')}</div></div>`).join('');
+  $('#tpl-body').innerHTML = `
+    <div class="tpl-badge" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</div>
+    <div><h1>${esc(t.name)}</h1><p class="lead">${esc(t.sub || describe(t))}</p></div>
+    <div class="group"><div class="eyebrow">So wird gezählt</div>
+      <div class="rule-card" style="--acc:${RULES[t.scene].acc}"><p>${RULES[t.scene].text}</p>
+        <div class="rule-ex"><span class="lbl">Beispiel</span>${RULES[t.scene].ex.map(([v, l]) => `<div class="ex-t"><b>${v}</b><small>${l}</small></div>`).join('<span class="ex-op">→</span>')}</div></div></div>
+    ${opts}`;
+  const last = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n));
+  const ok = last.length >= (t.min || 1) && last.length <= (t.max || 99);
+  $('#tpl-dock').innerHTML = ok
+    ? `<button class="secondary" data-act="tpl-players">Spieler</button><button class="primary" data-act="tpl-start">Los · ${last.length} Spieler</button>`
+    : `<button class="primary" data-act="tpl-players">Spieler wählen</button>`;
+  $('#s-tpl .scroll').scrollTop = 0;
+}
+
+/* ---------------- Weitere Spiele: Kniffel, Skyjo, Phase 10 ---------------- */
+// Würfel mit Augen (flach, mit dunklerer Unterkante)
+function die(x, y, s, rot, face, fill, pip, side) {
+  const o = s * .27, P = { 1: [[0, 0]], 2: [[-o, -o], [o, o]], 3: [[-o, -o], [0, 0], [o, o]], 4: [[-o, -o], [o, -o], [-o, o], [o, o]],
+    5: [[-o, -o], [o, -o], [0, 0], [-o, o], [o, o]], 6: [[-o, -o], [o, -o], [-o, 0], [o, 0], [-o, o], [o, o]] }[face];
+  return `<g transform="translate(${x} ${y}) rotate(${rot})">
+    <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s * 1.1}" rx="${s * .2}" fill="${side}"/>
+    <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .2}" fill="${fill}"/>
+    ${P.map(([a, b]) => `<circle cx="${a}" cy="${b}" r="${s * .085}" fill="${pip}"/>`).join('')}</g>`;
+}
+// Zahlkarte im Skyjo-Stil
+const numCard = (x, y, rot, v, c, w = 44) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-w * .7}" width="${w}" height="${w * 1.4}" rx="${w * .16}" fill="${c}"/>
+  <circle r="${w * .3}" fill="#fff" opacity=".92"/>
+  <text y="${w * .11}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="${w * .32}" fill="${c}">${String(v).replace('-', '\u2212')}</text></g>`;
+const cloud = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><circle cx="-22" cy="4" r="16"/><circle cx="0" cy="-6" r="22"/><circle cx="24" cy="4" r="15"/><rect x="-38" y="4" width="76" height="16" rx="8"/></g>`;
+const P10C = ['#e0543a', '#3b6fc4', '#4fae5e', '#f2c14e'];
+
+Object.assign(GAME_ICON, {
+  kniffel: `<svg viewBox="0 0 64 64" aria-hidden="true">${die(24, 34, 26, -12, 5, '#fbf3e6', '#e8684f', '#e2d6c2')}${die(42, 30, 22, 14, 3, '#e8684f', '#fbf3e6', '#c9523c')}</svg>`,
+  skyjo: `<svg viewBox="0 0 64 64" aria-hidden="true">${numCard(22, 22, -6, -2, '#3b4fa8', 20)}${numCard(43, 22, 5, 12, '#e0543a', 20)}${numCard(22, 44, 4, 5, '#4fae5e', 20)}${numCard(43, 44, -5, 0, '#4aa3d8', 20)}</svg>`,
+  phase10: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <rect x="9" y="40" width="14" height="14" rx="3" fill="#e0543a"/><rect x="25" y="30" width="14" height="24" rx="3" fill="#3b6fc4"/><rect x="41" y="20" width="14" height="34" rx="3" fill="#4fae5e"/>
+    <path d="M48 20V6" stroke="#2f3a5c" stroke-width="2.4" stroke-linecap="round"/><path d="M48 6l10 4-10 4z" fill="#f2c14e"/></svg>`
+});
+
+Object.assign(SCENE, {
+  kniffel: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#2f8f86"/>
+    <path d="M150-10h90L60 260H-30z" fill="#38998f"/><path d="M300-10h60L220 260h-60z" fill="#38998f"/>
+    <circle cx="72" cy="62" r="34" fill="#f6c565"/>
+    <g fill="#fbf3e6"><circle cx="190" cy="34" r="2.5" opacity=".7"/><circle cx="340" cy="40" r="3" opacity=".6"/><circle cx="30" cy="140" r="2.2" opacity=".6"/></g>
+    <g fill="#e8684f"><circle cx="250" cy="70" r="3"/><circle cx="130" cy="104" r="2.4"/></g>
+    <path d="M0 196q195-34 390 0v54H0z" fill="#24706a"/>
+    <ellipse cx="200" cy="208" rx="130" ry="9" fill="#000" opacity=".14"/>
+    ${die(312, 120, 50, 14, 6, '#f6c565', '#2f3a5c', '#d9a640')}
+    ${die(104, 170, 44, 18, 2, '#a99be8', '#fbf3e6', '#8c7fd0')}
+    ${die(160, 160, 66, -12, 5, '#fbf3e6', '#e8684f', '#e2d6c2')}
+    ${die(244, 162, 60, 10, 3, '#e8684f', '#fbf3e6', '#c9523c')}
+  </svg>`,
+  skyjo: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#78bde6"/>
+    <circle cx="322" cy="50" r="28" fill="#f8d77a"/>
+    ${cloud(70, 52, 1, '#fbf6ec')}${cloud(250, 34, .7, '#fbf6ec')}
+    <path d="M150 52q5-5 10 0q5-5 10 0M184 70q4-4 8 0q4-4 8 0" fill="none" stroke="#2f3a5c" stroke-width="2.4" stroke-linecap="round"/>
+    ${cloud(40, 222, 2.2, '#eaf3fb')}${cloud(330, 230, 2.4, '#eaf3fb')}${cloud(200, 246, 2.6, '#f6fafd')}
+    ${numCard(84, 138, -16, -2, '#3b4fa8')}${numCard(142, 112, -6, 0, '#4aa3d8')}${numCard(200, 132, 4, 5, '#4fae5e')}${numCard(258, 108, 12, 9, '#f2b93b')}${numCard(312, 140, 20, 12, '#e0543a')}
+  </svg>`,
+  phase10: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#f6b85e"/>
+    <path d="M-10 40L120-10h80L-10 110z" fill="#f9c77a"/>
+    <circle cx="210" cy="232" r="96" fill="#fbe1a0"/>
+    <g fill="#fff8e6"><circle cx="60" cy="150" r="2.5"/><circle cx="330" cy="40" r="2.5"/><circle cx="260" cy="70" r="2"/></g>
+    <path d="M0 214q100-34 200-6t190-10v52H0z" fill="#e99b4f"/>
+    ${Array.from({ length: 10 }, (_, k) => { const h = 22 + k * 15, x = 30 + k * 33; return `<rect x="${x}" y="${232 - h}" width="30" height="${h + 20}" rx="6" fill="${P10C[k % 4]}"/>
+      <text x="${x + 15}" y="${232 - h + 19}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="13" fill="#fff8e6">${k + 1}</text>`; }).join('')}
+    <path d="M342 75V30" stroke="#2f3a5c" stroke-width="3" stroke-linecap="round"/><path d="M342 30l22 8-22 8z" fill="#e0543a"/>
+    <g transform="translate(212 128)"><ellipse cy="14" rx="11" ry="4" fill="#2f3a5c"/><path d="M-8 13c1-9 3-15 6-18h4c3 3 5 9 6 18z" fill="#2f3a5c"/><circle cy="-10" r="7" fill="#2f3a5c"/></g>
+  </svg>`
+});
+
+Object.assign(RULES, {
+  kniffel: [
+    'Jeder hat pro Zug bis zu drei Würfe und trägt dann in ein freies Feld ein.',
+    'Oben zählen nur die passenden Augen, z. B. drei Vierer = 12.',
+    'Ab 63 Punkten oben gibt es 35 Bonuspunkte. Die App rechnet mit.',
+    'Passt nichts, wird ein Feld gestrichen (0). Nach 13 Runden ist Schluss.'
+  ],
+  skyjo: [
+    'Am Rundenende zählt jeder die Werte seiner Karten zusammen (−2 bis 12).',
+    'Wer die Runde beendet, aber nicht die wenigsten Punkte hat, zählt doppelt: Taste ×2.',
+    'Negative Werte gehen über die Taste ±.',
+    'Erreicht jemand 100 Punkte, endet das Spiel. Die wenigsten Punkte gewinnen.'
+  ],
+  phase10: [
+    'Jeder versucht pro Runde, seine aktuelle Phase auszulegen. Geschafft? Haken setzen.',
+    'Wer seine Phase schafft, steigt auf. Die App zeigt jedem seine nächste Phase.',
+    'Handkarten zählen als Strafpunkte: 1–9 = 5, 10–12 = 10, Aussetzen = 15, Joker = 25.',
+    'Wer zuerst Phase 10 schafft, gewinnt. Gleichstand: die wenigsten Punkte.'
+  ]
+});
+
+const PHASES = ['2 Drillinge', '1 Drilling + 1 Viererfolge', '1 Vierling + 1 Viererfolge', '1 Siebenerfolge', '1 Achterfolge',
+  '1 Neunerfolge', '2 Vierlinge', '7 Karten einer Farbe', '1 Fünfling + 1 Zwilling', '1 Fünfling + 1 Drilling'];
+const isP10 = g => g.quick === 'phase10';
+const phDone = (g, pid, before = Infinity) => g.rounds.slice(0, before).filter(r => r.ph && r.ph[pid]).length;
+const phLabel = (g, pid) => { const n = phDone(g, pid); return n >= 10 ? 'Fertig' : 'Phase ' + (n + 1); };
+function phaseCard(g, i, ref) {
+  const p = g.players[i], ri = ref === NEW ? g.rounds.length : g.rounds.findIndex(r => r.id === ref);
+  const r = g.rounds[ri], before = phDone(g, p.id, ri), ticked = !!(r && r.ph && r.ph[p.id]);
+  const attempt = Math.min(before + 1, 10), total = phDone(g, p.id);
+  return `<div class="ph-card" style="--c:${p.color};--on:${onColor(p.color)}">
+    <div class="ph-dots">${Array.from({ length: 10 }, (_, k) => `<i class="${k < total ? 'on' : k === total ? 'now' : ''}"></i>`).join('')}</div>
+    <div class="ph-now"><small>Runde ${ri + 1} · Phase ${attempt}</small><b>${PHASES[attempt - 1]}</b></div>
+    <button class="ph-toggle" data-act="ph-toggle" aria-pressed="${ticked}">${ticked ? '✓ Geschafft' : 'Geschafft?'}</button>
+  </div>`;
+}
+
+/* ---------------- Historie & Spielerprofile ---------------- */
+// Archiv abgeschlossener Partien (nur lokal). Spieler werden im Prototyp über den Namen erkannt.
+const hist = () => store.get('history', []);
+const GAME_META = { wizard: 'Wizard', romme: 'Rommé', dice: 'Kniffel', skyjo: 'Skyjo', phase10: 'Phase 10' };
+const tplOf = id => BUILTIN.find(t => t.id === id);
+function colorFor(name) {
+  const all = allPlayerNames(), i = all.indexOf(name);
+  return COLORS[(i < 0 ? 0 : i) % COLORS.length];
+}
+function allPlayerNames() {
+  const set = new Set(S.known);
+  hist().forEach(e => e.players.forEach(p => set.add(p.name)));
+  return [...set];
+}
+// Spielspezifische Kennzahlen je Spieler beim Speichern
+function extraStats(g, p) {
+  const played = g.rounds.filter(r => typeof r.s[p.id] === 'number').length;
+  if (isBids(g)) return { hits: g.rounds.filter(r => fv(r, 'bid', p.id) !== null && fv(r, 'bid', p.id) === fv(r, 'tricks', p.id)).length, rounds: played };
+  if (g.kind === 'cats') return { bonus: upper(g, p.id) >= BONUS_AT };
+  if (isP10(g)) return { phase: phDone(g, p.id), rounds: played };
+  return { rounds: played };
+}
+function archiveGame(g, eventName) {
+  const rk = ranking(g);
+  const e = { id: g.id, templateId: g.templateId, name: g.name, startedAt: g.createdAt, finishedAt: now(), event: eventName || null,
+    players: rk.map(x => ({ name: x.p.name, color: x.p.color, total: x.t, place: x.place, extra: extraStats(g, x.p) })) };
+  store.set('history', [e].concat(hist().filter(h => h.id !== e.id)));
+  if (eventName) store.set('lastEvent', eventName);
+}
+
+// Beispieldaten zum Ausprobieren (klar markiert, jederzeit entfernbar)
+function seedExamples() {
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const names = ['Anna', 'Ben', 'Clara', 'David'], skill = { Anna: .62, Ben: .5, Clara: .55, David: .4 };
+  const games = ['wizard', 'romme', 'dice', 'skyjo', 'phase10'], out = [], DAY = 864e5, t0 = Date.now();
+  names.forEach(n => { if (!S.known.includes(n)) S.known.push(n); }); store.set('known', S.known);
+  for (let k = 0; k < 28; k++) {
+    const tid = games[Math.floor(rnd() * games.length)];
+    const ps = names.filter(() => rnd() > .25); if (ps.length < 2) ps.push(names.find(n => !ps.includes(n)));
+    if (tid === 'wizard' && ps.length < 3) ps.push(names.find(n => !ps.includes(n)));
+    const ago = Math.floor(rnd() * 300) + 1, d = new Date(t0 - ago * DAY);
+    const ev = ago > 200 && ago < 230 ? 'Südamerika 2026' : null;
+    const low = tid === 'romme' || tid === 'skyjo' || tid === 'phase10';
+    const sc = ps.map(n => ({ n, s: skill[n] + rnd() * .6 })).sort((a, b) => b.s - a.s);
+    const players = sc.map((x, i) => {
+      const rounds = tid === 'wizard' ? Math.floor(60 / ps.length) : tid === 'dice' ? 13 : 6 + Math.floor(rnd() * 6);
+      let total = tid === 'wizard' ? Math.round((80 + x.s * 160) / 10) * 10 : tid === 'dice' ? Math.round(150 + x.s * 140)
+        : tid === 'phase10' ? Math.round(60 + i * 40 + rnd() * 30) : Math.round(40 + i * 45 + rnd() * 40);
+      const extra = tid === 'wizard' ? { hits: Math.round(rounds * (.3 + x.s * .5)), rounds } : tid === 'dice' ? { bonus: x.s > .75 }
+        : tid === 'phase10' ? { phase: i === 0 ? 10 : Math.max(4, 9 - i - Math.floor(rnd() * 2)), rounds } : { rounds };
+      return { name: x.n, color: colorFor(x.n), total, place: i + 1, extra };
+    });
+    if (low && tid !== 'phase10') players.sort((a, b) => a.total - b.total).forEach((p, i) => p.place = i + 1);
+    out.push({ id: uid(), templateId: tid, name: GAME_META[tid], startedAt: d.toISOString(), finishedAt: d.toISOString(), event: ev, example: true, players });
+  }
+  store.set('history', hist().concat(out).sort((a, b) => b.finishedAt.localeCompare(a.finishedAt)));
+}
+
+// Filterzustand der Profilseite
+const PF = { name: null, time: 'all', game: 'all', vs: [] };
+function filtered(name) {
+  const t = Date.now(), y = new Date().getFullYear();
+  return hist().filter(e => e.players.some(p => p.name === name))
+    .filter(e => PF.time === 'all' || (PF.time === '30' ? t - new Date(e.finishedAt) < 30 * 864e5 : PF.time === 'year' ? new Date(e.finishedAt).getFullYear() === y : e.event === PF.time))
+    .filter(e => PF.game === 'all' || e.templateId === PF.game);
+}
+const me = (e, n) => e.players.find(p => p.name === n);
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+function gameIcon(id, size = 'sm') { const t = tplOf(id); return t && t.icon ? `<span class="gi ${size}" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</span>` : `<span class="gi ${size} plain"></span>`; }
+
+function renderPlayersRow() {
+  const names = allPlayerNames();
+  return `<div class="group"><div class="eyebrow">Spieler</div>
+    <div class="prof-row">${names.map(n => { const games = hist().filter(e => e.players.some(p => p.name === n)), w = games.filter(e => me(e, n).place === 1).length;
+      return `<button class="prof-chip" data-act="open-profile" data-name="${esc(n)}">${av({ name: n, color: colorFor(n) }, true)}<b>${esc(n)}</b><small>${games.length ? w + (w === 1 ? ' Sieg' : ' Siege') : 'neu'}</small></button>`; }).join('')}</div>
+    ${hist().length >= 5 || hist().some(e => e.example) ? '' : '<button class="link-btn" data-act="seed">Beispieldaten laden, um die Statistik auszuprobieren</button>'}</div>`;
+}
+
+function renderProfile() {
+  const n = PF.name, col = colorFor(n), all = hist().filter(e => e.players.some(p => p.name === n));
+  show('s-profile');
+  const games = filtered(n), wins = games.filter(e => me(e, n).place === 1).length, losses = games.length - wins;
+  const events = [...new Set(all.map(e => e.event).filter(Boolean))];
+  const playedGames = [...new Set(all.map(e => e.templateId))];
+  const chip = (grp, v, label, extra = '') => `<button class="fchip" data-act="pf-filter" data-g="${grp}" data-v="${esc(v)}" aria-pressed="${PF[grp] === v}">${extra}${esc(label)}</button>`;
+  const since = all.length ? new Date(all[all.length - 1].finishedAt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) : '';
+
+  // Spiele-Übersicht oder spielspezifische Werte
+  let detail = '';
+  if (PF.game === 'all') {
+    const by = playedGames.map(id => { const gs = games.filter(e => e.templateId === id); return { id, n: gs.length, w: gs.filter(e => me(e, n).place === 1).length }; })
+      .filter(x => x.n).sort((a, b) => pct(b.w, b.n) - pct(a.w, a.n) || b.n - a.n);
+    if (by.length) detail = `<div class="group"><div class="eyebrow">Worin ${esc(n)} gut ist</div><div class="list">${by.map(x => `
+      <button class="row" data-act="pf-filter" data-g="game" data-v="${x.id}">${gameIcon(x.id)}<span class="t"><b>${esc(GAME_META[x.id] || x.id)}</b><small>${x.w} von ${x.n} gewonnen</small></span>
+      <span class="mini-bar"><i style="width:${pct(x.w, x.n)}%;background:${col}"></i></span><span class="mini-pct">${pct(x.w, x.n)}%</span></button>`).join('')}</div></div>`;
+  } else if (games.length) {
+    const mine = games.map(e => me(e, n)), avg = a => a.length ? Math.round(a.reduce((s, x) => s + x, 0) / a.length) : 0;
+    const low = ['romme', 'skyjo'].includes(PF.game);
+    let tiles = [];
+    if (PF.game === 'wizard') { const h = mine.reduce((s, p) => s + (p.extra.hits || 0), 0), r = mine.reduce((s, p) => s + (p.extra.rounds || 0), 0);
+      tiles = [['Ansage-Treffer', pct(h, r) + '%', `${h} von ${r} Runden`], ['Beste Partie', Math.max(...mine.map(p => p.total)), 'Punkte']]; }
+    else if (PF.game === 'dice') tiles = [['Bonus geschafft', pct(mine.filter(p => p.extra.bonus).length, mine.length) + '%', 'oben 63+'], ['Bestwert', Math.max(...mine.map(p => p.total)), `Ø ${avg(mine.map(p => p.total))}`]];
+    else if (PF.game === 'phase10') tiles = [['Ø erreichte Phase', (mine.reduce((s, p) => s + (p.extra.phase || 0), 0) / mine.length).toFixed(1).replace('.', ','), 'von 10'], ['Ø Strafpunkte', avg(mine.map(p => p.total)), 'pro Partie']];
+    else if (low) tiles = [['Ø pro Runde', (mine.reduce((s, p) => s + p.total / Math.max(1, p.extra.rounds || 1), 0) / mine.length).toFixed(1).replace('.', ','), 'Strafpunkte'], ['Beste Partie', Math.min(...mine.map(p => p.total)), 'Punkte']];
+    else tiles = [['Ø Punkte', avg(mine.map(p => p.total)), 'pro Partie'], ['Beste Partie', Math.max(...mine.map(p => p.total)), 'Punkte']];
+    detail = `<div class="group"><div class="eyebrow">Nur ${esc(GAME_META[PF.game] || '')}</div><div class="tiles two">${tiles.map(([l, v, s]) => `<div class="tile"><small>${l}</small><b>${v}</b><span>${s}</span></div>`).join('')}</div></div>`;
+  }
+
+  // Direktvergleich
+  const others = allPlayerNames().filter(x => x !== n && all.some(e => e.players.some(p => p.name === x)));
+  PF.vs = PF.vs.filter(x => others.includes(x));
+  let vs = '';
+  if (PF.vs.length) {
+    const group = [n, ...PF.vs], shared = games.filter(e => group.every(g => e.players.some(p => p.name === g)));
+    const best = Object.fromEntries(group.map(g => [g, 0]));
+    shared.forEach(e => { const m = Math.min(...group.map(g => me(e, g).place)); group.forEach(g => { if (me(e, g).place === m) best[g]++; }); });
+    const max = Math.max(1, ...Object.values(best));
+    vs = shared.length ? `<p class="vs-sum">${shared.length} gemeinsame ${shared.length === 1 ? 'Partie' : 'Partien'}. Wer lag am häufigsten vorn?</p>
+      <div class="vs-bars">${group.sort((a, b) => best[b] - best[a]).map(g => `<div class="vs-row">${av({ name: g, color: colorFor(g) })}<span class="vs-n">${esc(g)}</span>
+        <span class="vs-bar"><i style="width:${best[g] / max * 100}%;background:${colorFor(g)}"></i></span><b>${best[g]}×</b></div>`).join('')}</div>`
+      : '<p class="vs-sum">Im gewählten Zeitraum keine gemeinsamen Partien.</p>';
+  }
+
+  $('#pf-body').innerHTML = `
+    <div class="pf-hero">${av({ name: n, color: col }, true)}<div><h1>${esc(n)}</h1><small>${all.length ? `${all.length} Partien seit ${since}` : 'Noch keine gespeicherten Partien'}</small></div></div>
+    ${all.length ? `
+    <div class="fchips">${chip('time', 'all', 'Immer')}${chip('time', '30', '30 Tage')}${chip('time', 'year', 'Dieses Jahr')}${events.map(ev => chip('time', ev, ev)).join('')}</div>
+    <div class="fchips">${chip('game', 'all', 'Alle Spiele')}${playedGames.map(id => chip('game', id, GAME_META[id] || id, gameIcon(id, 'xs'))).join('')}</div>
+    <div class="tiles">
+      <div class="tile accent" style="--c:${col};--on:${onColor(col)}"><small>Siege</small><b>${wins}</b><span>von ${games.length}</span></div>
+      <div class="tile"><small>Siegquote</small><b>${pct(wins, games.length)}%</b><span>&nbsp;</span></div>
+      <div class="tile"><small>Partien</small><b>${games.length}</b><span>&nbsp;</span></div>
+    </div>
+    <div class="wl"><div class="wl-bar"><i style="flex:${wins || .0001};background:${col}"></i><i style="flex:${losses || .0001}"></i></div>
+      <div class="wl-lbl"><span><b>${wins}</b> ${wins === 1 ? 'Sieg' : 'Siege'}</span><span><b>${losses}</b> ${losses === 1 ? 'Niederlage' : 'Niederlagen'}</span></div></div>
+    ${detail}
+    <div class="group"><div class="eyebrow">Direktvergleich</div>
+      <div class="card"><div class="vs-pick">${others.map(o => `<button class="vs-p" data-act="pf-vs" data-name="${esc(o)}" aria-pressed="${PF.vs.includes(o)}">${av({ name: o, color: colorFor(o) })}<span>${esc(o)}</span></button>`).join('')}</div>
+      ${vs || '<p class="vs-sum">Wähle einen oder mehrere Mitspieler.</p>'}</div></div>
+    <div class="group"><div class="eyebrow">Letzte Partien</div><div class="list">${games.slice(0, 6).map(e => { const p = me(e, n);
+      return `<div class="row">${gameIcon(e.templateId)}<span class="t"><b>${esc(e.name)}</b><small>${new Date(e.finishedAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })}${e.event ? ' · ' + esc(e.event) : ''}${e.example ? ' · Beispiel' : ''}</small></span>
+        <span class="place-badge ${p.place === 1 ? 'win' : ''}" style="--c:${col};--on:${onColor(col)}">${p.place === 1 ? ICON.crown : ''}${p.place}.</span><span class="pts-sm">${fmt(p.total)}</span></div>`; }).join('') || '<div class="row"><span class="t"><small>Keine Partien für diesen Filter.</small></span></div>'}</div></div>
+    ${all.some(e => e.example) ? '<button class="link-btn" data-act="unseed">Beispieldaten entfernen</button>' : ''}`
+    : `<div class="card empty"><p>Sobald eine Partie mit ${esc(n)} gespeichert ist, erscheinen hier Siege, Bilanz und Vergleiche.</p>
+       <button class="secondary" data-act="seed">Beispieldaten laden</button></div>`}`;
+}
+
+/* ---------------- Hell / Dunkel ---------------- */
+const curTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+function renderThemeBtn() { const b = $('#theme-btn'); if (b) b.innerHTML = curTheme() === 'dark' ? ICON.sun : ICON.moon; }
+{ const t = store.get('theme', null); if (t) document.documentElement.dataset.theme = t; }
+
+/* ---------------- Navigation ---------------- */
+function show(id) { ['s-home', 's-tpl', 's-profile', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
+
+function renderHome() {
+  show('s-home'); renderThemeBtn();
+  const g = S.game;
+  $('#resume-slot').innerHTML = g ? `
+    <div class="group"><div class="eyebrow">Laufende Partie</div>
+    <button class="resume" data-act="resume">
+      <span class="t"><b>${esc(g.name)}</b>
+      <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind !== 'cats' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></span>
+      <span class="go-pill">Weiter</span>
+    </button></div>` : '';
+  const CHEV = '<svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
+  const row = (t, k) => `
+    <button class="row tpl" data-act="pick-tpl" data-id="${t.id}">
+      ${t.icon ? `<span class="ticon" style="--tc:${t.tint}">${GAME_ICON[t.icon]}</span>` : `<span class="tdot" style="--c:${COLORS[k % COLORS.length]}"></span>`}
+      <span class="t"><b>${esc(t.name)}</b><small>${esc(describe(t))}</small></span>
+      ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : CHEV}
+    </button>`;
+  $('#players-slot').innerHTML = renderPlayersRow();
+  const all = templates(), games = all.filter(t => t.page || t.game);
+  $('#tpl-list').innerHTML = games.map(row).join('');
+  $('#tpl-list2').innerHTML = all.filter(t => !games.includes(t)).map((t, k) => row(t, k + 2)).join('');
+}
+
+function renderPlayers() {
+  show('s-players');
+  $('#pl-sub').textContent = S.tpl.name;
+  $('#order').innerHTML = S.sel.length ? S.sel.map((n, i) => `
+    <div class="row order-row"><span class="pos">${i + 1}</span><span class="dot" style="--c:${COLORS[i % COLORS.length]}"></span>
+    <span class="nm">${esc(n)}</span><button class="rm" data-act="toggle-p" data-name="${esc(n)}" aria-label="${esc(n)} entfernen">✕</button></div>`).join('')
+    : '<div class="empty-order">Tippe unten auf Namen, um Spieler hinzuzufügen.</div>';
+  $('#chips').innerHTML = S.known.map(n => `<button class="chip" data-act="toggle-p" data-name="${esc(n)}" aria-pressed="${S.sel.includes(n)}">${esc(n)}</button>`).join('');
+  const b = $('#start-btn');
+  const min = S.tpl.min || 1, max = S.tpl.max || 99, n = S.sel.length;
+  b.disabled = n < min || n > max;
+  b.textContent = n < min ? (min > 1 ? `${S.tpl.name}: mindestens ${min} Spieler` : 'Mindestens 1 Spieler') : n > max ? `${S.tpl.name}: höchstens ${max} Spieler` : `Los · ${n} Spieler`;
+}
+
+function newGame(t, names) {
+  const g = {
+    id: uid(), createdAt: now(), updatedAt: now(), templateId: t.id, name: t.name,
+    kind: t.kind, win: t.win, end: { ...t.end }, view: t.view || 'grid', quick: t.quick || null,
+    players: names.map((n, i) => ({ id: uid(), name: n, color: COLORS[i % COLORS.length] })),
+    rounds: [], cells: {}
+  };
+  if (g.kind === 'bids') {
+    g.end.value = Math.floor(60 / g.players.length);
+    for (let i = 0; i < g.end.value; i++) g.rounds.push({ id: uid(), createdAt: now(), s: {}, bid: {}, tricks: {} });
+  } else if (g.kind === 'rounds') {
+    const n = g.end.type === 'rounds' ? g.end.value : 1;
+    for (let i = 0; i < n; i++) g.rounds.push({ id: uid(), createdAt: now(), s: {} });
+  } else DICE.forEach(c => { g.cells[c.id] = {}; });
+  return g;
+}
+
+/* ---------------- Spiel-Ansicht ---------------- */
+function renderHead() {
+  const g = S.game, bt = BUILTIN.find(t => t.id === g.templateId && t.icon), ic = $('#g-ic');
+  $('#g-title').textContent = g.name;
+  ic.hidden = !bt; if (bt) { ic.style.setProperty('--tc', bt.tint); ic.innerHTML = GAME_ICON[bt.icon]; }
+  const e = g.end.type === 'target' ? ` · Ziel ${g.end.value}` : g.end.type === 'rounds' ? ` von ${g.end.value}` : '';
+  if (isBids(g)) { const ri = curRoundIdx(g); $('#g-sub').textContent = `Runde ${ri + 1} von ${g.end.value} · ${wizPhase(g, g.rounds[ri]) === 'bid' ? 'Ansagen' : 'Stiche'}`; return; }
+  $('#g-sub').textContent = g.kind === 'cats' ? `Bonus ab 63 · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}` :
+    `Runde ${curRoundIdx(g) + 1}${e} · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}`;
+}
+function renderGame() {
+  show('s-game');
+  renderHead();
+  renderSwipe();
+}
+
+/* ---------------- Wizard: Ansage + Stiche ---------------- */
+const isBids = g => g.kind === 'bids';
+// Treffer: 20 + 10 je Stich; daneben: −10 je Stich Abweichung
+const wizScore = (b, t) => b === t ? 20 + 10 * t : -10 * Math.abs(b - t);
+function fv(r, f, pid) { const v = r[f] && r[f][pid]; return typeof v === 'number' ? v : null; }
+function recalc(r, pid) {
+  const b = fv(r, 'bid', pid), t = fv(r, 'tricks', pid);
+  if (b !== null && t !== null) r.s[pid] = wizScore(b, t); else delete r.s[pid];
+}
+// Geber rotiert jede Runde; es beginnt der Spieler links vom Geber.
+function dealer(g, ri) { return ri % g.players.length; }
+function order(g, ri) { const n = g.players.length, st = (dealer(g, ri) + 1) % n; return g.players.map((_, k) => (st + k) % n); }
+function sumF(g, r, f) { return g.players.reduce((a, p) => a + (fv(r, f, p.id) || 0), 0); }
+function countF(g, r, f) { return g.players.filter(p => fv(r, f, p.id) !== null).length; }
+function wizPhase(g, r) { return countF(g, r, 'bid') < g.players.length ? 'bid' : 'tricks'; }
+// Nächstes offenes Feld der laufenden Runde in Ansage-/Spielreihenfolge
+function wizNextOpen(g) {
+  const ri = curRoundIdx(g), r = g.rounds[ri], f = wizPhase(g, r);
+  const i = order(g, ri).find(k => fv(r, f, g.players[k].id) === null);
+  return { i: i === undefined ? order(g, ri)[0] : i, ref: r.id, f };
+}
+function ppGotoField(i, ref, f) { ppGoto(i); ppSelect(ref, f); ppUpdate(); }
+function wizNext() {
+  const g = S.game, P = S.pp, ri = g.rounds.findIndex(r => r.id === P.ref), r = g.rounds[ri];
+  const ord = order(g, ri), pos = ord.indexOf(P.idx);
+  if (pos < ord.length - 1) return ppGotoField(ord[pos + 1], r.id, P.field);
+  backToOverview(P.field === 'bid' ? 'Ansagen komplett · jetzt spielen' : `Runde ${ri + 1} fertig`);
+}
+function wizPageBody(g, i, ref, act) {
+  const p = g.players[i], P = S.pp, ri = g.rounds.findIndex(r => r.id === ref), r = g.rounds[ri];
+  const cards = ri + 1, field = act ? P.field : (fv(r, 'bid', p.id) === null ? 'bid' : 'tricks');
+  const val = f => (act && f === P.field) ? ppNum() : fv(r, f, p.id);
+  const box = (f, lbl) => { const v = val(f);
+    return `<button class="wz-f" data-act="pp-field" data-f="${f}" aria-pressed="${f === field}"><small>${lbl}</small><b class="${v === null ? 'ph' : ''}">${v === null ? '–' : v}</b></button>`; };
+  const b = fv(r, 'bid', p.id), t = fv(r, 'tricks', p.id);
+  const sc = b !== null && t !== null ? wizScore(b, t) : null;
+  const sb = sumF(g, r, 'bid'), st = sumF(g, r, 'tricks');
+  let hint;
+  if (wizPhase(g, r) === 'bid') {
+    const diff = sb - cards;
+    hint = `Angesagt: ${sb} von ${cards} Stichen` + (countF(g, r, 'bid') === g.players.length ? (diff > 0 ? ` · ${diff} überreizt` : diff < 0 ? ` · ${-diff} zu wenig` : ' · genau aufgeteilt') : '');
+  } else {
+    const done = countF(g, r, 'tricks') === g.players.length;
+    hint = `Stiche: ${st} von ${cards}` + (done && st !== cards ? ' · <b class="warn">Summe prüfen!</b>' : '');
+  }
+  let out = `<div class="pp-entry wz"><div class="wz-top"><div><div class="lbl">Runde ${ri + 1} · ${cards} ${cards === 1 ? 'Karte' : 'Karten'}</div>
+    <small>gibt: ${esc(g.players[dealer(g, ri)].name)}</small></div>
+    <span class="wz-sc ${sc !== null && sc < 0 ? 'neg' : ''}">${sc === null ? '' : (sc > 0 ? '+' : '') + fmt(sc)}</span></div>
+    <div class="wz-fields">${box('bid', 'Ansage')}${box('tricks', 'Stiche')}</div>
+    <div class="wz-hint">${hint}</div></div>`;
+  out += `<div class="eyebrow">Verlauf</div><div class="pp-hist">${g.rounds.map((rr, k) => {
+    const s = rr.s[p.id], bb = fv(rr, 'bid', p.id), tt = fv(rr, 'tricks', p.id);
+    if (k > curRoundIdx(g) && bb === null) return '';
+    return `<button data-act="pp-target" data-i="${i}" data-r="${rr.id}" aria-current="${rr.id === ref}"><small>R${k + 1} · ${bb === null ? '–' : bb}/${tt === null ? '–' : tt}</small><b>${typeof s === 'number' ? (s > 0 ? '+' : '') + fmt(s) : '·'}</b></button>`;
+  }).join('')}</div>`;
+  return out;
+}
+
+/* ---------------- Spieler-Seiten ---------------- */
+function canAddRound(g) {
+  const e = endState(g);
+  return g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value) && !(e && e.done);
+}
+// Ziel-Feld beim Öffnen einer Spielerseite: erste offene Runde dieses Spielers (bis zur aktuellen Runde),
+// sonst eine neue Runde, falls erlaubt.
+function defaultRef(g, pid) {
+  if (g.kind === 'cats') { const c = DICE.find(c => catVal(g, c.id, pid) === null); return c ? c.id : null; }
+  const open = g.rounds.find(r => typeof r.s[pid] !== 'number');
+  if (open) return open.id;
+  return canAddRound(g) ? NEW : g.rounds[g.rounds.length - 1].id;
+}
+function ppSelect(ref, field) {
+  const g = S.game, p = g.players[S.pp.idx], P = S.pp;
+  if (isBids(g)) {
+    const r = g.rounds.find(x => x.id === ref);
+    P.ref = ref; P.field = field || (fv(r, 'bid', p.id) === null ? 'bid' : 'tricks');
+    const v = fv(r, P.field, p.id); P.buf = v === null ? '' : String(v); P.fresh = v !== null; P.dirty = false; return;
+  }
+  P.ref = ref; const v = ref && ref !== NEW ? getVal(g, p.id, ref) : null;
+  P.buf = v === null ? '' : String(v); P.fresh = v !== null; P.dirty = false;
+}
+function ppActivate(i) {
+  const g = S.game; if (!g) return;
+  S.pp.idx = Number.isFinite(i) ? Math.min(Math.max(-1, i), g.players.length - 1) : -1;
+  if (S.pp.idx < 0) { S.pp.ref = null; S.pp.buf = ''; S.pp.dirty = false; return; }
+  ppSelect(defaultRef(g, g.players[S.pp.idx].id));
+}
+function ppNum() { const b = S.pp.buf; return b === '' || b === '-' ? null : parseInt(b, 10); }
+// Eingaben auf Spielerseiten werden sofort gespeichert; ein Undo-Schritt pro Feld-Bearbeitung.
+function ppWrite() {
+  const g = S.game, P = S.pp, pid = g.players[P.idx].id, v = ppNum();
+  if (!P.ref) return;
+  if (isBids(g)) {
+    const r = g.rounds.find(x => x.id === P.ref), cards = g.rounds.indexOf(r) + 1;
+    if (!P.dirty) { snapshot(); P.dirty = true; }
+    if (v === null) delete r[P.field][pid]; else { r[P.field][pid] = Math.min(Math.max(0, v), cards); P.buf = String(r[P.field][pid]); }
+    recalc(r, pid); save(); return;
+  }
+  if (P.ref === NEW) {
+    if (v === null) return;
+    if (!P.dirty) { snapshot(); P.dirty = true; }
+    const r = { id: uid(), createdAt: now(), s: {} }; g.rounds.push(r); P.ref = r.id;
+  } else if (!P.dirty) { snapshot(); P.dirty = true; }
+  setVal(g, pid, P.ref, v); save();
+}
+function refLabel(g, ref) {
+  if (g.kind === 'cats') { const c = DICE.find(x => x.id === ref); return c ? [c.name, c.fixed ? c.fixed + ' Punkte' : c.hint || 'Wert eintragen'] : ['Alles ausgefüllt', 'Kein Feld mehr frei']; }
+  if (ref === NEW) return ['Runde ' + (g.rounds.length + 1), 'neue Runde'];
+  return ['Runde ' + (g.rounds.findIndex(r => r.id === ref) + 1), 'Punkte dieser Runde'];
+}
+// Eine Wischleiste: Seite 0 = Überblick, danach eine Seite pro Spieler.
+function renderSwipe() {
+  const g = S.game;
+  if (S.pp.idx >= g.players.length) ppActivate(-1);
+  const keepY = $('#ov-grid') ? $('#ov-grid').scrollTop : 0;
+  $('#sheet').innerHTML = `<div class="pp-tabs gutter" id="pp-tabs"></div>
+    <div class="pp-swipe" id="pp-swipe"><section class="pp-page ov" id="pp-ov" aria-label="Überblick"><div class="ov-scroll" id="ov-grid"></div></section>${g.players.map((p, i) => `<section class="pp-page gutter" id="pp-page-${i}" style="--c:${p.color}" aria-label="${esc(p.name)}"></section>`).join('')}</div>`;
+  ppUpdate();
+  $('#ov-grid').scrollTop = keepY;
+  const sw = $('#pp-swipe');
+  sw.scrollLeft = (S.pp.idx + 1) * sw.clientWidth;
+  sw.addEventListener('scroll', onSwipe, { passive: true });
+}
+let swipeT;
+function onSwipe(e) {
+  clearTimeout(swipeT);
+  const sw = e.currentTarget;
+  swipeT = setTimeout(() => {
+    if (!sw.isConnected || !sw.clientWidth || $('#s-game').hidden) return; // Ansicht wurde inzwischen ersetzt
+    const i = Math.round(sw.scrollLeft / sw.clientWidth) - 1;
+    if (i !== S.pp.idx) {
+      if (S.pad) { commitPad(); S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
+      ppActivate(i); ppUpdate();
+    }
+  }, 80);
+}
+function ppGoto(i) {
+  ppActivate(i); ppUpdate();
+  const sw = $('#pp-swipe'); if (!sw) return;
+  const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sw.scrollTo({ left: (S.pp.idx + 1) * sw.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+}
+function ppUpdate() {
+  renderGrid();
+  S.game.players.forEach((_, i) => renderPage(i));
+  renderTabs(); if (S.pp.idx < 0) renderDock(); else renderPanel(); renderBanner(); renderHead();
+}
+function renderTabs() {
+  const g = S.game, t = totals(g);
+  $('#pp-tabs').innerHTML = `<button class="pp-tab" data-act="pp-goto" data-i="-1" aria-label="Überblick" aria-current="${S.pp.idx === -1}">
+    <svg class="ov-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></button>` +
+    g.players.map((p, i) => `<button class="pp-tab" style="--c:${p.color}" data-act="pp-goto" data-i="${i}" aria-label="${esc(p.name)}, ${fmt(t[p.id])} Punkte" aria-current="${i === S.pp.idx}"><span class="dot"></span></button>`).join('');
+  const a = $('#pp-tabs [aria-current="true"]');
+  if (a) { const box = $('#pp-tabs'); box.scrollLeft = Math.max(0, a.offsetLeft - box.clientWidth / 2 + a.offsetWidth / 2); }
+}
+function renderPage(i) {
+  const g = S.game, p = g.players[i], t = totals(g), rk = ranking(g), started = anyScore(g), x = rk.find(y => y.p.id === p.id);
+  const act = i === S.pp.idx, P = S.pp;
+  const ref = act ? P.ref : defaultRef(g, p.id);
+  const v = act ? ppNum() : (ref && ref !== NEW ? getVal(g, p.id, ref) : null);
+  const [lbl, sub] = isBids(g) ? ['', ''] : refLabel(g, ref);
+  let place = started ? (x.place === 1 ? ICON.crown : '') + x.place + '. Platz' : 'Noch keine Punkte';
+  if (started && g.end.type === 'target' && g.win === 'high') place += t[p.id] >= g.end.value ? ' · Ziel erreicht' : ` · noch ${g.end.value - t[p.id]} bis ${g.end.value}`;
+  let body = `<div class="pp-entry"><div><div class="lbl">${esc(lbl)}</div><small>${esc(sub)}</small></div>
+    <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? (act && P.buf === '-' ? '−' : '0') : fmt(v)}</span></div>`;
+  if (isBids(g)) body = wizPageBody(g, i, ref, act);
+  else if (g.kind === 'rounds') {
+    if (isP10(g)) body += phaseCard(g, i, ref);
+    body += `<div class="eyebrow">Verlauf</div><div class="pp-hist">${g.rounds.map((r, k) => {
+      const rv = r.s[p.id];
+      return `<button data-act="pp-target" data-i="${i}" data-r="${r.id}" aria-current="${r.id === ref}"><small>R${k + 1}</small><b>${typeof rv === 'number' ? fmt(rv) : '·'}</b></button>`;
+    }).join('')}${ref === NEW ? `<button aria-current="true" data-act="pp-target" data-i="${i}" data-r="${NEW}"><small>R${g.rounds.length + 1}</small><b>neu</b></button>` : ''}</div>`;
+  } else {
+    const up = upper(g, p.id);
+    const row = c => { const cv = catVal(g, c.id, p.id);
+      return `<button class="pp-cat" data-act="pp-target" data-i="${i}" data-r="${c.id}" aria-current="${c.id === ref}"><span>${esc(c.name)}${c.fixed ? ` <small>${c.fixed}</small>` : ''}</span><span class="v">${cv === null ? '·' : fmt(cv)}</span></button>`; };
+    body += `<div class="pp-cats">${DICE.filter(c => c.sec === 'up').map(row).join('')}
+      <div class="pp-cat calc ${up >= BONUS_AT ? 'hit' : ''}"><span>Summe oben ${up}/${BONUS_AT}</span><span>Bonus ${up >= BONUS_AT ? '+' + BONUS : '–'}</span></div>
+      ${DICE.filter(c => c.sec === 'low').map(row).join('')}</div>`;
+  }
+  $('#pp-page-' + i).innerHTML = `<div class="pp-hero"><div class="who">${av(p, true)}<div><h3>${esc(p.name)}</h3><div class="place">${place}</div></div></div>
+    <div class="score-pill"><small>Punkte</small><b>${fmt(t[p.id])}</b></div></div>${body}`;
+}
+// Wohin führt „Weiter“? Für die Beschriftung der Taste.
+// Wohin führt „Weiter“? Innerhalb einer Runde zum nächsten Spieler, nach dem letzten zurück in den Überblick.
+function nextTarget(g) {
+  const P = S.pp, n = g.players.length;
+  if (isBids(g)) {
+    const ri = g.rounds.findIndex(r => r.id === P.ref), ord = order(g, ri), pos = ord.indexOf(P.idx);
+    if (pos < ord.length - 1) { const p = g.players[ord[pos + 1]]; return { p, label: p.name }; }
+    return { done: true, label: P.field === 'bid' ? 'Ansagen fertig' : 'Runde fertig' };
+  }
+  if (P.idx < n - 1) { const p = g.players[P.idx + 1]; return { p, label: p.name }; }
+  return { done: true, label: g.kind === 'cats' ? 'Zug fertig' : 'Runde fertig' };
+}
+// Zurück zum Scoreboard, mit kurzer Rückmeldung
+function backToOverview(msg) { ppGoto(-1); if (msg) toast(msg); }
+function renderPanel() {
+  const g = S.game, P = S.pp, isCat = g.kind === 'cats', off = P.ref ? '' : 'disabled';
+  let quick;
+  if (isCat) {
+    const c = DICE.find(x => x.id === P.ref);
+    const vals = c ? (c.quick || (c.fixed ? [c.fixed] : [])).filter(x => x !== 0) : [];
+    quick = `<div class="quick">${vals.map(x => `<button data-act="pp-set" data-v="${x}" ${off}>${x}</button>`).join('')}<button class="strike" data-act="pp-set" data-v="0" ${off}>Streichen · 0</button></div>`;
+  } else if (g.quick === 'skyjo') {
+    quick = `<div class="quick">${[-1, 1, 5, 10].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>${d > 0 ? '+' + d : '−' + (-d)}</button>`).join('')}<button data-act="pp-mul" ${off}>×2</button></div>`;
+  } else if (g.quick === 'phase10') {
+    quick = `<div class="quick"><button class="strike" data-act="pp-set" data-v="0" ${off}>Raus · 0</button>${[5, 10, 15, 25].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>+${d}</button>`).join('')}</div>`;
+  } else if (g.quick === 'romme') {
+    quick = `<div class="quick"><button class="strike" data-act="pp-set" data-v="0" ${off}>Raus · 0</button>${[5, 10, 20].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>+${d}</button>`).join('')}<button data-act="pp-mul" ${off}>×2</button></div>`;
+  } else if (isBids(g)) {
+    const cards = g.rounds.findIndex(r => r.id === P.ref) + 1;
+    quick = `<div class="quick">${Array.from({ length: cards + 1 }, (_, k) => `<button data-act="pp-set" data-v="${k}" data-go="1">${k}</button>`).join('')}</div>`;
+  } else {
+    quick = `<div class="quick">${[-10, -5, -1, 1, 5, 10].map(d => `<button class="${d < 0 ? 'strike' : ''}" data-act="pp-add" data-v="${d}">${d > 0 ? '+' + d : '−' + (-d)}</button>`).join('')}</div>`;
+  }
+  const last = P.idx === g.players.length - 1;
+  const nx = nextTarget(g);
+  const goLbl = `${nx.done ? 'Fertig' : 'Weiter'}<span class="go-to">${nx.p ? `<i style="--c:${nx.p.color}"></i>` : ''}<span>${esc(nx.done ? 'Überblick' : nx.label)}</span></span>`;
+  const d = n => `<button class="key" data-act="pp-digit" data-v="${n}" ${off}>${n}</button>`;
+  $('#g-dock').innerHTML = `<div class="pp-panel">${quick}<div class="keys pp-keys">
+    ${d(1)}${d(2)}${d(3)}<button class="key fn" data-act="pp-back" aria-label="Löschen" ${off}>${ICON.back}</button>
+    ${d(4)}${d(5)}${d(6)}<button class="key fn" data-act="pp-clear" ${off} style="font-family:var(--f-body);font-size:15px">Leeren</button>
+    ${d(7)}${d(8)}${d(9)}<button class="key go" data-act="pp-next">${goLbl}</button>
+    ${isBids(g) ? `<button class="key fn" data-act="pp-field" data-f="${P.field === 'bid' ? 'tricks' : 'bid'}" style="font-family:var(--f-body);font-size:14px">${P.field === 'bid' ? 'Stiche' : 'Ansage'}</button>` : `<button class="key fn" data-act="pp-sign" aria-label="Vorzeichen" ${off}>±</button>`}${d(0)}
+    <button class="key fn" data-act="undo" aria-label="Rückgängig" ${S.undo.length ? '' : 'disabled'}>${ICON.undo}</button>
+  </div></div>`;
+}
+
+function cellHTML(g, pid, ref, v, extra) {
+  const act = S.pad && S.pad.pid === pid && S.pad.ref === ref;
+  const cls = ['cell', v === null ? 'empty' : '', v !== null && v < 0 ? 'neg' : '', v === 0 ? 'zero' : '', act ? 'active' : ''].join(' ');
+  return `<td class="${cls}" data-act="cell" data-p="${pid}" data-r="${ref}">${v === null ? '' : fmt(v)}${extra || ''}</td>`;
+}
+
+function renderGrid() {
+  const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
+  const leadIds = started ? rk.filter(x => x.place === 1).map(x => x.p.id) : [];
+  const head = `<thead><tr><th class="corner">${g.kind === 'cats' ? '' : '#'}</th>${g.players.map(p =>
+    `<th style="--c:${p.color}" data-act="pp-open" data-i="${g.players.indexOf(p)}"><div class="pn">${av(p)}<span>${esc(p.name)}</span></div></th>`).join('')}</tr></thead>`;
+  let body = '';
+  if (isBids(g)) {
+    const cur = curRoundIdx(g);
+    body = g.rounds.map((r, i) => `<tr class="${i === cur ? 'cur' : ''}"><th class="rn">${i + 1}</th>${g.players.map(p => {
+      const sc = typeof r.s[p.id] === 'number' ? r.s[p.id] : null, b = fv(r, 'bid', p.id), t = fv(r, 'tricks', p.id);
+      const sub = b === null && t === null ? '' : `<small>${b === null ? '–' : b}/${t === null ? '–' : t}</small>`;
+      return `<td class="cell ${sc === null && !sub ? 'empty' : 'pend'} ${sc !== null && sc < 0 ? 'neg' : ''}" data-act="cell" data-p="${p.id}" data-r="${r.id}">${sc === null ? '' : (sc > 0 ? '+' : '') + fmt(sc)}${sub}</td>`;
+    }).join('')}</tr>`).join('');
+  } else if (g.kind === 'rounds') {
+    body = g.rounds.map((r, i) => `<tr><th class="rn">${i + 1}</th>${g.players.map(p =>
+      cellHTML(g, p.id, r.id, typeof r.s[p.id] === 'number' ? r.s[p.id] : null, isP10(g) && r.ph && r.ph[p.id] ? '<small>✓ Phase</small>' : '')).join('')}</tr>`).join('');
+  } else {
+    const row = c => `<tr><th class="cat">${esc(c.name)}${c.fixed ? `<small>${c.fixed} Punkte</small>` : c.hint ? `<small>${c.hint}</small>` : ''}</th>${g.players.map(p =>
+      cellHTML(g, p.id, c.id, catVal(g, c.id, p.id))).join('')}</tr>`;
+    body += DICE.filter(c => c.sec === 'up').map(row).join('');
+    body += `<tr class="calc sep"><th class="cat">Summe oben</th>${g.players.map(p => {
+      const u = upper(g, p.id); return `<td class="${u >= BONUS_AT ? 'hit' : ''}">${u}/${BONUS_AT}</td>`; }).join('')}</tr>`;
+    body += `<tr class="calc"><th class="cat">Bonus</th>${g.players.map(p =>
+      `<td class="${upper(g, p.id) >= BONUS_AT ? 'hit' : ''}">${upper(g, p.id) >= BONUS_AT ? '+' + BONUS : '–'}</td>`).join('')}</tr>`;
+    body += DICE.filter(c => c.sec === 'low').map((c, i) => row(c).replace('<tr>', i === 0 ? '<tr class="sep">' : '<tr>')).join('');
+  }
+  const foot = `<tfoot><tr><th>Σ</th>${g.players.map(p => {
+    const x = rk.find(y => y.p.id === p.id);
+    let meta = isP10(g) ? phLabel(g, p.id) : started ? `${x.place}. Platz` : '&nbsp;';
+    if (started && g.end.type === 'target' && g.win === 'high') meta = t[p.id] >= g.end.value ? 'Ziel erreicht' : `noch ${g.end.value - t[p.id]}`;
+    return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}" style="--c:${p.color};--on:${onColor(p.color)}"><div class="tt"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${leadIds.includes(p.id) ? ICON.crown : ''}${meta}</span></div></td>`;
+  }).join('')}</tr></tfoot>`;
+  $('#ov-grid').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>
+    <p class="ov-hint gutter">Feld antippen zum Ändern · wischen für die Spielerseiten →</p>`;
+}
+
+function renderBanner() {
+  const b = $('#banner'), e = endState(S.game);
+  b.hidden = !e;
+  if (e) b.innerHTML = `<div class="grow"><b>${e.done ? 'Spielende erreicht' : 'Fast geschafft'}</b><br><span style="color:var(--muted)">${esc(e.text)}</span></div>
+    ${e.done ? '<button data-act="result">Ergebnis</button>' : ''}`;
+}
+
+// Was ist im Überblick als Nächstes einzutragen?
+function roundGoLabel(g) {
+  if (isBids(g)) { const ri = curRoundIdx(g); return `${wizPhase(g, g.rounds[ri]) === 'bid' ? 'Ansagen' : 'Stiche'} · Runde ${ri + 1}`; }
+  if (g.kind === 'cats') return 'Zug · ' + g.players[catTurn(g)].name;
+  const ri = g.rounds.findIndex(r => !roundFull(g, r));
+  return `Runde ${ri >= 0 ? ri + 1 : g.rounds.length + 1} eintragen`;
+}
+// Kniffel: wer ist dran? Der erste Spieler mit den wenigsten ausgefüllten Feldern.
+function catTurn(g) {
+  const cnt = g.players.map(p => DICE.filter(c => catVal(g, c.id, p.id) !== null).length);
+  return cnt.indexOf(Math.min(...cnt));
+}
+function renderDock() {
+  const g = S.game, e = endState(g), done = (e && e.done) || (g.kind === 'rounds' && !isP10(g) && !canAddRound(g) && g.rounds.every(r => roundFull(g, r)));
+  const main = done ? '<button class="primary" data-act="result">Ergebnis</button>'
+    : `<button class="primary" data-act="round-go">${esc(roundGoLabel(g))} →</button>`;
+  $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${main}`;
+}
+
+/* ---------------- Ziffernblock ---------------- */
+function getVal(g, pid, ref) {
+  if (g.kind === 'cats') return catVal(g, ref, pid);
+  const r = g.rounds.find(x => x.id === ref); return r && typeof r.s[pid] === 'number' ? r.s[pid] : null;
+}
+function setVal(g, pid, ref, v) {
+  if (g.kind === 'cats') { if (v === null) delete g.cells[ref][pid]; else g.cells[ref][pid] = v; return; }
+  const r = g.rounds.find(x => x.id === ref); if (v === null) delete r.s[pid]; else r.s[pid] = v;
+}
+function openPad(pid, ref) {
+  const v = getVal(S.game, pid, ref);
+  S.pad = { pid, ref, buf: v === null ? '' : String(v), fresh: v !== null };
+  document.body.classList.add('pad-open');
+  renderGame(); renderPad();
+  const el = document.querySelector(`td.cell[data-p="${pid}"][data-r="${ref}"]`);
+  const w = $('#ov-grid');
+  if (el && w) {
+    const er = el.getBoundingClientRect(), wr = w.getBoundingClientRect(), foot = 64;
+    if (er.bottom > wr.bottom - foot) w.scrollTop += er.bottom - wr.bottom + foot;
+    else if (er.top < wr.top + 50) w.scrollTop -= wr.top + 50 - er.top;
+  }
+}
+function closePad() {
+  S.pad = null; document.body.classList.remove('pad-open');
+  $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; renderGame();
+}
+function padNum() { const b = S.pad.buf; return b === '' || b === '-' ? null : parseInt(b, 10); }
+function commitPad() {
+  const g = S.game, v = padNum();
+  if (v !== getVal(g, S.pad.pid, S.pad.ref)) { snapshot(); setVal(g, S.pad.pid, S.pad.ref, v); save(); }
+}
+function renderPad() {
+  const g = S.game, P = S.pad, p = g.players.find(x => x.id === P.pid);
+  const v = padNum(), cur = getVal(g, P.pid, P.ref);
+  const after = totals(g)[P.pid] - (cur || 0) + (v || 0);
+  let where = '', quick = '', isCat = g.kind === 'cats';
+  if (isCat) {
+    const c = DICE.find(x => x.id === P.ref);
+    where = c.name + (c.hint ? ' · ' + c.hint : '');
+    const vals = c.quick || (c.fixed ? [c.fixed] : []);
+    quick = `<div class="quick">${vals.filter(x => x !== 0).map(x => `<button data-act="pad-set" data-v="${x}">${x}</button>`).join('')}
+      <button class="strike" data-act="pad-set" data-v="0">Streichen · 0</button></div>`;
+  } else {
+    where = 'Runde ' + (g.rounds.findIndex(r => r.id === P.ref) + 1);
+  }
+  const qk = isCat ? ['', '', '', ''] : ['+5', '+10', '−5', '−10'];
+  const qv = [5, 10, -5, -10];
+  const k = (lbl, i) => isCat ? '' : `<button class="key q" data-act="pad-add" data-v="${qv[i]}">${lbl}</button>`;
+  const cols = isCat ? 3 : 4;
+  const isLast = !isCat && (() => {
+    const pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
+    return pi === g.players.length - 1;
+  })();
+  $('#pad').innerHTML = `
+    <div class="grab"></div>
+    <div class="sheet-body">
+      <div class="pad-head">
+        <span class="dot" style="--c:${p.color};width:14px;height:14px"></span>
+        <div class="who"><b>${esc(p.name)}</b><small>${esc(where)}</small></div>
+        ${isCat ? '' : `<div class="navs"><button class="icon-btn" data-act="pad-move" data-d="-1" aria-label="Vorheriger Spieler">${ICON.prev}</button>
+        <button class="icon-btn" data-act="pad-move" data-d="1" aria-label="Nächster Spieler">${ICON.next}</button></div>`}
+        <button class="icon-btn" data-act="pad-close" aria-label="Ziffernblock schließen">${ICON.close}</button>
+      </div>
+      <div class="pad-display">
+        <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? '0' : fmt(v)}</span>
+        <span class="after">Summe danach<b>${fmt(after)}</b></span>
+      </div>
+      ${quick}
+      <div class="keys" style="grid-template-columns:repeat(${cols},1fr)">
+        ${[1, 2, 3].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[0], 0)}
+        ${[4, 5, 6].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[1], 1)}
+        ${[7, 8, 9].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[2], 2)}
+        <button class="key fn" data-act="pad-sign" aria-label="Vorzeichen">±</button>
+        <button class="key" data-act="pad-digit" data-v="0">0</button>
+        <button class="key fn" data-act="pad-back" aria-label="Löschen">${ICON.back}</button>${k(qk[3], 3)}
+      </div>
+      <div class="pad-actions">
+        <button class="secondary" data-act="pad-clear">Leeren</button>
+        <button class="primary" data-act="pad-ok">${isCat || isLast ? 'Eintragen' : 'Weiter →'}</button>
+      </div>
+    </div>`;
+  $('#pad').hidden = false;
+  $('#s-game').style.paddingBottom = $('#pad').offsetHeight + 'px';
+}
+function padMove(dir) {
+  const g = S.game, P = S.pad;
+  let pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
+  pi += dir;
+  if (pi >= g.players.length) return false;
+  if (pi < 0) { pi = g.players.length - 1; ri--; }
+  if (ri < 0) return false;
+  if (ri >= g.rounds.length) {
+    if (g.end.type === 'rounds' && g.rounds.length >= g.end.value) return false;
+    const e = endState(g); if (e && e.done) return false;
+    snapshot(); g.rounds.push({ id: uid(), createdAt: now(), s: {} }); save();
+  }
+  openPad(g.players[pi].id, g.rounds[ri].id);
+  return true;
+}
+
+/* ---------------- Sheets: Menü, Ergebnis, Baukasten ---------------- */
+function openSheet(html, label) {
+  const s = $('#sheet2'); s.innerHTML = '<div class="grab"></div><div class="sheet-body">' + html + '</div>';
+  s.setAttribute('aria-label', label); s.hidden = false; $('#scrim').hidden = false;
+}
+function closeSheet() { $('#sheet2').hidden = true; $('#scrim').hidden = true; }
+
+function openMenu() {
+  const g = S.game;
+  openSheet(`
+    <h3>${esc(g.name)}</h3>
+    <div class="field"><label>Gewinner</label>
+      <div class="seg"><button data-act="set-win" data-v="high" aria-pressed="${g.win === 'high'}">Höchste Summe</button>
+      <button data-act="set-win" data-v="low" aria-pressed="${g.win === 'low'}">Niedrigste Summe</button></div></div>
+    <div class="menu-list">
+      <button data-act="toggle-theme">Design <small>${curTheme() === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
+      <button data-act="save-tpl">Als Vorlage speichern <small>für den Start</small></button>
+      <button data-act="result">Spiel beenden <small>Ergebnis zeigen</small></button>
+      <button class="warn" data-act="discard">Partie verwerfen</button>
+    </div>`, 'Spielmenü');
+}
+
+function openResult() {
+  const g = S.game, rk = ranking(g), last = store.get('lastEvent', '');
+  openSheet(`
+    <div class="eyebrow">${esc(g.name)} · ${new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+    <h3>${anyScore(g) ? esc(rk.filter(x => x.place === 1).map(x => x.p.name).join(' & ')) + ' gewinnt' : 'Noch keine Punkte'}</h3>
+    <div class="podium">${rk.map(x => `<div class="prow ${x.place === 1 && anyScore(g) ? 'win' : ''}">
+      <span class="place">${x.place}</span>${av(x.p)}
+      <span class="nm">${esc(x.p.name)}</span><span class="pts">${fmt(x.t)}</span></div>`).join('')}</div>
+    <div class="field"><label for="ev-name">Anlass (optional)</label><input id="ev-name" placeholder="z. B. Südamerika 2026" maxlength="32" value="${esc(last)}" autocomplete="off"></div>
+    <div class="pad-actions">
+      <button class="secondary" data-act="close-sheet">Weiterspielen</button>
+      <button class="primary" data-act="save-game">Speichern</button>
+    </div>
+    <button class="link-btn" data-act="save-rematch" style="align-self:center">Speichern & Revanche</button>`, 'Ergebnis');
+}
+
+const CFG = { name: '', win: 'high', end: 'none', val: 500 };
+function openConfig() {
+  const valField = CFG.end === 'none' ? '' : `<div class="field"><label for="cfg-val">${CFG.end === 'target' ? 'Zielpunktzahl' : 'Anzahl Runden'}</label>
+    <input id="cfg-val" inputmode="numeric" pattern="[0-9]*" value="${CFG.val}"></div>`;
+  openSheet(`
+    <h3>Eigene Regeln</h3>
+    <div class="field"><label for="cfg-name">Name der Vorlage</label><input id="cfg-name" placeholder="z. B. Rommé am Strand" value="${esc(CFG.name)}" maxlength="28"></div>
+    <div class="field"><label>Gewinner</label><div class="seg">
+      <button data-act="cfg" data-k="win" data-v="high" aria-pressed="${CFG.win === 'high'}">Höchste Summe</button>
+      <button data-act="cfg" data-k="win" data-v="low" aria-pressed="${CFG.win === 'low'}">Niedrigste Summe</button></div></div>
+    <div class="field"><label>Spielende</label><div class="seg">
+      <button data-act="cfg" data-k="end" data-v="none" aria-pressed="${CFG.end === 'none'}">Offen</button>
+      <button data-act="cfg" data-k="end" data-v="target" aria-pressed="${CFG.end === 'target'}">Zielpunkte</button>
+      <button data-act="cfg" data-k="end" data-v="rounds" aria-pressed="${CFG.end === 'rounds'}">Runden</button></div></div>
+    ${valField}
+    <p class="note">Später kommen hier Kategorien, Bonusregeln und Teams dazu.</p>
+    <div class="pad-actions"><button class="primary" data-act="cfg-save">Vorlage speichern</button></div>`, 'Eigene Regeln');
+}
+function readCfgInputs() {
+  const n = $('#cfg-name'); if (n) CFG.name = n.value;
+  const v = $('#cfg-val'); if (v) CFG.val = parseInt(v.value, 10) || 0;
+}
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 1800);
+}
+
+/* ---------------- Aktionen ---------------- */
+const A = {
+  'pick-tpl'(el, ev) {
+    if (ev.target.closest('[data-act="del-tpl"]')) return A['del-tpl'](ev.target.closest('[data-act="del-tpl"]'));
+    S.tpl = { ...templates().find(t => t.id === el.dataset.id) };
+    if (S.tpl.page) return renderTplPage();
+    const last = store.get('lastPlayers', null);
+    S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : [];
+    renderPlayers();
+  },
+  'tpl-opt'(el) {
+    const o = S.tpl.options.find(x => x.key === el.dataset.o); S.tpl[o.key] = o.choices[+el.dataset.k].v; renderTplPage();
+  },
+  'tpl-players'() { const last = store.get('lastPlayers', null); S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : []; renderPlayers(); },
+  'tpl-start'() { S.sel = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n)); A.start(); },
+  'pl-back'() { if (S.tpl && S.tpl.page) renderTplPage(); else renderHome(); },
+  'ph-toggle'() {
+    const g = S.game, P = S.pp, pid = g.players[P.idx].id;
+    snapshot();
+    if (P.ref === NEW) { const r = { id: uid(), createdAt: now(), s: {} }; g.rounds.push(r); P.ref = r.id; P.dirty = true; }
+    const r = g.rounds.find(x => x.id === P.ref); r.ph = r.ph || {};
+    if (r.ph[pid]) delete r.ph[pid]; else r.ph[pid] = true;
+    save(); ppUpdate();
+  },
+  'pp-mul'() { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) * 2); P.fresh = false; ppWrite(); ppUpdate(); },
+  'del-tpl'(el) {
+    store.set('tpls', store.get('tpls', []).filter(t => t.id !== el.dataset.id)); renderHome(); toast('Vorlage gelöscht');
+  },
+  'toggle-p'(el) {
+    const n = el.dataset.name, i = S.sel.indexOf(n);
+    if (i >= 0) S.sel.splice(i, 1); else S.sel.push(n);
+    renderPlayers();
+  },
+  start() {
+    if (!S.sel.length) return;
+    store.set('lastPlayers', S.sel);
+    enterGame(newGame(S.tpl, S.sel.slice()));
+  },
+  'go-home'() { if (S.pad) closePad(); closeSheet(); renderHome(); },
+  resume() { renderGame(); },
+  cell(el) {
+    const g = S.game;
+    if (isBids(g)) { const i = g.players.findIndex(p => p.id === el.dataset.p); return ppGotoField(i, el.dataset.r); }
+    if (S.pad) commitPad();
+    openPad(el.dataset.p, el.dataset.r);
+  },
+  'pad-digit'(el) {
+    const P = S.pad;
+    if (P.fresh) { P.buf = P.buf.startsWith('-') ? '-' : ''; P.fresh = false; }
+    if (P.buf.replace('-', '').length >= 6) return;
+    P.buf = (P.buf === '0' ? '' : P.buf === '-0' ? '-' : P.buf) + el.dataset.v;
+    renderPad();
+  },
+  'pad-add'(el) {
+    const P = S.pad; P.buf = String((padNum() || 0) + parseInt(el.dataset.v, 10)); P.fresh = false; renderPad();
+  },
+  'pad-set'(el) { S.pad.buf = el.dataset.v; S.pad.fresh = true; renderPad(); },
+  'pad-sign'() { const P = S.pad; P.buf = P.buf.startsWith('-') ? P.buf.slice(1) : '-' + P.buf; P.fresh = false; renderPad(); },
+  'pad-back'() { const P = S.pad; P.buf = P.fresh ? '' : P.buf.slice(0, -1); P.fresh = false; renderPad(); },
+  'pad-clear'() { S.pad.buf = ''; S.pad.fresh = false; renderPad(); },
+  'pad-ok'() {
+    commitPad();
+    if (S.game.kind === 'cats' || !padMove(1)) closePad();
+  },
+  'pad-close'() { commitPad(); closePad(); },
+  'pad-move'(el) { commitPad(); if (!padMove(parseInt(el.dataset.d, 10))) renderPad(); },
+  scrim() { if (S.pad) { commitPad(); closePad(); } closeSheet(); },
+  'add-round'() {
+    snapshot(); S.game.rounds.push({ id: uid(), createdAt: now(), s: {} }); save(); renderGame();
+    const w = $('#ov-grid'); if (w) w.scrollTop = w.scrollHeight;
+    if (S.pp.idx < 0) openPad(S.game.players[0].id, S.game.rounds[S.game.rounds.length - 1].id);
+  },
+  undo() {
+    if (!S.undo.length) return;
+    S.game = JSON.parse(S.undo.pop()); save();
+    if (S.pp.idx >= 0) { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref, S.pp.field); else ppActivate(S.pp.idx); }
+    if (S.pad) { S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
+    renderGame(); toast('Rückgängig gemacht');
+  },
+  'pp-open'(el) { ppGoto(+el.dataset.i); },
+  'pp-goto'(el) { ppGoto(+el.dataset.i); },
+  'pp-target'(el) {
+    const i = +el.dataset.i; if (i !== S.pp.idx) ppActivate(i);
+    ppSelect(el.dataset.r); ppUpdate();
+  },
+  'pp-next'() {
+    const g = S.game, P = S.pp;
+    if (isBids(g)) return wizNext();
+    if (P.idx >= g.players.length - 1) {
+      const r = g.rounds.find(x => x.id === P.ref);
+      return backToOverview(g.kind === 'cats' ? 'Zug fertig' : r && roundFull(g, r) ? `Runde ${g.rounds.indexOf(r) + 1} komplett` : '');
+    }
+    const ref = P.ref; ppGoto(P.idx + 1);
+    if (g.kind !== 'cats' && ref) { ppSelect(ref); ppUpdate(); }
+  },
+  'round-go'() {
+    const g = S.game;
+    if (isBids(g)) { const n = wizNextOpen(g); return ppGotoField(n.i, n.ref, n.f); }
+    if (g.kind === 'cats') return ppGoto(catTurn(g));
+    const ri = g.rounds.findIndex(r => !roundFull(g, r));
+    if (ri >= 0) { const r = g.rounds[ri]; ppGoto(g.players.findIndex(p => typeof r.s[p.id] !== 'number')); ppSelect(r.id); return ppUpdate(); }
+    if (canAddRound(g) || isP10(g)) { ppGoto(0); ppSelect(NEW); return ppUpdate(); }
+    openResult();
+  },
+  'pp-field'(el) { ppSelect(S.pp.ref, el.dataset.f); ppUpdate(); },
+  'wz-go'() { const n = wizNextOpen(S.game); ppGotoField(n.i, n.ref, n.f); },
+  'pp-digit'(el) {
+    const P = S.pp; if (!P.ref) return;
+    if (P.fresh) { P.buf = P.buf.startsWith('-') ? '-' : ''; P.fresh = false; }
+    if (P.buf.replace('-', '').length >= 6) return;
+    P.buf = (P.buf === '0' ? '' : P.buf === '-0' ? '-' : P.buf) + el.dataset.v;
+    ppWrite(); ppUpdate();
+  },
+  'pp-add'(el) { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) + parseInt(el.dataset.v, 10)); P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-set'(el) { const P = S.pp; if (!P.ref) return; P.buf = el.dataset.v; P.fresh = true; ppWrite(); if (el.dataset.go && isBids(S.game)) return wizNext(); ppUpdate(); },
+  'pp-sign'() { const P = S.pp; if (!P.ref) return; P.buf = P.buf.startsWith('-') ? P.buf.slice(1) : '-' + P.buf; P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-back'() { const P = S.pp; if (!P.ref) return; P.buf = P.fresh ? '' : P.buf.slice(0, -1); P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-clear'() { const P = S.pp; if (!P.ref) return; P.buf = ''; P.fresh = false; ppWrite(); ppUpdate(); },
+  'open-menu'() { openMenu(); },
+  'toggle-theme'() {
+    const t = curTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t; store.set('theme', t); renderThemeBtn();
+    if (!$('#sheet2').hidden) openMenu();
+  },
+  'set-win'(el) { snapshot(); S.game.win = el.dataset.v; save(); renderGame(); openMenu(); },
+  'save-tpl'() {
+    const g = S.game, list = store.get('tpls', []);
+    list.push({ id: uid(), custom: true, glyph: '✎', name: g.name, kind: g.kind, win: g.win, end: { ...g.end }, view: g.view, createdAt: now() });
+    store.set('tpls', list); closeSheet(); toast('Vorlage gespeichert');
+  },
+  result() { if (S.pad) { commitPad(); closePad(); } openResult(); },
+  'save-game'() {
+    archiveGame(S.game, ($('#ev-name').value || '').trim());
+    S.game = null; S.undo = []; store.del('game'); closeSheet(); renderHome(); toast('Partie gespeichert');
+  },
+  'save-rematch'() {
+    const g = S.game; archiveGame(g, ($('#ev-name').value || '').trim()); A.rematch(); toast('Gespeichert · Revanche läuft');
+  },
+  'open-profile'(el) { Object.assign(PF, { name: el.dataset.name, time: 'all', game: 'all', vs: [] }); renderProfile(); $('#s-profile .scroll').scrollTop = 0; },
+  'pf-filter'(el) { PF[el.dataset.g] = el.dataset.v; renderProfile(); },
+  'pf-vs'(el) { const n = el.dataset.name, i = PF.vs.indexOf(n); if (i >= 0) PF.vs.splice(i, 1); else PF.vs.push(n); renderProfile(); },
+  seed() { seedExamples(); if (!$('#s-profile').hidden) renderProfile(); else renderHome(); toast('Beispieldaten geladen'); },
+  unseed() { store.set('history', hist().filter(e => !e.example)); renderProfile(); toast('Beispieldaten entfernt'); },
+  rematch() {
+    const g = S.game, t = templates().find(x => x.id === g.templateId) || { ...g, id: g.templateId };
+    closeSheet(); enterGame(newGame({ ...t, win: g.win }, g.players.map(p => p.name))); toast('Neue Partie, gleiche Runde');
+  },
+  'close-sheet'() { closeSheet(); },
+  discard() { S.game = null; S.undo = []; store.del('game'); closeSheet(); renderHome(); toast('Partie verworfen'); },
+  'open-config'() { CFG.name = ''; CFG.win = 'high'; CFG.end = 'none'; CFG.val = 500; openConfig(); },
+  cfg(el) {
+    readCfgInputs();
+    const k = el.dataset.k, v = el.dataset.v;
+    if (k === 'end' && v !== CFG.end) CFG.val = v === 'rounds' ? 10 : 500;
+    CFG[k] = v; openConfig();
+  },
+  'cfg-save'() {
+    readCfgInputs();
+    if (!CFG.name.trim()) { toast('Bitte einen Namen eingeben'); return; }
+    if (CFG.end !== 'none' && CFG.val < 1) { toast('Zahl muss größer als 0 sein'); return; }
+    const t = { id: uid(), custom: true, glyph: '✎', name: CFG.name.trim(), kind: 'rounds', win: CFG.win,
+      end: CFG.end === 'none' ? { type: 'none' } : { type: CFG.end, value: CFG.val }, createdAt: now() };
+    store.set('tpls', store.get('tpls', []).concat(t)); closeSheet(); renderHome(); toast('Vorlage gespeichert');
+  }
+};
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const f = A[el.dataset.act]; if (f) f(el, ev);
+});
+$('#add-form').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const inp = $('#add-name'), n = inp.value.trim();
+  if (!n) return;
+  if (!S.known.includes(n)) { S.known.push(n); store.set('known', S.known); }
+  if (!S.sel.includes(n)) S.sel.push(n);
+  inp.value = ''; inp.blur(); renderPlayers();
+});
+
+function enterGame(g) {
+  S.game = g; S.undo = [];
+  ppActivate(-1);
+  save(); renderGame();
+}
+if (S.game) { ppActivate(-1); renderGame(); } else renderHome();
+})();
+</script>

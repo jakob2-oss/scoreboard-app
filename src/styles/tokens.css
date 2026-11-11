@@ -1,0 +1,50 @@
+/* Konzept „Spieleabend“ im Stil flacher, geometrischer Illustrationen: ruhige Flächen,
+   keine Konturen, weiche Schatten. Hell = Papier & Indigo, Dunkel = Mitternacht.
+   Umschalter in der App setzt data-theme; ohne Wahl folgt die App dem System. */
+:root {
+  --bg: #f3f0ea; --surface: #ffffff;
+  --fill: rgba(46, 43, 79, .05); --fill-2: rgba(46, 43, 79, .10); --sep: rgba(46, 43, 79, .09);
+  --edge: transparent; --ink: #2e2b4f;
+  --fg: #2e2b4f; --muted: #7c7896; --faint: #d6d2e0;
+  --primary: #4644a6; --on-primary: #ffffff;
+  --sun: #f5c25b; --on-sun: #2e2b4f; --sky: #5fa8d3;
+  --good: #2f9a6f; --danger: #d9534a;
+  --scrim: rgba(46, 43, 79, .3);
+  --soft: 0 1px 2px rgba(46, 43, 79, .05), 0 8px 22px -10px rgba(46, 43, 79, .22);
+  --i-blob: #e4def2; --i-hill1: #cfe7df; --i-hill2: #a9d8c9; --i-tree: #6fbfa8; --i-star: #ffffff; --i-sun: #f5c25b;
+  --i-paper: #ffffff; --i-coral: #ef7a5c; --i-pencil: #ef7a5c; --i-pencil-2: #d9634a; --i-wood: #f6dcb0; --i-ink: #2e2b4f;
+  --i-eraser: #f19aa9; --i-metal: #c9c6dc; --i-die: #4644a6; --i-die-2: #34328a; --i-pip: #ffffff; --i-pawn: #3fb39b; --i-pawn-2: #2f9a84;
+  --f-body: "Jost", "Futura", -apple-system, system-ui, sans-serif;
+  --f-display: "Jost", "Futura", -apple-system, system-ui, sans-serif;
+  --f-num: "Jost", "Futura", -apple-system, system-ui, sans-serif;
+  --r: 16px; --r-lg: 24px;
+  --stick: var(--soft);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #272748; --surface: #33335c;
+    --fill: rgba(255, 255, 255, .07); --fill-2: rgba(255, 255, 255, .13); --sep: rgba(255, 255, 255, .08);
+    --ink: #1b1b33; --fg: #f7eedc; --muted: #a9a6c8; --faint: #4f4e7c;
+    --primary: #f07a4f; --on-primary: #ffffff; --sun: #f3b847; --on-sun: #2b2236; --sky: #5fb3c9;
+    --good: #6fcf97; --danger: #ff8a7a; --scrim: rgba(0, 0, 0, .6);
+    --soft: 0 1px 2px rgba(0, 0, 0, .15), 0 10px 24px -12px rgba(0, 0, 0, .55);
+    --i-blob: #34346a; --i-hill1: #2c5f73; --i-hill2: #2f8f86; --i-tree: #1f6b66; --i-star: #f7eedc; --i-sun: #f3b847;
+    --i-paper: #f7eedc; --i-coral: #f07a4f; --i-pencil: #f07a4f; --i-pencil-2: #d8603a; --i-wood: #f3d3a4; --i-ink: #1b1b33;
+    --i-eraser: #ee8aa0; --i-metal: #b9b6d6; --i-die: #3fb5a3; --i-die-2: #2f9384; --i-pip: #f7eedc; --i-pawn: #a99be8; --i-pawn-2: #8c7fd0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #272748; --surface: #33335c;
+  --fill: rgba(255, 255, 255, .07); --fill-2: rgba(255, 255, 255, .13); --sep: rgba(255, 255, 255, .08);
+  --ink: #1b1b33; --fg: #f7eedc; --muted: #a9a6c8; --faint: #4f4e7c;
+  --primary: #f07a4f; --on-primary: #ffffff; --sun: #f3b847; --on-sun: #2b2236; --sky: #5fb3c9;
+  --good: #6fcf97; --danger: #ff8a7a; --scrim: rgba(0, 0, 0, .6);
+  --soft: 0 1px 2px rgba(0, 0, 0, .15), 0 10px 24px -12px rgba(0, 0, 0, .55);
+  --i-blob: #34346a; --i-hill1: #2c5f73; --i-hill2: #2f8f86; --i-tree: #1f6b66; --i-star: #f7eedc; --i-sun: #f3b847;
+  --i-paper: #f7eedc; --i-coral: #f07a4f; --i-pencil: #f07a4f; --i-pencil-2: #d8603a; --i-wood: #f3d3a4; --i-ink: #1b1b33;
+  --i-eraser: #ee8aa0; --i-metal: #b9b6d6; --i-die: #3fb5a3; --i-die-2: #2f9384; --i-pip: #f7eedc; --i-pawn: #a99be8; --i-pawn-2: #8c7fd0;
+  color-scheme: dark;
+}
+

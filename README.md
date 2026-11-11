@@ -1,1 +1,30 @@
 # scoreboard-app
+
+Punktezettel: digitaler Block für Spieleabende, als installierbare Web-App (PWA).
+Später mit Historie, Statistik und Gruppen.
+
+## App
+
+- Live (nach Merge auf `main`): https://jakob2-oss.github.io/scoreboard-app/
+- Installieren am iPhone: Link in Safari öffnen → Teilen → **Zum Home-Bildschirm**
+- Stack: React + TypeScript + Vite, PWA über `vite-plugin-pwa`, Tests mit Vitest
+- Jeder Push auf `main` baut, testet und veröffentlicht automatisch (`.github/workflows/deploy.yml`)
+
+```bash
+npm install
+npm run dev      # Entwicklungsserver
+npm test         # Tests der Rechenregeln
+npm run build    # Produktions-Build nach dist/
+```
+
+## Dokumente
+
+- Briefing & Phasenplan: [docs/BRIEFING.md](docs/BRIEFING.md)
+- Design (festgeschrieben): [docs/DESIGN.md](docs/DESIGN.md)
+- Datenmodell: [docs/DATENMODELL.md](docs/DATENMODELL.md)
+- Spielvorlagen & Bausteine: [docs/VORLAGEN.md](docs/VORLAGEN.md)
+- Klick-Prototyp (Referenz für UI und Abläufe): [prototype/punktezettel.html](prototype/punktezettel.html)
+
+## Stand
+
+Phase 1 (Grundgerüst) fertig. Als Nächstes: Prototyp in die App übertragen (Phase 2).
