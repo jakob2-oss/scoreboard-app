@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap">
 <style>
 /* Konzept „Spieleabend“ im Stil flacher, geometrischer Illustrationen: ruhige Flächen,
    keine Konturen, weiche Schatten. Hell = Papier & Indigo, Dunkel = Mitternacht.
@@ -329,6 +329,81 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 }
 .home-top { display: flex; justify-content: flex-end; padding-top: 6px; height: 50px; margin-bottom: -50px; position: relative; z-index: 1; }
 .home-top .icon-btn { margin: 0 -8px 0 0; color: var(--muted); }
+
+/* ---------- Two-Dots-Schicht: geometrische Schrift, Brett statt Tabelle, Punkte als Formsprache ---------- */
+:root { --f-body: "Jost", "Futura", -apple-system, system-ui, sans-serif; --f-display: "Jost", "Futura", -apple-system, system-ui, sans-serif; --f-num: "Jost", "Futura", -apple-system, system-ui, sans-serif; }
+body { font-weight: 500; letter-spacing: .005em; }
+h1, h2, h3 { letter-spacing: .01em; }
+.eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 6px; }
+.wordmark { display: flex; flex-direction: column; align-items: center; font-size: 40px; font-weight: 600; line-height: .92; letter-spacing: .12em; margin-top: 6px; padding-left: .12em; }
+.wordmark .w1 { color: var(--i-coral); }
+.wordmark .w2 { color: var(--fg); }
+.brand p { margin-top: 8px; font-size: 15px; letter-spacing: .02em; }
+.top h2 { font-weight: 600; letter-spacing: .02em; }
+.row .t b { font-weight: 600; font-size: 18px; letter-spacing: .01em; }
+.tdot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); flex: none; }
+.resume b { font-weight: 600; letter-spacing: .01em; }
+
+/* Avatare */
+.av { width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: var(--on, #fff); display: inline-grid; place-items: center; flex: none; font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: 0; line-height: 1; }
+.av.big { width: 46px; height: 46px; font-size: 21px; }
+
+/* Brett */
+table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-left, 0px)) max(10px, env(safe-area-inset-right, 0px)); }
+.grid th, .grid td { border: 0 !important; }
+.grid thead th { padding: 6px 2px 4px; box-shadow: 0 -8px 0 4px var(--bg); }
+.grid thead th .pn { flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; letter-spacing: .03em; }
+.grid thead th .pn span:not(.av) { max-width: 76px; }
+.grid .corner { font-size: 12px; letter-spacing: .1em; }
+.grid .rn, .grid .corner, .grid .cat { box-shadow: -8px 0 0 4px var(--bg); }
+.grid .rn { font-size: 14px; font-weight: 500; width: 30px; min-width: 30px; }
+.grid td.cell { background: var(--surface); border-radius: 16px; height: 50px; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.grid td.cell.empty { background: transparent; box-shadow: inset 0 0 0 2px var(--fill-2); }
+.grid td.cell.empty::after { width: 7px; height: 7px; background: var(--faint); }
+.grid td.cell.active { box-shadow: inset 0 0 0 3px var(--fg); }
+.grid tr.cur td.cell { box-shadow: inset 0 0 0 2px var(--faint); }
+.grid tr.cur th, .grid tr.cur td { background: transparent; }
+.grid tr.cur td.cell:not(.empty) { background: var(--surface); }
+.grid tr.cur th.rn { color: var(--fg); font-weight: 700; }
+.grid tr.calc td { background: transparent; }
+.grid tr.sep th, .grid tr.sep td { border-top: 0 !important; padding-top: 6px; }
+.grid tfoot th, .grid tfoot td { background: var(--bg); box-shadow: 0 8px 0 4px var(--bg); padding: 0; }
+.grid tfoot th { font-size: 18px; }
+.grid tfoot .tt { background: var(--c); color: var(--on, #fff); border-radius: 18px; padding: 8px 4px 9px; display: flex; flex-direction: column; align-items: center; }
+.grid tfoot .tot { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { color: inherit; opacity: .85; font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.grid tfoot td.lead .tt { box-shadow: 0 8px 18px -10px var(--c); }
+
+/* Spielerseite */
+.pp-hero { align-items: center; }
+.pp-hero .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pp-hero .who > div { min-width: 0; }
+.pp-hero h3 { font-size: 26px; font-weight: 600; letter-spacing: .01em; }
+.pp-hero h3::before { content: none; }
+.pp-hero .place { font-size: 13px; }
+.score-pill { flex: none; background: var(--surface); border-radius: 20px; padding: 8px 16px 10px; box-shadow: var(--soft); display: flex; flex-direction: column; align-items: center; min-width: 96px; }
+.score-pill small { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.score-pill b { font-family: var(--f-num); font-size: 42px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.pp-entry { border-radius: 22px; }
+.pp-entry .lbl { font-weight: 600; letter-spacing: .02em; }
+.pp-entry .val { font-weight: 500; font-size: 46px; }
+.pp-hist button { border-radius: 16px; }
+.pp-hist button b { font-weight: 500; }
+.wz-f b { font-weight: 500; }
+
+/* Tasten: Punkte und Pillen */
+.quick { justify-content: space-between; gap: 8px; padding: 2px 2px 6px; margin: -2px -2px -4px; }
+.pp-panel .quick button { flex: 0 0 46px; }
+.pp-panel .quick button.strike { flex: 1 0 auto; }
+.quick button { flex: 0 0 46px; width: 46px; height: 46px; min-height: 0; padding: 0; border-radius: 50%; font-weight: 600; font-size: 15px; box-shadow: var(--soft); }
+.quick button.strike { flex: 1 0 auto; width: auto; border-radius: 999px; padding: 0 16px; }
+.key { border-radius: 999px; font-weight: 500; font-size: 26px; min-height: 52px; }
+.key.fn { font-family: var(--f-display); }
+.pp-keys .go { border-radius: 28px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 16px; }
+.go-to { text-transform: none; letter-spacing: .01em; }
+.primary { border-radius: 999px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 16px; }
+.secondary { border-radius: 999px; }
+.resume .go-pill { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; padding: 7px 14px; }
 </style>
 
 <!-- ================= Start ================= -->
@@ -394,7 +469,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
             <circle cx="259.5" cy="151.5" r="3.2" fill="#fff" opacity=".35"/>
           </g>
         </svg>
-        <h1>Punktezettel</h1>
+        <h1 class="wordmark" aria-label="Punktezettel"><span class="w1">PUNKTE</span><span class="w2">ZETTEL</span></h1>
         <p>Vorlage wählen, Spieler, los.</p>
       </div>
       <div class="home-body">
@@ -462,6 +537,13 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString
 const now = () => new Date().toISOString();
 const COLORS = ['#ef7a5c', '#3fb39b', '#f0b13e', '#e2709a', '#5fa8d3', '#9a7ad6', '#7cb85a', '#f09a4a'];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Lesbare Schriftfarbe auf einer Spielerfarbe
+function onColor(hex) {
+  const c = parseInt(hex.slice(1), 16), ch = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  const L = .2126 * ch(c >> 16 & 255) + .7152 * ch(c >> 8 & 255) + .0722 * ch(c & 255);
+  return L > .42 ? '#2e2b4f' : '#ffffff';
+}
+const av = (p, big) => `<span class="av${big ? ' big' : ''}" style="--c:${p.color};--on:${onColor(p.color)}" aria-hidden="true">${esc((p.name.trim()[0] || '?').toUpperCase())}</span>`;
 const fmt = n => (n < 0 ? '−' + Math.abs(n) : String(n));
 const store = {
   get(k, d) { try { const v = localStorage.getItem('pz:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
@@ -601,8 +683,9 @@ function renderHome() {
       <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind !== 'cats' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></span>
       <span class="go-pill">Weiter</span>
     </button></div>` : '';
-  $('#tpl-list').innerHTML = templates().map(t => `
+  $('#tpl-list').innerHTML = templates().map((t, k) => `
     <button class="row tpl" data-act="pick-tpl" data-id="${t.id}">
+      <span class="tdot" style="--c:${COLORS[k % COLORS.length]}"></span>
       <span class="t"><b>${esc(t.name)}</b><small>${esc(describe(t))}</small></span>
       ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : '<svg class="chev" viewBox="0 0 8 13" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>'}
     </button>`).join('');
@@ -834,7 +917,8 @@ function renderPage(i) {
       <div class="pp-cat calc ${up >= BONUS_AT ? 'hit' : ''}"><span>Summe oben ${up}/${BONUS_AT}</span><span>Bonus ${up >= BONUS_AT ? '+' + BONUS : '–'}</span></div>
       ${DICE.filter(c => c.sec === 'low').map(row).join('')}</div>`;
   }
-  $('#pp-page-' + i).innerHTML = `<div class="pp-hero"><div><h3>${esc(p.name)}</h3><div class="place">${place}</div></div><div class="total">${fmt(t[p.id])}</div></div>${body}`;
+  $('#pp-page-' + i).innerHTML = `<div class="pp-hero"><div class="who">${av(p, true)}<div><h3>${esc(p.name)}</h3><div class="place">${place}</div></div></div>
+    <div class="score-pill"><small>Punkte</small><b>${fmt(t[p.id])}</b></div></div>${body}`;
 }
 // Wohin führt „Weiter“? Für die Beschriftung der Taste.
 function nextTarget(g) {
@@ -884,7 +968,7 @@ function renderGrid() {
   const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
   const leadIds = started ? rk.filter(x => x.place === 1).map(x => x.p.id) : [];
   const head = `<thead><tr><th class="corner">${g.kind === 'cats' ? '' : '#'}</th>${g.players.map(p =>
-    `<th style="--c:${p.color}" data-act="pp-open" data-i="${g.players.indexOf(p)}"><div class="pn"><span>${esc(p.name)}</span><i class="bar"></i></div></th>`).join('')}</tr></thead>`;
+    `<th style="--c:${p.color}" data-act="pp-open" data-i="${g.players.indexOf(p)}"><div class="pn">${av(p)}<span>${esc(p.name)}</span></div></th>`).join('')}</tr></thead>`;
   let body = '';
   if (isBids(g)) {
     const cur = curRoundIdx(g);
@@ -910,7 +994,7 @@ function renderGrid() {
     const x = rk.find(y => y.p.id === p.id);
     let meta = started ? `${x.place}. Platz` : '&nbsp;';
     if (started && g.end.type === 'target' && g.win === 'high') meta = t[p.id] >= g.end.value ? 'Ziel erreicht' : `noch ${g.end.value - t[p.id]}`;
-    return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}" style="--c:${p.color}"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${leadIds.includes(p.id) ? ICON.crown : ''}${meta}</span></td>`;
+    return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}" style="--c:${p.color};--on:${onColor(p.color)}"><div class="tt"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${leadIds.includes(p.id) ? ICON.crown : ''}${meta}</span></div></td>`;
   }).join('')}</tr></tfoot>`;
   $('#ov-grid').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>
     <p class="ov-hint gutter">Nach links wischen: eigene Seite für jeden Spieler →</p>`;
