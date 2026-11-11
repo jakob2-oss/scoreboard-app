@@ -1044,9 +1044,7 @@ function wizNext() {
   const g = S.game, P = S.pp, ri = g.rounds.findIndex(r => r.id === P.ref), r = g.rounds[ri];
   const ord = order(g, ri), pos = ord.indexOf(P.idx);
   if (pos < ord.length - 1) return ppGotoField(ord[pos + 1], r.id, P.field);
-  if (P.field === 'bid') return ppGotoField(ord[0], r.id, 'tricks');
-  if (ri < g.rounds.length - 1) return ppGotoField(order(g, ri + 1)[0], g.rounds[ri + 1].id, 'bid');
-  ppGoto(-1);
+  backToOverview(P.field === 'bid' ? 'Ansagen komplett · jetzt spielen' : `Runde ${ri + 1} fertig`);
 }
 function wizPageBody(g, i, ref, act) {
   const p = g.players[i], P = S.pp, ri = g.rounds.findIndex(r => r.id === ref), r = g.rounds[ri];
@@ -1103,7 +1101,7 @@ function ppSelect(ref, field) {
 }
 function ppActivate(i) {
   const g = S.game; if (!g) return;
-  S.pp.idx = Math.min(Math.max(-1, i), g.players.length - 1);
+  S.pp.idx = Number.isFinite(i) ? Math.min(Math.max(-1, i), g.players.length - 1) : -1;
   if (S.pp.idx < 0) { S.pp.ref = null; S.pp.buf = ''; S.pp.dirty = false; return; }
   ppSelect(defaultRef(g, g.players[S.pp.idx].id));
 }
@@ -1148,6 +1146,7 @@ function onSwipe(e) {
   clearTimeout(swipeT);
   const sw = e.currentTarget;
   swipeT = setTimeout(() => {
+    if (!sw.isConnected || !sw.clientWidth || $('#s-game').hidden) return; // Ansicht wurde inzwischen ersetzt
     const i = Math.round(sw.scrollLeft / sw.clientWidth) - 1;
     if (i !== S.pp.idx) {
       if (S.pad) { commitPad(); S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
@@ -1203,17 +1202,19 @@ function renderPage(i) {
     <div class="score-pill"><small>Punkte</small><b>${fmt(t[p.id])}</b></div></div>${body}`;
 }
 // Wohin führt „Weiter“? Für die Beschriftung der Taste.
+// Wohin führt „Weiter“? Innerhalb einer Runde zum nächsten Spieler, nach dem letzten zurück in den Überblick.
 function nextTarget(g) {
   const P = S.pp, n = g.players.length;
   if (isBids(g)) {
     const ri = g.rounds.findIndex(r => r.id === P.ref), ord = order(g, ri), pos = ord.indexOf(P.idx);
     if (pos < ord.length - 1) { const p = g.players[ord[pos + 1]]; return { p, label: p.name }; }
-    if (P.field === 'bid') { const p = g.players[ord[0]]; return { p, label: 'Stiche' }; }
-    return ri < g.rounds.length - 1 ? { p: g.players[order(g, ri + 1)[0]], label: 'Runde ' + (ri + 2) } : { label: 'Überblick' };
+    return { done: true, label: P.field === 'bid' ? 'Ansagen fertig' : 'Runde fertig' };
   }
-  if (g.kind === 'rounds' && P.idx === n - 1) return { p: g.players[0], label: 'Nächste Runde' };
-  const p = g.players[(P.idx + 1) % n]; return { p, label: p.name };
+  if (P.idx < n - 1) { const p = g.players[P.idx + 1]; return { p, label: p.name }; }
+  return { done: true, label: g.kind === 'cats' ? 'Zug fertig' : 'Runde fertig' };
 }
+// Zurück zum Scoreboard, mit kurzer Rückmeldung
+function backToOverview(msg) { ppGoto(-1); if (msg) toast(msg); }
 function renderPanel() {
   const g = S.game, P = S.pp, isCat = g.kind === 'cats', off = P.ref ? '' : 'disabled';
   let quick;
@@ -1235,7 +1236,7 @@ function renderPanel() {
   }
   const last = P.idx === g.players.length - 1;
   const nx = nextTarget(g);
-  const goLbl = `Weiter<span class="go-to">${nx.p ? `<i style="--c:${nx.p.color}"></i>` : ''}<span>${esc(nx.label)}</span></span>`;
+  const goLbl = `${nx.done ? 'Fertig' : 'Weiter'}<span class="go-to">${nx.p ? `<i style="--c:${nx.p.color}"></i>` : ''}<span>${esc(nx.done ? 'Überblick' : nx.label)}</span></span>`;
   const d = n => `<button class="key" data-act="pp-digit" data-v="${n}" ${off}>${n}</button>`;
   $('#g-dock').innerHTML = `<div class="pp-panel">${quick}<div class="keys pp-keys">
     ${d(1)}${d(2)}${d(3)}<button class="key fn" data-act="pp-back" aria-label="Löschen" ${off}>${ICON.back}</button>
@@ -1285,7 +1286,7 @@ function renderGrid() {
     return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}" style="--c:${p.color};--on:${onColor(p.color)}"><div class="tt"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${leadIds.includes(p.id) ? ICON.crown : ''}${meta}</span></div></td>`;
   }).join('')}</tr></tfoot>`;
   $('#ov-grid').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>
-    <p class="ov-hint gutter">Nach links wischen: eigene Seite für jeden Spieler →</p>`;
+    <p class="ov-hint gutter">Feld antippen zum Ändern · wischen für die Spielerseiten →</p>`;
 }
 
 function renderBanner() {
@@ -1295,13 +1296,22 @@ function renderBanner() {
     ${e.done ? '<button data-act="result">Ergebnis</button>' : ''}`;
 }
 
+// Was ist im Überblick als Nächstes einzutragen?
+function roundGoLabel(g) {
+  if (isBids(g)) { const ri = curRoundIdx(g); return `${wizPhase(g, g.rounds[ri]) === 'bid' ? 'Ansagen' : 'Stiche'} · Runde ${ri + 1}`; }
+  if (g.kind === 'cats') return 'Zug · ' + g.players[catTurn(g)].name;
+  const ri = g.rounds.findIndex(r => !roundFull(g, r));
+  return `Runde ${ri >= 0 ? ri + 1 : g.rounds.length + 1} eintragen`;
+}
+// Kniffel: wer ist dran? Der erste Spieler mit den wenigsten ausgefüllten Feldern.
+function catTurn(g) {
+  const cnt = g.players.map(p => DICE.filter(c => catVal(g, c.id, p.id) !== null).length);
+  return cnt.indexOf(Math.min(...cnt));
+}
 function renderDock() {
-  const g = S.game;
-  const canAdd = g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value);
-  const main = isBids(g) ? ((endState(g) || {}).done ? '<button class="primary" data-act="result">Ergebnis</button>' : `<button class="primary" data-act="wz-go">Runde ${curRoundIdx(g) + 1} eintragen →</button>`)
-    : g.kind === 'rounds'
-    ? (canAdd ? '<button class="primary" data-act="add-round">+ Runde</button>' : '<button class="primary" data-act="result">Ergebnis</button>')
-    : '<button class="primary" data-act="result">Ergebnis</button>';
+  const g = S.game, e = endState(g), done = (e && e.done) || (g.kind === 'rounds' && !isP10(g) && !canAddRound(g) && g.rounds.every(r => roundFull(g, r)));
+  const main = done ? '<button class="primary" data-act="result">Ergebnis</button>'
+    : `<button class="primary" data-act="round-go">${esc(roundGoLabel(g))} →</button>`;
   $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${main}`;
 }
 
@@ -1356,7 +1366,7 @@ function renderPad() {
   const cols = isCat ? 3 : 4;
   const isLast = !isCat && (() => {
     const pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
-    return pi === g.players.length - 1 && g.end.type === 'rounds' && ri >= g.end.value - 1;
+    return pi === g.players.length - 1;
   })();
   $('#pad').innerHTML = `
     <div class="grab"></div>
@@ -1393,7 +1403,7 @@ function padMove(dir) {
   const g = S.game, P = S.pad;
   let pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
   pi += dir;
-  if (pi >= g.players.length) { pi = 0; ri++; }
+  if (pi >= g.players.length) return false;
   if (pi < 0) { pi = g.players.length - 1; ri--; }
   if (ri < 0) return false;
   if (ri >= g.rounds.length) {
@@ -1555,7 +1565,25 @@ const A = {
     const i = +el.dataset.i; if (i !== S.pp.idx) ppActivate(i);
     ppSelect(el.dataset.r); ppUpdate();
   },
-  'pp-next'() { if (isBids(S.game)) return wizNext(); ppGoto((S.pp.idx + 1) % S.game.players.length); },
+  'pp-next'() {
+    const g = S.game, P = S.pp;
+    if (isBids(g)) return wizNext();
+    if (P.idx >= g.players.length - 1) {
+      const r = g.rounds.find(x => x.id === P.ref);
+      return backToOverview(g.kind === 'cats' ? 'Zug fertig' : r && roundFull(g, r) ? `Runde ${g.rounds.indexOf(r) + 1} komplett` : '');
+    }
+    const ref = P.ref; ppGoto(P.idx + 1);
+    if (g.kind !== 'cats' && ref) { ppSelect(ref); ppUpdate(); }
+  },
+  'round-go'() {
+    const g = S.game;
+    if (isBids(g)) { const n = wizNextOpen(g); return ppGotoField(n.i, n.ref, n.f); }
+    if (g.kind === 'cats') return ppGoto(catTurn(g));
+    const ri = g.rounds.findIndex(r => !roundFull(g, r));
+    if (ri >= 0) { const r = g.rounds[ri]; ppGoto(g.players.findIndex(p => typeof r.s[p.id] !== 'number')); ppSelect(r.id); return ppUpdate(); }
+    if (canAddRound(g) || isP10(g)) { ppGoto(0); ppSelect(NEW); return ppUpdate(); }
+    openResult();
+  },
   'pp-field'(el) { ppSelect(S.pp.ref, el.dataset.f); ppUpdate(); },
   'wz-go'() { const n = wizNextOpen(S.game); ppGotoField(n.i, n.ref, n.f); },
   'pp-digit'(el) {
@@ -1621,8 +1649,7 @@ $('#add-form').addEventListener('submit', ev => {
 
 function enterGame(g) {
   S.game = g; S.undo = [];
-  const n = isBids(g) ? wizNextOpen(g) : null;
-  ppActivate(n ? n.i : g.view === 'players' ? 0 : -1); if (n) ppSelect(n.ref, n.f);
+  ppActivate(-1);
   save(); renderGame();
 }
 if (S.game) { ppActivate(-1); renderGame(); } else renderHome();
