@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('nur „Freies Spiel“, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 1 && !(await p.isVisible('#my-games')));
+  check('Rommé, Skyjo und Freies Spiel, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 3 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
   // Freies Spiel einrichten
@@ -156,6 +156,30 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('Vorlage beim Beenden automatisch gespeichert', (await text('.toast')) === 'Partie und Vorlage gespeichert');
   check('zwei eigene Spiele', (await p.locator('#my-games .row').count()) === 2);
+  // Eigener Zählschritt
+  await p.click('#new-free');
+  await p.click('.step-chips .chip >> text="10"');
+  await p.fill('#own-step', '15'); await p.press('#own-step', 'Enter');
+  check('eigener Zählschritt 15 gewählt', (await p.getAttribute('.step-chips .chip >> text="15"', 'aria-pressed')) === 'true');
+  check('Vorschau zeigt +15', (await text('.step-preview')).includes('+15'));
+  await p.click('.tpl-back');
+
+  // Rommé: Spielseite, Option, direkter Start, ×2
+  await p.click('[data-game="romme"]');
+  check('Rommé-Spielseite', await p.isVisible('#s-gamepage .rule-card'));
+  await shot('08-romme');
+  await p.click('.seg >> text=Bei 1000');
+  check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
+  await p.click('#quick-start');
+  check('Untertitel mit Ziel 1000', (await raw('.top .sub')) === 'Runde 1, Ziel 1000');
+  await p.click('.dock .primary'); await p.waitForTimeout(500);
+  await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
+  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
+  check('Rommé: (20 + 5) × 2 = 50', (await text('section[aria-label="Ben"] .pp-entry .val')) === '50');
+  await shot('09-romme-play');
+  await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row').count()) === 2);
+  await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 
   // Offline

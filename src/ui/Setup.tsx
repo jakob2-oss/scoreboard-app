@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, useApp } from '../store';
 import { MAX_STEPS, STEP_CHOICES, fallbackName } from '../game/templates';
 import type { End } from '../model/types';
@@ -21,6 +22,13 @@ export function Setup() {
     const has = setup.steps.includes(n);
     if (!has && setup.steps.length >= MAX_STEPS) return;
     a.updateSetup({ steps: has ? setup.steps.filter(x => x !== n) : [...setup.steps, n].sort((x, y) => x - y) });
+  };
+  const [own, setOwn] = useState('');
+  const addOwn = (e: React.FormEvent) => {
+    e.preventDefault();
+    const n = parseInt(own, 10);
+    if (n > 0 && !setup.steps.includes(n) && setup.steps.length < MAX_STEPS) a.updateSetup({ steps: [...setup.steps, n].sort((x, y) => x - y) });
+    setOwn('');
   };
   const valid = endKind === 'none' || endValue > 0;
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
@@ -55,10 +63,15 @@ export function Setup() {
           <div className="field">
             <label>Zählschritte (bis zu {MAX_STEPS})</label>
             <div className="chips step-chips">
-              {STEP_CHOICES.map(n => (
+              {[...new Set([...STEP_CHOICES, ...setup.steps])].sort((x, y) => x - y).map(n => (
                 <button key={n} className="chip" aria-pressed={setup.steps.includes(n)} onClick={() => toggleStep(n)}>{n}</button>
               ))}
             </div>
+            <form className="add-row own-step" onSubmit={addOwn}>
+              <input id="own-step" inputMode="numeric" pattern="[0-9]*" placeholder="Eigener Wert" aria-label="Eigener Zählschritt"
+                value={own} onChange={e => setOwn(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+              <button type="submit" disabled={!own || setup.steps.length >= MAX_STEPS}>Hinzufügen</button>
+            </form>
             <div className="quick step-preview" aria-hidden="true">
               {preview.map(n => <span key={n}>{n > 0 ? '+' + n : '−' + -n}</span>)}
             </div>

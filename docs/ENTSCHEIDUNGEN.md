@@ -4,6 +4,8 @@ Kurzes Protokoll, damit Begründungen nicht verloren gehen. Neueste oben.
 
 | Datum | Entscheidung | Warum |
 |---|---|---|
+| 11.11.2026 | Freies Spiel bekommt später eine Sektion „Spezialregeln“, zuerst Notizfelder ohne Verrechnung | Deckt Spiele ab, bei denen man sich etwas merken muss, ohne feste Vorlage |
+| 11.11.2026 | Feste Spiele als Daten (`games.ts`) mit eigener Spielseite, keine Kopie in „Meine Spiele“ | Einheitliches Layout, Statistik über festen Schlüssel |
 | 11.11.2026 | App-Icon Würfel-Figur, In-App-Logo bleibt die Landschafts-Illustration | Große Figur wirkt auf dem Home-Bildschirm, Logo in der App gefiel |
 | 11.11.2026 | Ein freies Spiel statt fester Zettel, jede Konfiguration wird eigene Vorlage | Flexibel; eigener Schlüssel ermöglicht Statistik je Spiel |
 | 11.11.2026 | Vorlage spätestens beim Beenden automatisch speichern | Nichts geht verloren, Vorlagen später zusammenführbar |

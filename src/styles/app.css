@@ -44,3 +44,9 @@ body { margin: 0; }
 .tpl-title { text-align: center; }
 .tpl-body .setup-body { padding-top: 0; }
 .field input::placeholder { color: var(--muted); opacity: .7; }
+
+/* Feste Spiele */
+.pp-panel .quick button.wide { flex: 1 0 auto; width: auto; border-radius: 999px; padding: 0 16px; }
+.own-step { margin-top: 10px; }
+.own-step button:disabled { opacity: .4; }
+.tpl-body .rule-card { margin-top: -4px; }

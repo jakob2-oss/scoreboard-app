@@ -6,6 +6,7 @@ import type { Player } from './model/types';
 import type { GameState } from './game/engine';
 import { liveRounds, seated, totals } from './game/engine';
 import { TPL } from './test/fixtures';
+import { GAMES } from './game/games';
 import type { Template } from './model/types';
 
 function testClock(): Clock {
@@ -217,5 +218,35 @@ describe('Freies Spiel', () => {
     const { st, a } = await fresh();
     a.openSetup(); a.setupNext(); a.playersBack();
     expect(st.get().screen).toBe('setup');
+  });
+});
+
+describe('Feste Spiele', () => {
+  it('Rommé: Raus, Schnelltasten und ×2, Ende per Option, keine eigene Vorlage', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init();
+    a.openGame(GAMES.find(g => g.template.key === 'romme')!.template);
+    expect(st.get().screen).toBe('gamepage');
+    a.setTemplateEnd({ type: 'target', value: 1000 });
+    a.toPlayers(); await a.addPlayer('A'); await a.addPlayer('B');
+    a.playersBack(); expect(st.get().screen).toBe('gamepage');
+    a.start();
+    const g = () => st.get().game!;
+    expect(g().game.rules).toMatchObject({ key: 'romme', win: 'low', end: { type: 'target', value: 1000 } });
+    a.roundGo(); a.setValue(0); a.next();
+    a.add(20); a.add(5); a.mul(2); a.next();
+    expect(totals(g())).toEqual({ id1: 0, id2: 50 });
+    expect(st.get().page).toBe(-1);
+    a.finishGame();
+    expect(mem.templates).toHaveLength(0);
+    expect(GAMES[0].template.end).toEqual({ type: 'target', value: 500 });
+  });
+  it('startet direkt mit den letzten Spielern', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free); await a.addPlayer('A'); await a.addPlayer('B'); a.start(); a.finishGame();
+    a.openGame(GAMES.find(g => g.template.key === 'skyjo')!.template);
+    expect(st.get().selected).toHaveLength(2);
+    a.start();
+    expect(st.get().game!.game.rules.key).toBe('skyjo');
   });
 });

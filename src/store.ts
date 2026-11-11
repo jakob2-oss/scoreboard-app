@@ -9,7 +9,7 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'setup' | 'players' | 'game';
+export type Screen = 'home' | 'setup' | 'gamepage' | 'players' | 'game';
 
 /** Aktive Eingabe: Ziel (Runde × Spieler) und der Text im Ziffernblock. */
 export interface Edit { ref: RoundRef; playerId: string; buf: string; fresh: boolean; dirty: boolean }
@@ -105,7 +105,19 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const known = new Set(state.players.map(p => p.id));
       set({ template: makeFreeTemplate(state.setup, clock), pendingSave: state.setup.save, selected: readLast().filter(id => known.has(id)), screen: 'players' });
     },
-    playersBack() { set({ screen: state.pendingSave || !state.templates.some(t => t.key === state.template?.key) ? 'setup' : 'home' }); },
+    playersBack() {
+      const t = state.template;
+      if (t && !t.custom) { set({ screen: 'gamepage' }); return; }
+      set({ screen: state.pendingSave || !state.templates.some(x => x.key === t?.key) ? 'setup' : 'home' });
+    },
+
+    // ---------- Spielseite eines festen Spiels (Rommé, Skyjo, …)
+    openGame(t: Template) {
+      const known = new Set(state.players.map(p => p.id));
+      set({ template: structuredClone(t), pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'gamepage' });
+    },
+    setTemplateEnd(end: Template['end']) { if (state.template) set({ template: { ...state.template, end } }); },
+    toPlayers() { set({ screen: 'players' }); },
 
     // ---------- Spieler wählen
     pickTemplate(t: Template) {
@@ -196,6 +208,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       buf = (buf === '0' ? '' : buf === '-0' ? '-' : buf) + d;
       writeBuf({ ...e, buf, fresh: false });
     },
+    mul(n: number) { const e = state.edit; if (!e) return; writeBuf({ ...e, buf: String((numOf(e.buf) ?? 0) * n), fresh: false }); },
+    setValue(n: number) { const e = state.edit; if (!e) return; writeBuf({ ...e, buf: String(n), fresh: true }); },
     add(n: number) { const e = state.edit; if (!e) return; writeBuf({ ...e, buf: String((numOf(e.buf) ?? 0) + n), fresh: false }); },
     sign() { const e = state.edit; if (!e) return; writeBuf({ ...e, buf: e.buf.startsWith('-') ? e.buf.slice(1) : '-' + e.buf, fresh: false }); },
     back() { const e = state.edit; if (!e) return; writeBuf({ ...e, buf: e.fresh ? '' : e.buf.slice(0, -1), fresh: false }); },

@@ -6,7 +6,8 @@ import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
 import { GameIcon } from './GamePage';
-import { FREE_ICON } from './art';
+import { FREE_ICON, GAME_ART } from './art';
+import { GAMES } from '../game/games';
 import { FREE_TINT } from './Setup';
 
 /** „Anna, Ben und Clara“ */
@@ -46,6 +47,13 @@ export function Home() {
             <div className="group">
               <div className="eyebrow">Neues Spiel</div>
               <div className="list">
+                {GAMES.map(d => (
+                  <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
+                    <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
+                    <span className="t"><b>{d.template.name}</b></span>
+                    <Chevron />
+                  </button>
+                ))}
                 <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
                   <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
                   <span className="t"><b>Freies Spiel</b></span>

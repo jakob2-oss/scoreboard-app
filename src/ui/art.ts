@@ -39,3 +39,46 @@ export const FREE_SCENE = `<svg class="scene" viewBox="0 0 390 250" preserveAspe
     <path d="M34-12l24 12-24 12z" fill="#f6dcb0"/><path d="M49-4l9 4-9 4z" fill="#2e2b4f"/>
   </g>
 </svg>`;
+
+// ---------------------------------------------------------------- Spiele (aus dem Prototyp übernommen)
+const SUIT: Record<string, string> = {
+  heart: 'M0-5C0-13-12-13-12-4c0 8 12 13 12 18 0-5 12-10 12-18 0-9-12-9-12-1z',
+  spade: 'M0-14C-2-6-12-2-12 5c0 6 7 8 11 3l-3 8h8l-3-8c4 5 11 3 11-3 0-7-10-11-12-19z',
+  diamond: 'M0-14L10 0 0 14-10 0z',
+  club: 'M0-13a6 6 0 0 1 5.5 8.4A6 6 0 1 1 2.5 6L5 14h-10l2.5-8A6 6 0 1 1-5.5-4.6 6 6 0 0 1 0-13z'
+};
+const suit = (k: string, x: number, y: number, s: number, rot: number, fill: string, op = 1) =>
+  `<path d="${SUIT[k]}" transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" fill="${fill}" opacity="${op}"/>`;
+const numCard = (x: number, y: number, rot: number, v: number, c: string, w = 44) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-w * .7}" width="${w}" height="${w * 1.4}" rx="${w * .16}" fill="${c}"/>
+  <circle r="${w * .3}" fill="#fff" opacity=".92"/>
+  <text y="${w * .11}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="${w * .32}" fill="${c}">${String(v).replace('-', '\u2212')}</text></g>`;
+const cloud = (x: number, y: number, s: number, c: string) =>
+  `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><circle cx="-22" cy="4" r="16"/><circle cx="0" cy="-6" r="22"/><circle cx="24" cy="4" r="15"/><rect x="-38" y="4" width="76" height="16" rx="8"/></g>`;
+const SCENE_OPEN = '<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">';
+
+export const GAME_ART: Record<string, { icon: string; scene: string }> = {
+  romme: {
+    icon: `<svg viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(32 57)">
+      <rect x="-13" y="-46" width="26" height="36" rx="4" fill="#e8684f" transform="rotate(-24)"/>
+      <rect x="-13" y="-48" width="26" height="36" rx="4" fill="#2f6f62"/>
+      <g transform="rotate(24)"><rect x="-13" y="-46" width="26" height="36" rx="4" fill="#fbf3e6"/>${suit('heart', 0, -29, .62, 0, '#e8684f')}</g></g></svg>`,
+    scene: `${SCENE_OPEN}<rect width="390" height="250" fill="#e8684f"/>
+      <path d="M-20 70L130-20h90L-20 140z" fill="#df5c45"/><path d="M170 250L390 110v80l-100 60z" fill="#df5c45"/>
+      <circle cx="322" cy="54" r="30" fill="#f6c565"/>
+      ${suit('heart', 58, 72, 2.4, -14, '#fbf3e6', .95)}${suit('spade', 340, 150, 1.7, 14, '#2f3a5c')}${suit('diamond', 128, 140, 1.25, 8, '#f6c565')}${suit('club', 236, 40, 1.35, -10, '#2f6f62')}
+      <path d="M0 192q195-40 390 0v58H0z" fill="#2f6f62"/><path d="M0 192q195-40 390 0" fill="none" stroke="#3f8a7a" stroke-width="7"/>
+      <ellipse cx="195" cy="203" rx="80" ry="8" fill="#000" opacity=".15"/>
+      ${([['A', 'heart', '#e8684f', -30], ['K', 'spade', '#2f3a5c', -10], ['D', 'diamond', '#e8684f', 10], ['B', 'club', '#2f6f62', 30]] as [string, string, string, number][]).map(([l, k, c, a]) => `
+      <g transform="translate(195 206) rotate(${a})"><rect x="-25" y="-96" width="50" height="72" rx="8" fill="#fbf3e6"/>
+        <text x="-19" y="-80" font-family="Jost, sans-serif" font-weight="600" font-size="13" fill="${c}">${l}</text>${suit(k, -14, -64, .42, 0, c)}</g>`).join('')}</svg>`
+  },
+  skyjo: {
+    icon: `<svg viewBox="0 0 64 64" aria-hidden="true">${numCard(22, 22, -6, -2, '#3b4fa8', 20)}${numCard(43, 22, 5, 12, '#e0543a', 20)}${numCard(22, 44, 4, 5, '#4fae5e', 20)}${numCard(43, 44, -5, 0, '#4aa3d8', 20)}</svg>`,
+    scene: `${SCENE_OPEN}<rect width="390" height="250" fill="#78bde6"/><circle cx="322" cy="50" r="28" fill="#f8d77a"/>
+      ${cloud(70, 52, 1, '#fbf6ec')}${cloud(250, 34, .7, '#fbf6ec')}
+      <path d="M150 52q5-5 10 0q5-5 10 0M184 70q4-4 8 0q4-4 8 0" fill="none" stroke="#2f3a5c" stroke-width="2.4" stroke-linecap="round"/>
+      ${cloud(40, 222, 2.2, '#eaf3fb')}${cloud(330, 230, 2.4, '#eaf3fb')}${cloud(200, 246, 2.6, '#f6fafd')}
+      ${numCard(84, 138, -16, -2, '#3b4fa8')}${numCard(142, 112, -6, 0, '#4aa3d8')}${numCard(200, 132, 4, 5, '#4fae5e')}${numCard(258, 108, 12, 9, '#f2b93b')}${numCard(312, 140, 20, 12, '#e0543a')}</svg>`
+  }
+};

@@ -6,7 +6,7 @@ import {
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
-import type { Player } from '../model/types';
+import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
 import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
@@ -15,9 +15,11 @@ const css = (vars: Record<string, string>) => vars as React.CSSProperties;
 const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
 
 /** Schnelltasten aus den Zählschritten der Vorlage: −10 −5 −1 +1 +5 +10 */
-export function quickKeys(g: GameState): number[] {
+export function quickKeys(g: GameState): QuickKey[] {
+  const own = g.game.rules.params?.quick;
+  if (own && own.length) return own;
   const s = [...stepsOf(g.game.rules)].sort((a, b) => a - b);
-  return [...s].reverse().map(n => -n).concat(s);
+  return [...s].reverse().map(n => -n).concat(s).map(n => ({ label: n > 0 ? '+' + n : '\u2212' + -n, op: 'add' as const, v: n }));
 }
 
 function subtitle(g: GameState): string {
@@ -231,8 +233,9 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
   return (
     <div className="pp-panel">
       <div className="quick">
-        {quickKeys(g).map(n => (
-          <button key={n} className={n < 0 ? 'strike' : ''} onClick={() => a.add(n)}>{n > 0 ? '+' + n : '−' + -n}</button>
+        {quickKeys(g).map(k => (
+          <button key={k.label} className={k.op === 'set' ? 'strike wide' : k.v < 0 ? 'strike' : ''}
+            onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : a.setValue(k.v))}>{k.label}</button>
         ))}
       </div>
       <div className="keys pp-keys">

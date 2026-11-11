@@ -44,9 +44,14 @@ export interface Template {
   deletedAt?: ISODate | null;
 }
 
+/** Schnelltaste: Wert addieren, setzen oder multiplizieren */
+export interface QuickKey { label: string; op: 'add' | 'set' | 'mul'; v: number }
+
 export interface TemplateParams {
   /** Zählschritte für die Schnelltasten, z. B. [1, 5, 10] → −10 −5 −1 +1 +5 +10 */
   steps?: number[];
+  /** Eigene Schnelltasten eines Spiels; ersetzt die aus steps abgeleiteten */
+  quick?: QuickKey[];
   [key: string]: unknown;
 }
 
