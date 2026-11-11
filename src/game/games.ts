@@ -15,6 +15,12 @@ export interface GameDef {
 
 export const GAMES: GameDef[] = [
   {
+    template: { key: 'wizard', version: 1, name: 'Wizard', scoring: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, players: { min: 3, max: 6 } },
+    acc: '#7a5cc9', tint: '#ece6fb',
+    text: 'Jede Runde gibt es <b>eine Karte mehr</b>. Bevor gespielt wird, sagt jeder an, wie viele Stiche er holt. Wer <b>genau richtig liegt</b>, bekommt <b>20 Punkte plus 10 pro Stich</b>. Wer danebenliegt, verliert <b>10 Punkte pro Stich Abweichung</b>.',
+    example: [['2', 'angesagt'], ['2', 'geholt'], ['+40', 'Punkte']]
+  },
+  {
     template: {
       key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'target', value: 500 }, players: { min: 2, max: 6 },
       params: { quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }

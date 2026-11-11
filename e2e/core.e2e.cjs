@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('Rommé, Skyjo und Freies Spiel, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 3 && !(await p.isVisible('#my-games')));
+  check('Wizard, Rommé, Skyjo und Freies Spiel, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 4 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
   // Freies Spiel einrichten
@@ -180,6 +180,24 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row').count()) === 2);
   await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
+
+  // Wizard: Ansagen, zurück zum Überblick, Stiche
+  await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
+  check('Wizard: 20 Runden bei 3 Spielern', (await p.locator('tbody tr').count()) === 20);
+  check('Wizard: Knopf „Ansagen Runde 1“', (await raw('#round-go')).startsWith('Ansagen Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  check('Wizard: Ben sagt zuerst an', (await page()) === 1);
+  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
+  check('Wizard: nach Ansagen im Überblick', (await page()) === -1 && (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  await shot('12-wizard-bids');
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  await shot('13-wizard-page');
+  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
+  check('Wizard: Punkte 20, 30, 20', (await text('tbody tr:nth-child(1)')).replace(/ /g, '') === '1+200/0+301/1+200/0', await text('tbody tr:nth-child(1)'));
+  check('Wizard: weiter mit Ansagen Runde 2', (await raw('#round-go')).startsWith('Ansagen Runde 2'));
+  await shot('14-wizard-ov');
+  await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 
   // Offline

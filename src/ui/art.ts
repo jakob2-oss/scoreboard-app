@@ -58,6 +58,23 @@ const cloud = (x: number, y: number, s: number, c: string) =>
 const SCENE_OPEN = '<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">';
 
 export const GAME_ART: Record<string, { icon: string; scene: string }> = {
+  wizard: {
+    icon: `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="51" rx="25" ry="6.5" fill="#5a46a3"/>
+      <path d="M13 51c9-4 13-21 18-42 6 13 12 31 20 42z" fill="#7a5cc9"/><path d="M17 47c9-3 21-3 30 0l2 4c-11-3-22-3-34 0z" fill="#f6d27a"/>
+      <path d="${st(33, 31, 6)}" fill="#f6d27a"/><path d="${st(51, 15, 4.5)}" fill="#f6d27a"/><circle cx="13" cy="22" r="2.2" fill="#a99be8"/></svg>`,
+    scene: `${SCENE_OPEN}<rect width="390" height="250" fill="#2f2563"/><circle cx="80" cy="30" r="120" fill="#382c74"/>
+      <g fill="#f7eedc"><circle cx="30" cy="40" r="1.8" opacity=".7"/><circle cx="140" cy="28" r="1.5" opacity=".6"/><circle cx="210" cy="50" r="2" opacity=".7"/><circle cx="360" cy="120" r="1.6" opacity=".6"/>
+        <path d="${st(180, 26, 6)}"/><path d="${st(42, 96, 4.5)}" opacity=".8"/><path d="${st(352, 34, 4)}" opacity=".8"/></g>
+      <circle cx="305" cy="70" r="34" fill="#f6d27a"/><circle cx="322" cy="58" r="30" fill="#2f2563"/>
+      <path d="M0 190l55-48 50 32 62-56 72 60 58-44 93 50v66H0z" fill="#45388a"/><path d="M0 214c70-26 130-28 190-10s120 10 200-6v52H0z" fill="#5a46a3"/>
+      <rect x="52" y="118" width="34" height="98" fill="#241c4f"/><path d="M45 121l24-46 24 46z" fill="#7a5cc9"/><path d="M69 75v-14l12 5-12 5" fill="#f6d27a"/>
+      <rect x="64" y="138" width="10" height="14" rx="5" fill="#f6d27a"/><rect x="64" y="168" width="10" height="14" rx="5" fill="#f6d27a" opacity=".6"/>
+      <path d="M0 234c110-22 220-18 300-4s70 0 90-4v24H0z" fill="#241c4f"/>
+      <path d="M92 98c40-60 100-60 112-20" fill="none" stroke="#f6d27a" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0 12"/>
+      <g transform="translate(206 128) rotate(-14)"><rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#7a5cc9"/><path d="${st(0, 0, 13)}" fill="#f6d27a"/></g>
+      <g transform="translate(258 116) rotate(12)"><rect x="-24" y="-34" width="48" height="68" rx="8" fill="#f7eedc"/><rect x="-17" y="-27" width="34" height="54" rx="5" fill="#3fb5a3"/>
+        <circle cx="0" cy="-4" r="9" fill="#f7eedc"/><path d="M-11 14q11-10 22 0" fill="none" stroke="#f7eedc" stroke-width="4" stroke-linecap="round"/></g></svg>`
+  },
   romme: {
     icon: `<svg viewBox="0 0 64 64" aria-hidden="true"><g transform="translate(32 57)">
       <rect x="-13" y="-46" width="26" height="36" rx="4" fill="#e8684f" transform="rotate(-24)"/>

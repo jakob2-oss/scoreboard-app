@@ -50,3 +50,14 @@ body { margin: 0; }
 .own-step { margin-top: 10px; }
 .own-step button:disabled { opacity: .4; }
 .tpl-body .rule-card { margin-top: -4px; }
+
+/* Wizard */
+.pp-entry.wz { box-shadow: var(--soft); }
+.wz-hint.warn { color: var(--danger); font-weight: 600; }
+.grid td.cell.pend { background: var(--surface); }
+
+/* Wizard */
+.pp-entry.wz { box-shadow: var(--soft); }
+.wz-hint.warn { color: var(--danger); font-weight: 600; }
+.grid td.cell.pend { background: var(--surface); }
+.pp-panel .quick.bids { justify-content: flex-start; }

@@ -21,18 +21,21 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
   - Rommé und Skyjo spielbar, Direktstart mit den letzten Spielern
   - Freies Spiel: eigene Zählschritte per Eingabefeld
 
+- **Paket 2b:** Wizard
+  - `scoring: 'bids'` in `engine.ts`: `fieldOf`, `setField`, `bidPhase`, `inputOrder`; Punkte über `src/rules/wizard.ts`
+  - Ablauf: „Ansagen Runde n“, zurück zum Überblick, „Stiche Runde n“, Geber rotiert
+  - Spielerseite mit Feldern Ansage und Stiche (`BidEntry` in `Game.tsx`), Tasten 0 bis Kartenzahl tragen ein und springen weiter
+  - Zelle im Überblick antippen öffnet bei Wizard die Spielerseite der Runde
+
 ## Als Nächstes
-1. **Paket 2b: Wizard.** Neuer Baustein `scoring: 'bids'` in `engine.ts` (Ansage und Stiche je Eintrag,
-   Punkte über `src/rules/wizard.ts`), Überblick-Knopf „Ansagen“ dann „Stiche“, Geber rotiert.
-   Ablauf, Spielerseite und Szene stehen im Prototyp (`wizPageBody`, `wizNext`, `SCENE.wizard`).
-2. **Paket 2c: Kniffel** (`scoring: 'categories'`, Bonus 35 ab 63) und **Phase 10** (Haken je Runde,
+1. **Paket 2c: Kniffel** (`scoring: 'categories'`, Bonus 35 ab 63) und **Phase 10** (Haken je Runde,
    Rang erst nach Phase). Vorlagen im Prototyp (`DICE`, `phaseCard`).
-3. **Spezialregeln im freien Spiel** (von Jakob vorgemerkt): eigene Sektion in der Konfiguration.
+2. **Spezialregeln im freien Spiel** (von Jakob vorgemerkt): eigene Sektion in der Konfiguration.
    Erste Regel: **Notizfelder** je Runde und Spieler, die rechts neben dem Punktwert stehen
    (wie die Ansage bei Wizard, aber ohne Verrechnung). Idee: `params.notes: [{ key, label }]`,
    Werte im Eintrag unter `values.notes`.
-4. **Paket 3: Historie & Statistik**: Profile, Filter, Direktvergleich, Beispieldaten, JSON-Backup.
-5. Später: Skat, Doppelkopf, Arschloch (Rang pro Runde), dann Accounts & Sync (Phase 4).
+3. **Paket 3: Historie & Statistik**: Profile, Filter, Direktvergleich, Beispieldaten, JSON-Backup.
+4. Später: Skat, Doppelkopf, Arschloch (Rang pro Runde), dann Accounts & Sync (Phase 4).
 
 ## Offene Punkte
 - Gespeicherte Vorlagen lassen sich noch nicht bearbeiten oder löschen.
@@ -41,5 +44,5 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
 - JSON-Backup fehlt noch (wichtig gegen Datenverlust, Paket 3).
 
 ## Tests
-- Unit-Tests: 44 (Logik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 63 Prüfungen
+- Unit-Tests: 48 (Logik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 69 Prüfungen

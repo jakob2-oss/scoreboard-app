@@ -4,15 +4,15 @@ import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/tem
 import { realClock, type Clock } from './lib/id';
 import { PLAYER_COLORS } from './lib/color';
 import {
-  createGame, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
-  type GameState, type RoundRef
+  bidPhase, createGame, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
 
 export type Screen = 'home' | 'setup' | 'gamepage' | 'players' | 'game';
 
 /** Aktive Eingabe: Ziel (Runde × Spieler) und der Text im Ziffernblock. */
-export interface Edit { ref: RoundRef; playerId: string; buf: string; fresh: boolean; dirty: boolean }
+export interface Edit { ref: RoundRef; playerId: string; buf: string; fresh: boolean; dirty: boolean; field?: BidField }
 
 export interface AppState {
   ready: boolean;
@@ -68,7 +68,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
 
   const numOf = (buf: string): number | null => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
   const valueAt = (g: GameState, ref: RoundRef, playerId: string) => (ref === 'new' ? null : scoreOf(g, ref, playerId));
-  const makeEdit = (g: GameState, ref: RoundRef, playerId: string): Edit => {
+  const makeEdit = (g: GameState, ref: RoundRef, playerId: string, field?: BidField): Edit => {
+    if (isBids(g) && ref !== 'new') {
+      const f = field ?? (fieldOf(g, ref, playerId, 'bid') === null ? 'bid' : 'tricks');
+      const v = fieldOf(g, ref, playerId, f);
+      return { ref, playerId, field: f, buf: v === null ? '' : String(v), fresh: v !== null, dirty: false };
+    }
     const v = valueAt(g, ref, playerId);
     return { ref, playerId, buf: v === null ? '' : String(v), fresh: v !== null, dirty: false };
   };
@@ -78,6 +83,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     const g = state.game; if (!g) return;
     const value = numOf(edit.buf);
     if (edit.ref === 'new' && value === null) { set({ edit }); return; }
+    if (edit.field && edit.ref !== 'new') {
+      const ng = setField(g, edit.ref, edit.playerId, edit.field, value, clock);
+      const stored = fieldOf(ng, edit.ref, edit.playerId, edit.field);
+      set({ game: ng, undo: edit.dirty ? state.undo : [...state.undo.slice(-99), g], edit: { ...edit, dirty: true, buf: stored === null ? edit.buf : String(stored) } });
+      persist(ng); return;
+    }
     const undo = edit.dirty ? state.undo : [...state.undo.slice(-99), g];
     const r = setScore(g, edit.ref, edit.playerId, value, clock);
     const next: Edit = { ...edit, dirty: true, ref: r.roundId ?? edit.ref };
@@ -161,27 +172,43 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
 
     // ---------- Navigation in der Partie
     /** Seite wechseln; optional mit festem Ziel (Runde), sonst Standardziel des Spielers. */
-    goPage(i: number, ref?: RoundRef) {
+    goPage(i: number, ref?: RoundRef, field?: BidField) {
       const g = state.game; if (!g) return;
       if (i < 0) { set({ page: -1, edit: null }); return; }
       const p = seated(g)[i]; if (!p) return;
-      set({ page: i, pad: false, edit: makeEdit(g, ref ?? defaultRef(g, p.id), p.id) });
+      set({ page: i, pad: false, edit: makeEdit(g, ref ?? defaultRef(g, p.id), p.id, field) });
     },
     selectRef(ref: RoundRef) {
       const g = state.game, e = state.edit; if (!g || !e) return;
       set({ edit: makeEdit(g, ref, e.playerId) });
     },
+    /** Wizard: zwischen Ansage und Stichen wechseln */
+    selectField(field: BidField) {
+      const g = state.game, e = state.edit; if (!g || !e) return;
+      set({ edit: makeEdit(g, e.ref, e.playerId, field) });
+    },
+    /** Wert setzen und gleich weiter (Wizard-Schnelltasten) */
+    pick(n: number) { actions.setValue(n); actions.next(); },
     /** Knopf im Überblick: zum nächsten offenen Feld */
     roundGo() {
       const g = state.game; if (!g) return;
       const step = nextStep(g);
       if (step.kind === 'result') { set({ sheet: 'result' }); return; }
-      actions.goPage(step.playerIndex, step.ref);
+      actions.goPage(step.playerIndex, step.ref, step.field);
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
     next() {
       const g = state.game, e = state.edit; if (!g || !e) return;
       const players = seated(g), i = players.findIndex(p => p.id === e.playerId);
+      if (e.field && e.ref !== 'new') {
+        const order = inputOrder(g, e.ref), pos = order.indexOf(i);
+        if (pos < order.length - 1) { actions.goPage(order[pos + 1], e.ref, e.field); return; }
+        const full = roundFull(g, e.ref), bidsDone = bidPhase(g, e.ref) === 'tricks';
+        set({ page: -1, edit: null });
+        if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
+        else if (e.field === 'bid' && bidsDone) toast('Ansagen komplett');
+        return;
+      }
       if (i < players.length - 1) {
         const ref = e.ref;
         if (state.pad) set({ edit: makeEdit(g, ref, players[i + 1].id) });
@@ -196,6 +223,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
+      if (isBids(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
       set({ pad: true, edit: makeEdit(g, ref, playerId) });
     },
     closePad() { set({ pad: false, edit: null }); },
@@ -221,7 +249,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const restored = restore(g, prev, clock);
       const e = state.edit;
       const ref = e && e.ref !== 'new' && !liveRounds(restored).some(r => r.id === e.ref) ? 'new' : e?.ref;
-      set({ game: restored, undo: state.undo.slice(0, -1), edit: e && ref ? makeEdit(restored, ref, e.playerId) : null });
+      set({ game: restored, undo: state.undo.slice(0, -1), edit: e && ref ? makeEdit(restored, ref, e.playerId, e.field) : null });
       persist(restored);
       toast('Rückgängig gemacht');
     },

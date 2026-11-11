@@ -239,7 +239,7 @@ describe('Feste Spiele', () => {
     expect(st.get().page).toBe(-1);
     a.finishGame();
     expect(mem.templates).toHaveLength(0);
-    expect(GAMES[0].template.end).toEqual({ type: 'target', value: 500 });
+    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'target', value: 500 });
   });
   it('startet direkt mit den letzten Spielern', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
@@ -248,5 +248,56 @@ describe('Feste Spiele', () => {
     expect(st.get().selected).toHaveLength(2);
     a.start();
     expect(st.get().game!.game.rules.key).toBe('skyjo');
+  });
+});
+
+describe('Wizard', () => {
+  async function wiz() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    return { st, a };
+  }
+  it('legt 60 ÷ Spieler Runden an und startet im Überblick', async () => {
+    const { st } = await wiz();
+    expect(liveRounds(st.get().game!)).toHaveLength(20);
+    expect(st.get().page).toBe(-1);
+  });
+  it('führt durch Ansagen, zurück zum Überblick, dann Stiche, und rechnet', async () => {
+    const { st, a } = await wiz();
+    a.roundGo();
+    expect(st.get().page).toBe(1);            // B beginnt, A gibt
+    expect(st.get().edit?.field).toBe('bid');
+    a.pick(1); expect(st.get().page).toBe(2);
+    a.pick(0); expect(st.get().page).toBe(0);
+    a.pick(0);
+    expect(st.get().page).toBe(-1);
+    expect(st.get().toast?.text).toBe('Ansagen komplett');
+    a.roundGo();
+    expect(st.get().edit?.field).toBe('tricks');
+    a.pick(1); a.pick(0); a.pick(0);
+    expect(st.get().page).toBe(-1);
+    expect(st.get().toast?.text).toBe('Runde 1 komplett');
+    expect(totals(st.get().game!)).toEqual({ id1: 20, id2: 30, id3: 20 });
+    a.roundGo();
+    expect(st.get().page).toBe(2);            // Runde 2: B gibt, C beginnt
+    expect(st.get().edit?.field).toBe('bid');
+  });
+  it('begrenzt Werte auf die Kartenzahl und erlaubt Korrektur über das Feld', async () => {
+    const { st, a } = await wiz();
+    a.roundGo(); a.digit(7);
+    expect(st.get().edit?.buf).toBe('1');
+    a.selectField('tricks'); a.digit(0);
+    a.selectField('bid'); a.digit(0);
+    expect(totals(st.get().game!).id2).toBe(20);
+    a.undo();
+    expect(totals(st.get().game!).id2).toBe(-10);
+  });
+  it('öffnet beim Antippen einer Zelle die Spielerseite statt des Ziffernblocks', async () => {
+    const { st, a } = await wiz();
+    a.openPad(liveRounds(st.get().game!)[0].id, 'id3');
+    expect(st.get().pad).toBe(false);
+    expect(st.get().page).toBe(2);
   });
 });
