@@ -424,6 +424,18 @@ table.grid { border-spacing: 6px; padding-inline: max(10px, env(safe-area-inset-
 .ticon svg { width: 32px; height: 32px; }
 .top .g-ic { width: 34px; height: 34px; border-radius: 50%; background: var(--tc); display: grid; place-items: center; flex: none; margin-right: 6px; }
 .top .g-ic svg { width: 26px; height: 26px; }
+
+/* Phase 10 */
+.ph-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--soft); padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px 12px; align-items: center; }
+.ph-dots { grid-column: 1 / -1; display: flex; gap: 6px; }
+.ph-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--fill-2); }
+.ph-dots i.on { background: var(--c); }
+.ph-dots i.now { background: transparent; box-shadow: inset 0 0 0 2.5px var(--c); }
+.ph-now { min-width: 0; }
+.ph-now small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ph-now b { font-weight: 600; font-size: 17px; }
+.ph-toggle { min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--fill); font-weight: 600; font-size: 15px; white-space: nowrap; }
+.ph-toggle[aria-pressed="true"] { background: var(--c); color: var(--on, #fff); }
 </style>
 
 <!-- ================= Start ================= -->
@@ -608,7 +620,12 @@ const BUILTIN = [
   { id: 'romme', name: 'Rommé', kind: 'rounds', win: 'low', end: { type: 'target', value: 500 }, view: 'players', min: 2, max: 6, quick: 'romme',
     page: true, icon: 'romme', scene: 'romme', tint: '#fde6df', sub: 'Strafpunkte · wenigste Punkte gewinnen',
     options: [{ key: 'end', label: 'Spielende', choices: [{ l: 'Bei 500', v: { type: 'target', value: 500 } }, { l: 'Bei 1000', v: { type: 'target', value: 1000 } }, { l: 'Offen', v: { type: 'none' } }] }] },
-  { id: 'dice', glyph: '⚄', name: 'Würfel-Kategorien', kind: 'cats', win: 'high', end: { type: 'cats' }, game: true },
+  { id: 'dice', name: 'Kniffel', kind: 'cats', win: 'high', end: { type: 'cats' }, page: true, icon: 'kniffel', scene: 'kniffel', tint: '#dff1ee', sub: 'Würfel-Kategorien · Bonus ab 63' },
+  { id: 'skyjo', name: 'Skyjo', kind: 'rounds', win: 'low', end: { type: 'target', value: 100 }, view: 'players', min: 2, max: 8, quick: 'skyjo',
+    page: true, icon: 'skyjo', scene: 'skyjo', tint: '#e1f0fa', sub: 'Bis 100 · wenigste Punkte gewinnen',
+    options: [{ key: 'end', label: 'Spielende', choices: [{ l: 'Bei 100', v: { type: 'target', value: 100 } }, { l: 'Offen', v: { type: 'none' } }] }] },
+  { id: 'phase10', name: 'Phase 10', kind: 'rounds', win: 'low', end: { type: 'none' }, view: 'players', min: 2, max: 6, quick: 'phase10',
+    page: true, icon: 'phase10', scene: 'phase10', tint: '#fdeccc', sub: 'Phasen & Strafpunkte · 2–6 Spieler' },
   { id: 'free', glyph: '∞', name: 'Freie Runden', kind: 'rounds', win: 'high', end: { type: 'none' } },
   { id: 't500', glyph: '500', name: 'Bis 500 Punkte', kind: 'rounds', win: 'high', end: { type: 'target', value: 500 } },
   { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
@@ -675,9 +692,10 @@ function totals(g) {
 }
 function ranking(g) {
   const t = totals(g);
-  const arr = g.players.map(p => ({ p, t: t[p.id] })).sort((a, b) => g.win === 'high' ? b.t - a.t : a.t - b.t);
+  const arr = g.players.map(p => ({ p, t: t[p.id], ph: isP10(g) ? phDone(g, p.id) : 0 }))
+    .sort((a, b) => (b.ph - a.ph) || (g.win === 'high' ? b.t - a.t : a.t - b.t));
   let place = 0, last = null;
-  arr.forEach((x, i) => { if (x.t !== last) { place = i + 1; last = x.t; } x.place = place; });
+  arr.forEach((x, i) => { const key = x.ph + '|' + x.t; if (key !== last) { place = i + 1; last = key; } x.place = place; });
   return arr;
 }
 function anyScore(g) {
@@ -689,6 +707,12 @@ function curRoundIdx(g) {
   return i === -1 ? g.rounds.length - 1 : i;
 }
 function endState(g) {
+  if (isP10(g)) {
+    const fin = g.players.filter(p => phDone(g, p.id) >= 10);
+    if (!fin.length) return null;
+    const r = g.rounds[g.rounds.length - 1], full = r && roundFull(g, r);
+    return { done: full, text: `${fin.map(p => p.name).join(', ')} hat Phase 10 geschafft` + (full ? '' : ' · Runde zu Ende eintragen') };
+  }
   if (g.kind === 'cats') {
     const done = DICE.every(c => g.players.every(p => catVal(g, c.id, p.id) !== null));
     return done ? { done: true, text: 'Alle Felder ausgefüllt' } : null;
@@ -817,6 +841,104 @@ function renderTplPage() {
     ? `<button class="secondary" data-act="tpl-players">Spieler</button><button class="primary" data-act="tpl-start">Los · ${last.length} Spieler</button>`
     : `<button class="primary" data-act="tpl-players">Spieler wählen</button>`;
   $('#s-tpl .scroll').scrollTop = 0;
+}
+
+/* ---------------- Weitere Spiele: Kniffel, Skyjo, Phase 10 ---------------- */
+// Würfel mit Augen (flach, mit dunklerer Unterkante)
+function die(x, y, s, rot, face, fill, pip, side) {
+  const o = s * .27, P = { 1: [[0, 0]], 2: [[-o, -o], [o, o]], 3: [[-o, -o], [0, 0], [o, o]], 4: [[-o, -o], [o, -o], [-o, o], [o, o]],
+    5: [[-o, -o], [o, -o], [0, 0], [-o, o], [o, o]], 6: [[-o, -o], [o, -o], [-o, 0], [o, 0], [-o, o], [o, o]] }[face];
+  return `<g transform="translate(${x} ${y}) rotate(${rot})">
+    <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s * 1.1}" rx="${s * .2}" fill="${side}"/>
+    <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .2}" fill="${fill}"/>
+    ${P.map(([a, b]) => `<circle cx="${a}" cy="${b}" r="${s * .085}" fill="${pip}"/>`).join('')}</g>`;
+}
+// Zahlkarte im Skyjo-Stil
+const numCard = (x, y, rot, v, c, w = 44) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-w * .7}" width="${w}" height="${w * 1.4}" rx="${w * .16}" fill="${c}"/>
+  <circle r="${w * .3}" fill="#fff" opacity=".92"/>
+  <text y="${w * .11}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="${w * .32}" fill="${c}">${String(v).replace('-', '\u2212')}</text></g>`;
+const cloud = (x, y, s, c) => `<g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><circle cx="-22" cy="4" r="16"/><circle cx="0" cy="-6" r="22"/><circle cx="24" cy="4" r="15"/><rect x="-38" y="4" width="76" height="16" rx="8"/></g>`;
+const P10C = ['#e0543a', '#3b6fc4', '#4fae5e', '#f2c14e'];
+
+Object.assign(GAME_ICON, {
+  kniffel: `<svg viewBox="0 0 64 64" aria-hidden="true">${die(24, 34, 26, -12, 5, '#fbf3e6', '#e8684f', '#e2d6c2')}${die(42, 30, 22, 14, 3, '#e8684f', '#fbf3e6', '#c9523c')}</svg>`,
+  skyjo: `<svg viewBox="0 0 64 64" aria-hidden="true">${numCard(22, 22, -6, -2, '#3b4fa8', 20)}${numCard(43, 22, 5, 12, '#e0543a', 20)}${numCard(22, 44, 4, 5, '#4fae5e', 20)}${numCard(43, 44, -5, 0, '#4aa3d8', 20)}</svg>`,
+  phase10: `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <rect x="9" y="40" width="14" height="14" rx="3" fill="#e0543a"/><rect x="25" y="30" width="14" height="24" rx="3" fill="#3b6fc4"/><rect x="41" y="20" width="14" height="34" rx="3" fill="#4fae5e"/>
+    <path d="M48 20V6" stroke="#2f3a5c" stroke-width="2.4" stroke-linecap="round"/><path d="M48 6l10 4-10 4z" fill="#f2c14e"/></svg>`
+});
+
+Object.assign(SCENE, {
+  kniffel: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#2f8f86"/>
+    <path d="M150-10h90L60 260H-30z" fill="#38998f"/><path d="M300-10h60L220 260h-60z" fill="#38998f"/>
+    <circle cx="72" cy="62" r="34" fill="#f6c565"/>
+    <g fill="#fbf3e6"><circle cx="190" cy="34" r="2.5" opacity=".7"/><circle cx="340" cy="40" r="3" opacity=".6"/><circle cx="30" cy="140" r="2.2" opacity=".6"/></g>
+    <g fill="#e8684f"><circle cx="250" cy="70" r="3"/><circle cx="130" cy="104" r="2.4"/></g>
+    <path d="M0 196q195-34 390 0v54H0z" fill="#24706a"/>
+    <ellipse cx="200" cy="208" rx="130" ry="9" fill="#000" opacity=".14"/>
+    ${die(312, 120, 50, 14, 6, '#f6c565', '#2f3a5c', '#d9a640')}
+    ${die(104, 170, 44, 18, 2, '#a99be8', '#fbf3e6', '#8c7fd0')}
+    ${die(160, 160, 66, -12, 5, '#fbf3e6', '#e8684f', '#e2d6c2')}
+    ${die(244, 162, 60, 10, 3, '#e8684f', '#fbf3e6', '#c9523c')}
+  </svg>`,
+  skyjo: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#78bde6"/>
+    <circle cx="322" cy="50" r="28" fill="#f8d77a"/>
+    ${cloud(70, 52, 1, '#fbf6ec')}${cloud(250, 34, .7, '#fbf6ec')}
+    <path d="M150 52q5-5 10 0q5-5 10 0M184 70q4-4 8 0q4-4 8 0" fill="none" stroke="#2f3a5c" stroke-width="2.4" stroke-linecap="round"/>
+    ${cloud(40, 222, 2.2, '#eaf3fb')}${cloud(330, 230, 2.4, '#eaf3fb')}${cloud(200, 246, 2.6, '#f6fafd')}
+    ${numCard(84, 138, -16, -2, '#3b4fa8')}${numCard(142, 112, -6, 0, '#4aa3d8')}${numCard(200, 132, 4, 5, '#4fae5e')}${numCard(258, 108, 12, 9, '#f2b93b')}${numCard(312, 140, 20, 12, '#e0543a')}
+  </svg>`,
+  phase10: () => `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="390" height="250" fill="#f6b85e"/>
+    <path d="M-10 40L120-10h80L-10 110z" fill="#f9c77a"/>
+    <circle cx="210" cy="232" r="96" fill="#fbe1a0"/>
+    <g fill="#fff8e6"><circle cx="60" cy="150" r="2.5"/><circle cx="330" cy="40" r="2.5"/><circle cx="260" cy="70" r="2"/></g>
+    <path d="M0 214q100-34 200-6t190-10v52H0z" fill="#e99b4f"/>
+    ${Array.from({ length: 10 }, (_, k) => { const h = 22 + k * 15, x = 30 + k * 33; return `<rect x="${x}" y="${232 - h}" width="30" height="${h + 20}" rx="6" fill="${P10C[k % 4]}"/>
+      <text x="${x + 15}" y="${232 - h + 19}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="13" fill="#fff8e6">${k + 1}</text>`; }).join('')}
+    <path d="M342 75V30" stroke="#2f3a5c" stroke-width="3" stroke-linecap="round"/><path d="M342 30l22 8-22 8z" fill="#e0543a"/>
+    <g transform="translate(212 128)"><ellipse cy="14" rx="11" ry="4" fill="#2f3a5c"/><path d="M-8 13c1-9 3-15 6-18h4c3 3 5 9 6 18z" fill="#2f3a5c"/><circle cy="-10" r="7" fill="#2f3a5c"/></g>
+  </svg>`
+});
+
+Object.assign(RULES, {
+  kniffel: [
+    'Jeder hat pro Zug bis zu drei Würfe und trägt dann in ein freies Feld ein.',
+    'Oben zählen nur die passenden Augen, z. B. drei Vierer = 12.',
+    'Ab 63 Punkten oben gibt es 35 Bonuspunkte. Die App rechnet mit.',
+    'Passt nichts, wird ein Feld gestrichen (0). Nach 13 Runden ist Schluss.'
+  ],
+  skyjo: [
+    'Am Rundenende zählt jeder die Werte seiner Karten zusammen (−2 bis 12).',
+    'Wer die Runde beendet, aber nicht die wenigsten Punkte hat, zählt doppelt: Taste ×2.',
+    'Negative Werte gehen über die Taste ±.',
+    'Erreicht jemand 100 Punkte, endet das Spiel. Die wenigsten Punkte gewinnen.'
+  ],
+  phase10: [
+    'Jeder versucht pro Runde, seine aktuelle Phase auszulegen. Geschafft? Haken setzen.',
+    'Wer seine Phase schafft, steigt auf. Die App zeigt jedem seine nächste Phase.',
+    'Handkarten zählen als Strafpunkte: 1–9 = 5, 10–12 = 10, Aussetzen = 15, Joker = 25.',
+    'Wer zuerst Phase 10 schafft, gewinnt. Gleichstand: die wenigsten Punkte.'
+  ]
+});
+
+const PHASES = ['2 Drillinge', '1 Drilling + 1 Viererfolge', '1 Vierling + 1 Viererfolge', '1 Siebenerfolge', '1 Achterfolge',
+  '1 Neunerfolge', '2 Vierlinge', '7 Karten einer Farbe', '1 Fünfling + 1 Zwilling', '1 Fünfling + 1 Drilling'];
+const isP10 = g => g.quick === 'phase10';
+const phDone = (g, pid, before = Infinity) => g.rounds.slice(0, before).filter(r => r.ph && r.ph[pid]).length;
+const phLabel = (g, pid) => { const n = phDone(g, pid); return n >= 10 ? 'Fertig' : 'Phase ' + (n + 1); };
+function phaseCard(g, i, ref) {
+  const p = g.players[i], ri = ref === NEW ? g.rounds.length : g.rounds.findIndex(r => r.id === ref);
+  const r = g.rounds[ri], before = phDone(g, p.id, ri), ticked = !!(r && r.ph && r.ph[p.id]);
+  const attempt = Math.min(before + 1, 10), total = phDone(g, p.id);
+  return `<div class="ph-card" style="--c:${p.color};--on:${onColor(p.color)}">
+    <div class="ph-dots">${Array.from({ length: 10 }, (_, k) => `<i class="${k < total ? 'on' : k === total ? 'now' : ''}"></i>`).join('')}</div>
+    <div class="ph-now"><small>Runde ${ri + 1} · Phase ${attempt}</small><b>${PHASES[attempt - 1]}</b></div>
+    <button class="ph-toggle" data-act="ph-toggle" aria-pressed="${ticked}">${ticked ? '✓ Geschafft' : 'Geschafft?'}</button>
+  </div>`;
 }
 
 /* ---------------- Hell / Dunkel ---------------- */
@@ -1064,6 +1186,7 @@ function renderPage(i) {
     <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? (act && P.buf === '-' ? '−' : '0') : fmt(v)}</span></div>`;
   if (isBids(g)) body = wizPageBody(g, i, ref, act);
   else if (g.kind === 'rounds') {
+    if (isP10(g)) body += phaseCard(g, i, ref);
     body += `<div class="eyebrow">Verlauf</div><div class="pp-hist">${g.rounds.map((r, k) => {
       const rv = r.s[p.id];
       return `<button data-act="pp-target" data-i="${i}" data-r="${r.id}" aria-current="${r.id === ref}"><small>R${k + 1}</small><b>${typeof rv === 'number' ? fmt(rv) : '·'}</b></button>`;
@@ -1098,6 +1221,10 @@ function renderPanel() {
     const c = DICE.find(x => x.id === P.ref);
     const vals = c ? (c.quick || (c.fixed ? [c.fixed] : [])).filter(x => x !== 0) : [];
     quick = `<div class="quick">${vals.map(x => `<button data-act="pp-set" data-v="${x}" ${off}>${x}</button>`).join('')}<button class="strike" data-act="pp-set" data-v="0" ${off}>Streichen · 0</button></div>`;
+  } else if (g.quick === 'skyjo') {
+    quick = `<div class="quick">${[-1, 1, 5, 10].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>${d > 0 ? '+' + d : '−' + (-d)}</button>`).join('')}<button data-act="pp-mul" ${off}>×2</button></div>`;
+  } else if (g.quick === 'phase10') {
+    quick = `<div class="quick"><button class="strike" data-act="pp-set" data-v="0" ${off}>Raus · 0</button>${[5, 10, 15, 25].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>+${d}</button>`).join('')}</div>`;
   } else if (g.quick === 'romme') {
     quick = `<div class="quick"><button class="strike" data-act="pp-set" data-v="0" ${off}>Raus · 0</button>${[5, 10, 20].map(d => `<button data-act="pp-add" data-v="${d}" ${off}>+${d}</button>`).join('')}<button data-act="pp-mul" ${off}>×2</button></div>`;
   } else if (isBids(g)) {
@@ -1119,10 +1246,10 @@ function renderPanel() {
   </div></div>`;
 }
 
-function cellHTML(g, pid, ref, v) {
+function cellHTML(g, pid, ref, v, extra) {
   const act = S.pad && S.pad.pid === pid && S.pad.ref === ref;
   const cls = ['cell', v === null ? 'empty' : '', v !== null && v < 0 ? 'neg' : '', v === 0 ? 'zero' : '', act ? 'active' : ''].join(' ');
-  return `<td class="${cls}" data-act="cell" data-p="${pid}" data-r="${ref}">${v === null ? '' : fmt(v)}</td>`;
+  return `<td class="${cls}" data-act="cell" data-p="${pid}" data-r="${ref}">${v === null ? '' : fmt(v)}${extra || ''}</td>`;
 }
 
 function renderGrid() {
@@ -1140,7 +1267,7 @@ function renderGrid() {
     }).join('')}</tr>`).join('');
   } else if (g.kind === 'rounds') {
     body = g.rounds.map((r, i) => `<tr><th class="rn">${i + 1}</th>${g.players.map(p =>
-      cellHTML(g, p.id, r.id, typeof r.s[p.id] === 'number' ? r.s[p.id] : null)).join('')}</tr>`).join('');
+      cellHTML(g, p.id, r.id, typeof r.s[p.id] === 'number' ? r.s[p.id] : null, isP10(g) && r.ph && r.ph[p.id] ? '<small>✓ Phase</small>' : '')).join('')}</tr>`).join('');
   } else {
     const row = c => `<tr><th class="cat">${esc(c.name)}${c.fixed ? `<small>${c.fixed} Punkte</small>` : c.hint ? `<small>${c.hint}</small>` : ''}</th>${g.players.map(p =>
       cellHTML(g, p.id, c.id, catVal(g, c.id, p.id))).join('')}</tr>`;
@@ -1153,7 +1280,7 @@ function renderGrid() {
   }
   const foot = `<tfoot><tr><th>Σ</th>${g.players.map(p => {
     const x = rk.find(y => y.p.id === p.id);
-    let meta = started ? `${x.place}. Platz` : '&nbsp;';
+    let meta = isP10(g) ? phLabel(g, p.id) : started ? `${x.place}. Platz` : '&nbsp;';
     if (started && g.end.type === 'target' && g.win === 'high') meta = t[p.id] >= g.end.value ? 'Ziel erreicht' : `noch ${g.end.value - t[p.id]}`;
     return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}" style="--c:${p.color};--on:${onColor(p.color)}"><div class="tt"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${leadIds.includes(p.id) ? ICON.crown : ''}${meta}</span></div></td>`;
   }).join('')}</tr></tfoot>`;
@@ -1359,6 +1486,14 @@ const A = {
   'tpl-players'() { const last = store.get('lastPlayers', null); S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : []; renderPlayers(); },
   'tpl-start'() { S.sel = (store.get('lastPlayers', []) || []).filter(n => S.known.includes(n)); A.start(); },
   'pl-back'() { if (S.tpl && S.tpl.page) renderTplPage(); else renderHome(); },
+  'ph-toggle'() {
+    const g = S.game, P = S.pp, pid = g.players[P.idx].id;
+    snapshot();
+    if (P.ref === NEW) { const r = { id: uid(), createdAt: now(), s: {} }; g.rounds.push(r); P.ref = r.id; P.dirty = true; }
+    const r = g.rounds.find(x => x.id === P.ref); r.ph = r.ph || {};
+    if (r.ph[pid]) delete r.ph[pid]; else r.ph[pid] = true;
+    save(); ppUpdate();
+  },
   'pp-mul'() { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) * 2); P.fresh = false; ppWrite(); ppUpdate(); },
   'del-tpl'(el) {
     store.set('tpls', store.get('tpls', []).filter(t => t.id !== el.dataset.id)); renderHome(); toast('Vorlage gelöscht');

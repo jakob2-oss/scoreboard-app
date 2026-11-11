@@ -23,9 +23,9 @@ Wizard, Skyjo, Uno und Skip-Bo liegen in Shop-Bestsellerlisten weit vorn
 | Wizard ✅ (im Prototyp) | 3/3/3 | **Ansage vor der Runde**, Stiche nach der Runde; Treffer = 20 + 10 je Stich, sonst −10 je Abweichung; Rundenzahl = 60 ÷ Spieler; Hinweis, wenn Summe der Ansagen = Kartenzahl |
 | Skat | 3/3/3 | Skatliste: Alleinspieler, Spielart, Spielwert, gewonnen/verloren (verloren = doppelt minus), Seeger-Fabian-Abrechnung (+50 / Gegnerpunkte) |
 | Doppelkopf | 3/3/3 | Re/Kontra-Parteien **wechseln jede Runde**, Spielwert inkl. Ansagen und Sonderpunkte, Soli, Nullsumme pro Runde, Bock-Runden |
-| Kniffel | 3/3/2 | Kategorien-Zettel mit Bonus (schon im Prototyp) |
-| Skyjo | 3/3/2 | Punkte pro Runde, Ende ab 100, niedrig gewinnt; Wer beendet und nicht niedrigster ist, zählt doppelt |
-| Phase 10 | 3/3/2 | Punkte pro Runde **plus Phase je Spieler** (1–10, geschafft ja/nein) |
+| Kniffel ✅ (im Prototyp) | 3/3/2 | Kategorien-Zettel mit Bonus (schon im Prototyp) |
+| Skyjo ✅ (im Prototyp) | 3/3/2 | Punkte pro Runde, Ende ab 100, niedrig gewinnt; Wer beendet und nicht niedrigster ist, zählt doppelt |
+| Phase 10 ✅ (im Prototyp) | 3/3/2 | Punkte pro Runde **plus Phase je Spieler** (1–10, geschafft ja/nein) |
 
 ## Stufe 2 – starker Bedarf, kleinere Zielgruppe
 
