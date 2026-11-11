@@ -62,3 +62,7 @@ body { margin: 0; }
 .grid td.cell.pend { background: var(--surface); }
 .pp-panel .quick.bids { justify-content: flex-start; }
 .pp-hist.hide { display: none; }
+
+/* Pastell-Szenen: Zurück-Knopf und Rechenbeispiel passend dazu */
+.ex-t:last-child { color: #2e2b4f; }
+.ex-t:last-child small { color: rgba(46, 43, 79, .75); }
