@@ -42,6 +42,7 @@
   color-scheme: light;
 }
 
+*, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
@@ -175,18 +176,50 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 .banner .grow { flex: 1; min-width: 0; }
 .banner button { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 9px 12px; font-weight: 700; font-size: 14px; flex: none; }
 
-/* ---------- Schnellzähler ---------- */
-.counter { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; padding-block: 12px; }
-.ctile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c); }
-.ctile.lead { box-shadow: 0 0 0 2px var(--accent); }
-.ctile .head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-weight: 600; }
-.ctile .head small { color: var(--muted); font-weight: 500; font-size: 12px; font-family: var(--f-num); }
-.ctile .big { font-family: var(--f-num); font-size: 44px; font-weight: 700; line-height: 1; text-align: center; padding-block: 6px; }
-.ctile .round-delta { text-align: center; font-size: 12px; color: var(--muted); font-family: var(--f-num); min-height: 16px; }
-.ctile .btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.ctile .btns button { min-height: 52px; border-radius: 10px; background: var(--surface-2); font-family: var(--f-num); font-weight: 700; font-size: 16px; }
-.ctile .btns button.plus { background: var(--accent-soft); }
-.ctile .btns button:active { transform: scale(.95); }
+/* ---------- Ansicht-Umschalter ---------- */
+.viewseg { padding-block: 0 8px; }
+.viewseg .seg button { min-height: 36px; }
+
+/* ---------- Spieler-Seiten ---------- */
+.sheet-wrap.pp-mode { overflow: hidden; display: flex; flex-direction: column; }
+.pp-tabs { display: flex; gap: 6px; overflow-x: auto; padding-block: 2px 8px; scrollbar-width: none; flex: none; }
+.pp-tabs::-webkit-scrollbar, .pp-swipe::-webkit-scrollbar { display: none; }
+.pp-tab { flex: none; display: flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1.5px solid var(--line); font-weight: 600; font-size: 14px; min-height: 38px; }
+.pp-tab .dot { background: var(--c); width: 10px; height: 10px; }
+.pp-tab small { font-family: var(--f-num); color: var(--muted); font-weight: 500; }
+.pp-tab[aria-current="true"] { border-color: var(--c); background: var(--surface-2); }
+.pp-swipe { flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.pp-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-block: 4px 14px; }
+.pp-page > * { flex: none; }
+.pp-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; border-bottom: 3px solid var(--c); padding-bottom: 8px; }
+.pp-hero > div { min-width: 0; }
+.pp-hero h3 { font-size: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-hero .place { color: var(--muted); font-size: 13px; }
+.pp-hero .total { font-family: var(--f-num); font-size: 46px; font-weight: 700; line-height: 1; flex: none; }
+.pp-entry { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--accent-soft); border: 2px solid var(--accent); border-radius: var(--r); padding: 8px 14px; }
+.pp-entry .lbl { font-weight: 700; }
+.pp-entry small { color: var(--muted); font-size: 12px; }
+.pp-entry .val { font-family: var(--f-num); font-size: 34px; font-weight: 700; line-height: 1.1; }
+.pp-entry .val.ph { color: var(--muted); opacity: .5; }
+.pp-entry .val.neg { color: var(--danger); }
+.pp-hist { display: flex; flex-wrap: wrap; gap: 6px; }
+.pp-hist button { min-width: 58px; padding: 5px 8px; border-radius: 10px; background: var(--surface); border: 1.5px solid var(--line); display: flex; flex-direction: column; align-items: center; }
+.pp-hist button small { font-size: 11px; color: var(--muted); }
+.pp-hist button b { font-family: var(--f-num); font-size: 16px; font-weight: 600; }
+.pp-hist button[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.pp-cats { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; flex: none; }
+.pp-cat { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 42px; padding: 0 12px; border-top: 1px solid var(--line-soft); text-align: left; width: 100%; font-size: 15px; }
+.pp-cat:first-child { border-top: 0; }
+.pp-cat small { color: var(--muted); font-size: 12px; }
+.pp-cat .v { font-family: var(--f-num); font-size: 17px; font-weight: 600; }
+.pp-cat[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.pp-cat.calc { color: var(--muted); font-size: 13px; min-height: 34px; background: var(--surface); }
+.pp-cat.calc.hit { color: var(--good); }
+.pp-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.pp-panel .quick button { flex: 1 0 auto; }
+.pp-keys .key { min-height: 48px; }
+.pp-keys .go { grid-column: 4; grid-row: 3 / span 2; background: var(--accent); color: var(--accent-ink); font-family: var(--f-body); font-size: 16px; font-weight: 700; line-height: 1.2; text-align: center; }
+.pp-keys .key:disabled, .quick button:disabled { opacity: .35; }
 
 /* ---------- Bottom Sheets ---------- */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; }
@@ -197,7 +230,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
   animation: up .18s ease-out;
 }
 @keyframes up { from { transform: translateY(24px); } to { transform: none; } }
-@media (prefers-reduced-motion: reduce) { .bsheet { animation: none; } .primary:active, .ctile .btns button:active, .key:active { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bsheet { animation: none; } .primary:active, .key:active { transform: none; } }
 .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 6px; }
 .bsheet h3 { font-size: 20px; }
 .sheet-body { display: flex; flex-direction: column; gap: 10px; padding-block: 4px 4px; }
@@ -255,7 +288,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 .prow .pts { font-family: var(--f-num); font-size: 20px; font-weight: 700; }
 
 .toast {
-  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 50;
+  position: fixed; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top, 0px)); z-index: 50;
   background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap;
 }
 .proto-tag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 3px 7px; border-radius: 6px; align-self: flex-start; }
@@ -315,6 +348,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
     <div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
     <button class="icon-btn" data-act="open-menu" aria-label="Menü"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
   </div>
+  <div class="viewseg gutter" id="viewseg"></div>
   <div class="sheet-wrap" id="sheet"></div>
   <div class="banner gutter" id="banner" hidden></div>
   <div class="dock gutter" id="g-dock"></div>
@@ -356,7 +390,7 @@ const BUILTIN = [
   { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
   { id: 'low9', glyph: '↓9', name: 'Wenig gewinnt', kind: 'rounds', win: 'low', end: { type: 'rounds', value: 9 } },
   { id: 'dice', glyph: '⚄', name: 'Würfel-Kategorien', kind: 'cats', win: 'high', end: { type: 'cats' } },
-  { id: 'count', glyph: '±', name: 'Schnellzähler', kind: 'rounds', win: 'high', end: { type: 'none' }, view: 'counter' }
+  { id: 'count', glyph: '±', name: 'Schnellzähler', kind: 'rounds', win: 'high', end: { type: 'none' }, view: 'players' }
 ];
 const DICE = [
   { id: 'c1', name: 'Einser', sec: 'up', quick: [0, 1, 2, 3, 4, 5] },
@@ -377,7 +411,7 @@ const BONUS_AT = 63, BONUS = 35;
 
 function describe(t) {
   if (t.kind === 'cats') return '13 Felder · Bonus ab 63';
-  if (t.view === 'counter') return 'Große +/− Tasten pro Spieler';
+  if (t.view === 'players') return 'Eine Seite pro Spieler · +/− Tasten';
   const w = t.win === 'high' ? 'Höchste Summe gewinnt' : 'Niedrigste Summe gewinnt';
   const e = t.end.type === 'target' ? `Ziel ${t.end.value} Punkte` : t.end.type === 'rounds' ? `${t.end.value} Runden` : 'offen';
   return `${w} · ${e}`;
@@ -394,7 +428,9 @@ const S = {
   pad: null,                               // { pid, ref, buf, fresh }
   view: 'grid'
 };
-if (S.game && S.game.view) S.view = S.game.view;
+S.pp = { idx: 0, ref: null, buf: '', fresh: true, dirty: false };
+const NEW = '__new';
+const normView = v => (v === 'players' || v === 'counter') ? 'players' : 'grid';
 
 function save() { if (S.game) { S.game.updatedAt = now(); store.set('game', S.game); } }
 function snapshot() { S.undo.push(JSON.stringify(S.game)); if (S.undo.length > 100) S.undo.shift(); }
@@ -497,16 +533,146 @@ function newGame(t, names) {
 }
 
 /* ---------------- Spiel-Ansicht ---------------- */
-function renderGame() {
-  show('s-game');
+function renderHead() {
   const g = S.game;
   $('#g-title').textContent = g.name;
   const e = g.end.type === 'target' ? ` · Ziel ${g.end.value}` : g.end.type === 'rounds' ? ` von ${g.end.value}` : '';
   $('#g-sub').textContent = g.kind === 'cats' ? `Bonus ab 63 · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}` :
     `Runde ${curRoundIdx(g) + 1}${e} · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}`;
-  if (S.view === 'counter' && g.kind === 'rounds') renderCounter(); else renderGrid();
+}
+function renderGame() {
+  show('s-game');
+  renderHead();
+  const pm = S.view === 'players';
+  $('#viewseg').innerHTML = `<div class="seg" role="group" aria-label="Ansicht">
+    <button data-act="set-view" data-v="grid" aria-pressed="${!pm}">Überblick</button>
+    <button data-act="set-view" data-v="players" aria-pressed="${pm}">Spieler</button></div>`;
+  $('#sheet').classList.toggle('pp-mode', pm);
+  if (pm) renderPlayersView(); else { renderGrid(); renderDock(); }
   renderBanner();
-  renderDock();
+}
+
+/* ---------------- Spieler-Seiten ---------------- */
+function canAddRound(g) {
+  const e = endState(g);
+  return g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value) && !(e && e.done);
+}
+// Ziel-Feld beim Öffnen einer Spielerseite: erste offene Runde dieses Spielers (bis zur aktuellen Runde),
+// sonst eine neue Runde, falls erlaubt.
+function defaultRef(g, pid) {
+  if (g.kind === 'cats') { const c = DICE.find(c => catVal(g, c.id, pid) === null); return c ? c.id : null; }
+  const open = g.rounds.find(r => typeof r.s[pid] !== 'number');
+  if (open) return open.id;
+  return canAddRound(g) ? NEW : g.rounds[g.rounds.length - 1].id;
+}
+function ppSelect(ref) {
+  const g = S.game, p = g.players[S.pp.idx], P = S.pp;
+  P.ref = ref; const v = ref && ref !== NEW ? getVal(g, p.id, ref) : null;
+  P.buf = v === null ? '' : String(v); P.fresh = v !== null; P.dirty = false;
+}
+function ppActivate(i) {
+  const g = S.game; if (!g) return;
+  S.pp.idx = Math.min(Math.max(0, i), g.players.length - 1);
+  ppSelect(defaultRef(g, g.players[S.pp.idx].id));
+}
+function ppNum() { const b = S.pp.buf; return b === '' || b === '-' ? null : parseInt(b, 10); }
+// Eingaben auf Spielerseiten werden sofort gespeichert; ein Undo-Schritt pro Feld-Bearbeitung.
+function ppWrite() {
+  const g = S.game, P = S.pp, pid = g.players[P.idx].id, v = ppNum();
+  if (!P.ref) return;
+  if (P.ref === NEW) {
+    if (v === null) return;
+    if (!P.dirty) { snapshot(); P.dirty = true; }
+    const r = { id: uid(), createdAt: now(), s: {} }; g.rounds.push(r); P.ref = r.id;
+  } else if (!P.dirty) { snapshot(); P.dirty = true; }
+  setVal(g, pid, P.ref, v); save();
+}
+function refLabel(g, ref) {
+  if (g.kind === 'cats') { const c = DICE.find(x => x.id === ref); return c ? [c.name, c.fixed ? c.fixed + ' Punkte' : c.hint || 'Wert eintragen'] : ['Alles ausgefüllt', 'Kein Feld mehr frei']; }
+  if (ref === NEW) return ['Runde ' + (g.rounds.length + 1), 'neue Runde'];
+  return ['Runde ' + (g.rounds.findIndex(r => r.id === ref) + 1), 'Punkte dieser Runde'];
+}
+function renderPlayersView() {
+  const g = S.game;
+  if (S.pp.idx >= g.players.length) ppActivate(0);
+  $('#sheet').innerHTML = `<div class="pp-tabs gutter" id="pp-tabs"></div>
+    <div class="pp-swipe" id="pp-swipe">${g.players.map((p, i) => `<section class="pp-page gutter" id="pp-page-${i}" style="--c:${p.color}" aria-label="${esc(p.name)}"></section>`).join('')}</div>`;
+  ppUpdate();
+  const sw = $('#pp-swipe');
+  sw.scrollLeft = S.pp.idx * sw.clientWidth;
+  sw.addEventListener('scroll', onSwipe, { passive: true });
+}
+let swipeT;
+function onSwipe(e) {
+  clearTimeout(swipeT);
+  const sw = e.currentTarget;
+  swipeT = setTimeout(() => {
+    const i = Math.round(sw.scrollLeft / sw.clientWidth);
+    if (i !== S.pp.idx) { ppActivate(i); ppUpdate(); }
+  }, 80);
+}
+function ppGoto(i) {
+  ppActivate(i); ppUpdate();
+  const sw = $('#pp-swipe'); if (!sw) return;
+  const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  sw.scrollTo({ left: S.pp.idx * sw.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+}
+function ppUpdate() {
+  S.game.players.forEach((_, i) => renderPage(i));
+  renderTabs(); renderPanel(); renderBanner(); renderHead();
+}
+function renderTabs() {
+  const g = S.game, t = totals(g);
+  $('#pp-tabs').innerHTML = g.players.map((p, i) => `<button class="pp-tab" style="--c:${p.color}" data-act="pp-goto" data-i="${i}" aria-current="${i === S.pp.idx}">
+    <span class="dot"></span>${esc(p.name)}<small>${fmt(t[p.id])}</small></button>`).join('');
+  const a = $('#pp-tabs [aria-current="true"]');
+  if (a) { const box = $('#pp-tabs'); box.scrollLeft = Math.max(0, a.offsetLeft - box.clientWidth / 2 + a.offsetWidth / 2); }
+}
+function renderPage(i) {
+  const g = S.game, p = g.players[i], t = totals(g), rk = ranking(g), started = anyScore(g), x = rk.find(y => y.p.id === p.id);
+  const act = i === S.pp.idx, P = S.pp;
+  const ref = act ? P.ref : defaultRef(g, p.id);
+  const v = act ? ppNum() : (ref && ref !== NEW ? getVal(g, p.id, ref) : null);
+  const [lbl, sub] = refLabel(g, ref);
+  let place = started ? x.place + '. Platz' : 'Noch keine Punkte';
+  if (started && g.end.type === 'target' && g.win === 'high') place += t[p.id] >= g.end.value ? ' · Ziel erreicht' : ` · noch ${g.end.value - t[p.id]} bis ${g.end.value}`;
+  let body = `<div class="pp-entry"><div><div class="lbl">${esc(lbl)}</div><small>${esc(sub)}</small></div>
+    <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? (act && P.buf === '-' ? '−' : '0') : fmt(v)}</span></div>`;
+  if (g.kind === 'rounds') {
+    body += `<div class="eyebrow">Verlauf · antippen zum Ändern</div><div class="pp-hist">${g.rounds.map((r, k) => {
+      const rv = r.s[p.id];
+      return `<button data-act="pp-target" data-i="${i}" data-r="${r.id}" aria-current="${r.id === ref}"><small>R${k + 1}</small><b>${typeof rv === 'number' ? fmt(rv) : '·'}</b></button>`;
+    }).join('')}${ref === NEW ? `<button aria-current="true" data-act="pp-target" data-i="${i}" data-r="${NEW}"><small>R${g.rounds.length + 1}</small><b>neu</b></button>` : ''}</div>`;
+  } else {
+    const up = upper(g, p.id);
+    const row = c => { const cv = catVal(g, c.id, p.id);
+      return `<button class="pp-cat" data-act="pp-target" data-i="${i}" data-r="${c.id}" aria-current="${c.id === ref}"><span>${esc(c.name)}${c.fixed ? ` <small>${c.fixed}</small>` : ''}</span><span class="v">${cv === null ? '·' : fmt(cv)}</span></button>`; };
+    body += `<div class="pp-cats">${DICE.filter(c => c.sec === 'up').map(row).join('')}
+      <div class="pp-cat calc ${up >= BONUS_AT ? 'hit' : ''}"><span>Summe oben ${up}/${BONUS_AT}</span><span>Bonus ${up >= BONUS_AT ? '+' + BONUS : '–'}</span></div>
+      ${DICE.filter(c => c.sec === 'low').map(row).join('')}</div>`;
+  }
+  $('#pp-page-' + i).innerHTML = `<div class="pp-hero"><div><h3>${esc(p.name)}</h3><div class="place">${place}</div></div><div class="total">${fmt(t[p.id])}</div></div>${body}`;
+}
+function renderPanel() {
+  const g = S.game, P = S.pp, isCat = g.kind === 'cats', off = P.ref ? '' : 'disabled';
+  let quick;
+  if (isCat) {
+    const c = DICE.find(x => x.id === P.ref);
+    const vals = c ? (c.quick || (c.fixed ? [c.fixed] : [])).filter(x => x !== 0) : [];
+    quick = `<div class="quick">${vals.map(x => `<button data-act="pp-set" data-v="${x}" ${off}>${x}</button>`).join('')}<button class="strike" data-act="pp-set" data-v="0" ${off}>Streichen · 0</button></div>`;
+  } else {
+    quick = `<div class="quick">${[-10, -5, -1, 1, 5, 10].map(d => `<button class="${d < 0 ? 'strike' : ''}" data-act="pp-add" data-v="${d}">${d > 0 ? '+' + d : '−' + (-d)}</button>`).join('')}</div>`;
+  }
+  const last = P.idx === g.players.length - 1;
+  const goLbl = !isCat && last ? 'Nächste<br>Runde' : 'Weiter<br>→';
+  const d = n => `<button class="key" data-act="pp-digit" data-v="${n}" ${off}>${n}</button>`;
+  $('#g-dock').innerHTML = `<div class="pp-panel">${quick}<div class="keys pp-keys">
+    ${d(1)}${d(2)}${d(3)}<button class="key fn" data-act="pp-back" aria-label="Löschen" ${off}>${ICON.back}</button>
+    ${d(4)}${d(5)}${d(6)}<button class="key fn" data-act="pp-clear" ${off} style="font-family:var(--f-body);font-size:15px">Leeren</button>
+    ${d(7)}${d(8)}${d(9)}<button class="key go" data-act="pp-next">${goLbl}</button>
+    <button class="key fn" data-act="pp-sign" aria-label="Vorzeichen" ${off}>±</button>${d(0)}
+    <button class="key fn" data-act="undo" aria-label="Rückgängig" ${S.undo.length ? '' : 'disabled'}>${ICON.undo}</button>
+  </div></div>`;
 }
 
 function cellHTML(g, pid, ref, v) {
@@ -519,7 +685,7 @@ function renderGrid() {
   const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
   const leadIds = started ? rk.filter(x => x.place === 1).map(x => x.p.id) : [];
   const head = `<thead><tr><th class="corner">${g.kind === 'cats' ? '' : '#'}</th>${g.players.map(p =>
-    `<th style="--c:${p.color}"><div class="pn"><span>${esc(p.name)}</span><i class="bar"></i></div></th>`).join('')}</tr></thead>`;
+    `<th style="--c:${p.color}" data-act="pp-open" data-i="${g.players.indexOf(p)}"><div class="pn"><span>${esc(p.name)}</span><i class="bar"></i></div></th>`).join('')}</tr></thead>`;
   let body = '';
   if (g.kind === 'rounds') {
     body = g.rounds.map((r, i) => `<tr><th class="rn">${i + 1}</th>${g.players.map(p =>
@@ -543,24 +709,6 @@ function renderGrid() {
   $('#sheet').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>`;
 }
 
-function renderCounter() {
-  const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
-  const r = g.rounds[g.rounds.length - 1];
-  $('#sheet').innerHTML = `<div class="counter gutter">${g.players.map(p => {
-    const x = rk.find(y => y.p.id === p.id), d = typeof r.s[p.id] === 'number' ? r.s[p.id] : 0;
-    return `<div class="ctile ${started && x.place === 1 ? 'lead' : ''}" style="--c:${p.color}">
-      <div class="head"><span>${esc(p.name)}</span><small>${started ? x.place + '.' : ''}</small></div>
-      <div class="big">${fmt(t[p.id])}</div>
-      <div class="round-delta">${d ? 'diese Runde ' + (d > 0 ? '+' : '') + fmt(d) : '&nbsp;'}</div>
-      <div class="btns">
-        <button data-act="bump" data-p="${p.id}" data-d="-5">−5</button>
-        <button data-act="bump" data-p="${p.id}" data-d="-1">−1</button>
-        <button class="plus" data-act="bump" data-p="${p.id}" data-d="1">+1</button>
-        <button class="plus" data-act="bump" data-p="${p.id}" data-d="5">+5</button>
-      </div></div>`;
-  }).join('')}</div>`;
-}
-
 function renderBanner() {
   const b = $('#banner'), e = endState(S.game);
   b.hidden = !e;
@@ -571,11 +719,10 @@ function renderBanner() {
 function renderDock() {
   const g = S.game;
   const canAdd = g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value);
-  const viewBtn = g.kind === 'rounds' ? `<button class="secondary" data-act="toggle-view" aria-label="Ansicht wechseln">${S.view === 'counter' ? ICON.grid + 'Raster' : ICON.tally + 'Zähler'}</button>` : '';
   const main = g.kind === 'rounds'
     ? (canAdd ? '<button class="primary" data-act="add-round">+ Runde</button>' : '<button class="primary" data-act="result">Ergebnis</button>')
     : '<button class="primary" data-act="result">Ergebnis</button>';
-  $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${viewBtn}${main}`;
+  $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${main}`;
 }
 
 /* ---------------- Ziffernblock ---------------- */
@@ -757,7 +904,7 @@ const A = {
   start() {
     if (!S.sel.length) return;
     store.set('lastPlayers', S.sel);
-    S.game = newGame(S.tpl, S.sel.slice()); S.undo = []; S.view = S.game.view; save(); renderGame();
+    enterGame(newGame(S.tpl, S.sel.slice()));
   },
   'go-home'() { if (S.pad) closePad(); closeSheet(); renderHome(); },
   resume() { renderGame(); },
@@ -794,14 +941,35 @@ const A = {
   undo() {
     if (!S.undo.length) return;
     S.game = JSON.parse(S.undo.pop()); save();
+    if (S.view === 'players') { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref); else ppActivate(S.pp.idx); }
     if (S.pad) { S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
     renderGame(); toast('Rückgängig gemacht');
   },
-  'toggle-view'() { S.view = S.view === 'grid' ? 'counter' : 'grid'; S.game.view = S.view; save(); renderGame(); },
-  bump(el) {
-    const g = S.game, r = g.rounds[g.rounds.length - 1], pid = el.dataset.p;
-    snapshot(); r.s[pid] = (typeof r.s[pid] === 'number' ? r.s[pid] : 0) + parseInt(el.dataset.d, 10); save(); renderGame();
+  'set-view'(el) {
+    if (S.pad) closePad();
+    S.view = el.dataset.v; S.game.view = S.view; save();
+    if (S.view === 'players') ppActivate(S.pp.idx);
+    renderGame();
   },
+  'pp-open'(el) { S.view = 'players'; S.game.view = 'players'; save(); ppActivate(+el.dataset.i); renderGame(); },
+  'pp-goto'(el) { ppGoto(+el.dataset.i); },
+  'pp-target'(el) {
+    const i = +el.dataset.i; if (i !== S.pp.idx) ppActivate(i);
+    ppSelect(el.dataset.r); ppUpdate();
+  },
+  'pp-next'() { ppGoto((S.pp.idx + 1) % S.game.players.length); },
+  'pp-digit'(el) {
+    const P = S.pp; if (!P.ref) return;
+    if (P.fresh) { P.buf = P.buf.startsWith('-') ? '-' : ''; P.fresh = false; }
+    if (P.buf.replace('-', '').length >= 6) return;
+    P.buf = (P.buf === '0' ? '' : P.buf === '-0' ? '-' : P.buf) + el.dataset.v;
+    ppWrite(); ppUpdate();
+  },
+  'pp-add'(el) { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) + parseInt(el.dataset.v, 10)); P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-set'(el) { const P = S.pp; if (!P.ref) return; P.buf = el.dataset.v; P.fresh = true; ppWrite(); ppUpdate(); },
+  'pp-sign'() { const P = S.pp; if (!P.ref) return; P.buf = P.buf.startsWith('-') ? P.buf.slice(1) : '-' + P.buf; P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-back'() { const P = S.pp; if (!P.ref) return; P.buf = P.fresh ? '' : P.buf.slice(0, -1); P.fresh = false; ppWrite(); ppUpdate(); },
+  'pp-clear'() { const P = S.pp; if (!P.ref) return; P.buf = ''; P.fresh = false; ppWrite(); ppUpdate(); },
   'open-menu'() { openMenu(); },
   'set-win'(el) { snapshot(); S.game.win = el.dataset.v; save(); renderGame(); openMenu(); },
   'save-tpl'() {
@@ -812,7 +980,7 @@ const A = {
   result() { if (S.pad) { commitPad(); closePad(); } openResult(); },
   rematch() {
     const g = S.game, t = templates().find(x => x.id === g.templateId) || { ...g, id: g.templateId };
-    S.game = newGame({ ...t, win: g.win }, g.players.map(p => p.name)); S.undo = []; save(); closeSheet(); renderGame(); toast('Neue Partie, gleiche Runde');
+    closeSheet(); enterGame(newGame({ ...t, win: g.win }, g.players.map(p => p.name))); toast('Neue Partie, gleiche Runde');
   },
   'close-sheet'() { closeSheet(); },
   discard() { S.game = null; S.undo = []; store.del('game'); closeSheet(); renderHome(); toast('Partie verworfen'); },
@@ -846,6 +1014,9 @@ $('#add-form').addEventListener('submit', ev => {
   inp.value = ''; inp.blur(); renderPlayers();
 });
 
-if (S.game) renderGame(); else renderHome();
+function enterGame(g) {
+  S.game = g; S.undo = []; S.view = normView(g.view); g.view = S.view; S.pp.idx = 0; ppActivate(0); save(); renderGame();
+}
+if (S.game) { S.view = normView(S.game.view); ppActivate(0); renderGame(); } else renderHome();
 })();
 </script>
