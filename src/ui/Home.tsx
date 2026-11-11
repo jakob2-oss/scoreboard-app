@@ -2,7 +2,6 @@ import { act, useApp } from '../store';
 import { FREE_TEMPLATES, describeTemplate } from '../game/templates';
 import { currentRoundIndex, seated } from '../game/engine';
 import { PLAYER_COLORS } from '../lib/color';
-import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
 
@@ -21,7 +20,7 @@ export function Home() {
             </button>
           </div>
           <div className="brand">
-            <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
+            <img className="app-logo" src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="168" height="168" />
             <h1 className="wordmark" aria-label="Punktezettel"><span className="w1">PUNKTE</span><span className="w2">ZETTEL</span></h1>
             <p>Vorlage wählen, Spieler, los.</p>
           </div>
