@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Entry, Game, Player, Round } from './model/types';
+import type { Entry, Game, Player, Round, Template } from './model/types';
 import type { GameState } from './game/engine';
 
 /** Lokale Datenbank auf dem Gerät (IndexedDB). Tabellen entsprechen docs/DATENMODELL.md. */
@@ -8,6 +8,7 @@ export class PzDb extends Dexie {
   games!: Table<Game, string>;
   rounds!: Table<Round, string>;
   entries!: Table<Entry, string>;
+  templates!: Table<Template, string>;
   constructor(name = 'punktezettel') {
     super(name);
     this.version(1).stores({
@@ -16,6 +17,8 @@ export class PzDb extends Dexie {
       rounds: 'id, gameId, updatedAt',
       entries: 'id, gameId, roundId, playerId, updatedAt'
     });
+    // v2: eigene Vorlagen (freie Spiele)
+    this.version(2).stores({ templates: 'key, updatedAt, lastUsedAt' });
   }
 }
 
@@ -23,6 +26,8 @@ export interface Repo {
   loadPlayers(): Promise<Player[]>;
   savePlayer(p: Player): Promise<void>;
   loadRunningGame(): Promise<GameState | null>;
+  loadTemplates(): Promise<Template[]>;
+  saveTemplate(t: Template): Promise<void>;
   saveGame(s: GameState): Promise<void>;
 }
 
@@ -32,6 +37,12 @@ export function createRepo(db: PzDb): Repo {
       return (await db.players.toArray()).filter(p => !p.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     },
     async savePlayer(p) { await db.players.put(p); },
+    /** Eigene Vorlagen, zuletzt gespielte zuerst */
+    async loadTemplates() {
+      const key = (t: Template) => t.lastUsedAt || t.createdAt || '';
+      return (await db.templates.toArray()).filter(t => !t.deletedAt).sort((a, b) => key(b).localeCompare(key(a)));
+    },
+    async saveTemplate(t) { await db.templates.put(t); },
     async loadRunningGame() {
       const running = (await db.games.where('status').equals('running').toArray())
         .filter(g => !g.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];

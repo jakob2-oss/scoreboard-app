@@ -30,6 +30,8 @@ npm run e2e      # Klicktest im Browser (Playwright)
 ## Stand
 
 - Phase 1 (Grundgerüst) fertig.
-- Phase 2, Paket 1 (Spieler & Partie-Kern) fertig: Spieler anlegen, freie Zettel, Überblick,
-  Spielerseiten, Ziffernblock, Rückgängig, Speicherung auf dem Gerät.
+- Phase 2, Paket 1 (Spieler & Partie-Kern) fertig: Spieler anlegen, Überblick, Spielerseiten,
+  Ziffernblock, Rückgängig, Speicherung auf dem Gerät.
+- Freies Spiel: Gewinner, Spielende und Zählschritte frei wählbar; wird als eigene Vorlage
+  gespeichert (beim Start oder spätestens beim Beenden) und erscheint unter „Meine Spiele“.
 - Als Nächstes: Paket 2 (Spiele-Vorlagen mit eigenen Regeln), dann Paket 3 (Historie & Statistik).

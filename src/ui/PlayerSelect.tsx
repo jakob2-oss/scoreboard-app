@@ -8,7 +8,7 @@ export function PlayerSelect() {
   if (!template) return null;
   const chosen = selected.map(id => players.find(p => p.id === id)).filter(p => !!p);
   const n = chosen.length, { min, max } = template.players;
-  const label = n < min ? 'Mindestens 1 Spieler' : n > max ? `Höchstens ${max} Spieler` : `Los · ${n} Spieler`;
+  const label = n < min ? 'Spieler wählen' : n > max ? `Höchstens ${max} Spieler` : `Los mit ${n} ${n === 1 ? 'Spieler' : 'Spielern'}`;
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     act().addPlayer(name); setName('');
@@ -17,7 +17,7 @@ export function PlayerSelect() {
   return (
     <section className="screen" id="s-players">
       <div className="top gutter">
-        <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zurück"><IconBack /></button>
+        <button className="icon-btn" onClick={() => act().playersBack()} aria-label="Zurück"><IconBack /></button>
         <div className="grow"><h2>Wer spielt mit?</h2><div className="sub">{template.name}</div></div>
       </div>
       <div className="scroll">

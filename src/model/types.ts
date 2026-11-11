@@ -35,8 +35,19 @@ export interface Template {
   win: Win;
   end: End;
   players: { min: number; max: number };
-  params?: Record<string, unknown>;
+  params?: TemplateParams;
   custom?: boolean;
+  /** Nur bei gespeicherten eigenen Vorlagen */
+  createdAt?: ISODate;
+  updatedAt?: ISODate;
+  lastUsedAt?: ISODate | null;
+  deletedAt?: ISODate | null;
+}
+
+export interface TemplateParams {
+  /** Zählschritte für die Schnelltasten, z. B. [1, 5, 10] → −10 −5 −1 +1 +5 +10 */
+  steps?: number[];
+  [key: string]: unknown;
 }
 
 export type GameStatus = 'running' | 'finished' | 'abandoned';

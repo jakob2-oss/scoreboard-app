@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import type { Player, Template } from './model/types';
+import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { PLAYER_COLORS } from './lib/color';
 import {
@@ -8,7 +9,7 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'players' | 'game';
+export type Screen = 'home' | 'setup' | 'players' | 'game';
 
 /** Aktive Eingabe: Ziel (Runde × Spieler) und der Text im Ziffernblock. */
 export interface Edit { ref: RoundRef; playerId: string; buf: string; fresh: boolean; dirty: boolean }
@@ -18,6 +19,10 @@ export interface AppState {
   screen: Screen;
   players: Player[];
   template: Template | null;
+  /** Neue Vorlage aus dem freien Spiel, die beim Start gespeichert werden soll */
+  pendingSave: boolean;
+  templates: Template[];
+  setup: FreeConfig;
   selected: string[];
   game: GameState | null;
   undo: GameState[];
@@ -30,7 +35,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  ready: false, screen: 'home', players: [], template: null, selected: [], game: null, undo: [],
+  ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null
 };
 
@@ -55,6 +60,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     repo.saveGame(g).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
   };
 
+  /** Vorlage speichern und in der Liste nach vorn holen */
+  const saveTemplate = (t: Template) => {
+    set({ templates: [t, ...state.templates.filter(x => x.key !== t.key)], pendingSave: false });
+    repo.saveTemplate(t).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+  };
+
   const numOf = (buf: string): number | null => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
   const valueAt = (g: GameState, ref: RoundRef, playerId: string) => (ref === 'new' ? null : scoreOf(g, ref, playerId));
   const makeEdit = (g: GameState, ref: RoundRef, playerId: string): Edit => {
@@ -77,8 +88,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const actions = {
     async init() {
       try {
-        const [players, game] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame()]);
-        set({ ready: true, players, game });
+        const [players, game, templates] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates()]);
+        set({ ready: true, players, game, templates });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -86,10 +97,20 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     goHome() { set({ screen: 'home', pad: false, sheet: null, edit: null }); },
 
+    // ---------- Freies Spiel einrichten
+    openSetup() { set({ setup: defaultFreeConfig(), screen: 'setup' }); },
+    updateSetup(patch: Partial<FreeConfig>) { set({ setup: { ...state.setup, ...patch } }); },
+    /** Einstellungen übernehmen und weiter zur Spielerauswahl */
+    setupNext() {
+      const known = new Set(state.players.map(p => p.id));
+      set({ template: makeFreeTemplate(state.setup, clock), pendingSave: state.setup.save, selected: readLast().filter(id => known.has(id)), screen: 'players' });
+    },
+    playersBack() { set({ screen: state.pendingSave || !state.templates.some(t => t.key === state.template?.key) ? 'setup' : 'home' }); },
+
     // ---------- Spieler wählen
     pickTemplate(t: Template) {
       const known = new Set(state.players.map(p => p.id));
-      set({ template: t, selected: readLast().filter(id => known.has(id)), screen: 'players' });
+      set({ template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'players' });
     },
     toggleSelect(id: string) {
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
@@ -110,6 +131,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const chosen = state.selected.map(id => state.players.find(p => p.id === id)).filter((p): p is Player => !!p);
       if (chosen.length < t.players.min || chosen.length > t.players.max) return;
       writeLast(state.selected);
+      // Vorlage merken bzw. als zuletzt gespielt markieren
+      const known = state.templates.some(x => x.key === t.key);
+      if (known || state.pendingSave) saveTemplate({ ...t, lastUsedAt: clock.now(), updatedAt: clock.now() });
       const g = createGame(t, chosen, clock);
       set({ game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
       persist(g);
@@ -189,11 +213,15 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const ng = setWin(g, win, clock);
       set({ game: ng, undo: [...state.undo, g] }); persist(ng);
     },
+    /** Beenden und speichern. Eine noch nicht gespeicherte Vorlage wird automatisch gesichert. */
     finishGame() {
       const g = state.game; if (!g) return;
       const f = finish(g, clock); persist(f);
+      const rules = g.game.rules;
+      const auto = rules.custom && !state.templates.some(t => t.key === rules.key);
+      if (auto) saveTemplate({ ...rules, lastUsedAt: clock.now(), updatedAt: clock.now() });
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
-      toast('Partie beendet');
+      toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
     discardGame() {
       const g = state.game; if (!g) return;

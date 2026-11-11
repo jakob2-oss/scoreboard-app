@@ -2,6 +2,7 @@ import { forwardRef, useState } from 'react';
 import { act, type Edit } from '../store';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
 import { fmt } from '../lib/color';
+import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Avatar } from './Avatar';
 import { IconBackspace, IconClose } from './icons';
@@ -26,6 +27,9 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit }>
   const a = act();
   const d = (n: number) => <button key={n} className="key" onClick={() => a.digit(n)}>{n}</button>;
   const q = (n: number) => <button className="key q" onClick={() => a.add(n)}>{n > 0 ? '+' + n : '−' + -n}</button>;
+  // Die zwei größten Zählschritte der Vorlage
+  const st = [...stepsOf(g.game.rules)].sort((x, y) => x - y);
+  const [s1, s2] = st.length >= 2 ? st.slice(-2) : [st[0], st[0] * 5];
   return (
     <div className="bsheet" id="pad" role="dialog" aria-label="Punkte eingeben" ref={ref}>
       <div className="grab" />
@@ -40,15 +44,15 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit }>
           <span className="after">Summe danach<b>{fmt(after)}</b></span>
         </div>
         <div className="keys">
-          {d(1)}{d(2)}{d(3)}{q(5)}
-          {d(4)}{d(5)}{d(6)}{q(10)}
-          {d(7)}{d(8)}{d(9)}{q(-5)}
+          {d(1)}{d(2)}{d(3)}{q(s1)}
+          {d(4)}{d(5)}{d(6)}{q(s2)}
+          {d(7)}{d(8)}{d(9)}{q(-s1)}
           <button className="key fn" onClick={a.sign} aria-label="Vorzeichen">±</button>{d(0)}
-          <button className="key fn" onClick={a.back} aria-label="Löschen"><IconBackspace /></button>{q(-10)}
+          <button className="key fn" onClick={a.back} aria-label="Löschen"><IconBackspace /></button>{q(-s2)}
         </div>
         <div className="pad-actions">
           <button className="secondary" onClick={a.clear}>Leeren</button>
-          <button className="primary" onClick={a.next}>{i < players.length - 1 ? `Weiter · ${players[i + 1].name}` : 'Eintragen'}</button>
+          <button className="primary" onClick={a.next}>{i < players.length - 1 ? `Weiter zu ${players[i + 1].name}` : 'Eintragen'}</button>
         </div>
       </div>
     </div>
@@ -72,7 +76,7 @@ export function MenuSheet({ g }: { g: GameState }) {
       </div>
       <div className="menu-list">
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
-        <button onClick={() => act().openSheet('result')}>Spiel beenden <small>Ergebnis zeigen</small></button>
+        <button onClick={() => act().openSheet('result')}>Beenden und speichern</button>
         {!confirm
           ? <button className="warn" onClick={() => setConfirm(true)}>Partie verwerfen</button>
           : <div className="confirm-row"><button className="no" onClick={() => setConfirm(false)}>Abbrechen</button><button className="yes" onClick={() => act().discardGame()}>Wirklich verwerfen</button></div>}
@@ -87,7 +91,7 @@ export function ResultSheet({ g }: { g: GameState }) {
   const rk = ranking(g), started = anyScore(g);
   return (
     <Sheet label="Ergebnis">
-      <div className="eyebrow">{g.game.rules.name} · {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+      <div className="eyebrow">{new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
       <h3>{started ? rk.filter(x => x.place === 1).map(x => x.player.name).join(' & ') + ' gewinnt' : 'Noch keine Punkte'}</h3>
       <div className="podium">
         {rk.map(x => (
@@ -96,10 +100,9 @@ export function ResultSheet({ g }: { g: GameState }) {
           </div>
         ))}
       </div>
-      <p className="note">Historie und Statistik kommen mit dem nächsten Paket. Beendete Partien bleiben bis dahin auf dem Gerät gespeichert.</p>
       <div className="pad-actions">
         <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
-        <button className="primary" onClick={() => act().finishGame()}>Partie beenden</button>
+        <button className="primary" onClick={() => act().finishGame()}>Speichern</button>
       </div>
     </Sheet>
   );
