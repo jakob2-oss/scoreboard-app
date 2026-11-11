@@ -3,6 +3,7 @@
 Spiele-Tracker als PWA: digitaler Punktezettel für (fast) jedes Spiel, später mit Historie, Statistik und Community.
 
 - Briefing & Phasenplan: [docs/BRIEFING.md](docs/BRIEFING.md)
+- Spielvorlagen & Bausteine: [docs/VORLAGEN.md](docs/VORLAGEN.md)
 - Klick-Prototyp des Punktezettels: [prototype/punktezettel.html](prototype/punktezettel.html)
   (eigenständige HTML-Datei, keine Abhängigkeiten außer Google Fonts)
 
