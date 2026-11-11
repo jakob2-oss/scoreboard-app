@@ -1,0 +1,851 @@
+<title>Punktezettel Prototyp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: ein Bildschirm wie ein Block Karopapier – Spieler als Spalten, Runden als Zeilen,
+   Summen unten fixiert, alle Bedienelemente im Daumenbereich unten. Dark first. */
+:root {
+  --bg: #121418;
+  --surface: #1b1e24;
+  --surface-2: #242830;
+  --line: #2b3039;
+  --line-soft: #1f232a;
+  --fg: #eceef2;
+  --muted: #8a909c;
+  --accent: #f4bf3a;        /* Bleistift-Gelb */
+  --accent-ink: #1c1604;
+  --accent-soft: rgba(244, 191, 58, .14);
+  --danger: #ff7a6b;
+  --good: #4fd1a5;
+  --scrim: rgba(5, 6, 8, .6);
+  --shadow: 0 -12px 40px rgba(0, 0, 0, .45);
+  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body: "Inter", -apple-system, system-ui, sans-serif;
+  --f-num: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 14px;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #eef1f4; --surface: #ffffff; --surface-2: #e4e8ee; --line: #d3d9e1; --line-soft: #e6eaef;
+    --fg: #14171c; --muted: #5d6573; --accent: #f0b429; --accent-ink: #1c1604; --accent-soft: rgba(240, 180, 41, .2);
+    --danger: #d4483a; --good: #12916a; --scrim: rgba(20, 23, 28, .35); --shadow: 0 -10px 30px rgba(20, 23, 28, .15);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #eef1f4; --surface: #ffffff; --surface-2: #e4e8ee; --line: #d3d9e1; --line-soft: #e6eaef;
+  --fg: #14171c; --muted: #5d6573; --accent: #f0b429; --accent-ink: #1c1604; --accent-soft: rgba(240, 180, 41, .2);
+  --danger: #d4483a; --good: #12916a; --scrim: rgba(20, 23, 28, .35); --shadow: 0 -10px 30px rgba(20, 23, 28, .15);
+  color-scheme: light;
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.4;
+  -webkit-tap-highlight-color: transparent; overflow: hidden;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.screen { height: 100%; display: flex; flex-direction: column; }
+.gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+
+/* ---------- Typo ---------- */
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+
+/* ---------- Topbar ---------- */
+.top { display: flex; align-items: center; gap: 8px; padding-block: 10px 8px; }
+.top .grow { flex: 1; min-width: 0; }
+.top h2 { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .sub { font-size: 13px; color: var(--muted); }
+.icon-btn { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+.icon-btn:active { background: var(--surface-2); }
+.icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Home ---------- */
+.brand { padding-block: 22px 6px; display: flex; flex-direction: column; gap: 4px; }
+.brand h1 { font-size: 40px; font-weight: 800; line-height: 1; }
+.brand h1 span { color: var(--accent); }
+.brand p { margin: 0; color: var(--muted); font-size: 14px; }
+.home-body { display: flex; flex-direction: column; gap: 22px; padding-block: 16px 28px; }
+.group { display: flex; flex-direction: column; gap: 10px; }
+.resume {
+  display: flex; align-items: center; gap: 14px; text-align: left; width: 100%;
+  background: var(--accent); color: var(--accent-ink); border-radius: var(--r); padding: 16px;
+}
+.resume b { font-family: var(--f-display); font-size: 18px; display: block; }
+.resume small { font-size: 13px; opacity: .8; }
+.tpl-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.tpl {
+  display: flex; align-items: center; gap: 14px; padding: 14px 14px; text-align: left; width: 100%;
+  min-height: 64px; border-top: 1px solid var(--line);
+}
+.tpl:first-child { border-top: 0; }
+.tpl:active { background: var(--surface-2); }
+.tpl .glyph { width: 40px; height: 40px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; flex: none; font-family: var(--f-num); font-size: 13px; font-weight: 700; color: var(--accent); }
+.tpl .t { flex: 1; min-width: 0; }
+.tpl .t b { display: block; font-weight: 600; }
+.tpl .t small { color: var(--muted); font-size: 13px; }
+.tpl .chev { color: var(--muted); }
+.tpl .del { color: var(--muted); font-size: 13px; padding: 8px; margin: -8px; }
+.ghost-btn { border: 1.5px dashed var(--line); border-radius: var(--r); padding: 14px; color: var(--muted); font-weight: 600; min-height: 52px; }
+.ghost-btn:active { background: var(--surface); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+
+/* ---------- Spieler ---------- */
+.players-body { display: flex; flex-direction: column; gap: 18px; padding-block: 8px 24px; }
+.order { display: flex; flex-direction: column; gap: 8px; }
+.order-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-height: 52px; }
+.order-row .pos { font-family: var(--f-num); color: var(--muted); width: 18px; }
+.order-row .nm { flex: 1; font-weight: 600; }
+.order-row .rm { color: var(--muted); padding: 6px 8px; }
+.empty-order { color: var(--muted); font-size: 14px; padding: 14px; border: 1.5px dashed var(--line); border-radius: 12px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--c, var(--muted)); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 10px 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-weight: 500; min-height: 44px; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+.add-row { display: flex; gap: 8px; }
+.add-row input {
+  flex: 1; min-width: 0; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px;
+}
+.add-row button { height: 48px; padding: 0 18px; border-radius: 12px; background: var(--surface-2); font-weight: 600; }
+
+/* ---------- Bottom-Aktion ---------- */
+.dock { padding-block: 10px 12px; border-top: 1px solid var(--line); background: var(--bg); display: flex; gap: 8px; }
+.primary { flex: 1; min-height: 56px; border-radius: var(--r); background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 17px; }
+.primary:disabled { opacity: .4; }
+.primary:active:not(:disabled) { transform: scale(.98); }
+.secondary { min-height: 56px; border-radius: var(--r); background: var(--surface-2); font-weight: 600; padding: 0 16px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.secondary:disabled { opacity: .35; }
+.secondary svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Zettel ---------- */
+.sheet-wrap { flex: 1; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; position: relative; scroll-padding: 60px 0 60px 52px; }
+body.pad-open #g-dock, body.pad-open #banner { display: none !important; }
+table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user-select: none; -webkit-user-select: none; }
+.grid th, .grid td { border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
+.grid thead th {
+  position: sticky; top: 0; z-index: 3; background: var(--bg); padding: 10px 6px 8px; font-weight: 600; font-size: 14px;
+  border-bottom: 2px solid var(--line); min-width: 74px;
+}
+.grid thead th .pn { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.grid thead th .pn span { max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.grid thead th .bar { width: 26px; height: 3px; border-radius: 2px; background: var(--c); }
+.grid .corner, .grid .rn, .grid .cat, .grid tfoot th { position: sticky; left: 0; z-index: 2; background: var(--bg); }
+.grid thead .corner { z-index: 4; min-width: 44px; color: var(--muted); font-family: var(--f-num); }
+.grid .rn { width: 44px; min-width: 44px; text-align: center; color: var(--muted); font-family: var(--f-num); font-size: 13px; font-weight: 500; }
+.grid .cat { text-align: left; font-weight: 500; font-size: 14px; padding: 0 10px; min-width: 116px; white-space: nowrap; }
+.grid .cat small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; }
+.grid td.cell {
+  height: 50px; text-align: center; font-family: var(--f-num); font-variant-numeric: tabular-nums; font-size: 19px; font-weight: 500;
+  cursor: pointer; position: relative;
+}
+.grid td.cell:active { background: var(--surface); }
+.grid td.cell.empty::after { content: "·"; color: var(--line); font-size: 22px; }
+.grid td.cell.neg { color: var(--danger); }
+.grid td.cell.zero { color: var(--muted); }
+.grid td.cell.active { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.grid tr.calc th, .grid tr.calc td { background: var(--surface); height: 40px; font-size: 13px; color: var(--muted); }
+.grid tr.calc td { text-align: center; font-family: var(--f-num); }
+.grid tr.calc td.hit { color: var(--good); font-weight: 700; }
+.grid tr.sep th, .grid tr.sep td { border-top: 2px solid var(--line); }
+.grid tfoot th, .grid tfoot td {
+  position: sticky; bottom: 0; z-index: 2; background: var(--surface); border-top: 2px solid var(--fg); border-bottom: 0;
+}
+.grid tfoot th { z-index: 3; font-family: var(--f-display); font-size: 20px; text-align: center; }
+.grid tfoot td { text-align: center; padding: 8px 4px 10px; }
+.grid tfoot .tot { font-family: var(--f-num); font-size: 22px; font-weight: 700; display: block; }
+.grid tfoot .meta { font-size: 11px; color: var(--muted); display: block; margin-top: 2px; }
+.grid tfoot td.lead .tot { color: var(--accent); }
+.grid tfoot td.lead .meta { color: var(--accent); }
+.grid td.pad-col { border-right: 0; }
+
+.banner {
+  display: flex; align-items: center; gap: 12px; padding-block: 10px; background: var(--accent-soft); border-top: 1px solid var(--accent);
+  font-size: 14px;
+}
+.banner .grow { flex: 1; min-width: 0; }
+.banner button { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 9px 12px; font-weight: 700; font-size: 14px; flex: none; }
+
+/* ---------- Schnellzähler ---------- */
+.counter { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; padding-block: 12px; }
+.ctile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 10px; border-top: 4px solid var(--c); }
+.ctile.lead { box-shadow: 0 0 0 2px var(--accent); }
+.ctile .head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-weight: 600; }
+.ctile .head small { color: var(--muted); font-weight: 500; font-size: 12px; font-family: var(--f-num); }
+.ctile .big { font-family: var(--f-num); font-size: 44px; font-weight: 700; line-height: 1; text-align: center; padding-block: 6px; }
+.ctile .round-delta { text-align: center; font-size: 12px; color: var(--muted); font-family: var(--f-num); min-height: 16px; }
+.ctile .btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.ctile .btns button { min-height: 52px; border-radius: 10px; background: var(--surface-2); font-family: var(--f-num); font-weight: 700; font-size: 16px; }
+.ctile .btns button.plus { background: var(--accent-soft); }
+.ctile .btns button:active { transform: scale(.95); }
+
+/* ---------- Bottom Sheets ---------- */
+.scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 20; }
+.bsheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-radius: 22px 22px 0 0;
+  box-shadow: var(--shadow); padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-height: 88%; overflow-y: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  animation: up .18s ease-out;
+}
+@keyframes up { from { transform: translateY(24px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bsheet { animation: none; } .primary:active, .ctile .btns button:active, .key:active { transform: none; } }
+.grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 8px auto 6px; }
+.bsheet h3 { font-size: 20px; }
+.sheet-body { display: flex; flex-direction: column; gap: 10px; padding-block: 4px 4px; }
+#pad .icon-btn { width: 40px; height: 40px; }
+#pad .grab { margin: 6px auto 2px; }
+#pad .quick button { min-height: 40px; }
+#pad .primary, #pad .secondary { min-height: 52px; }
+
+/* Ziffernblock */
+.pad-head { display: flex; align-items: center; gap: 10px; }
+.pad-head .who { flex: 1; min-width: 0; }
+.pad-head .who b { font-size: 17px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pad-head .who small { color: var(--muted); font-size: 13px; }
+.pad-head .navs { display: flex; gap: 4px; }
+.pad-display {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  background: var(--bg); border-radius: 12px; padding: 6px 14px; border: 1px solid var(--line);
+}
+.pad-display .val { font-family: var(--f-num); font-size: 34px; font-weight: 700; line-height: 1.1; min-width: 0; overflow: hidden; }
+.pad-display .val.ph { color: var(--line); }
+.pad-display .val.neg { color: var(--danger); }
+.pad-display .after { font-size: 12px; color: var(--muted); text-align: right; flex: none; }
+.pad-display .after b { display: block; font-family: var(--f-num); font-size: 16px; color: var(--fg); }
+.quick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.quick button { flex: none; min-height: 44px; padding: 0 14px; border-radius: 10px; background: var(--accent-soft); font-family: var(--f-num); font-weight: 700; }
+.quick button.strike { background: var(--surface-2); font-family: var(--f-body); font-weight: 600; }
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.key { min-height: 46px; border-radius: 12px; background: var(--surface-2); font-family: var(--f-num); font-size: 24px; font-weight: 500; display: grid; place-items: center; }
+.key:active { transform: scale(.96); background: var(--line); }
+.key.q { font-size: 17px; font-weight: 700; background: var(--accent-soft); }
+.key.fn { font-size: 18px; color: var(--muted); }
+.key svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.pad-actions { display: flex; gap: 8px; }
+
+/* Menü / Formular */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.field input {
+  height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px;
+}
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { min-height: 42px; border-radius: 9px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); }
+.menu-list { display: flex; flex-direction: column; }
+.menu-list button { text-align: left; padding: 14px 4px; min-height: 52px; border-top: 1px solid var(--line); font-weight: 500; display: flex; justify-content: space-between; gap: 10px; }
+.menu-list button small { color: var(--muted); }
+.menu-list button.warn { color: var(--danger); }
+
+/* Ergebnis */
+.podium { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.prow.win { border-color: var(--accent); background: var(--accent-soft); }
+.prow .place { font-family: var(--f-display); font-size: 22px; font-weight: 800; width: 30px; }
+.prow .nm { flex: 1; font-weight: 600; min-width: 0; }
+.prow .pts { font-family: var(--f-num); font-size: 20px; font-weight: 700; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 50;
+  background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.proto-tag { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); padding: 3px 7px; border-radius: 6px; align-self: flex-start; }
+</style>
+
+<!-- ================= Start ================= -->
+<section id="s-home" class="screen">
+  <div class="scroll">
+    <div class="gutter">
+      <div class="brand">
+        <span class="proto-tag">Prototyp</span>
+        <h1>Punkte<span>zettel</span></h1>
+        <p>Ersetzt Stift und Papier. Vorlage wählen, Spieler, los.</p>
+      </div>
+      <div class="home-body">
+        <div id="resume-slot"></div>
+        <div class="group">
+          <div class="eyebrow">Neue Partie</div>
+          <div class="tpl-list" id="tpl-list"></div>
+          <button class="ghost-btn" data-act="open-config">+ Eigene Regeln bauen</button>
+        </div>
+        <p class="note">Klick-Prototyp zum Testen des Bedienkonzepts. Daten bleiben nur in diesem Browser.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Spieler ================= -->
+<section id="s-players" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="go-home" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="grow"><h2>Wer spielt mit?</h2><div class="sub" id="pl-sub"></div></div>
+  </div>
+  <div class="scroll">
+    <div class="gutter players-body">
+      <div class="group">
+        <div class="eyebrow">Reihenfolge = Spalten</div>
+        <div class="order" id="order"></div>
+      </div>
+      <div class="group">
+        <div class="eyebrow">Bekannte Spieler</div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <form class="add-row" id="add-form">
+        <input id="add-name" placeholder="Neuer Name" autocomplete="off" maxlength="18" aria-label="Neuer Spielername">
+        <button type="submit">Hinzufügen</button>
+      </form>
+    </div>
+  </div>
+  <div class="dock gutter"><button class="primary" id="start-btn" data-act="start">Los</button></div>
+</section>
+
+<!-- ================= Spiel ================= -->
+<section id="s-game" class="screen" hidden>
+  <div class="top gutter">
+    <button class="icon-btn" data-act="go-home" aria-label="Zum Start"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
+    <button class="icon-btn" data-act="open-menu" aria-label="Menü"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
+  </div>
+  <div class="sheet-wrap" id="sheet"></div>
+  <div class="banner gutter" id="banner" hidden></div>
+  <div class="dock gutter" id="g-dock"></div>
+</section>
+
+<div class="scrim" id="scrim" data-act="scrim" hidden></div>
+<div class="bsheet" id="pad" role="dialog" aria-label="Punkte eingeben" hidden></div>
+<div class="bsheet" id="sheet2" role="dialog" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const now = () => new Date().toISOString();
+const COLORS = ['#5aa9ff', '#ff7a6b', '#4fd1a5', '#c792ea', '#ffb454', '#f78fb3', '#7dd3fc', '#a3e635'];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => (n < 0 ? '−' + Math.abs(n) : String(n));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('pz:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('pz:' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('pz:' + k); } catch (e) {} }
+};
+const ICON = {
+  undo: '<svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>',
+  grid: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>',
+  tally: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M17 9l-5 6M12 9l5 6"/></svg>',
+  prev: '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+  next: '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>',
+  close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ---------------- Vorlagen ---------------- */
+const BUILTIN = [
+  { id: 'free', glyph: '∞', name: 'Freie Runden', kind: 'rounds', win: 'high', end: { type: 'none' } },
+  { id: 't500', glyph: '500', name: 'Bis 500 Punkte', kind: 'rounds', win: 'high', end: { type: 'target', value: 500 } },
+  { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
+  { id: 'low9', glyph: '↓9', name: 'Wenig gewinnt', kind: 'rounds', win: 'low', end: { type: 'rounds', value: 9 } },
+  { id: 'dice', glyph: '⚄', name: 'Würfel-Kategorien', kind: 'cats', win: 'high', end: { type: 'cats' } },
+  { id: 'count', glyph: '±', name: 'Schnellzähler', kind: 'rounds', win: 'high', end: { type: 'none' }, view: 'counter' }
+];
+const DICE = [
+  { id: 'c1', name: 'Einser', sec: 'up', quick: [0, 1, 2, 3, 4, 5] },
+  { id: 'c2', name: 'Zweier', sec: 'up', quick: [0, 2, 4, 6, 8, 10] },
+  { id: 'c3', name: 'Dreier', sec: 'up', quick: [0, 3, 6, 9, 12, 15] },
+  { id: 'c4', name: 'Vierer', sec: 'up', quick: [0, 4, 8, 12, 16, 20] },
+  { id: 'c5', name: 'Fünfer', sec: 'up', quick: [0, 5, 10, 15, 20, 25] },
+  { id: 'c6', name: 'Sechser', sec: 'up', quick: [0, 6, 12, 18, 24, 30] },
+  { id: 'k3', name: 'Dreierpasch', sec: 'low', hint: 'Augensumme' },
+  { id: 'k4', name: 'Viererpasch', sec: 'low', hint: 'Augensumme' },
+  { id: 'fh', name: 'Full House', sec: 'low', fixed: 25 },
+  { id: 'ks', name: 'Kleine Straße', sec: 'low', fixed: 30 },
+  { id: 'gs', name: 'Große Straße', sec: 'low', fixed: 40 },
+  { id: 'f5', name: 'Fünf Gleiche', sec: 'low', fixed: 50 },
+  { id: 'ch', name: 'Chance', sec: 'low', hint: 'Augensumme' }
+];
+const BONUS_AT = 63, BONUS = 35;
+
+function describe(t) {
+  if (t.kind === 'cats') return '13 Felder · Bonus ab 63';
+  if (t.view === 'counter') return 'Große +/− Tasten pro Spieler';
+  const w = t.win === 'high' ? 'Höchste Summe gewinnt' : 'Niedrigste Summe gewinnt';
+  const e = t.end.type === 'target' ? `Ziel ${t.end.value} Punkte` : t.end.type === 'rounds' ? `${t.end.value} Runden` : 'offen';
+  return `${w} · ${e}`;
+}
+const templates = () => BUILTIN.concat(store.get('tpls', []));
+
+/* ---------------- Zustand ---------------- */
+const S = {
+  tpl: null,
+  sel: [],                                 // gewählte Spielernamen in Reihenfolge
+  known: store.get('known', ['Anna', 'Ben', 'Clara', 'David']),
+  game: store.get('game', null),
+  undo: [],
+  pad: null,                               // { pid, ref, buf, fresh }
+  view: 'grid'
+};
+if (S.game && S.game.view) S.view = S.game.view;
+
+function save() { if (S.game) { S.game.updatedAt = now(); store.set('game', S.game); } }
+function snapshot() { S.undo.push(JSON.stringify(S.game)); if (S.undo.length > 100) S.undo.shift(); }
+
+/* ---------------- Berechnung ---------------- */
+function catVal(g, cid, pid) { const v = g.cells[cid] && g.cells[cid][pid]; return typeof v === 'number' ? v : null; }
+function upper(g, pid) { return DICE.filter(c => c.sec === 'up').reduce((a, c) => a + (catVal(g, c.id, pid) || 0), 0); }
+function totals(g) {
+  const t = {};
+  g.players.forEach(p => {
+    if (g.kind === 'cats') {
+      const up = upper(g, p.id);
+      t[p.id] = up + (up >= BONUS_AT ? BONUS : 0) + DICE.filter(c => c.sec === 'low').reduce((a, c) => a + (catVal(g, c.id, p.id) || 0), 0);
+    } else {
+      t[p.id] = g.rounds.reduce((a, r) => a + (typeof r.s[p.id] === 'number' ? r.s[p.id] : 0), 0);
+    }
+  });
+  return t;
+}
+function ranking(g) {
+  const t = totals(g);
+  const arr = g.players.map(p => ({ p, t: t[p.id] })).sort((a, b) => g.win === 'high' ? b.t - a.t : a.t - b.t);
+  let place = 0, last = null;
+  arr.forEach((x, i) => { if (x.t !== last) { place = i + 1; last = x.t; } x.place = place; });
+  return arr;
+}
+function anyScore(g) {
+  return g.kind === 'cats' ? Object.values(g.cells).some(o => Object.keys(o).length) : g.rounds.some(r => Object.keys(r.s).length);
+}
+function roundFull(g, r) { return g.players.every(p => typeof r.s[p.id] === 'number'); }
+function curRoundIdx(g) {
+  const i = g.rounds.findIndex(r => !roundFull(g, r));
+  return i === -1 ? g.rounds.length - 1 : i;
+}
+function endState(g) {
+  if (g.kind === 'cats') {
+    const done = DICE.every(c => g.players.every(p => catVal(g, c.id, p.id) !== null));
+    return done ? { done: true, text: 'Alle Felder ausgefüllt' } : null;
+  }
+  if (g.end.type === 'rounds') {
+    const done = g.rounds.length >= g.end.value && g.rounds.slice(0, g.end.value).every(r => roundFull(g, r));
+    return done ? { done: true, text: `${g.end.value} Runden gespielt` } : null;
+  }
+  if (g.end.type === 'target') {
+    const t = totals(g);
+    const hit = g.players.filter(p => t[p.id] >= g.end.value);
+    if (!hit.length) return null;
+    const r = g.rounds[g.rounds.length - 1];
+    const full = r && roundFull(g, r);
+    return { done: full, text: `${hit.map(p => p.name).join(', ')} über ${g.end.value}` + (full ? '' : ' · Runde zu Ende spielen') };
+  }
+  return null;
+}
+
+/* ---------------- Navigation ---------------- */
+function show(id) { ['s-home', 's-players', 's-game'].forEach(s => { $('#' + s).hidden = s !== id; }); }
+
+function renderHome() {
+  show('s-home');
+  const g = S.game;
+  $('#resume-slot').innerHTML = g ? `
+    <button class="resume" data-act="resume">
+      <div style="flex:1;min-width:0"><small>Laufende Partie</small><b>${esc(g.name)}</b>
+      <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind === 'rounds' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></div>
+      <span aria-hidden="true" style="font-size:22px">→</span>
+    </button>` : '';
+  $('#tpl-list').innerHTML = templates().map(t => `
+    <button class="tpl" data-act="pick-tpl" data-id="${t.id}">
+      <span class="glyph">${esc(t.glyph || '✎')}</span>
+      <span class="t"><b>${esc(t.name)}</b><small>${esc(describe(t))}</small></span>
+      ${t.custom ? `<span class="del" data-act="del-tpl" data-id="${t.id}" aria-label="Vorlage löschen">Löschen</span>` : '<span class="chev">›</span>'}
+    </button>`).join('');
+}
+
+function renderPlayers() {
+  show('s-players');
+  $('#pl-sub').textContent = S.tpl.name;
+  $('#order').innerHTML = S.sel.length ? S.sel.map((n, i) => `
+    <div class="order-row"><span class="pos">${i + 1}</span><span class="dot" style="--c:${COLORS[i % COLORS.length]}"></span>
+    <span class="nm">${esc(n)}</span><button class="rm" data-act="toggle-p" data-name="${esc(n)}" aria-label="${esc(n)} entfernen">✕</button></div>`).join('')
+    : '<div class="empty-order">Tippe unten auf Namen, um Spieler hinzuzufügen.</div>';
+  $('#chips').innerHTML = S.known.map(n => `<button class="chip" data-act="toggle-p" data-name="${esc(n)}" aria-pressed="${S.sel.includes(n)}">${esc(n)}</button>`).join('');
+  const b = $('#start-btn');
+  b.disabled = S.sel.length < 1;
+  b.textContent = S.sel.length ? `Los · ${S.sel.length} Spieler` : 'Mindestens 1 Spieler';
+}
+
+function newGame(t, names) {
+  const g = {
+    id: uid(), createdAt: now(), updatedAt: now(), templateId: t.id, name: t.name,
+    kind: t.kind, win: t.win, end: { ...t.end }, view: t.view || 'grid',
+    players: names.map((n, i) => ({ id: uid(), name: n, color: COLORS[i % COLORS.length] })),
+    rounds: [], cells: {}
+  };
+  if (g.kind === 'rounds') {
+    const n = g.end.type === 'rounds' ? g.end.value : 1;
+    for (let i = 0; i < n; i++) g.rounds.push({ id: uid(), createdAt: now(), s: {} });
+  } else DICE.forEach(c => { g.cells[c.id] = {}; });
+  return g;
+}
+
+/* ---------------- Spiel-Ansicht ---------------- */
+function renderGame() {
+  show('s-game');
+  const g = S.game;
+  $('#g-title').textContent = g.name;
+  const e = g.end.type === 'target' ? ` · Ziel ${g.end.value}` : g.end.type === 'rounds' ? ` von ${g.end.value}` : '';
+  $('#g-sub').textContent = g.kind === 'cats' ? `Bonus ab 63 · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}` :
+    `Runde ${curRoundIdx(g) + 1}${e} · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}`;
+  if (S.view === 'counter' && g.kind === 'rounds') renderCounter(); else renderGrid();
+  renderBanner();
+  renderDock();
+}
+
+function cellHTML(g, pid, ref, v) {
+  const act = S.pad && S.pad.pid === pid && S.pad.ref === ref;
+  const cls = ['cell', v === null ? 'empty' : '', v !== null && v < 0 ? 'neg' : '', v === 0 ? 'zero' : '', act ? 'active' : ''].join(' ');
+  return `<td class="${cls}" data-act="cell" data-p="${pid}" data-r="${ref}">${v === null ? '' : fmt(v)}</td>`;
+}
+
+function renderGrid() {
+  const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
+  const leadIds = started ? rk.filter(x => x.place === 1).map(x => x.p.id) : [];
+  const head = `<thead><tr><th class="corner">${g.kind === 'cats' ? '' : '#'}</th>${g.players.map(p =>
+    `<th style="--c:${p.color}"><div class="pn"><span>${esc(p.name)}</span><i class="bar"></i></div></th>`).join('')}</tr></thead>`;
+  let body = '';
+  if (g.kind === 'rounds') {
+    body = g.rounds.map((r, i) => `<tr><th class="rn">${i + 1}</th>${g.players.map(p =>
+      cellHTML(g, p.id, r.id, typeof r.s[p.id] === 'number' ? r.s[p.id] : null)).join('')}</tr>`).join('');
+  } else {
+    const row = c => `<tr><th class="cat">${esc(c.name)}${c.fixed ? `<small>${c.fixed} Punkte</small>` : c.hint ? `<small>${c.hint}</small>` : ''}</th>${g.players.map(p =>
+      cellHTML(g, p.id, c.id, catVal(g, c.id, p.id))).join('')}</tr>`;
+    body += DICE.filter(c => c.sec === 'up').map(row).join('');
+    body += `<tr class="calc sep"><th class="cat">Summe oben</th>${g.players.map(p => {
+      const u = upper(g, p.id); return `<td class="${u >= BONUS_AT ? 'hit' : ''}">${u}/${BONUS_AT}</td>`; }).join('')}</tr>`;
+    body += `<tr class="calc"><th class="cat">Bonus</th>${g.players.map(p =>
+      `<td class="${upper(g, p.id) >= BONUS_AT ? 'hit' : ''}">${upper(g, p.id) >= BONUS_AT ? '+' + BONUS : '–'}</td>`).join('')}</tr>`;
+    body += DICE.filter(c => c.sec === 'low').map((c, i) => row(c).replace('<tr>', i === 0 ? '<tr class="sep">' : '<tr>')).join('');
+  }
+  const foot = `<tfoot><tr><th>Σ</th>${g.players.map(p => {
+    const x = rk.find(y => y.p.id === p.id);
+    let meta = started ? `${x.place}. Platz` : '&nbsp;';
+    if (started && g.end.type === 'target' && g.win === 'high') meta = t[p.id] >= g.end.value ? 'Ziel erreicht' : `noch ${g.end.value - t[p.id]}`;
+    return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${meta}</span></td>`;
+  }).join('')}</tr></tfoot>`;
+  $('#sheet').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>`;
+}
+
+function renderCounter() {
+  const g = S.game, t = totals(g), rk = ranking(g), started = anyScore(g);
+  const r = g.rounds[g.rounds.length - 1];
+  $('#sheet').innerHTML = `<div class="counter gutter">${g.players.map(p => {
+    const x = rk.find(y => y.p.id === p.id), d = typeof r.s[p.id] === 'number' ? r.s[p.id] : 0;
+    return `<div class="ctile ${started && x.place === 1 ? 'lead' : ''}" style="--c:${p.color}">
+      <div class="head"><span>${esc(p.name)}</span><small>${started ? x.place + '.' : ''}</small></div>
+      <div class="big">${fmt(t[p.id])}</div>
+      <div class="round-delta">${d ? 'diese Runde ' + (d > 0 ? '+' : '') + fmt(d) : '&nbsp;'}</div>
+      <div class="btns">
+        <button data-act="bump" data-p="${p.id}" data-d="-5">−5</button>
+        <button data-act="bump" data-p="${p.id}" data-d="-1">−1</button>
+        <button class="plus" data-act="bump" data-p="${p.id}" data-d="1">+1</button>
+        <button class="plus" data-act="bump" data-p="${p.id}" data-d="5">+5</button>
+      </div></div>`;
+  }).join('')}</div>`;
+}
+
+function renderBanner() {
+  const b = $('#banner'), e = endState(S.game);
+  b.hidden = !e;
+  if (e) b.innerHTML = `<div class="grow"><b>${e.done ? 'Spielende erreicht' : 'Fast geschafft'}</b><br><span style="color:var(--muted)">${esc(e.text)}</span></div>
+    ${e.done ? '<button data-act="result">Ergebnis</button>' : ''}`;
+}
+
+function renderDock() {
+  const g = S.game;
+  const canAdd = g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value);
+  const viewBtn = g.kind === 'rounds' ? `<button class="secondary" data-act="toggle-view" aria-label="Ansicht wechseln">${S.view === 'counter' ? ICON.grid + 'Raster' : ICON.tally + 'Zähler'}</button>` : '';
+  const main = g.kind === 'rounds'
+    ? (canAdd ? '<button class="primary" data-act="add-round">+ Runde</button>' : '<button class="primary" data-act="result">Ergebnis</button>')
+    : '<button class="primary" data-act="result">Ergebnis</button>';
+  $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${viewBtn}${main}`;
+}
+
+/* ---------------- Ziffernblock ---------------- */
+function getVal(g, pid, ref) {
+  if (g.kind === 'cats') return catVal(g, ref, pid);
+  const r = g.rounds.find(x => x.id === ref); return r && typeof r.s[pid] === 'number' ? r.s[pid] : null;
+}
+function setVal(g, pid, ref, v) {
+  if (g.kind === 'cats') { if (v === null) delete g.cells[ref][pid]; else g.cells[ref][pid] = v; return; }
+  const r = g.rounds.find(x => x.id === ref); if (v === null) delete r.s[pid]; else r.s[pid] = v;
+}
+function openPad(pid, ref) {
+  const v = getVal(S.game, pid, ref);
+  S.pad = { pid, ref, buf: v === null ? '' : String(v), fresh: v !== null };
+  document.body.classList.add('pad-open');
+  renderGame(); renderPad();
+  const el = document.querySelector(`td.cell[data-p="${pid}"][data-r="${ref}"]`);
+  if (el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+function closePad() {
+  S.pad = null; document.body.classList.remove('pad-open');
+  $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; renderGame();
+}
+function padNum() { const b = S.pad.buf; return b === '' || b === '-' ? null : parseInt(b, 10); }
+function commitPad() {
+  const g = S.game, v = padNum();
+  if (v !== getVal(g, S.pad.pid, S.pad.ref)) { snapshot(); setVal(g, S.pad.pid, S.pad.ref, v); save(); }
+}
+function renderPad() {
+  const g = S.game, P = S.pad, p = g.players.find(x => x.id === P.pid);
+  const v = padNum(), cur = getVal(g, P.pid, P.ref);
+  const after = totals(g)[P.pid] - (cur || 0) + (v || 0);
+  let where = '', quick = '', isCat = g.kind === 'cats';
+  if (isCat) {
+    const c = DICE.find(x => x.id === P.ref);
+    where = c.name + (c.hint ? ' · ' + c.hint : '');
+    const vals = c.quick || (c.fixed ? [c.fixed] : []);
+    quick = `<div class="quick">${vals.filter(x => x !== 0).map(x => `<button data-act="pad-set" data-v="${x}">${x}</button>`).join('')}
+      <button class="strike" data-act="pad-set" data-v="0">Streichen · 0</button></div>`;
+  } else {
+    where = 'Runde ' + (g.rounds.findIndex(r => r.id === P.ref) + 1);
+  }
+  const qk = isCat ? ['', '', '', ''] : ['+5', '+10', '−5', '−10'];
+  const qv = [5, 10, -5, -10];
+  const k = (lbl, i) => isCat ? '' : `<button class="key q" data-act="pad-add" data-v="${qv[i]}">${lbl}</button>`;
+  const cols = isCat ? 3 : 4;
+  const isLast = !isCat && (() => {
+    const pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
+    return pi === g.players.length - 1 && g.end.type === 'rounds' && ri >= g.end.value - 1;
+  })();
+  $('#pad').innerHTML = `
+    <div class="grab"></div>
+    <div class="sheet-body">
+      <div class="pad-head">
+        <span class="dot" style="--c:${p.color};width:14px;height:14px"></span>
+        <div class="who"><b>${esc(p.name)}</b><small>${esc(where)}</small></div>
+        ${isCat ? '' : `<div class="navs"><button class="icon-btn" data-act="pad-move" data-d="-1" aria-label="Vorheriger Spieler">${ICON.prev}</button>
+        <button class="icon-btn" data-act="pad-move" data-d="1" aria-label="Nächster Spieler">${ICON.next}</button></div>`}
+        <button class="icon-btn" data-act="pad-close" aria-label="Ziffernblock schließen">${ICON.close}</button>
+      </div>
+      <div class="pad-display">
+        <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? '0' : fmt(v)}</span>
+        <span class="after">Summe danach<b>${fmt(after)}</b></span>
+      </div>
+      ${quick}
+      <div class="keys" style="grid-template-columns:repeat(${cols},1fr)">
+        ${[1, 2, 3].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[0], 0)}
+        ${[4, 5, 6].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[1], 1)}
+        ${[7, 8, 9].map(d => `<button class="key" data-act="pad-digit" data-v="${d}">${d}</button>`).join('')}${k(qk[2], 2)}
+        <button class="key fn" data-act="pad-sign" aria-label="Vorzeichen">±</button>
+        <button class="key" data-act="pad-digit" data-v="0">0</button>
+        <button class="key fn" data-act="pad-back" aria-label="Löschen">${ICON.back}</button>${k(qk[3], 3)}
+      </div>
+      <div class="pad-actions">
+        <button class="secondary" data-act="pad-clear">Leeren</button>
+        <button class="primary" data-act="pad-ok">${isCat || isLast ? 'Eintragen' : 'Weiter →'}</button>
+      </div>
+    </div>`;
+  $('#pad').hidden = false;
+  $('#s-game').style.paddingBottom = $('#pad').offsetHeight + 'px';
+}
+function padMove(dir) {
+  const g = S.game, P = S.pad;
+  let pi = g.players.findIndex(x => x.id === P.pid), ri = g.rounds.findIndex(r => r.id === P.ref);
+  pi += dir;
+  if (pi >= g.players.length) { pi = 0; ri++; }
+  if (pi < 0) { pi = g.players.length - 1; ri--; }
+  if (ri < 0) return false;
+  if (ri >= g.rounds.length) {
+    if (g.end.type === 'rounds' && g.rounds.length >= g.end.value) return false;
+    const e = endState(g); if (e && e.done) return false;
+    snapshot(); g.rounds.push({ id: uid(), createdAt: now(), s: {} }); save();
+  }
+  openPad(g.players[pi].id, g.rounds[ri].id);
+  return true;
+}
+
+/* ---------------- Sheets: Menü, Ergebnis, Baukasten ---------------- */
+function openSheet(html, label) {
+  const s = $('#sheet2'); s.innerHTML = '<div class="grab"></div><div class="sheet-body">' + html + '</div>';
+  s.setAttribute('aria-label', label); s.hidden = false; $('#scrim').hidden = false;
+}
+function closeSheet() { $('#sheet2').hidden = true; $('#scrim').hidden = true; }
+
+function openMenu() {
+  const g = S.game;
+  openSheet(`
+    <h3>${esc(g.name)}</h3>
+    <div class="field"><label>Gewinner</label>
+      <div class="seg"><button data-act="set-win" data-v="high" aria-pressed="${g.win === 'high'}">Höchste Summe</button>
+      <button data-act="set-win" data-v="low" aria-pressed="${g.win === 'low'}">Niedrigste Summe</button></div></div>
+    <div class="menu-list">
+      <button data-act="save-tpl">Als Vorlage speichern <small>für den Start</small></button>
+      <button data-act="result">Spiel beenden <small>Ergebnis zeigen</small></button>
+      <button class="warn" data-act="discard">Partie verwerfen</button>
+    </div>`, 'Spielmenü');
+}
+
+function openResult() {
+  const g = S.game, rk = ranking(g);
+  openSheet(`
+    <div class="eyebrow">${esc(g.name)} · ${new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+    <h3>${anyScore(g) ? esc(rk.filter(x => x.place === 1).map(x => x.p.name).join(' & ')) + ' gewinnt' : 'Noch keine Punkte'}</h3>
+    <div class="podium">${rk.map(x => `<div class="prow ${x.place === 1 && anyScore(g) ? 'win' : ''}">
+      <span class="place">${x.place}</span><span class="dot" style="--c:${x.p.color}"></span>
+      <span class="nm">${esc(x.p.name)}</span><span class="pts">${fmt(x.t)}</span></div>`).join('')}</div>
+    <p class="note">Im echten Produkt landet die Partie hier in der Historie, mit Ort und Anlass (z. B. „Südamerika 2026“).</p>
+    <div class="pad-actions">
+      <button class="secondary" data-act="close-sheet">Weiterspielen</button>
+      <button class="primary" data-act="rematch">Revanche</button>
+    </div>`, 'Ergebnis');
+}
+
+const CFG = { name: '', win: 'high', end: 'none', val: 500 };
+function openConfig() {
+  const valField = CFG.end === 'none' ? '' : `<div class="field"><label for="cfg-val">${CFG.end === 'target' ? 'Zielpunktzahl' : 'Anzahl Runden'}</label>
+    <input id="cfg-val" inputmode="numeric" pattern="[0-9]*" value="${CFG.val}"></div>`;
+  openSheet(`
+    <h3>Eigene Regeln</h3>
+    <div class="field"><label for="cfg-name">Name der Vorlage</label><input id="cfg-name" placeholder="z. B. Rommé am Strand" value="${esc(CFG.name)}" maxlength="28"></div>
+    <div class="field"><label>Gewinner</label><div class="seg">
+      <button data-act="cfg" data-k="win" data-v="high" aria-pressed="${CFG.win === 'high'}">Höchste Summe</button>
+      <button data-act="cfg" data-k="win" data-v="low" aria-pressed="${CFG.win === 'low'}">Niedrigste Summe</button></div></div>
+    <div class="field"><label>Spielende</label><div class="seg">
+      <button data-act="cfg" data-k="end" data-v="none" aria-pressed="${CFG.end === 'none'}">Offen</button>
+      <button data-act="cfg" data-k="end" data-v="target" aria-pressed="${CFG.end === 'target'}">Zielpunkte</button>
+      <button data-act="cfg" data-k="end" data-v="rounds" aria-pressed="${CFG.end === 'rounds'}">Runden</button></div></div>
+    ${valField}
+    <p class="note">Später kommen hier Kategorien, Bonusregeln und Teams dazu.</p>
+    <div class="pad-actions"><button class="primary" data-act="cfg-save">Vorlage speichern</button></div>`, 'Eigene Regeln');
+}
+function readCfgInputs() {
+  const n = $('#cfg-name'); if (n) CFG.name = n.value;
+  const v = $('#cfg-val'); if (v) CFG.val = parseInt(v.value, 10) || 0;
+}
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 1800);
+}
+
+/* ---------------- Aktionen ---------------- */
+const A = {
+  'pick-tpl'(el, ev) {
+    if (ev.target.closest('[data-act="del-tpl"]')) return A['del-tpl'](ev.target.closest('[data-act="del-tpl"]'));
+    S.tpl = templates().find(t => t.id === el.dataset.id);
+    const last = store.get('lastPlayers', null);
+    S.sel = last && last.length ? last.filter(n => S.known.includes(n)) : [];
+    renderPlayers();
+  },
+  'del-tpl'(el) {
+    store.set('tpls', store.get('tpls', []).filter(t => t.id !== el.dataset.id)); renderHome(); toast('Vorlage gelöscht');
+  },
+  'toggle-p'(el) {
+    const n = el.dataset.name, i = S.sel.indexOf(n);
+    if (i >= 0) S.sel.splice(i, 1); else S.sel.push(n);
+    renderPlayers();
+  },
+  start() {
+    if (!S.sel.length) return;
+    store.set('lastPlayers', S.sel);
+    S.game = newGame(S.tpl, S.sel.slice()); S.undo = []; S.view = S.game.view; save(); renderGame();
+  },
+  'go-home'() { if (S.pad) closePad(); closeSheet(); renderHome(); },
+  resume() { renderGame(); },
+  cell(el) {
+    if (S.pad) commitPad();
+    openPad(el.dataset.p, el.dataset.r);
+  },
+  'pad-digit'(el) {
+    const P = S.pad;
+    if (P.fresh) { P.buf = P.buf.startsWith('-') ? '-' : ''; P.fresh = false; }
+    if (P.buf.replace('-', '').length >= 6) return;
+    P.buf = (P.buf === '0' ? '' : P.buf === '-0' ? '-' : P.buf) + el.dataset.v;
+    renderPad();
+  },
+  'pad-add'(el) {
+    const P = S.pad; P.buf = String((padNum() || 0) + parseInt(el.dataset.v, 10)); P.fresh = false; renderPad();
+  },
+  'pad-set'(el) { S.pad.buf = el.dataset.v; S.pad.fresh = true; renderPad(); },
+  'pad-sign'() { const P = S.pad; P.buf = P.buf.startsWith('-') ? P.buf.slice(1) : '-' + P.buf; P.fresh = false; renderPad(); },
+  'pad-back'() { const P = S.pad; P.buf = P.fresh ? '' : P.buf.slice(0, -1); P.fresh = false; renderPad(); },
+  'pad-clear'() { S.pad.buf = ''; S.pad.fresh = false; renderPad(); },
+  'pad-ok'() {
+    commitPad();
+    if (S.game.kind === 'cats' || !padMove(1)) closePad();
+  },
+  'pad-close'() { commitPad(); closePad(); },
+  'pad-move'(el) { commitPad(); if (!padMove(parseInt(el.dataset.d, 10))) renderPad(); },
+  scrim() { if (S.pad) { commitPad(); closePad(); } closeSheet(); },
+  'add-round'() {
+    snapshot(); S.game.rounds.push({ id: uid(), createdAt: now(), s: {} }); save(); renderGame();
+    const w = $('#sheet'); w.scrollTop = w.scrollHeight;
+    if (S.view === 'grid') openPad(S.game.players[0].id, S.game.rounds[S.game.rounds.length - 1].id);
+  },
+  undo() {
+    if (!S.undo.length) return;
+    S.game = JSON.parse(S.undo.pop()); save();
+    if (S.pad) { S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
+    renderGame(); toast('Rückgängig gemacht');
+  },
+  'toggle-view'() { S.view = S.view === 'grid' ? 'counter' : 'grid'; S.game.view = S.view; save(); renderGame(); },
+  bump(el) {
+    const g = S.game, r = g.rounds[g.rounds.length - 1], pid = el.dataset.p;
+    snapshot(); r.s[pid] = (typeof r.s[pid] === 'number' ? r.s[pid] : 0) + parseInt(el.dataset.d, 10); save(); renderGame();
+  },
+  'open-menu'() { openMenu(); },
+  'set-win'(el) { snapshot(); S.game.win = el.dataset.v; save(); renderGame(); openMenu(); },
+  'save-tpl'() {
+    const g = S.game, list = store.get('tpls', []);
+    list.push({ id: uid(), custom: true, glyph: '✎', name: g.name, kind: g.kind, win: g.win, end: { ...g.end }, view: g.view, createdAt: now() });
+    store.set('tpls', list); closeSheet(); toast('Vorlage gespeichert');
+  },
+  result() { if (S.pad) { commitPad(); closePad(); } openResult(); },
+  rematch() {
+    const g = S.game, t = templates().find(x => x.id === g.templateId) || { ...g, id: g.templateId };
+    S.game = newGame({ ...t, win: g.win }, g.players.map(p => p.name)); S.undo = []; save(); closeSheet(); renderGame(); toast('Neue Partie, gleiche Runde');
+  },
+  'close-sheet'() { closeSheet(); },
+  discard() { S.game = null; S.undo = []; store.del('game'); closeSheet(); renderHome(); toast('Partie verworfen'); },
+  'open-config'() { CFG.name = ''; CFG.win = 'high'; CFG.end = 'none'; CFG.val = 500; openConfig(); },
+  cfg(el) {
+    readCfgInputs();
+    const k = el.dataset.k, v = el.dataset.v;
+    if (k === 'end' && v !== CFG.end) CFG.val = v === 'rounds' ? 10 : 500;
+    CFG[k] = v; openConfig();
+  },
+  'cfg-save'() {
+    readCfgInputs();
+    if (!CFG.name.trim()) { toast('Bitte einen Namen eingeben'); return; }
+    if (CFG.end !== 'none' && CFG.val < 1) { toast('Zahl muss größer als 0 sein'); return; }
+    const t = { id: uid(), custom: true, glyph: '✎', name: CFG.name.trim(), kind: 'rounds', win: CFG.win,
+      end: CFG.end === 'none' ? { type: 'none' } : { type: CFG.end, value: CFG.val }, createdAt: now() };
+    store.set('tpls', store.get('tpls', []).concat(t)); closeSheet(); renderHome(); toast('Vorlage gespeichert');
+  }
+};
+
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const f = A[el.dataset.act]; if (f) f(el, ev);
+});
+$('#add-form').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const inp = $('#add-name'), n = inp.value.trim();
+  if (!n) return;
+  if (!S.known.includes(n)) { S.known.push(n); store.set('known', S.known); }
+  if (!S.sel.includes(n)) S.sel.push(n);
+  inp.value = ''; inp.blur(); renderPlayers();
+});
+
+if (S.game) renderGame(); else renderHome();
+})();
+</script>
