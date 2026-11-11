@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { PzDb, createRepo } from './db';
 import { createGame, finish, liveRounds, restore, setScore, totals } from './game/engine';
-import { FREE_TEMPLATES } from './game/templates';
+import { TPL } from './test/fixtures';
 import type { Player } from './model/types';
 import type { Clock } from './lib/id';
 
@@ -28,7 +28,7 @@ describe('Lokale Datenbank', () => {
   it('lädt eine laufende Partie vollständig wieder', async () => {
     const repo = freshRepo(); const c = testClock();
     for (const p of players) await repo.savePlayer(p);
-    let s = createGame(FREE_TEMPLATES[0], players, c);
+    let s = createGame(TPL.free, players, c);
     const r0 = liveRounds(s)[0].id;
     s = setScore(s, r0, 'a', 12, c).state;
     s = setScore(s, r0, 'b', 7, c).state;
@@ -42,7 +42,7 @@ describe('Lokale Datenbank', () => {
   it('behält nach Rückgängig gelöschte Datensätze als Markierung', async () => {
     const repo = freshRepo(); const c = testClock();
     for (const p of players) await repo.savePlayer(p);
-    let s = createGame(FREE_TEMPLATES[0], players, c);
+    let s = createGame(TPL.free, players, c);
     const snap = s;
     s = setScore(s, liveRounds(s)[0].id, 'a', 5, c).state;
     await repo.saveGame(s);
@@ -54,9 +54,17 @@ describe('Lokale Datenbank', () => {
     expect(loaded!.entries[0].deletedAt).toBeTruthy();
   });
 
+  it('speichert eigene Vorlagen, zuletzt gespielte zuerst', async () => {
+    const repo = freshRepo();
+    await repo.saveTemplate({ ...TPL.free, key: 'a', createdAt: '2026-01-01T00:00:00Z', lastUsedAt: '2026-03-01T00:00:00Z' });
+    await repo.saveTemplate({ ...TPL.t500, key: 'b', createdAt: '2026-02-01T00:00:00Z', lastUsedAt: null });
+    await repo.saveTemplate({ ...TPL.r10, key: 'c', createdAt: '2026-01-05T00:00:00Z', lastUsedAt: '2026-04-01T00:00:00Z' });
+    expect((await repo.loadTemplates()).map(t => t.key)).toEqual(['c', 'a', 'b']);
+  });
+
   it('liefert keine laufende Partie mehr, wenn sie beendet wurde', async () => {
     const repo = freshRepo(); const c = testClock();
-    const s = createGame(FREE_TEMPLATES[0], players, c);
+    const s = createGame(TPL.free, players, c);
     await repo.saveGame(s);
     await repo.saveGame(finish(s, c));
     expect(await repo.loadRunningGame()).toBeNull();

@@ -1,15 +1,21 @@
 import { act, useApp } from '../store';
-import { FREE_TEMPLATES, describeTemplate } from '../game/templates';
+import { describeTemplate } from '../game/templates';
 import { currentRoundIndex, seated } from '../game/engine';
 import { PLAYER_COLORS } from '../lib/color';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
+import { GameIcon } from './GamePage';
+import { FREE_ICON } from './art';
+import { FREE_TINT } from './Setup';
 
-const SOON = [['Wizard', '#7a5cc9'], ['Rommé', '#e8684f'], ['Kniffel', '#2f8f86'], ['Skyjo', '#4aa3d8'], ['Phase 10', '#f2a33a']];
+/** „Anna, Ben und Clara“ */
+export function names(list: string[]): string {
+  return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' und ' + list[list.length - 1];
+}
 
 export function Home() {
-  const { game } = useApp();
+  const { game, templates } = useApp();
   const theme = useTheme();
   return (
     <section className="screen" id="s-home">
@@ -23,7 +29,6 @@ export function Home() {
           <div className="brand">
             <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
             <h1 className="wordmark" aria-label="Punktezettel"><span className="w1">PUNKTE</span><span className="w2">ZETTEL</span></h1>
-            <p>Vorlage wählen, Spieler, los.</p>
           </div>
           <div className="home-body">
             {game && (
@@ -32,28 +37,36 @@ export function Home() {
                 <button className="resume" onClick={() => act().resume()}>
                   <span className="t">
                     <b>{game.game.rules.name}</b>
-                    <small>{seated(game).map(p => p.name).join(', ')} · Runde {currentRoundIndex(game) + 1}</small>
+                    <small>Runde {currentRoundIndex(game) + 1} mit {names(seated(game).map(p => p.name))}</small>
                   </span>
                   <span className="go-pill">Weiter</span>
                 </button>
               </div>
             )}
             <div className="group">
-              <div className="eyebrow">Freie Zettel</div>
+              <div className="eyebrow">Neues Spiel</div>
               <div className="list">
-                {FREE_TEMPLATES.map((t, k) => (
-                  <button key={t.key} className="row tpl" onClick={() => act().pickTemplate(t)}>
-                    <span className="tdot" style={{ ['--c' as string]: PLAYER_COLORS[k] }} />
-                    <span className="t"><b>{t.name}</b><small>{describeTemplate(t)}</small></span>
-                    <Chevron />
-                  </button>
-                ))}
+                <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
+                  <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
+                  <span className="t"><b>Freies Spiel</b></span>
+                  <Chevron />
+                </button>
               </div>
             </div>
-            <div className="group">
-              <div className="eyebrow">Bald dabei</div>
-              <div className="soon">{SOON.map(([n, c]) => <span key={n}><i style={{ ['--c' as string]: c }} />{n}</span>)}</div>
-            </div>
+            {templates.length > 0 && (
+              <div className="group">
+                <div className="eyebrow">Meine Spiele</div>
+                <div className="list" id="my-games">
+                  {templates.map((t, k) => (
+                    <button key={t.key} className="row tpl" onClick={() => act().pickTemplate(t)}>
+                      <span className="tdot" style={{ ['--c' as string]: PLAYER_COLORS[k % PLAYER_COLORS.length] }} />
+                      <span className="t"><b>{t.name}</b><small>{describeTemplate(t)}</small></span>
+                      <Chevron />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <p className="version">Version {__APP_VERSION__}</p>
           </div>
         </div>

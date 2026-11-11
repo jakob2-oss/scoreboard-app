@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Player, Template } from '../model/types';
 import type { Clock } from '../lib/id';
-import { FREE_TEMPLATES } from './templates';
+import { TPL } from '../test/fixtures';
 import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState
@@ -12,7 +12,7 @@ function testClock(): Clock {
   let n = 0; let t = Date.UTC(2026, 0, 1);
   return { uid: () => 'id' + (++n), now: () => new Date(t += 1000).toISOString() };
 }
-const tpl = (key: string): Template => FREE_TEMPLATES.find(t => t.key === key)!;
+const tpl = (key: string): Template => TPL[key];
 function players(...names: string[]): Player[] {
   return names.map((name, i) => ({ id: 'p' + i, name, color: '#000', createdAt: '', updatedAt: '' }));
 }

@@ -5,7 +5,8 @@ import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
 import { liveRounds, seated, totals } from './game/engine';
-import { FREE_TEMPLATES } from './game/templates';
+import { TPL } from './test/fixtures';
+import type { Template } from './model/types';
 
 function testClock(): Clock {
   let n = 0; let t = Date.UTC(2026, 0, 1);
@@ -14,18 +15,19 @@ function testClock(): Clock {
 /** Speicher im Arbeitsspeicher, merkt sich den zuletzt gespeicherten Stand */
 function memPrefs(): Prefs { let last: string[] = []; return { getLast: () => last, setLast: ids => { last = ids; } }; }
 function memRepo() {
-  const players: Player[] = []; let saved: GameState | null = null; let saves = 0;
+  const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = [];
   const repo: Repo = {
+    loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
     loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
     saveGame: async s => { saved = s; saves++; }
   };
-  return { repo, last: () => saved, saves: () => saves };
+  return { repo, last: () => saved, saves: () => saves, templates };
 }
 async function setup(tplKey = 'free', names = ['Anna', 'Ben', 'Clara']) {
   const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
   await a.init();
-  a.pickTemplate(FREE_TEMPLATES.find(t => t.key === tplKey)!);
+  a.pickTemplate(TPL[tplKey]);
   for (const n of names) await a.addPlayer(n);
   a.start();
   return { st, a, mem };
@@ -119,9 +121,20 @@ describe('Rückgängig', () => {
 });
 
 describe('Spieler', () => {
+  it('ändert die Reihenfolge am Tisch und startet in dieser Reihenfolge', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free);
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.moveSelected(0, 2);
+    expect(st.get().selected).toEqual(['id2', 'id3', 'id1']);
+    a.moveSelected(2, 0); a.moveSelected(1, 1); a.moveSelected(5, 0);
+    expect(st.get().selected).toEqual(['id1', 'id2', 'id3']);
+    a.moveSelected(2, 1); a.start();
+    expect(seated(st.get().game!).map(p => p.name)).toEqual(['A', 'C', 'B']);
+  });
   it('erkennt Namen ohne Groß-/Kleinschreibung und vergibt feste Farben', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
-    await a.init(); a.pickTemplate(FREE_TEMPLATES[0]);
+    await a.init(); a.pickTemplate(TPL.free);
     await a.addPlayer('Anna'); await a.addPlayer(' anna '); await a.addPlayer('Ben');
     expect(st.get().players.map(p => p.name)).toEqual(['Anna', 'Ben']);
     expect(st.get().players[0].color).not.toBe(st.get().players[1].color);
@@ -130,7 +143,7 @@ describe('Spieler', () => {
   });
   it('merkt sich die letzte Auswahl für die nächste Partie', async () => {
     const { st, a } = await setup('free', ['A', 'B']);
-    a.goHome(); a.pickTemplate(FREE_TEMPLATES[1]);
+    a.goHome(); a.pickTemplate(TPL.t500);
     expect(st.get().selected).toEqual(['id1', 'id2']);
   });
 });
@@ -152,5 +165,57 @@ describe('Ende', () => {
     expect(st.get().game!.game.rules.win).toBe('low');
     a.undo();
     expect(st.get().game!.game.rules.win).toBe('high');
+  });
+});
+
+describe('Freies Spiel', () => {
+  async function fresh() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); return { mem, st, a };
+  }
+  it('übernimmt Gewinner, Ende und Zählschritte in die Partie', async () => {
+    const { st, a } = await fresh();
+    a.openSetup();
+    a.updateSetup({ name: 'Rommé bei Oma', win: 'low', end: { type: 'target', value: 300 }, steps: [10, 5, 25] });
+    a.setupNext();
+    expect(st.get().screen).toBe('players');
+    await a.addPlayer('A'); a.start();
+    const rules = st.get().game!.game.rules;
+    expect(rules).toMatchObject({ name: 'Rommé bei Oma', win: 'low', end: { type: 'target', value: 300 }, custom: true });
+    expect(rules.params?.steps).toEqual([5, 10, 25]);
+  });
+  it('speichert die Vorlage beim Start, wenn gewünscht', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(); a.updateSetup({ name: 'Mein Spiel', save: true }); a.setupNext();
+    await a.addPlayer('A'); a.start();
+    expect(st.get().templates.map(t => t.name)).toEqual(['Mein Spiel']);
+    expect(mem.templates).toHaveLength(1);
+    expect(mem.templates[0].lastUsedAt).toBeTruthy();
+    expect(mem.templates[0].key).toBe(st.get().game!.game.rules.key);
+  });
+  it('speichert die Vorlage spätestens beim Beenden automatisch', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(); a.updateSetup({ save: false }); a.setupNext();
+    await a.addPlayer('A'); a.start();
+    expect(mem.templates).toHaveLength(0);
+    a.finishGame();
+    expect(mem.templates).toHaveLength(1);
+    expect(mem.templates[0].name).toMatch(/^Freies Spiel vom /);
+    expect(st.get().toast?.text).toBe('Partie und Vorlage gespeichert');
+  });
+  it('spielt eine gespeicherte Vorlage erneut mit demselben Schlüssel', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(); a.updateSetup({ name: 'X' }); a.setupNext(); await a.addPlayer('A'); a.start();
+    const key = st.get().game!.game.rules.key;
+    a.finishGame();
+    expect(st.get().toast?.text).toBe('Partie gespeichert');
+    a.pickTemplate(st.get().templates[0]); a.start();
+    expect(st.get().game!.game.rules.key).toBe(key);
+    expect(mem.templates).toHaveLength(1);
+  });
+  it('führt von der Spielerauswahl zurück zu den Einstellungen, solange die Vorlage neu ist', async () => {
+    const { st, a } = await fresh();
+    a.openSetup(); a.setupNext(); a.playersBack();
+    expect(st.get().screen).toBe('setup');
   });
 });

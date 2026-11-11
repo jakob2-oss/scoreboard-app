@@ -51,6 +51,12 @@ Regeln als **Konfiguration aus Bausteinen**, nicht als eigener Code pro Spiel.
 | `players` | `{ min, max }` |
 | `params` | Baustein-Details, z. B. Kategorien und Bonus bei Kniffel, Punkteformel bei Wizard |
 | `custom` | `true` für selbst gebaute Vorlagen |
+| `params.steps` | Zählschritte für die Schnelltasten (freies Spiel), z. B. `[1, 5, 10]` |
+
+Eigene Vorlagen (freies Spiel) bekommen einen eigenen `key` und werden in der Tabelle
+`templates` gespeichert, spätestens beim Beenden der ersten Partie. Partien verweisen über
+`rules.key` auf ihre Vorlage. So lassen sich Statistiken je eigenem Spiel bilden und Vorlagen
+später zusammenführen.
 
 ### Partie (`games`)
 

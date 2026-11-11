@@ -21,6 +21,11 @@ npm run e2e      # Klicktest im Browser (Playwright)
 
 ## Dokumente
 
+- Arbeitsanweisungen für Claude: [CLAUDE.md](CLAUDE.md)
+- Stand & nächste Schritte: [docs/STATUS.md](docs/STATUS.md)
+- Entscheidungen: [docs/ENTSCHEIDUNGEN.md](docs/ENTSCHEIDUNGEN.md)
+- Spielseiten: [docs/SPIELSEITEN.md](docs/SPIELSEITEN.md)
+
 - Briefing & Phasenplan: [docs/BRIEFING.md](docs/BRIEFING.md)
 - Design (festgeschrieben): [docs/DESIGN.md](docs/DESIGN.md)
 - Datenmodell: [docs/DATENMODELL.md](docs/DATENMODELL.md)
@@ -30,6 +35,8 @@ npm run e2e      # Klicktest im Browser (Playwright)
 ## Stand
 
 - Phase 1 (Grundgerüst) fertig.
-- Phase 2, Paket 1 (Spieler & Partie-Kern) fertig: Spieler anlegen, freie Zettel, Überblick,
-  Spielerseiten, Ziffernblock, Rückgängig, Speicherung auf dem Gerät.
+- Phase 2, Paket 1 (Spieler & Partie-Kern) fertig: Spieler anlegen, Überblick, Spielerseiten,
+  Ziffernblock, Rückgängig, Speicherung auf dem Gerät.
+- Freies Spiel: Gewinner, Spielende und Zählschritte frei wählbar; wird als eigene Vorlage
+  gespeichert (beim Start oder spätestens beim Beenden) und erscheint unter „Meine Spiele“.
 - Als Nächstes: Paket 2 (Spiele-Vorlagen mit eigenen Regeln), dann Paket 3 (Historie & Statistik).

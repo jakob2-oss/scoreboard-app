@@ -5,6 +5,7 @@ import {
   currentRoundIndex, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
+import { stepsOf } from '../game/templates';
 import type { Player } from '../model/types';
 import { Avatar } from './Avatar';
 import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
@@ -13,10 +14,17 @@ import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
 const css = (vars: Record<string, string>) => vars as React.CSSProperties;
 const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
 
+/** Schnelltasten aus den Zählschritten der Vorlage: −10 −5 −1 +1 +5 +10 */
+export function quickKeys(g: GameState): number[] {
+  const s = [...stepsOf(g.game.rules)].sort((a, b) => a - b);
+  return [...s].reverse().map(n => -n).concat(s);
+}
+
 function subtitle(g: GameState): string {
-  const end = g.game.rules.end;
-  const e = end.type === 'target' ? ` · Ziel ${end.value}` : end.type === 'rounds' ? ` von ${end.value}` : '';
-  return `Runde ${currentRoundIndex(g) + 1}${e} · ${g.game.rules.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}`;
+  const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
+  if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
+  if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
+  return `Runde ${n}`;
 }
 
 export function GameScreen() {
@@ -62,6 +70,7 @@ export function GameScreen() {
       <div className="top gutter">
         <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zum Start"><IconBack /></button>
         <div className="grow"><h2>{g.game.rules.name}</h2><div className="sub">{subtitle(g)}</div></div>
+        <button className="text-btn" onClick={() => act().openSheet('result')}>Beenden</button>
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>
 
@@ -162,7 +171,6 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
           </tr>
         </tfoot>
       </table>
-      <p className="ov-hint gutter">Feld antippen zum Ändern · wischen für die Spielerseiten →</p>
     </>
   );
 }
@@ -187,7 +195,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
   const value = edit ? numOf(edit.buf) : ref === 'new' ? null : scoreOf(g, ref, p.id);
   const end = g.game.rules.end;
   let place = started ? `${x.place}. Platz` : 'Noch keine Punkte';
-  if (started && end.type === 'target' && g.game.rules.win === 'high') place += t[p.id] >= end.value ? ' · Ziel erreicht' : ` · noch ${end.value - t[p.id]} bis ${end.value}`;
+  if (started && end.type === 'target' && g.game.rules.win === 'high') place += t[p.id] >= end.value ? ', Ziel erreicht' : `, noch ${end.value - t[p.id]} bis ${end.value}`;
   const rounds = liveRounds(g);
   const pick = (r: RoundRef) => (edit ? act().selectRef(r) : act().goPage(i, r));
   return (
@@ -223,7 +231,7 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
   return (
     <div className="pp-panel">
       <div className="quick">
-        {[-10, -5, -1, 1, 5, 10].map(n => (
+        {quickKeys(g).map(n => (
           <button key={n} className={n < 0 ? 'strike' : ''} onClick={() => a.add(n)}>{n > 0 ? '+' + n : '−' + -n}</button>
         ))}
       </div>

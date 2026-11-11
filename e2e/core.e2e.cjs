@@ -23,16 +23,34 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('vier freie Vorlagen', (await p.locator('.row.tpl').count()) === 4);
+  check('nur „Freies Spiel“, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 1 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
-  await p.click('.row.tpl >> text=Freie Runden');
+  // Freies Spiel einrichten
+  await p.click('#new-free');
+  check('Einstellungen offen', await p.isVisible('#s-setup'));
+  await p.fill('#setup-name', 'Testspiel');
+  await shot('01b-setup');
+  await p.click('#setup-next');
   check('Spielerauswahl offen', await p.isVisible('#s-players'));
   check('Start ohne Spieler gesperrt', await p.isDisabled('#start-btn'));
   for (const n of ['Anna', 'Ben', 'Clara']) { await p.fill('#add-name', n); await p.press('#add-name', 'Enter'); }
   await p.fill('#add-name', 'anna'); await p.press('#add-name', 'Enter');
   check('Doppelter Name wird nicht neu angelegt', (await p.locator('.chip').count()) === 3);
-  check('Startknopf zeigt 3 Spieler', (await raw('#start-btn')) === 'Los · 3 Spieler');
+  // Reihenfolge per Ziehen am Griff ändern und zurück
+  const order = async () => (await p.locator('.order-row .nm').allTextContents()).join(',');
+  const dragRow = async (i, rows) => {
+    const g = await p.locator('.order-row .grip').nth(i).boundingBox();
+    const h = (await p.locator('.order-row').nth(i).boundingBox()).height;
+    await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await p.mouse.down();
+    for (let k = 1; k <= 8; k++) await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + (rows * h * 1.05) * k / 8);
+    await p.mouse.up(); await p.waitForTimeout(100);
+  };
+  await dragRow(0, 2);
+  check('Ziehen: Anna ans Ende', (await order()) === 'Ben,Clara,Anna', await order());
+  await dragRow(2, -2);
+  check('Ziehen zurück: Anna vorn', (await order()) === 'Anna,Ben,Clara', await order());
+  check('Startknopf zeigt 3 Spieler', (await raw('#start-btn')) === 'Los mit 3 Spielern');
   await shot('02-players');
   await p.click('#start-btn');
   check('Partie startet im Überblick', (await page()) === -1);
@@ -95,26 +113,50 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Menü: Gewinner umstellen, Design, Ende
   await p.click('[aria-label="Menü"]');
   await p.click('.seg >> text=Niedrigste Summe'); await p.waitForTimeout(100);
-  await p.click('.scrim');
+  await p.click('.scrim', { position: { x: 30, y: 40 } });
   check('„Wenig gewinnt“: Ben führt', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b'));
   await p.click('[aria-label="Menü"]'); await p.click('.menu-list >> text=Design');
   check('Design wechselt', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
   await shot('06-menu-dark');
-  await p.click('.menu-list >> text=Spiel beenden');
+  await p.click('.menu-list >> text=Beenden und speichern');
   check('Ergebnis zeigt Ben vorn', (await text('.bsheet h3')) === 'Ben gewinnt');
   await shot('07-result-dark');
-  await p.click('.bsheet >> text=Partie beenden'); await p.waitForTimeout(300);
+  await p.click('.scrim', { position: { x: 30, y: 40 } });
+  await p.click('#s-game .text-btn');
+  check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
+  await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('Meldung nach dem Speichern', (await text('.toast')) === 'Partie gespeichert');
   check('nach Beenden auf der Startseite', await p.isVisible('#s-home'));
   check('keine laufende Partie mehr', !(await p.isVisible('.resume')));
   await p.reload(); await p.waitForSelector('.wordmark');
   check('auch nach Neuladen beendet', !(await p.isVisible('.resume')));
   check('Design bleibt nach Neuladen dunkel', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
 
-  // Feste Rundenzahl & letzte Auswahl
-  await p.click('.row.tpl >> text=10 Runden');
-  check('letzte Spieler vorausgewählt', (await raw('#start-btn')) === 'Los · 3 Spieler');
-  await p.click('#start-btn');
+  // Gespeicherte Vorlage erneut spielen
+  check('„Testspiel“ unter Meine Spiele', (await text('#my-games')).includes('Testspiel'));
+  await p.click('#my-games .row >> text=Testspiel');
+  check('letzte Spieler vorausgewählt', (await raw('#start-btn')) === 'Los mit 3 Spielern');
+  await p.click('[aria-label="Zurück"]');
+  check('Zurück führt zur Startseite (Vorlage schon gespeichert)', await p.isVisible('#s-home'));
+
+  // Zweites freies Spiel: feste Rundenzahl, eigene Zählschritte, ohne Vorlage
+  await p.click('#new-free');
+  await p.click('.seg >> text=Runden'); await p.fill('#setup-end', '10');
+  for (const n of ['1', '5']) await p.click(`.step-chips .chip >> text="${n}"`);   // abwählen
+  for (const n of ['2', '20', '50']) await p.click(`.step-chips .chip >> text="${n}"`);
+  check('höchstens drei Zählschritte', (await p.locator('.step-chips .chip[aria-pressed="true"]').count()) === 3);
+  await p.click('.switch-row');
+  await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
+  check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');
+  await p.click('.dock .primary'); await p.waitForTimeout(500);
+  check('eigene Schnelltasten', (await text('.pp-panel .quick')) === '−20 −10 −2 +2 +10 +20');
+  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+2"');
+  check('Schnelltasten rechnen', (await text('section[aria-label="Anna"] .pp-entry .val')) === '22');
+  await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('Vorlage beim Beenden automatisch gespeichert', (await text('.toast')) === 'Partie und Vorlage gespeichert');
+  check('zwei eigene Spiele', (await p.locator('#my-games .row').count()) === 2);
+  await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

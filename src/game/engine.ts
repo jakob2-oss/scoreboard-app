@@ -86,7 +86,7 @@ export function endState(s: GameState): EndState | null {
     if (!hit.length) return null;
     const last = rounds[rounds.length - 1];
     const full = !!last && roundFull(s, last.id);
-    return { done: full, text: `${hit.map(p => p.name).join(', ')} über ${end.value}` + (full ? '' : ' · Runde zu Ende eintragen') };
+    return { done: full, text: `${hit.map(p => p.name).join(', ')} über ${end.value}` + (full ? '' : '. Runde noch zu Ende eintragen') };
   }
   return null;
 }
