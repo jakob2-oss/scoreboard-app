@@ -177,8 +177,10 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 .banner button { background: var(--accent); color: var(--accent-ink); border-radius: 10px; padding: 9px 12px; font-weight: 700; font-size: 14px; flex: none; }
 
 /* ---------- Ansicht-Umschalter ---------- */
-.viewseg { padding-block: 0 8px; }
-.viewseg .seg button { min-height: 36px; }
+.pp-page.ov { padding: 0; overflow: hidden; }
+.pp-page > .ov-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+.ov-hint { color: var(--muted); font-size: 13px; text-align: center; margin: 0; padding-block: 18px; }
+.pp-tab .ov-ic { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
 /* ---------- Spieler-Seiten ---------- */
 .sheet-wrap.pp-mode { overflow: hidden; display: flex; flex-direction: column; }
@@ -348,8 +350,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
     <div class="grow"><h2 id="g-title"></h2><div class="sub" id="g-sub"></div></div>
     <button class="icon-btn" data-act="open-menu" aria-label="Menü"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg></button>
   </div>
-  <div class="viewseg gutter" id="viewseg"></div>
-  <div class="sheet-wrap" id="sheet"></div>
+  <div class="sheet-wrap pp-mode" id="sheet"></div>
   <div class="banner gutter" id="banner" hidden></div>
   <div class="dock gutter" id="g-dock"></div>
 </section>
@@ -426,11 +427,9 @@ const S = {
   game: store.get('game', null),
   undo: [],
   pad: null,                               // { pid, ref, buf, fresh }
-  view: 'grid'
 };
 S.pp = { idx: 0, ref: null, buf: '', fresh: true, dirty: false };
 const NEW = '__new';
-const normView = v => (v === 'players' || v === 'counter') ? 'players' : 'grid';
 
 function save() { if (S.game) { S.game.updatedAt = now(); store.set('game', S.game); } }
 function snapshot() { S.undo.push(JSON.stringify(S.game)); if (S.undo.length > 100) S.undo.shift(); }
@@ -543,13 +542,7 @@ function renderHead() {
 function renderGame() {
   show('s-game');
   renderHead();
-  const pm = S.view === 'players';
-  $('#viewseg').innerHTML = `<div class="seg" role="group" aria-label="Ansicht">
-    <button data-act="set-view" data-v="grid" aria-pressed="${!pm}">Überblick</button>
-    <button data-act="set-view" data-v="players" aria-pressed="${pm}">Spieler</button></div>`;
-  $('#sheet').classList.toggle('pp-mode', pm);
-  if (pm) renderPlayersView(); else { renderGrid(); renderDock(); }
-  renderBanner();
+  renderSwipe();
 }
 
 /* ---------------- Spieler-Seiten ---------------- */
@@ -572,7 +565,8 @@ function ppSelect(ref) {
 }
 function ppActivate(i) {
   const g = S.game; if (!g) return;
-  S.pp.idx = Math.min(Math.max(0, i), g.players.length - 1);
+  S.pp.idx = Math.min(Math.max(-1, i), g.players.length - 1);
+  if (S.pp.idx < 0) { S.pp.ref = null; S.pp.buf = ''; S.pp.dirty = false; return; }
   ppSelect(defaultRef(g, g.players[S.pp.idx].id));
 }
 function ppNum() { const b = S.pp.buf; return b === '' || b === '-' ? null : parseInt(b, 10); }
@@ -592,14 +586,17 @@ function refLabel(g, ref) {
   if (ref === NEW) return ['Runde ' + (g.rounds.length + 1), 'neue Runde'];
   return ['Runde ' + (g.rounds.findIndex(r => r.id === ref) + 1), 'Punkte dieser Runde'];
 }
-function renderPlayersView() {
+// Eine Wischleiste: Seite 0 = Überblick, danach eine Seite pro Spieler.
+function renderSwipe() {
   const g = S.game;
-  if (S.pp.idx >= g.players.length) ppActivate(0);
+  if (S.pp.idx >= g.players.length) ppActivate(-1);
+  const keepY = $('#ov-grid') ? $('#ov-grid').scrollTop : 0;
   $('#sheet').innerHTML = `<div class="pp-tabs gutter" id="pp-tabs"></div>
-    <div class="pp-swipe" id="pp-swipe">${g.players.map((p, i) => `<section class="pp-page gutter" id="pp-page-${i}" style="--c:${p.color}" aria-label="${esc(p.name)}"></section>`).join('')}</div>`;
+    <div class="pp-swipe" id="pp-swipe"><section class="pp-page ov" id="pp-ov" aria-label="Überblick"><div class="ov-scroll" id="ov-grid"></div></section>${g.players.map((p, i) => `<section class="pp-page gutter" id="pp-page-${i}" style="--c:${p.color}" aria-label="${esc(p.name)}"></section>`).join('')}</div>`;
   ppUpdate();
+  $('#ov-grid').scrollTop = keepY;
   const sw = $('#pp-swipe');
-  sw.scrollLeft = S.pp.idx * sw.clientWidth;
+  sw.scrollLeft = (S.pp.idx + 1) * sw.clientWidth;
   sw.addEventListener('scroll', onSwipe, { passive: true });
 }
 let swipeT;
@@ -607,23 +604,28 @@ function onSwipe(e) {
   clearTimeout(swipeT);
   const sw = e.currentTarget;
   swipeT = setTimeout(() => {
-    const i = Math.round(sw.scrollLeft / sw.clientWidth);
-    if (i !== S.pp.idx) { ppActivate(i); ppUpdate(); }
+    const i = Math.round(sw.scrollLeft / sw.clientWidth) - 1;
+    if (i !== S.pp.idx) {
+      if (S.pad) { commitPad(); S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
+      ppActivate(i); ppUpdate();
+    }
   }, 80);
 }
 function ppGoto(i) {
   ppActivate(i); ppUpdate();
   const sw = $('#pp-swipe'); if (!sw) return;
   const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  sw.scrollTo({ left: S.pp.idx * sw.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+  sw.scrollTo({ left: (S.pp.idx + 1) * sw.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
 }
 function ppUpdate() {
+  renderGrid();
   S.game.players.forEach((_, i) => renderPage(i));
-  renderTabs(); renderPanel(); renderBanner(); renderHead();
+  renderTabs(); if (S.pp.idx < 0) renderDock(); else renderPanel(); renderBanner(); renderHead();
 }
 function renderTabs() {
   const g = S.game, t = totals(g);
-  $('#pp-tabs').innerHTML = g.players.map((p, i) => `<button class="pp-tab" style="--c:${p.color}" data-act="pp-goto" data-i="${i}" aria-current="${i === S.pp.idx}">
+  $('#pp-tabs').innerHTML = `<button class="pp-tab" style="--c:var(--fg)" data-act="pp-goto" data-i="-1" aria-current="${S.pp.idx === -1}">
+    <svg class="ov-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Überblick</button>` + g.players.map((p, i) => `<button class="pp-tab" style="--c:${p.color}" data-act="pp-goto" data-i="${i}" aria-current="${i === S.pp.idx}">
     <span class="dot"></span>${esc(p.name)}<small>${fmt(t[p.id])}</small></button>`).join('');
   const a = $('#pp-tabs [aria-current="true"]');
   if (a) { const box = $('#pp-tabs'); box.scrollLeft = Math.max(0, a.offsetLeft - box.clientWidth / 2 + a.offsetWidth / 2); }
@@ -706,7 +708,8 @@ function renderGrid() {
     if (started && g.end.type === 'target' && g.win === 'high') meta = t[p.id] >= g.end.value ? 'Ziel erreicht' : `noch ${g.end.value - t[p.id]}`;
     return `<td class="${leadIds.includes(p.id) ? 'lead' : ''}"><span class="tot">${fmt(t[p.id])}</span><span class="meta">${meta}</span></td>`;
   }).join('')}</tr></tfoot>`;
-  $('#sheet').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>`;
+  $('#ov-grid').innerHTML = `<table class="grid">${head}<tbody>${body}</tbody>${foot}</table>
+    <p class="ov-hint gutter">Nach links wischen: eigene Seite für jeden Spieler →</p>`;
 }
 
 function renderBanner() {
@@ -740,7 +743,12 @@ function openPad(pid, ref) {
   document.body.classList.add('pad-open');
   renderGame(); renderPad();
   const el = document.querySelector(`td.cell[data-p="${pid}"][data-r="${ref}"]`);
-  if (el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const w = $('#ov-grid');
+  if (el && w) {
+    const er = el.getBoundingClientRect(), wr = w.getBoundingClientRect(), foot = 64;
+    if (er.bottom > wr.bottom - foot) w.scrollTop += er.bottom - wr.bottom + foot;
+    else if (er.top < wr.top + 50) w.scrollTop -= wr.top + 50 - er.top;
+  }
 }
 function closePad() {
   S.pad = null; document.body.classList.remove('pad-open');
@@ -935,23 +943,17 @@ const A = {
   scrim() { if (S.pad) { commitPad(); closePad(); } closeSheet(); },
   'add-round'() {
     snapshot(); S.game.rounds.push({ id: uid(), createdAt: now(), s: {} }); save(); renderGame();
-    const w = $('#sheet'); w.scrollTop = w.scrollHeight;
-    if (S.view === 'grid') openPad(S.game.players[0].id, S.game.rounds[S.game.rounds.length - 1].id);
+    const w = $('#ov-grid'); if (w) w.scrollTop = w.scrollHeight;
+    if (S.pp.idx < 0) openPad(S.game.players[0].id, S.game.rounds[S.game.rounds.length - 1].id);
   },
   undo() {
     if (!S.undo.length) return;
     S.game = JSON.parse(S.undo.pop()); save();
-    if (S.view === 'players') { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref); else ppActivate(S.pp.idx); }
+    if (S.pp.idx >= 0) { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref); else ppActivate(S.pp.idx); }
     if (S.pad) { S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
     renderGame(); toast('Rückgängig gemacht');
   },
-  'set-view'(el) {
-    if (S.pad) closePad();
-    S.view = el.dataset.v; S.game.view = S.view; save();
-    if (S.view === 'players') ppActivate(S.pp.idx);
-    renderGame();
-  },
-  'pp-open'(el) { S.view = 'players'; S.game.view = 'players'; save(); ppActivate(+el.dataset.i); renderGame(); },
+  'pp-open'(el) { ppGoto(+el.dataset.i); },
   'pp-goto'(el) { ppGoto(+el.dataset.i); },
   'pp-target'(el) {
     const i = +el.dataset.i; if (i !== S.pp.idx) ppActivate(i);
@@ -1015,8 +1017,8 @@ $('#add-form').addEventListener('submit', ev => {
 });
 
 function enterGame(g) {
-  S.game = g; S.undo = []; S.view = normView(g.view); g.view = S.view; S.pp.idx = 0; ppActivate(0); save(); renderGame();
+  S.game = g; S.undo = []; ppActivate(g.view === 'players' ? 0 : -1); save(); renderGame();
 }
-if (S.game) { S.view = normView(S.game.view); ppActivate(0); renderGame(); } else renderHome();
+if (S.game) { ppActivate(-1); renderGame(); } else renderHome();
 })();
 </script>
