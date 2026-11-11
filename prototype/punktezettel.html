@@ -222,6 +222,21 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 .pp-panel .quick button { flex: 1 0 auto; }
 .pp-keys .key { min-height: 48px; }
 .pp-keys .go { grid-column: 4; grid-row: 3 / span 2; background: var(--accent); color: var(--accent-ink); font-family: var(--f-body); font-size: 16px; font-weight: 700; line-height: 1.2; text-align: center; }
+.pp-entry.wz { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+.wz-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.wz-sc { font-family: var(--f-num); font-size: 26px; font-weight: 700; color: var(--good); }
+.wz-sc.neg { color: var(--danger); }
+.wz-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wz-f { background: var(--bg); border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; min-height: 56px; }
+.wz-f small { color: var(--muted); font-size: 13px; font-weight: 600; }
+.wz-f b { font-family: var(--f-num); font-size: 32px; }
+.wz-f b.ph { color: var(--muted); opacity: .5; }
+.wz-f[aria-pressed="true"] { border-color: var(--accent); }
+.wz-hint { font-size: 13px; color: var(--muted); }
+.wz-hint .warn { color: var(--danger); }
+.grid td.cell small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; line-height: 1.1; }
+.grid td.cell.pend::after { content: none; }
+.grid tr.cur th.rn { color: var(--accent); font-weight: 700; }
 .pp-keys .key:disabled, .quick button:disabled { opacity: .35; }
 
 /* ---------- Bottom Sheets ---------- */
@@ -388,6 +403,7 @@ const ICON = {
 /* ---------------- Vorlagen ---------------- */
 const BUILTIN = [
   { id: 'free', glyph: '∞', name: 'Freie Runden', kind: 'rounds', win: 'high', end: { type: 'none' } },
+  { id: 'wizard', glyph: 'W', name: 'Wizard', kind: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, view: 'players', min: 3, max: 6 },
   { id: 't500', glyph: '500', name: 'Bis 500 Punkte', kind: 'rounds', win: 'high', end: { type: 'target', value: 500 } },
   { id: 'r10', glyph: '10×', name: '10 Runden', kind: 'rounds', win: 'high', end: { type: 'rounds', value: 10 } },
   { id: 'low9', glyph: '↓9', name: 'Wenig gewinnt', kind: 'rounds', win: 'low', end: { type: 'rounds', value: 9 } },
@@ -413,6 +429,7 @@ const BONUS_AT = 63, BONUS = 35;
 
 function describe(t) {
   if (t.kind === 'cats') return '13 Felder · Bonus ab 63';
+  if (t.kind === 'bids') return 'Ansage & Stiche · 3–6 Spieler';
   if (t.view === 'players') return 'Eine Seite pro Spieler · +/− Tasten';
   const w = t.win === 'high' ? 'Höchste Summe gewinnt' : 'Niedrigste Summe gewinnt';
   const e = t.end.type === 'target' ? `Ziel ${t.end.value} Punkte` : t.end.type === 'rounds' ? `${t.end.value} Runden` : 'offen';
@@ -494,7 +511,7 @@ function renderHome() {
   $('#resume-slot').innerHTML = g ? `
     <button class="resume" data-act="resume">
       <div style="flex:1;min-width:0"><small>Laufende Partie</small><b>${esc(g.name)}</b>
-      <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind === 'rounds' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></div>
+      <small>${g.players.map(p => esc(p.name)).join(', ')}${g.kind !== 'cats' ? ' · Runde ' + (curRoundIdx(g) + 1) : ''}</small></div>
       <span aria-hidden="true" style="font-size:22px">→</span>
     </button>` : '';
   $('#tpl-list').innerHTML = templates().map(t => `
@@ -514,8 +531,9 @@ function renderPlayers() {
     : '<div class="empty-order">Tippe unten auf Namen, um Spieler hinzuzufügen.</div>';
   $('#chips').innerHTML = S.known.map(n => `<button class="chip" data-act="toggle-p" data-name="${esc(n)}" aria-pressed="${S.sel.includes(n)}">${esc(n)}</button>`).join('');
   const b = $('#start-btn');
-  b.disabled = S.sel.length < 1;
-  b.textContent = S.sel.length ? `Los · ${S.sel.length} Spieler` : 'Mindestens 1 Spieler';
+  const min = S.tpl.min || 1, max = S.tpl.max || 99, n = S.sel.length;
+  b.disabled = n < min || n > max;
+  b.textContent = n < min ? (min > 1 ? `${S.tpl.name}: mindestens ${min} Spieler` : 'Mindestens 1 Spieler') : n > max ? `${S.tpl.name}: höchstens ${max} Spieler` : `Los · ${n} Spieler`;
 }
 
 function newGame(t, names) {
@@ -525,7 +543,10 @@ function newGame(t, names) {
     players: names.map((n, i) => ({ id: uid(), name: n, color: COLORS[i % COLORS.length] })),
     rounds: [], cells: {}
   };
-  if (g.kind === 'rounds') {
+  if (g.kind === 'bids') {
+    g.end.value = Math.floor(60 / g.players.length);
+    for (let i = 0; i < g.end.value; i++) g.rounds.push({ id: uid(), createdAt: now(), s: {}, bid: {}, tricks: {} });
+  } else if (g.kind === 'rounds') {
     const n = g.end.type === 'rounds' ? g.end.value : 1;
     for (let i = 0; i < n; i++) g.rounds.push({ id: uid(), createdAt: now(), s: {} });
   } else DICE.forEach(c => { g.cells[c.id] = {}; });
@@ -537,6 +558,7 @@ function renderHead() {
   const g = S.game;
   $('#g-title').textContent = g.name;
   const e = g.end.type === 'target' ? ` · Ziel ${g.end.value}` : g.end.type === 'rounds' ? ` von ${g.end.value}` : '';
+  if (isBids(g)) { const ri = curRoundIdx(g); $('#g-sub').textContent = `Runde ${ri + 1} von ${g.end.value} · ${wizPhase(g, g.rounds[ri]) === 'bid' ? 'Ansagen' : 'Stiche'}`; return; }
   $('#g-sub').textContent = g.kind === 'cats' ? `Bonus ab 63 · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}` :
     `Runde ${curRoundIdx(g) + 1}${e} · ${g.win === 'high' ? 'Hoch gewinnt' : 'Wenig gewinnt'}`;
 }
@@ -544,6 +566,66 @@ function renderGame() {
   show('s-game');
   renderHead();
   renderSwipe();
+}
+
+/* ---------------- Wizard: Ansage + Stiche ---------------- */
+const isBids = g => g.kind === 'bids';
+// Treffer: 20 + 10 je Stich; daneben: −10 je Stich Abweichung
+const wizScore = (b, t) => b === t ? 20 + 10 * t : -10 * Math.abs(b - t);
+function fv(r, f, pid) { const v = r[f] && r[f][pid]; return typeof v === 'number' ? v : null; }
+function recalc(r, pid) {
+  const b = fv(r, 'bid', pid), t = fv(r, 'tricks', pid);
+  if (b !== null && t !== null) r.s[pid] = wizScore(b, t); else delete r.s[pid];
+}
+// Geber rotiert jede Runde; es beginnt der Spieler links vom Geber.
+function dealer(g, ri) { return ri % g.players.length; }
+function order(g, ri) { const n = g.players.length, st = (dealer(g, ri) + 1) % n; return g.players.map((_, k) => (st + k) % n); }
+function sumF(g, r, f) { return g.players.reduce((a, p) => a + (fv(r, f, p.id) || 0), 0); }
+function countF(g, r, f) { return g.players.filter(p => fv(r, f, p.id) !== null).length; }
+function wizPhase(g, r) { return countF(g, r, 'bid') < g.players.length ? 'bid' : 'tricks'; }
+// Nächstes offenes Feld der laufenden Runde in Ansage-/Spielreihenfolge
+function wizNextOpen(g) {
+  const ri = curRoundIdx(g), r = g.rounds[ri], f = wizPhase(g, r);
+  const i = order(g, ri).find(k => fv(r, f, g.players[k].id) === null);
+  return { i: i === undefined ? order(g, ri)[0] : i, ref: r.id, f };
+}
+function ppGotoField(i, ref, f) { ppGoto(i); ppSelect(ref, f); ppUpdate(); }
+function wizNext() {
+  const g = S.game, P = S.pp, ri = g.rounds.findIndex(r => r.id === P.ref), r = g.rounds[ri];
+  const ord = order(g, ri), pos = ord.indexOf(P.idx);
+  if (pos < ord.length - 1) return ppGotoField(ord[pos + 1], r.id, P.field);
+  if (P.field === 'bid') return ppGotoField(ord[0], r.id, 'tricks');
+  if (ri < g.rounds.length - 1) return ppGotoField(order(g, ri + 1)[0], g.rounds[ri + 1].id, 'bid');
+  ppGoto(-1);
+}
+function wizPageBody(g, i, ref, act) {
+  const p = g.players[i], P = S.pp, ri = g.rounds.findIndex(r => r.id === ref), r = g.rounds[ri];
+  const cards = ri + 1, field = act ? P.field : (fv(r, 'bid', p.id) === null ? 'bid' : 'tricks');
+  const val = f => (act && f === P.field) ? ppNum() : fv(r, f, p.id);
+  const box = (f, lbl) => { const v = val(f);
+    return `<button class="wz-f" data-act="pp-field" data-f="${f}" aria-pressed="${f === field}"><small>${lbl}</small><b class="${v === null ? 'ph' : ''}">${v === null ? '–' : v}</b></button>`; };
+  const b = fv(r, 'bid', p.id), t = fv(r, 'tricks', p.id);
+  const sc = b !== null && t !== null ? wizScore(b, t) : null;
+  const sb = sumF(g, r, 'bid'), st = sumF(g, r, 'tricks');
+  let hint;
+  if (wizPhase(g, r) === 'bid') {
+    const diff = sb - cards;
+    hint = `Angesagt: ${sb} von ${cards} Stichen` + (countF(g, r, 'bid') === g.players.length ? (diff > 0 ? ` · ${diff} überreizt` : diff < 0 ? ` · ${-diff} zu wenig` : ' · genau aufgeteilt') : '');
+  } else {
+    const done = countF(g, r, 'tricks') === g.players.length;
+    hint = `Stiche: ${st} von ${cards}` + (done && st !== cards ? ' · <b class="warn">Summe prüfen!</b>' : '');
+  }
+  let out = `<div class="pp-entry wz"><div class="wz-top"><div><div class="lbl">Runde ${ri + 1} · ${cards} ${cards === 1 ? 'Karte' : 'Karten'}</div>
+    <small>gibt: ${esc(g.players[dealer(g, ri)].name)}</small></div>
+    <span class="wz-sc ${sc !== null && sc < 0 ? 'neg' : ''}">${sc === null ? '' : (sc > 0 ? '+' : '') + fmt(sc)}</span></div>
+    <div class="wz-fields">${box('bid', 'Ansage')}${box('tricks', 'Stiche')}</div>
+    <div class="wz-hint">${hint}</div></div>`;
+  out += `<div class="eyebrow">Verlauf · antippen zum Ändern</div><div class="pp-hist">${g.rounds.map((rr, k) => {
+    const s = rr.s[p.id], bb = fv(rr, 'bid', p.id), tt = fv(rr, 'tricks', p.id);
+    if (k > curRoundIdx(g) && bb === null) return '';
+    return `<button data-act="pp-target" data-i="${i}" data-r="${rr.id}" aria-current="${rr.id === ref}"><small>R${k + 1} · ${bb === null ? '–' : bb}/${tt === null ? '–' : tt}</small><b>${typeof s === 'number' ? (s > 0 ? '+' : '') + fmt(s) : '·'}</b></button>`;
+  }).join('')}</div>`;
+  return out;
 }
 
 /* ---------------- Spieler-Seiten ---------------- */
@@ -559,8 +641,13 @@ function defaultRef(g, pid) {
   if (open) return open.id;
   return canAddRound(g) ? NEW : g.rounds[g.rounds.length - 1].id;
 }
-function ppSelect(ref) {
+function ppSelect(ref, field) {
   const g = S.game, p = g.players[S.pp.idx], P = S.pp;
+  if (isBids(g)) {
+    const r = g.rounds.find(x => x.id === ref);
+    P.ref = ref; P.field = field || (fv(r, 'bid', p.id) === null ? 'bid' : 'tricks');
+    const v = fv(r, P.field, p.id); P.buf = v === null ? '' : String(v); P.fresh = v !== null; P.dirty = false; return;
+  }
   P.ref = ref; const v = ref && ref !== NEW ? getVal(g, p.id, ref) : null;
   P.buf = v === null ? '' : String(v); P.fresh = v !== null; P.dirty = false;
 }
@@ -575,6 +662,12 @@ function ppNum() { const b = S.pp.buf; return b === '' || b === '-' ? null : par
 function ppWrite() {
   const g = S.game, P = S.pp, pid = g.players[P.idx].id, v = ppNum();
   if (!P.ref) return;
+  if (isBids(g)) {
+    const r = g.rounds.find(x => x.id === P.ref), cards = g.rounds.indexOf(r) + 1;
+    if (!P.dirty) { snapshot(); P.dirty = true; }
+    if (v === null) delete r[P.field][pid]; else { r[P.field][pid] = Math.min(Math.max(0, v), cards); P.buf = String(r[P.field][pid]); }
+    recalc(r, pid); save(); return;
+  }
   if (P.ref === NEW) {
     if (v === null) return;
     if (!P.dirty) { snapshot(); P.dirty = true; }
@@ -636,12 +729,13 @@ function renderPage(i) {
   const act = i === S.pp.idx, P = S.pp;
   const ref = act ? P.ref : defaultRef(g, p.id);
   const v = act ? ppNum() : (ref && ref !== NEW ? getVal(g, p.id, ref) : null);
-  const [lbl, sub] = refLabel(g, ref);
+  const [lbl, sub] = isBids(g) ? ['', ''] : refLabel(g, ref);
   let place = started ? x.place + '. Platz' : 'Noch keine Punkte';
   if (started && g.end.type === 'target' && g.win === 'high') place += t[p.id] >= g.end.value ? ' · Ziel erreicht' : ` · noch ${g.end.value - t[p.id]} bis ${g.end.value}`;
   let body = `<div class="pp-entry"><div><div class="lbl">${esc(lbl)}</div><small>${esc(sub)}</small></div>
     <span class="val ${v === null ? 'ph' : ''} ${v !== null && v < 0 ? 'neg' : ''}">${v === null ? (act && P.buf === '-' ? '−' : '0') : fmt(v)}</span></div>`;
-  if (g.kind === 'rounds') {
+  if (isBids(g)) body = wizPageBody(g, i, ref, act);
+  else if (g.kind === 'rounds') {
     body += `<div class="eyebrow">Verlauf · antippen zum Ändern</div><div class="pp-hist">${g.rounds.map((r, k) => {
       const rv = r.s[p.id];
       return `<button data-act="pp-target" data-i="${i}" data-r="${r.id}" aria-current="${r.id === ref}"><small>R${k + 1}</small><b>${typeof rv === 'number' ? fmt(rv) : '·'}</b></button>`;
@@ -663,17 +757,20 @@ function renderPanel() {
     const c = DICE.find(x => x.id === P.ref);
     const vals = c ? (c.quick || (c.fixed ? [c.fixed] : [])).filter(x => x !== 0) : [];
     quick = `<div class="quick">${vals.map(x => `<button data-act="pp-set" data-v="${x}" ${off}>${x}</button>`).join('')}<button class="strike" data-act="pp-set" data-v="0" ${off}>Streichen · 0</button></div>`;
+  } else if (isBids(g)) {
+    const cards = g.rounds.findIndex(r => r.id === P.ref) + 1;
+    quick = `<div class="quick">${Array.from({ length: cards + 1 }, (_, k) => `<button data-act="pp-set" data-v="${k}" data-go="1">${k}</button>`).join('')}</div>`;
   } else {
     quick = `<div class="quick">${[-10, -5, -1, 1, 5, 10].map(d => `<button class="${d < 0 ? 'strike' : ''}" data-act="pp-add" data-v="${d}">${d > 0 ? '+' + d : '−' + (-d)}</button>`).join('')}</div>`;
   }
   const last = P.idx === g.players.length - 1;
-  const goLbl = !isCat && last ? 'Nächste<br>Runde' : 'Weiter<br>→';
+  const goLbl = isBids(g) ? 'Weiter<br>→' : !isCat && last ? 'Nächste<br>Runde' : 'Weiter<br>→';
   const d = n => `<button class="key" data-act="pp-digit" data-v="${n}" ${off}>${n}</button>`;
   $('#g-dock').innerHTML = `<div class="pp-panel">${quick}<div class="keys pp-keys">
     ${d(1)}${d(2)}${d(3)}<button class="key fn" data-act="pp-back" aria-label="Löschen" ${off}>${ICON.back}</button>
     ${d(4)}${d(5)}${d(6)}<button class="key fn" data-act="pp-clear" ${off} style="font-family:var(--f-body);font-size:15px">Leeren</button>
     ${d(7)}${d(8)}${d(9)}<button class="key go" data-act="pp-next">${goLbl}</button>
-    <button class="key fn" data-act="pp-sign" aria-label="Vorzeichen" ${off}>±</button>${d(0)}
+    ${isBids(g) ? `<button class="key fn" data-act="pp-field" data-f="${P.field === 'bid' ? 'tricks' : 'bid'}" style="font-family:var(--f-body);font-size:14px">${P.field === 'bid' ? 'Stiche' : 'Ansage'}</button>` : `<button class="key fn" data-act="pp-sign" aria-label="Vorzeichen" ${off}>±</button>`}${d(0)}
     <button class="key fn" data-act="undo" aria-label="Rückgängig" ${S.undo.length ? '' : 'disabled'}>${ICON.undo}</button>
   </div></div>`;
 }
@@ -690,7 +787,14 @@ function renderGrid() {
   const head = `<thead><tr><th class="corner">${g.kind === 'cats' ? '' : '#'}</th>${g.players.map(p =>
     `<th style="--c:${p.color}" data-act="pp-open" data-i="${g.players.indexOf(p)}"><div class="pn"><span>${esc(p.name)}</span><i class="bar"></i></div></th>`).join('')}</tr></thead>`;
   let body = '';
-  if (g.kind === 'rounds') {
+  if (isBids(g)) {
+    const cur = curRoundIdx(g);
+    body = g.rounds.map((r, i) => `<tr class="${i === cur ? 'cur' : ''}"><th class="rn">${i + 1}</th>${g.players.map(p => {
+      const sc = typeof r.s[p.id] === 'number' ? r.s[p.id] : null, b = fv(r, 'bid', p.id), t = fv(r, 'tricks', p.id);
+      const sub = b === null && t === null ? '' : `<small>${b === null ? '–' : b}/${t === null ? '–' : t}</small>`;
+      return `<td class="cell ${sc === null && !sub ? 'empty' : 'pend'} ${sc !== null && sc < 0 ? 'neg' : ''}" data-act="cell" data-p="${p.id}" data-r="${r.id}">${sc === null ? '' : (sc > 0 ? '+' : '') + fmt(sc)}${sub}</td>`;
+    }).join('')}</tr>`).join('');
+  } else if (g.kind === 'rounds') {
     body = g.rounds.map((r, i) => `<tr><th class="rn">${i + 1}</th>${g.players.map(p =>
       cellHTML(g, p.id, r.id, typeof r.s[p.id] === 'number' ? r.s[p.id] : null)).join('')}</tr>`).join('');
   } else {
@@ -723,7 +827,8 @@ function renderBanner() {
 function renderDock() {
   const g = S.game;
   const canAdd = g.kind === 'rounds' && !(g.end.type === 'rounds' && g.rounds.length >= g.end.value);
-  const main = g.kind === 'rounds'
+  const main = isBids(g) ? ((endState(g) || {}).done ? '<button class="primary" data-act="result">Ergebnis</button>' : `<button class="primary" data-act="wz-go">Runde ${curRoundIdx(g) + 1} eintragen →</button>`)
+    : g.kind === 'rounds'
     ? (canAdd ? '<button class="primary" data-act="add-round">+ Runde</button>' : '<button class="primary" data-act="result">Ergebnis</button>')
     : '<button class="primary" data-act="result">Ergebnis</button>';
   $('#g-dock').innerHTML = `<button class="secondary" data-act="undo" ${S.undo.length ? '' : 'disabled'} aria-label="Rückgängig">${ICON.undo}</button>${main}`;
@@ -918,6 +1023,8 @@ const A = {
   'go-home'() { if (S.pad) closePad(); closeSheet(); renderHome(); },
   resume() { renderGame(); },
   cell(el) {
+    const g = S.game;
+    if (isBids(g)) { const i = g.players.findIndex(p => p.id === el.dataset.p); return ppGotoField(i, el.dataset.r); }
     if (S.pad) commitPad();
     openPad(el.dataset.p, el.dataset.r);
   },
@@ -950,7 +1057,7 @@ const A = {
   undo() {
     if (!S.undo.length) return;
     S.game = JSON.parse(S.undo.pop()); save();
-    if (S.pp.idx >= 0) { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref); else ppActivate(S.pp.idx); }
+    if (S.pp.idx >= 0) { const ref = S.pp.ref, g = S.game; const ok = ref && (g.kind === 'cats' || g.rounds.some(r => r.id === ref)); if (ok) ppSelect(ref, S.pp.field); else ppActivate(S.pp.idx); }
     if (S.pad) { S.pad = null; document.body.classList.remove('pad-open'); $('#pad').hidden = true; $('#s-game').style.paddingBottom = ''; }
     renderGame(); toast('Rückgängig gemacht');
   },
@@ -960,7 +1067,9 @@ const A = {
     const i = +el.dataset.i; if (i !== S.pp.idx) ppActivate(i);
     ppSelect(el.dataset.r); ppUpdate();
   },
-  'pp-next'() { ppGoto((S.pp.idx + 1) % S.game.players.length); },
+  'pp-next'() { if (isBids(S.game)) return wizNext(); ppGoto((S.pp.idx + 1) % S.game.players.length); },
+  'pp-field'(el) { ppSelect(S.pp.ref, el.dataset.f); ppUpdate(); },
+  'wz-go'() { const n = wizNextOpen(S.game); ppGotoField(n.i, n.ref, n.f); },
   'pp-digit'(el) {
     const P = S.pp; if (!P.ref) return;
     if (P.fresh) { P.buf = P.buf.startsWith('-') ? '-' : ''; P.fresh = false; }
@@ -969,7 +1078,7 @@ const A = {
     ppWrite(); ppUpdate();
   },
   'pp-add'(el) { const P = S.pp; if (!P.ref) return; P.buf = String((ppNum() || 0) + parseInt(el.dataset.v, 10)); P.fresh = false; ppWrite(); ppUpdate(); },
-  'pp-set'(el) { const P = S.pp; if (!P.ref) return; P.buf = el.dataset.v; P.fresh = true; ppWrite(); ppUpdate(); },
+  'pp-set'(el) { const P = S.pp; if (!P.ref) return; P.buf = el.dataset.v; P.fresh = true; ppWrite(); if (el.dataset.go && isBids(S.game)) return wizNext(); ppUpdate(); },
   'pp-sign'() { const P = S.pp; if (!P.ref) return; P.buf = P.buf.startsWith('-') ? P.buf.slice(1) : '-' + P.buf; P.fresh = false; ppWrite(); ppUpdate(); },
   'pp-back'() { const P = S.pp; if (!P.ref) return; P.buf = P.fresh ? '' : P.buf.slice(0, -1); P.fresh = false; ppWrite(); ppUpdate(); },
   'pp-clear'() { const P = S.pp; if (!P.ref) return; P.buf = ''; P.fresh = false; ppWrite(); ppUpdate(); },
@@ -1018,7 +1127,10 @@ $('#add-form').addEventListener('submit', ev => {
 });
 
 function enterGame(g) {
-  S.game = g; S.undo = []; ppActivate(g.view === 'players' ? 0 : -1); save(); renderGame();
+  S.game = g; S.undo = [];
+  const n = isBids(g) ? wizNextOpen(g) : null;
+  ppActivate(n ? n.i : g.view === 'players' ? 0 : -1); if (n) ppSelect(n.ref, n.f);
+  save(); renderGame();
 }
 if (S.game) { ppActivate(-1); renderGame(); } else renderHome();
 })();
