@@ -126,7 +126,11 @@ export function createRepo(db: PzDb): Repo {
           db.entries.where('gameId').equals(game.id).toArray(),
           db.players.bulkGet(game.seats.map(s => s.playerId))
         ]);
-        return { game, rounds, entries, players: players.filter((p): p is Player => !!p) };
+        // Teampartie: Teams sind keine gespeicherten Spieler, sie stehen in der Partie selbst
+        const seated = game.teams?.length
+          ? game.teams.map(x => ({ id: x.id, name: x.name, color: x.color, createdAt: game.createdAt, updatedAt: game.updatedAt }))
+          : players.filter((p): p is Player => !!p);
+        return { game, rounds, entries, players: seated };
       }));
     },
     async loadRunningGame() { return (await this.loadRunningGames())[0] ?? null; },

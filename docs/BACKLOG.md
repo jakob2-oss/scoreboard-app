@@ -101,3 +101,5 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 - [x] **Siegerseite (12.11.):** ganze Seite mit Szene des Spiels, Sieger mit Krone, Treppchen, bis zu drei Kennzahlen je Spiel (`src/game/highlights.ts`), Serie zuordnen und speichern.
 - [x] **App-Hintergrund mit Formen (12.11.):** blau bleibt, Formen passend zum Spiel, alles langsam in Bewegung; Szenen-Konfetti verlangsamt.
 - [x] **Otter auf der Siegerseite (12.11.):** Trophäenzimmer mit Otter (Krone, Pokal), gerahmtes Bild des Spiels, Punktezettel an der Wand, Band „Gewonnen“; langsam fallendes Konfetti. Stil erwachsen, angelehnt an das Vorbild, eigene Zeichnung (`src/ui/trophy.ts`).
+- [x] **Teams (12.11.):** in der Spielerauswahl „In Teams spielen“, Teams aus einzelnen Spielern; Partie zählt je Team, beim Beenden bekommt jedes Mitglied Platz und Punkte des Teams. Nicht bei Wizard, Kniffel, Phase 10.
+- [ ] Später: wechselnde Partner je Runde (Doppelkopf Re/Kontra, Schafkopf Sauspiel).

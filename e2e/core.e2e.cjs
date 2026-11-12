@@ -329,6 +329,17 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('45-binokel-ov');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
+  // Teams aus einzelnen Spielern
+  await p.click('[data-game="uno"]'); await p.click('#s-gamepage .dock .secondary');
+  await p.fill('#add-name', 'Dora'); await p.press('#add-name', 'Enter');
+  await p.click('#team-mode'); await p.waitForTimeout(100);
+  check('Teams: zwei Teams vorgeschlagen', (await raw('#start-btn')) === 'Los mit 2 Teams' && (await p.locator('.team-chip').count()) === 4);
+  await shot('36a-teams');
+  await p.click('#start-btn'); await p.waitForTimeout(300);
+  check('Teams: Zettel mit Teamspalten', (await raw('.grid thead')).includes('&'));
+  await shot('36b-team-game');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite
@@ -433,8 +444,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[aria-label="Zurück"]');
   check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
   // Spieler löschen: weg aus der Liste, Name bleibt im Verlauf
+  const nPeople = await p.locator('.person-row').count();
   await p.click('.person-row >> text=Clara M'); await p.click('#player-delete'); await p.click('#player-delete-yes'); await p.waitForTimeout(300);
-  check('Spieler gelöscht', (await p.locator('.person-row').count()) === 2 && !(await text('#s-people')).includes('Clara M'));
+  check('Spieler gelöscht', (await p.locator('.person-row').count()) === nPeople - 1 && !(await text('#s-people')).includes('Clara M'));
   await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
   check('Name bleibt im Verlauf', (await text('.bsheet .podium')).includes('Clara M'));
   await p.mouse.click(30, 40); await p.click('#tab-people');

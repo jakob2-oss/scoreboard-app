@@ -81,6 +81,9 @@ export interface TemplateParams {
 
 export type GameStatus = 'running' | 'finished' | 'abandoned';
 
+/** Team einer Partie (nur innerhalb der Partie, keine eigene Person) */
+export interface Team { id: string; name: string; color: string; members: string[] }
+
 export interface Seat { playerId: string; seat: number; team?: string | null }
 
 export interface Game extends Base {
@@ -90,6 +93,8 @@ export interface Game extends Base {
   startedAt: ISODate;
   finishedAt?: ISODate | null;
   seats: Seat[];
+  /** Teampartie: Teams spielen wie Spieler (Sitzplätze verweisen auf Team-IDs); members sind echte Spieler */
+  teams?: Team[];
   eventId?: string | null;
   place?: string | null;
   groupId?: string | null;

@@ -302,3 +302,8 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 .vo-breathe { animation: vo-breathe 5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes vo-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015, 1.025); } }
 @media (prefers-reduced-motion: reduce) { .vc-fall, .vl-glow, .vo-breathe { animation: none !important; } }
+
+/* ---------- Teams ---------- */
+.team-chip { flex: none; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #2e2b4f; }
+.team-opts { display: flex; flex-direction: column; gap: 6px; }
+.team-opts .text-btn { align-self: flex-start; }

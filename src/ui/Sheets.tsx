@@ -5,7 +5,7 @@ import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
 import { trophyRoom } from './trophy';
 import { names } from './Home';
-import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
+import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -115,7 +115,7 @@ export function ResultSheet({ g }: { g: GameState }) {
         </div>
         <div className="sheet-body">
           <div className="eyebrow v-meta">{rules.name}, {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-          <h3 className="v-title">{started ? names(winners.map(x => x.player.name)) + (winners.length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
+          <h3 className="v-title">{started ? names(winners.map(x => x.player.name)) + (winners.length > 1 || membersOf(g, winners[0].player.id).length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
           {started && (
             <div className="v-podium">
               {podium.map(x => (

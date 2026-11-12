@@ -90,6 +90,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 
 - **Mehrere Partien** (PR #12): `parked` im Store, `loadRunningGames` in `db.ts`, `resume(id)`
 
+- **Teams** (PR #13): `createTeamGame`, `membersOf`, `playsIn` in `engine.ts`; Ergebnisse je Mitglied in `finishGame`
+
 ## Tests
-- Unit-Tests: 96 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 100 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen

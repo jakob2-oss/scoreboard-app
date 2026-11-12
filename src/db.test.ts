@@ -106,4 +106,13 @@ describe('Lokale Datenbank', () => {
     expect((await repo.loadRunningGames()).map(x => x.game.id)).toEqual(['b', 'c', 'a']);
     expect((await repo.loadRunningGame())!.game.id).toBe('b');
   });
+
+  it('lädt eine laufende Teampartie mit ihren Teams', async () => {
+    const repo = freshRepo(), t = '2026-01-01T00:00:00Z';
+    const teams = [{ id: 'team-1', name: 'A & B', color: '#000', members: ['a', 'b'] }, { id: 'team-2', name: 'C & D', color: '#111', members: ['c', 'd'] }];
+    await repo.saveGame({ game: { id: 'g', createdAt: t, updatedAt: t, rules: TPL.free, status: 'running', seats: [{ playerId: 'team-1', seat: 0 }, { playerId: 'team-2', seat: 1 }], teams } as never, players: [], rounds: [], entries: [] });
+    const g = (await repo.loadRunningGames())[0];
+    expect(g.players.map(p => p.name)).toEqual(['A & B', 'C & D']);
+    expect(g.game.teams?.[0].members).toEqual(['a', 'b']);
+  });
 });

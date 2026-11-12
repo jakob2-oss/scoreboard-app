@@ -65,7 +65,8 @@ später zusammenführen.
 | `rules` | eingefrorene Kopie der Vorlage (`key` + `version` + Inhalt) |
 | `status` | `running` · `finished` · `abandoned` |
 | `startedAt` / `finishedAt` | Zeitpunkte |
-| `seats` | Reihenfolge am Tisch: `[{ playerId, seat, team? }]` |
+| `seats` | Reihenfolge am Tisch: `[{ playerId, seat, team? }]`; bei Teams verweist `playerId` auf eine Team-ID |
+| `teams` | optional: `[{ id, name, color, members }]`; Teams spielen wie Spieler, Ergebnisse gehen an die Mitglieder |
 | `eventId` | optional: Anlass (siehe unten) |
 | `place` | optional: Ort als Text („Cusco“) |
 | `groupId` | leer; ab Phase 4 die Gruppe, mit der geteilt wird |

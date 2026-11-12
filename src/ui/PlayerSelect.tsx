@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
-import { act, useApp } from '../store';
+import { act, canTeam, useApp } from '../store';
+
+const TEAM_COLORS = ['#97c4e3', '#f3a98f', '#86cbb8', '#f2cf86', '#bba8e6', '#eda7bf'];
 import { IconBack } from './icons';
 
 /** Ziehen am Griff verschiebt den Spieler; die Liste ordnet sich beim Überqueren einer halben Zeile neu. */
@@ -24,13 +26,17 @@ function useReorder(count: number) {
 }
 
 export function PlayerSelect() {
-  const { template, players, selected } = useApp();
+  const { template, players, selected, teamMode, teamOf, teamCount } = useApp();
   const [name, setName] = useState('');
   const chosen = selected.map(id => players.find(p => p.id === id)).filter(p => !!p);
   const dnd = useReorder(chosen.length);
   if (!template) return null;
   const n = chosen.length, { min, max } = template.players;
-  const label = n < min ? 'Spieler wählen' : n > max ? `Höchstens ${max} Spieler` : `Los mit ${n} ${n === 1 ? 'Spieler' : 'Spielern'}`;
+  const teamsOn = teamMode && canTeam(template) && n >= 2;
+  const teamsUsed = new Set(chosen.map(p => teamOf[p!.id] ?? 0)).size;
+  const label = teamsOn ? (teamsUsed < 2 ? 'Mindestens zwei Teams' : `Los mit ${teamsUsed} Teams`)
+    : n < min ? 'Spieler wählen' : n > max ? `Höchstens ${max} Spieler` : `Los mit ${n} ${n === 1 ? 'Spieler' : 'Spielern'}`;
+  const ready = teamsOn ? teamsUsed >= 2 : n >= min && n <= max;
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     act().addPlayer(name); setName('');
@@ -58,12 +64,23 @@ export function PlayerSelect() {
                     </span>
                     <span className="dot" style={{ ['--c' as string]: p.color }} />
                     <span className="nm">{p.name}</span>
+                    {teamsOn && <button className="team-chip" style={{ background: TEAM_COLORS[(teamOf[p.id] ?? 0) % TEAM_COLORS.length] }}
+                      onClick={() => act().cycleTeam(p.id)} aria-label={`${p.name}: Team wechseln`}>Team {(teamOf[p.id] ?? 0) + 1}</button>}
                     <button className="rm" onClick={() => act().toggleSelect(p.id)} aria-label={`${p.name} entfernen`}>✕</button>
                   </div>
                 );
               }) : <div className="empty-order">Noch niemand ausgewählt</div>}
             </div>
           </div>
+          {canTeam(template) && n >= 2 && (
+            <div className="team-opts">
+              <label className="switch-row">
+                <input type="checkbox" id="team-mode" checked={teamMode} onChange={e => act().setTeamMode(e.target.checked)} />
+                <span className="t"><b>In Teams spielen</b></span>
+              </label>
+              {teamsOn && teamCount < n && <button className="text-btn" id="add-team" onClick={() => act().addTeam()}>Team hinzufügen</button>}
+            </div>
+          )}
           {players.length > 0 && (
             <div className="group">
               <div className="eyebrow">Spieler</div>
@@ -81,7 +98,7 @@ export function PlayerSelect() {
         </div>
       </div>
       <div className="dock gutter">
-        <button className="primary" id="start-btn" disabled={n < min || n > max} onClick={() => act().start()}>{label}</button>
+        <button className="primary" id="start-btn" disabled={!ready} onClick={() => act().start()}>{label}</button>
       </div>
     </section>
   );
