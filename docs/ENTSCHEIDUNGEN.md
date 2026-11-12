@@ -43,7 +43,8 @@ Kein fester Empfänger im Code (Repo ist öffentlich, keine E-Mail-Adresse). Tes
 ihres Geräts, Version und Gerät hängen automatisch an.
 
 ## 12.11.2026: App-Hintergrund bleibt Mitternachtsblau
-Varianten Pflaume, Petrol und Dämmerung wurden gezeigt; Jakob bleibt beim Indigo des Designs „Mitternacht“.
+Varianten Pflaume, Petrol und Dämmerung wurden gezeigt; Jakob bleibt beim Indigo des Designs „Mitternacht“,
+mit langsam bewegten Formen darüber, die zum jeweiligen Spiel passen (Variante A erweitert).
 
 ## 12.11.2026: Gestaltung nur bei Spielerprofilen, feste Spiele bleiben
 Profilbild und Farbe der Spieler werden anpassbar (offline alle, später mit Accounts nur das eigene Profil und Offline-Spieler).

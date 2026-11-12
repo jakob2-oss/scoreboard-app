@@ -137,7 +137,7 @@ const sky = (bg: string, band: string, ground: string, sun: string, pattern: Pat
   <g opacity=".85">${PATTERNS[pattern](band)}</g>
   <circle class="an-drift" cx="-10" cy="250" r="150" fill="${band}"/><circle class="an-drift" style="animation-delay:-4s" cx="410" cy="-10" r="120" fill="${band}"/>
   <circle class="an-pulse" cx="318" cy="56" r="40" fill="#fff" opacity=".35"/><circle cx="318" cy="56" r="26" fill="${sun}"/>
-  ${conf.map(([x, y, el], k) => `<g transform="translate(${x} ${y})"><g class="an-float" style="animation-delay:${-k * .7}s;animation-duration:${5 + (k % 4)}s">${el}</g></g>`).join('')}
+  ${conf.map(([x, y, el], k) => `<g transform="translate(${x} ${y})"><g class="an-float" style="animation-delay:${-k * .7}s;animation-duration:${11 + (k % 4) * 2}s">${el}</g></g>`).join('')}
   <path d="M-10 196c60-34 120-34 170-8s120 20 240-22v84H-10z" fill="${band}"/>
   <path d="M-10 214c80-26 150-22 210-4s120 16 200-10v50H-10z" fill="${ground}"/>
   <ellipse cx="195" cy="214" rx="110" ry="8" fill="#000" opacity=".12"/><g class="an-bob">`;

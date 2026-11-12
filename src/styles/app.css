@@ -273,3 +273,21 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 .v-stat small { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .v-stat b { font-family: var(--f-num); font-size: 24px; font-weight: 600; line-height: 1.15; }
 .v-stat span { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- App-Hintergrund mit Formen (bleibt blau bzw. Papier, bewegt sich langsam) ---------- */
+:root { --bd-c: rgba(46, 43, 79, .045); --bd-op: .26; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bd-c: rgba(255, 255, 255, .045); --bd-op: .17; } }
+:root[data-theme="dark"] { --bd-c: rgba(255, 255, 255, .045); --bd-op: .17; }
+.backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; color: var(--bd-c); }
+.backdrop svg { width: 100%; height: 100%; display: block; }
+.bd-m { opacity: var(--bd-op); }
+.bd-a { animation: bd-drift var(--d, 30s) ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.bd-big { animation: bd-big 48s ease-in-out infinite; }
+@keyframes bd-drift { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(16px, -24px) rotate(14deg); } }
+@keyframes bd-big { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-18px, 14px); } }
+@media (prefers-reduced-motion: reduce) { .backdrop * { animation: none !important; } }
+#root > .screen { position: relative; z-index: 1; background: transparent; }
+.tabbar, .dock { background: transparent; }
+.scene .an-bob { animation-duration: 11s; }
+.scene .an-drift { animation-duration: 22s; }
+.backdrop.dim .bd-m { opacity: calc(var(--bd-op) * .45); }
