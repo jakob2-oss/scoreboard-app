@@ -186,7 +186,13 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
 }
 
 /** Auszeichnung einer Serie (Abend, Urlaub …): Titel, Wert und wer */
-export interface Award { label: string; value: string; who: string[] }
+export interface Award {
+  /** Art, bestimmt die kleine Abbildung */
+  key: 'siege' | 'serie' | 'allround' | 'pech';
+  label: string; n: number;
+  /** Einheit hinter der Zahl, z. B. „Siege“ */
+  unit: string; who: string[];
+}
 
 /** Auszeichnungen einer Serie: meiste Siege, längste Siegesserie, Allrounder, Pechvogel. Partien in beliebiger Reihenfolge. */
 export function seriesAwards(list: HistGame[]): Award[] {
@@ -198,12 +204,12 @@ export function seriesAwards(list: HistGame[]): Award[] {
   };
   const out: Award[] = [];
   const wins = best(id => games.filter(g => isWin(g, id)).length, 1);
-  if (wins) out.push({ label: 'Meiste Siege', value: `${wins.v}×`, who: wins.who });
+  if (wins) out.push({ key: 'siege', label: 'Meiste Siege', n: wins.v, unit: wins.v === 1 ? 'Sieg' : 'Siege', who: wins.who });
   const streak = best(id => { let c = 0, m = 0; for (const g of games) { const r = resultOf(g, id); if (!r) continue; c = r.place === 1 ? c + 1 : 0; m = Math.max(m, c); } return m; }, 2);
-  if (streak) out.push({ label: 'Längste Siegesserie', value: `${streak.v} in Folge`, who: streak.who });
+  if (streak) out.push({ key: 'serie', label: 'Siegesserie', n: streak.v, unit: 'in Folge', who: streak.who });
   const kinds = best(id => new Set(games.filter(g => isWin(g, id)).map(g => g.key)).size, 2);
-  if (kinds) out.push({ label: 'Allrounder', value: `${kinds.v} Spiele`, who: kinds.who });
+  if (kinds) out.push({ key: 'allround', label: 'Allrounder', n: kinds.v, unit: 'Spiele', who: kinds.who });
   const last = best(id => games.filter(g => { const r = resultOf(g, id); return !!r && r.place === Math.max(...g.results.map(x => x.place)) && r.place > 1; }).length, 1);
-  if (last) out.push({ label: 'Pechvogel', value: `${last.v}× Letzter`, who: last.who });
+  if (last) out.push({ key: 'pech', label: 'Pechvogel', n: last.v, unit: '× Letzter', who: last.who });
   return out;
 }

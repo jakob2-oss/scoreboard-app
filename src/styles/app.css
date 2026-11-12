@@ -497,3 +497,17 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .grp-chev { width: 20px; height: 20px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transform: rotate(-90deg); transition: transform .2s ease; }
 .grp.open .grp-chev { transform: none; }
 .grp:not(.open) { margin-bottom: 2px; }
+/* Serien: Auszeichnungen als gleich große Karten im Raster, mit kleiner Abbildung */
+.ser-awards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 4px; }
+.award { display: grid; grid-template-rows: 54px auto auto auto; justify-items: center; align-content: start; gap: 4px; text-align: center;
+  background: var(--surface); border-radius: 22px; box-shadow: var(--soft); padding: 14px 10px 14px; min-height: 168px; }
+.award-ill { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); }
+.award-ill svg { width: 40px; height: 40px; display: block; }
+.a-siege .award-ill { background: rgba(242, 207, 134, .22); }
+.a-serie .award-ill { background: rgba(243, 169, 143, .22); }
+.a-allround .award-ill { background: rgba(134, 203, 184, .22); }
+.a-pech .award-ill { background: rgba(151, 196, 227, .22); }
+.award small { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.award b { font-family: var(--f-num); font-size: 30px; font-weight: 600; line-height: 1.05; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.award b em { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted); }
+.award-who { font-size: 14px; font-weight: 600; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
