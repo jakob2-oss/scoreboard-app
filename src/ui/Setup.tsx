@@ -20,6 +20,9 @@ function pointsOf(t: Template): [string, string][] {
   if (t.scoring === 'lives') return [['Am Tisch', `${t.params?.lives ?? 3} Leben je Spieler`], ['Phasen', t.params?.swim === false ? 'ohne Leben ist man raus' : 'ohne Leben schwimmt man, danach raus'], ['Gewinner', 'wer als Letzter übrig bleibt']];
   if (t.scoring === 'tokens') {
     const h = t.params?.halves ?? 2;
+    if (t.params?.phase2 === 'return') return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'],
+      ['Mitte leer', 'wer keine Deckel hat, ist raus'], ['Zweite Phase', 'Sieger spielen Deckel zurück in die Mitte, ohne Deckel ist man raus'],
+      ['Verlierer', `wer zuletzt Deckel hat${h > 1 ? `, verloren nach ${h} Hälften` : ''}`]];
     return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'wer alle Deckel hat, verliert sie'],
       ['Verlierer', h === 1 ? 'wer die erste Hälfte verliert' : `wer ${h} Hälften verliert${h === 2 ? ', sonst entscheidet das Finale' : ''}`]];
   }
@@ -181,6 +184,13 @@ export function Setup() {
             <input type="checkbox" id="phase-swim" checked={setup.swim} onChange={e => a.updateSetup({ swim: e.target.checked })} />
             <span className="t"><b>Schwimmen nach dem letzten Leben</b></span>
           </label>}
+          {tableKind && setup.kind === 'tokens' && <div className="field">
+            <label>Wenn die Mitte leer ist</label>
+            <div className="seg">
+              <button id="phase2-pass" aria-pressed={setup.phase2 !== 'return'} onClick={() => a.updateSetup({ phase2: 'pass' })}>Weitergeben</button>
+              <button id="phase2-return" aria-pressed={setup.phase2 === 'return'} onClick={() => a.updateSetup({ phase2: 'return' })}>Zurück in die Mitte</button>
+            </div>
+          </div>}
           {tableKind && setup.kind === 'tokens' && <div className="field">
             <label>Verloren nach</label>
             <div className="seg">

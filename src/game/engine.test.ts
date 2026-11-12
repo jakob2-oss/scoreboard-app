@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens
 } from './engine';
 import { gameDef } from './games';
 
@@ -300,5 +300,28 @@ describe('Tisch-Modus', () => {
     let t = createGame({ ...gameDef('schocken')!.template, params: { tokens: 5, halves: 1 } }, players('A', 'B'), c);
     t = giveTokens(t, 'p1', 5, null, c);
     expect(tokenState(t).loser).toBe('p1');
+  });
+
+  it('Chic: erst aus der Mitte, dann ist raus, wer keine Deckel hat, danach zurück in die Mitte', () => {
+    const c = testClock();
+    let s = createGame({ ...gameDef('schocken')!.template, params: { tokens: 9, halves: 1, phase2: 'return' } }, players('A', 'B', 'C', 'D'), c);
+    s = giveTokens(s, 'p0', 4, null, c);
+    s = giveTokens(s, 'p1', 3, null, c);
+    expect(tokenState(s).phase).toBe(1);
+    s = schockOut(s, 'p2', c);
+    let t = tokenState(s);
+    expect([t.phase, t.middle, t.hold.p2]).toEqual([2, 0, 2]);
+    expect(t.out).toEqual({ p0: false, p1: false, p2: false, p3: true });
+    // In Phase 2 gibt es nichts mehr aus der Mitte
+    expect(giveTokens(s, 'p3', 1, null, c)).toBe(s);
+    expect(returnTokens(s, 'p3', 1, c)).toBe(s);
+    s = returnTokens(s, 'p2', 5, c);
+    t = tokenState(s);
+    expect([t.out.p2, t.middle, t.hold.p2]).toEqual([true, 2, 0]);
+    s = returnTokens(s, 'p0', 4, c);
+    t = tokenState(s);
+    expect(t.loser).toBe('p1');
+    expect(endState(s)?.done).toBe(true);
+    expect(ranking(s)[3].player.name).toBe('B');
   });
 });

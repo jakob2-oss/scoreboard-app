@@ -23,7 +23,10 @@ export function TableView({ g }: { g: GameState }) {
   const done = !!endState(g)?.done;
   const rounds = tableRounds(g).length;
   const scene = useMemo(() => room(n), [n]);
-  const phase = lives ? `Runde ${rounds + 1}` : halfLabel(ts!.need, ts!.half);
+  // Phase in der Mitte: bei Chic auch, ob aus der Mitte genommen oder zurückgespielt wird
+  const step = ts && ts.mode === 'return' ? (ts.phase === 1 ? 'Aus der Mitte' : 'Zurückspielen') : null;
+  const phase = lives ? `Runde ${rounds + 1}` : step ? (ts!.need > 1 ? `${halfLabel(ts!.need, ts!.half)}, ${step}` : step) : halfLabel(ts!.need, ts!.half);
+  const phaseText = done ? 'Spielende' : phase, pillW = phaseText.length * 9.2 + 28;
   const middle = lives ? middleCards(rounds) : stack(ts!.middle);
 
   const stage = useRef<HTMLDivElement>(null);
@@ -70,8 +73,8 @@ export function TableView({ g }: { g: GameState }) {
           <g key={lives ? rounds : ts!.middle} className="tb-mid-art" dangerouslySetInnerHTML={{ __html: middle }} />
           {[0, 180].map(r => (
             <g key={r} transform={`rotate(${r} ${TABLE.cx} ${TABLE.cy})`} className="tb-phase">
-              <rect x={TABLE.cx - 46} y={TABLE.cy + 54} width="92" height="22" rx="11" fill="#1c1611" opacity=".55" />
-              <text x={TABLE.cx} y={TABLE.cy + 69.5} textAnchor="middle">{done ? 'Spielende' : phase}</text>
+              <rect x={TABLE.cx - pillW / 2} y={TABLE.cy + 54} width={pillW} height="22" rx="11" fill="#1c1611" opacity=".55" />
+              <text x={TABLE.cx} y={TABLE.cy + 69.5} textAnchor="middle">{phaseText}</text>
             </g>
           ))}
           {players.map((p, i) => <Front key={p.id} i={i} n={n} lives={ls ? { max: ls.lives, left: ls.left[p.id], swim: ls.swimming[p.id] } : null} hold={ts?.hold[p.id] ?? 0} />)}
@@ -80,9 +83,9 @@ export function TableView({ g }: { g: GameState }) {
         {players.map((p, i) => {
           const pos = seatPos(i, n);
           const dragging = off?.i === i, target = off && off.i !== i && off.to === i;
-          const out = ls ? ls.out[p.id] !== null : false, swim = ls ? ls.swimming[p.id] : false;
+          const out = ls ? ls.out[p.id] !== null : !!ts?.out[p.id], swim = ls ? ls.swimming[p.id] : false;
           const hold = ts?.hold[p.id] ?? 0, halves = ts?.halves[p.id] ?? 0;
-          const label = ls ? `${p.name}, ${out ? 'raus' : swim ? 'schwimmt' : `${ls.left[p.id]} Leben`}` : `${p.name}, ${hold} Deckel`;
+          const label = ls ? `${p.name}, ${out ? 'raus' : swim ? 'schwimmt' : `${ls.left[p.id]} Leben`}` : (out ? `${p.name}, raus` : `${p.name}, ${hold} Deckel`);
           return (
             <button key={p.id} className={'tb-seat' + (dragging ? ' drag' : '') + (target ? ' target' : '') + (out ? ' out' : '') + (swim ? ' swim' : '')}
               style={{ left: `${pos.x / VIEW.w * 100}%`, top: `${pos.y / VIEW.h * 100}%`, ['--c' as string]: p.color,
@@ -96,7 +99,7 @@ export function TableView({ g }: { g: GameState }) {
                 {ls ? (
                   <span className="tb-state">{out ? 'raus' : swim ? 'schwimmt' : `${ls.left[p.id]} Leben`}</span>
                 ) : (
-                  <span className="tb-deck"><span className="tb-dk" key={hold} dangerouslySetInnerHTML={{ __html: DECKEL }} /><b>{hold}</b>
+                  out ? <span className="tb-state">raus</span> : <span className="tb-deck"><span className="tb-dk" key={hold} dangerouslySetInnerHTML={{ __html: DECKEL }} /><b>{hold}</b>
                     {halves > 0 && <span className="tb-halves">{Array.from({ length: halves }, (_, k) => <i key={k} />)}</span>}</span>
                 )}
               </span>
@@ -141,6 +144,23 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
   const givers = players.filter(x => x.id !== to && ts.hold[x.id] > 0);
   const [from, setFrom] = useState<string | null>(givers.length === 1 ? givers[0].id : null);
   const fromMiddle = ts.middle > 0, ready = fromMiddle || !!from;
+  // Chic, zweite Phase: der Angetippte spielt eigene Deckel zurück in die Mitte
+  if (ts.mode === 'return' && ts.phase === 2) return (
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet" role="dialog" aria-label={`${p.name} spielt zurück`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>{p.name} spielt zurück</h3>
+          <div className="eyebrow">Noch {ts.hold[to]} Deckel</div>
+          <div className="tk-keys">
+            {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={k > ts.hold[to]} onClick={() => act().tableGive(k)}>{k}</button>)}
+            <button className="wide" id="tk-all" onClick={() => act().tableGive('all')}>Alle</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
   return (
     <>
       <div className="scrim" onClick={() => act().closeSheet()} />

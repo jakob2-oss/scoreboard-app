@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -99,6 +99,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   let toastN = 0;
   const toast = (text: string) => set({ toast: { text, n: ++toastN } });
 
+  const names = (l: string[]) => (l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' und ' + l[l.length - 1]);
   const persist = (g: GameState) => {
     repo.saveGame(g).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
   };
@@ -387,7 +388,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Schwimmen: Antippen kostet ein Leben; im Feuer-Modus verlieren alle anderen eins */
     tableTap(playerId: string) {
       const g = state.game; if (!g || !isTable(g)) return;
-      if (!isLives(g)) { if (!tokenState(g).loser) set({ sheet: 'tokens', tokenTo: playerId, pad: false }); return; }
+      if (!isLives(g)) {
+        const t = tokenState(g);
+        if (t.loser || t.out[playerId] || (t.mode === 'return' && t.phase === 2 && !t.hold[playerId])) return;
+        set({ sheet: 'tokens', tokenTo: playerId, pad: false }); return;
+      }
       const fm = state.fireMode, ng = fm ? fire(g, playerId, clock) : loseLife(g, playerId, clock);
       set({ fireMode: false });
       if (ng === g) return;
@@ -400,14 +405,23 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     setFireMode(on: boolean) { set({ fireMode: on }); },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
-    tableGive(n: number | 'schock', from: string | null = null) {
+    tableGive(n: number | 'schock' | 'all', from: string | null = null) {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;
       const before = tokenState(g);
-      const ng = n === 'schock' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock);
+      // Chic, zweite Phase: der Angetippte spielt Deckel zurück in die Mitte
+      const back = before.mode === 'return' && before.phase === 2;
+      const ng = back ? returnTokens(g, to, n === 'all' || n === 'schock' ? before.hold[to] : n, clock)
+        : n === 'schock' || n === 'all' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock);
       if (ng === g) return;
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
-      const after = tokenState(ng), p = seated(ng).find(x => x.id === to)!;
-      if (after.half > before.half && !after.loser) toast(halfLabel(after.need, after.half) === 'Finale' ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`);
+      const after = tokenState(ng), players = seated(ng);
+      // Wer hat die Hälfte verloren (bei Chic nicht unbedingt der Angetippte)
+      const p = players.find(x => after.halves[x.id] > before.halves[x.id]);
+      if (p && !after.loser) { toast(halfLabel(after.need, after.half) === 'Finale' ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`); return; }
+      if (after.mode !== 'return' || after.loser) return;
+      const gone = players.filter(x => after.out[x.id] && !before.out[x.id]).map(x => x.name);
+      if (before.phase === 1 && after.phase === 2) toast(gone.length ? `Mitte leer, ${names(gone)} ${gone.length > 1 ? 'sind' : 'ist'} raus` : 'Mitte leer');
+      else if (gone.length) toast(`${names(gone)} ist raus`);
     },
     /** Sitzplatz am Tisch verschieben */
     moveSeat(from: number, to: number) {

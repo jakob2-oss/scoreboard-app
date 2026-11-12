@@ -34,6 +34,8 @@ export interface FreeConfig {
   /** Tisch-Modus, Phasen: Schwimmen nach dem letzten Leben; Hälften bis zum Verlieren */
   swim: boolean;
   halves: number;
+  /** Zweite Phase bei leerer Mitte: weitergeben (Schocken) oder zurück in die Mitte (Chic) */
+  phase2: 'pass' | 'return';
 }
 
 export type Kind = 'points' | 'split' | 'rank' | 'lives' | 'tokens';
@@ -44,11 +46,11 @@ export const MAX_KEYS = 3;
 /** Wertung je Runde: ändert die Art nur bei normalen Rundenspielen (Wizard und Kniffel bleiben, wie sie sind) */
 function kindRules(cfg: FreeConfig, prev?: Template): { scoring?: Scoring; params: Record<string, unknown> } {
   if (prev && !['rounds', 'rank', 'lives', 'tokens'].includes(prev.scoring)) return { params: {} };
-  const off = { split: undefined, zeroSum: undefined, lives: undefined, tokens: undefined, swim: undefined, halves: undefined };
+  const off = { split: undefined, zeroSum: undefined, lives: undefined, tokens: undefined, swim: undefined, halves: undefined, phase2: undefined };
   if (cfg.mode === 'result') return { scoring: 'rounds', params: off };
   if (cfg.kind === 'rank') return { scoring: 'rank', params: off };
   if (cfg.kind === 'lives') return { scoring: 'lives', params: { ...off, lives: cfg.start > 0 ? cfg.start : TABLE_START.lives, swim: cfg.swim ? undefined : false } };
-  if (cfg.kind === 'tokens') return { scoring: 'tokens', params: { ...off, tokens: cfg.start > 0 ? cfg.start : TABLE_START.tokens, halves: cfg.halves && cfg.halves !== 2 ? cfg.halves : undefined } };
+  if (cfg.kind === 'tokens') return { scoring: 'tokens', params: { ...off, tokens: cfg.start > 0 ? cfg.start : TABLE_START.tokens, halves: cfg.halves && cfg.halves !== 2 ? cfg.halves : undefined, phase2: cfg.phase2 === 'return' ? 'return' : undefined } };
   if (cfg.kind === 'split') {
     const old = prev?.params?.split;
     const names = cfg.splitNames.map((n, i) => n.trim() || (i ? 'Zweiter Wert' : 'Erster Wert'));
@@ -69,7 +71,7 @@ const table = (s?: Scoring) => s === 'lives' || s === 'tokens';
 const winOf = (s: Scoring | undefined, win: 'high' | 'low'): 'high' | 'low' => (s === 'rank' || s === 'lives' ? 'high' : s === 'tokens' ? 'low' : win);
 const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 
-export const defaultFreeConfig = (): FreeConfig => ({ name: '', win: 'high', end: { type: 'none' }, steps: [...DEFAULT_STEPS], save: false, notes: [], mode: 'rounds', unit: 'Punkte', kind: 'points', splitNames: ['', ''], zeroSum: false, keys: [], start: 0, swim: true, halves: 2 });
+export const defaultFreeConfig = (): FreeConfig => ({ name: '', win: 'high', end: { type: 'none' }, steps: [...DEFAULT_STEPS], save: false, notes: [], mode: 'rounds', unit: 'Punkte', kind: 'points', splitNames: ['', ''], zeroSum: false, keys: [], start: 0, swim: true, halves: 2, phase2: 'pass' });
 
 export function fallbackName(date = new Date()): string {
   return 'Freies Spiel vom ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
@@ -118,7 +120,7 @@ export function updateFreeTemplate(t: Template, cfg: FreeConfig, clock: Clock): 
 export const configOf = (t: Template): FreeConfig => ({ name: t.name, win: t.win, end: t.end, steps: [...stepsOf(t)], save: true, notes: [...(t.params?.notes ?? [])], look: t.params?.look,
   mode: t.params?.resultOnly ? 'result' : 'rounds', unit: t.params?.unit === 'Platz' ? 'Platz' : 'Punkte',
   kind: t.scoring === 'rank' || t.scoring === 'lives' || t.scoring === 'tokens' ? t.scoring : t.params?.split?.length === 2 ? 'split' : 'points',
-  start: t.params?.lives ?? t.params?.tokens ?? 0, swim: t.params?.swim !== false, halves: t.params?.halves ?? 2,
+  start: t.params?.lives ?? t.params?.tokens ?? 0, swim: t.params?.swim !== false, halves: t.params?.halves ?? 2, phase2: t.params?.phase2 === 'return' ? 'return' : 'pass',
   splitNames: [t.params?.split?.[0]?.label ?? '', t.params?.split?.[1]?.label ?? ''], zeroSum: !!t.params?.zeroSum, keys: [...(t.params?.keys ?? [])] });
 
 export function stepsOf(t: Template): number[] {
@@ -129,7 +131,7 @@ export function stepsOf(t: Template): number[] {
 /** Kurze Beschreibung in ganzen Worten, z. B. „Höchste Punktzahl gewinnt, Ziel 500“ */
 export function describeTemplate(t: Template): string {
   if (t.scoring === 'lives') return `${t.params?.lives ?? 3} Leben${t.params?.swim === false ? '' : ' und Schwimmen'}, der Letzte gewinnt`;
-  if (t.scoring === 'tokens') { const h = t.params?.halves ?? 2; return `${t.params?.tokens ?? 13} Deckel, verloren nach ${h === 1 ? 'einer Hälfte' : `${h} Hälften`}`; }
+  if (t.scoring === 'tokens') { const h = t.params?.halves ?? 2; return `${t.params?.tokens ?? 13} Deckel${t.params?.phase2 === 'return' ? ', zurück in die Mitte' : ''}, verloren nach ${h === 1 ? 'einer Hälfte' : `${h} Hälften`}`; }
   if (t.scoring === 'rank') return 'Rang je Runde';
   const w = t.win === 'high' ? 'Höchste Punktzahl gewinnt' : 'Niedrigste Punktzahl gewinnt';
   if (t.end.type === 'target') return `${w}, Ziel ${t.end.value}`;

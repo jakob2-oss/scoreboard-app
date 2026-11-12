@@ -204,6 +204,9 @@ describe('Testspiele: Varianten', () => {
     const h1 = await series({ ...base, key: 'eigen-leben', name: 'Leben', scoring: 'lives', win: 'high', params: { lives: 5 } }, 4, 21);
     expect(h1.every(h => h.results.some(r => r.extra?.left !== undefined))).toBe(true);
     const h2 = await series({ ...base, key: 'eigen-deckel', name: 'Deckel', scoring: 'tokens', win: 'low', params: { tokens: 7 } }, 4, 22);
+    // Chic: zweite Phase zurück in die Mitte, eine Hälfte entscheidet
+    await series({ ...base, key: 'eigen-chic', name: 'Chic', scoring: 'tokens', win: 'low', params: { tokens: 13, halves: 1, phase2: 'return' } }, 5, 23);
+    await series({ ...base, key: 'eigen-chic2', name: 'Chic 2', scoring: 'tokens', win: 'low', params: { tokens: 9, halves: 2, phase2: 'return' } }, 4, 24);
     expect(h2.every(h => h.results.filter(r => r.place === Math.max(...h.results.map(x => x.place))).some(r => r.extra?.halves === 2))).toBe(true);
   });
 });
