@@ -444,8 +444,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[aria-label="Zurück"]');
   check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
   // Spieler löschen: weg aus der Liste, Name bleibt im Verlauf
+  const nPeople = await p.locator('.person-row').count();
   await p.click('.person-row >> text=Clara M'); await p.click('#player-delete'); await p.click('#player-delete-yes'); await p.waitForTimeout(300);
-  check('Spieler gelöscht', (await p.locator('.person-row').count()) === 2 && !(await text('#s-people')).includes('Clara M'));
+  check('Spieler gelöscht', (await p.locator('.person-row').count()) === nPeople - 1 && !(await text('#s-people')).includes('Clara M'));
   await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
   check('Name bleibt im Verlauf', (await text('.bsheet .podium')).includes('Clara M'));
   await p.mouse.click(30, 40); await p.click('#tab-people');
