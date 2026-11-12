@@ -437,3 +437,14 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .victory .again svg { width: 30px; height: 30px; }
 :root[data-theme="dark"] .victory .again { background: #3a3970; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .victory .again { background: #3a3970; } }
+
+/* Startseite: Logo-Würfel wie im App-Icon, ohne eigene Fläche, damit er im Hintergrund aufgeht */
+.brand-die { width: 96px; height: 99px; display: block; margin-top: 18px; overflow: visible; }
+.brand-die .die-face { fill: #ffffff; }
+.brand-die .die-side { fill: #dcd5c6; }
+:root[data-theme="dark"] .brand-die .die-face { fill: #f3ead6; }
+:root[data-theme="dark"] .brand-die .die-side { fill: #c9bda5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .brand-die .die-face { fill: #f3ead6; } :root:not([data-theme="light"]) .brand-die .die-side { fill: #c9bda5; } }
+.bd-roll { transform-box: fill-box; transform-origin: 50% 60%; animation: bd-roll 9s ease-in-out infinite; }
+@keyframes bd-roll { 0%, 70%, 100% { transform: rotate(0) translateY(0); } 78% { transform: rotate(-10deg) translateY(-6px); } 86% { transform: rotate(8deg) translateY(0); } 92% { transform: rotate(-3deg); } }
+@media (prefers-reduced-motion: reduce) { .bd-roll { animation: none; } }

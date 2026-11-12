@@ -4,7 +4,6 @@ import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
 import type { Template } from '../model/types';
 import { currentRoundIndex, seated, isCats, isResultOnly } from '../game/engine';
-import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
 import { TabBar } from './TabBar';
@@ -35,7 +34,14 @@ export function Home() {
             </button>
           </div>
           <div className="brand">
-            <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
+            {/* Logo wie das App-Icon: Würfel mit einem Auge, rollt ab und zu leicht */}
+            <svg className="brand-die" viewBox="18 16 64 66" aria-hidden="true">
+              <g className="bd-roll"><g transform="rotate(-14 50 52)">
+                <rect x="25" y="28" width="50" height="50" rx="13" className="die-side" />
+                <rect x="25" y="23" width="50" height="50" rx="13" className="die-face" />
+                <circle cx="50" cy="48" r="8" fill="#ef7a5c" />
+              </g></g>
+            </svg>
             <h1 className="wordmark" aria-label="Oina no?"><span className="w1">OINA</span><span className="w2">NO?</span></h1>
           </div>
           <div className="home-body">

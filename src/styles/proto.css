@@ -280,7 +280,7 @@ table.grid { border-collapse: separate; border-spacing: 0; min-width: 100%; user
 body { font-weight: 500; letter-spacing: .005em; }
 h1, h2, h3 { letter-spacing: .01em; }
 .eyebrow { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .16em; font-size: 12px; font-weight: 600; color: var(--muted); padding-left: 6px; }
-.wordmark { display: flex; flex-direction: column; align-items: center; font-size: 40px; font-weight: 600; line-height: .92; letter-spacing: .12em; margin-top: 6px; padding-left: .12em; }
+.wordmark { display: flex; justify-content: center; gap: .32em; font-size: 40px; font-weight: 600; line-height: 1; letter-spacing: .12em; margin-top: 14px; padding-left: .12em; }
 .wordmark .w1 { color: var(--i-coral); }
 .wordmark .w2 { color: var(--fg); }
 .brand p { margin-top: 8px; font-size: 15px; letter-spacing: .02em; }

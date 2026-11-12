@@ -98,3 +98,8 @@ Auf der Ergebnisseite startet „Oina no“ nach dem Speichern sofort eine neue 
 Die App vom Homescreen startet auf iOS oft nicht neu und blieb so auf alten Versionen. Sie fragt jetzt beim
 Zurückkehren in die App und alle 30 Minuten nach einer neuen Version und lädt sie selbst (`registerSW` in `src/main.tsx`).
 Version steigt mit jedem größeren Paket (0.9.0: Tisch-Modus, Chic, Oina no?).
+
+## 12.11.2026: Startseite mit Logo statt Bild
+Das alte Punktezettel-Bild (Nachtlandschaft mit eigenem Oval) ist ersetzt durch den Würfel aus dem App-Icon, darunter
+„OINA NO?“ in einer Zeile (Variante L1). Der Würfel rollt alle paar Sekunden leicht. Hintergrundformen berühren die
+Oberkante nicht mehr, damit unter der Statusleiste keine harte Kante entsteht.
