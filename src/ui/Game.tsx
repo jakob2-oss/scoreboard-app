@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -29,7 +29,7 @@ export function quickKeys(g: GameState): QuickKey[] {
 function subtitle(g: GameState): string {
   const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
   if (isLives(g)) return `Runde ${tableRounds(g).length + 1}`;
-  if (isTable(g)) { const h = tokenState(g).half; return h >= 3 ? 'Finale' : `${h}. Hälfte`; }
+  if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
   if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
   if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}, ${bidPhase(g, liveRounds(g)[n - 1].id) === 'bid' ? 'Ansagen' : 'Stiche'}`;

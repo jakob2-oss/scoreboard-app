@@ -11,7 +11,10 @@ describe('Eigene Spiele im Tisch-Modus', () => {
     expect(t.win).toBe('high');
     expect(t.end).toEqual({ type: 'none' });
     expect(t.players).toEqual({ min: 2, max: 10 });
-    expect(describeTemplate(t)).toBe('3 Leben, der Letzte gewinnt');
+    expect(describeTemplate(t)).toBe('3 Leben und Schwimmen, der Letzte gewinnt');
+    const u = makeFreeTemplate({ ...defaultFreeConfig(), kind: 'lives', swim: false, start: 4 }, clock());
+    expect([u.params?.lives, u.params?.swim]).toEqual([4, false]);
+    expect(configOf(u).swim).toBe(false);
     expect(configOf(t).kind).toBe('lives');
   });
   it('Deckel verteilen mit eigener Zahl, später zurück zu Punkten', () => {
@@ -19,9 +22,11 @@ describe('Eigene Spiele im Tisch-Modus', () => {
     const t = makeFreeTemplate({ ...defaultFreeConfig(), name: 'Meier', kind: 'tokens', start: 9 }, c);
     expect([t.scoring, t.params?.tokens, t.win]).toEqual(['tokens', 9, 'low']);
     expect(configOf(t).start).toBe(9);
-    const u = updateFreeTemplate(t, { ...configOf(t), kind: 'points' }, c);
-    expect(u.scoring).toBe('rounds');
-    expect(u.params?.tokens).toBeUndefined();
-    expect(u.version).toBe(2);
+    const h = updateFreeTemplate(t, { ...configOf(t), halves: 3 }, c);
+    expect([h.params?.halves, configOf(h).halves, h.version]).toEqual([3, 3, 2]);
+    const p = updateFreeTemplate(h, { ...configOf(h), kind: 'points' }, c);
+    expect(p.scoring).toBe('rounds');
+    expect(p.params?.tokens).toBeUndefined();
+    expect(p.params?.halves).toBeUndefined();
   });
 });

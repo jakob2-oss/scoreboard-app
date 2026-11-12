@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, isTable, isLives, loseLife, fire, giveTokens, schockOut, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -407,7 +407,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (ng === g) return;
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
       const after = tokenState(ng), p = seated(ng).find(x => x.id === to)!;
-      if (after.half > before.half && !after.loser) toast(after.half >= 3 && before.half === 2 ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`);
+      if (after.half > before.half && !after.loser) toast(halfLabel(after.need, after.half) === 'Finale' ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`);
     },
     /** Sitzplatz am Tisch verschieben */
     moveSeat(from: number, to: number) {

@@ -59,3 +59,19 @@ Spiele wie Schwimmen und Schocken werden nicht als Zettel, sondern am Tisch erfa
 darunter ein voller runder Tisch, die Spieler sitzen darum. Antippen verliert ein Leben bzw. öffnet die Deckel-Auswahl;
 Sitzplätze lassen sich durch Ziehen tauschen (zählt nicht als Spielzug, Rückgängig lässt sie in Ruhe).
 Annahmen: Schwimmen mit 3 Leben plus Schwimmen; Schocken mit 13 Deckeln, zwei Hälften, bei verschiedenen Verlierern Finale.
+
+## 12.11.2026: Tisch-Modus als Bar
+Der erste Entwurf (helle Holzwand mit Pastell-Dingen) wirkte zu kindlich. Neu: eine Bar mit dunkler Rückwand,
+Spiegel und Flaschenregal, Neon-Zeichen, Messinglampen, Schachbrettboden und Spieltisch mit grünem Filz. Feste Farben
+in beiden Modi. Leben liegen bei Schwimmen als Münzen vor jedem Spieler auf dem Tisch, Deckel bei Schocken als Stapel.
+
+## 12.11.2026: Tisch nur von oben, Handy in der Mitte
+Die Bar mit Rückwand wird ersetzt durch einen ovalen Kneipentisch von oben auf Terrakotta-Fliesen, voll mit Bier
+(Weizen, Pils, Maß, Caña), Rotwein, Oliven, Tapas, Brotkorb und Servietten. Namensschilder sind zum jeweiligen Platz
+gedreht, Phase steht zweimal in der Mitte (für beide Seiten). Plätze liegen in gleichen Abständen auf dem Oval.
+Phasen sind Teil der Vorlage: `params.swim` (Schwimmen nach dem letzten Leben) und `params.halves` (Hälften bis zum Verlieren).
+
+## 12.11.2026: Hintergrund am Tisch
+Statt Terrakotta-Fliesen ein tiefes Mitternachtsblau mit großen, weichen Formen (Indigo, Petrol, Pflaume), die sehr langsam
+treiben, sich drehen und atmen; unter dem Tisch ein warmer Lichtschein. So hebt sich das Holz klar ab.
+Bei „Bewegung reduzieren“ steht alles still.

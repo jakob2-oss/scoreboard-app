@@ -288,4 +288,17 @@ describe('Tisch-Modus', () => {
     s = giveTokens(s, 'p1', 5, null, c);
     expect(ranking(s).map(x => x.player.name)).toEqual(['C', 'A', 'B']);
   });
+
+  it('Phasen: ohne Schwimmen raus mit dem letzten Leben, Schocken nach einer Hälfte vorbei', () => {
+    const c = testClock();
+    const base = gameDef('schwimmen')!.template;
+    let s = createGame({ ...base, params: { lives: 2, swim: false } }, players('A', 'B'), c);
+    s = loseLife(s, 'p0', c); s = loseLife(s, 'p0', c);
+    expect(lifeState(s).out.p0).toBe(1);
+    expect(lifeState(s).swimming.p0).toBe(false);
+    expect(endState(s)?.done).toBe(true);
+    let t = createGame({ ...gameDef('schocken')!.template, params: { tokens: 5, halves: 1 } }, players('A', 'B'), c);
+    t = giveTokens(t, 'p1', 5, null, c);
+    expect(tokenState(t).loser).toBe('p1');
+  });
 });

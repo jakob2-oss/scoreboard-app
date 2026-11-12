@@ -43,6 +43,8 @@ export const tableRounds = (s: GameState) => liveRounds(s).filter(r => roundEntr
 
 export interface LifeState {
   lives: number;
+  /** Gibt es die Phase „Schwimmen“ nach dem letzten Leben? */
+  swim: boolean;
   /** Verbleibende Leben (0 = schwimmt, -1 = raus) */
   left: Record<string, number>;
   swimming: Record<string, boolean>;
@@ -51,18 +53,20 @@ export interface LifeState {
   alive: string[];
 }
 export function lifeState(s: GameState): LifeState {
-  const lives = s.game.rules.params?.lives ?? 3, players = seated(s);
+  const lives = s.game.rules.params?.lives ?? 3, swim = s.game.rules.params?.swim !== false, players = seated(s);
+  // Ohne Schwimmen ist man mit dem letzten Leben raus
+  const limit = swim ? lives : lives - 1;
   const loss: Record<string, number> = {}, out: Record<string, number | null> = {};
   players.forEach(p => { loss[p.id] = 0; out[p.id] = null; });
   tableRounds(s).forEach((r, i) => {
     for (const e of roundEntries(s, r.id)) if (tv(e).loss && e.playerId in loss) {
       loss[e.playerId] += tv(e).loss!;
-      if (loss[e.playerId] > lives && out[e.playerId] === null) out[e.playerId] = i;
+      if (loss[e.playerId] > limit && out[e.playerId] === null) out[e.playerId] = i;
     }
   });
   const left: Record<string, number> = {}, swimming: Record<string, boolean> = {};
-  for (const p of players) { left[p.id] = Math.max(-1, lives - loss[p.id]); swimming[p.id] = loss[p.id] === lives; }
-  return { lives, left, swimming, out, alive: players.filter(p => out[p.id] === null).map(p => p.id) };
+  for (const p of players) { left[p.id] = Math.max(swim ? -1 : 0, lives - loss[p.id]); swimming[p.id] = swim && loss[p.id] === lives; }
+  return { lives, swim, left, swimming, out, alive: players.filter(p => out[p.id] === null).map(p => p.id) };
 }
 /** Schwimmen: Verlierer der Runde verliert ein Leben. Mehrere auf einmal bei „Feuer“ (alle anderen). Wer raus ist, nicht mehr. */
 export function loseLife(s: GameState, playerIds: string | string[], clock: Clock): GameState {
@@ -80,6 +84,8 @@ export function fire(s: GameState, playerId: string, clock: Clock): GameState {
 
 export interface TokenState {
   total: number;
+  /** Verlorene Hälften, mit denen man die Partie verliert */
+  need: number;
   /** Laufende Hälfte (1, 2, Finale 3 …) */
   half: number;
   middle: number;
@@ -94,7 +100,7 @@ export interface TokenState {
   loser: string | null;
 }
 export function tokenState(s: GameState): TokenState {
-  const total = s.game.rules.params?.tokens ?? 13, players = seated(s);
+  const total = s.game.rules.params?.tokens ?? 13, need = Math.max(1, s.game.rules.params?.halves ?? 2), players = seated(s);
   const hold: Record<string, number> = {}, halves: Record<string, number> = {}, schock: Record<string, number> = {}, taken: Record<string, number> = {};
   players.forEach(p => { hold[p.id] = 0; halves[p.id] = 0; schock[p.id] = 0; taken[p.id] = 0; });
   let half = 1, maxTake = { n: 0, who: [] as string[] };
@@ -115,8 +121,8 @@ export function tokenState(s: GameState): TokenState {
     if (lost) { halves[lost]++; half++; players.forEach(p => { hold[p.id] = 0; }); }
   }
   const middle = total - players.reduce((x, p) => x + hold[p.id], 0);
-  const loser = players.find(p => halves[p.id] >= 2)?.id ?? null;
-  return { total, half, middle, hold, halves, maxTake, schock, taken, loser };
+  const loser = players.find(p => halves[p.id] >= need)?.id ?? null;
+  return { total, need, half, middle, hold, halves, maxTake, schock, taken, loser };
 }
 /**
  * Schocken: Deckel an den Verlierer der Runde. Solange die Mitte nicht leer ist, kommen sie aus der Mitte,
@@ -144,6 +150,10 @@ export function moveSeat(s: GameState, from: number, to: number, clock: Clock): 
   if (from === to || from < 0 || to < 0 || from >= order.length || to >= order.length) return s;
   const [m] = order.splice(from, 1); order.splice(to, 0, m);
   return { ...s, game: { ...touch(s, clock), seats: order.map((x, i) => ({ ...x, seat: i })) } };
+}
+/** Name der laufenden Phase: „1. Hälfte“, bei zwei Hälften danach „Finale“ */
+export function halfLabel(need: number, h: number): string {
+  return need === 2 && h === 3 ? 'Finale' : `${h}. Hälfte`;
 }
 /** Schock aus: der Verlierer bekommt sofort alle Deckel und verliert die Hälfte */
 export function schockOut(s: GameState, to: string, clock: Clock): GameState {
