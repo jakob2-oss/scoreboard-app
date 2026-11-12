@@ -93,23 +93,27 @@ describe('Direktvergleich', () => {
 });
 
 describe('Leistung', () => {
-  it('misst Siege an der Erwartung 1 ÷ Spieleranzahl', () => {
-    // a: gewinnt eine 4er-Partie und verliert eine 4er-Partie: 1 Sieg bei 0,5 erwarteten = 2
+  it('bewertet jeden Platz am Durchschnitt, nicht nur Siege', () => {
     const l = [
       g('1', 'uno', 1, [['a', 1, 10], ['b', 2, 5], ['c', 3, 4], ['d', 4, 3]]),
-      g('2', 'uno', 0, [['b', 1, 10], ['a', 2, 5], ['c', 3, 4], ['d', 4, 3]]),
-      g('3', 'uno', 0, [['c', 1, 1], ['d', 2, 1]])
+      g('2', 'uno', 0, [['b', 1, 10], ['a', 2, 5], ['c', 3, 4], ['d', 4, 3]])
     ];
-    expect(performance(l, 'a')).toMatchObject({ played: 2, wins: 1, expected: 0.5, score: 2 });
-    expect(performance(l, 'c').score).toBe(Math.round(1 / 1 * 100) / 100);
+    // a: 3 + 2 geschlagen, erwartet 1,5 + 1,5
+    expect(performance(l, 'a')).toMatchObject({ played: 2, beaten: 5, expected: 3, score: 1.67 });
+    expect(performance(l, 'c').score).toBe(Math.round(2 / 3 * 100) / 100);
     expect(performance(l, 'd').score).toBe(0);
   });
-  it('teilt einen geteilten Sieg', () => {
-    const l = [g('1', 'uno', 0, [['a', 1, 1], ['b', 1, 1]])];
-    expect(performance(l, 'a')).toMatchObject({ wins: 0.5, expected: 0.5, score: 1 });
+  it('Zweiter von vier liegt über dem Schnitt, Sieg zu zweit zählt weniger als zu sechst', () => {
+    expect(performance([g('1', 'uno', 0, [['a', 1, 1], ['b', 2, 1], ['c', 3, 1], ['d', 4, 1]])], 'b').score).toBe(1.33);
+    const two = g('2', 'uno', 0, [['a', 1, 1], ['x', 2, 1]]);
+    const six = g('6', 'uno', 0, [['a', 6, 1], ['b', 1, 1], ['c', 2, 1], ['d', 3, 1], ['e', 4, 1], ['f', 5, 1]]);
+    expect(performance([two, six], 'a').score).toBe(Math.round(1 / 3 * 100) / 100);
+  });
+  it('wertet Gleichstand halb', () => {
+    expect(performance([g('1', 'uno', 0, [['a', 1, 1], ['b', 1, 1]])], 'a')).toMatchObject({ beaten: 0.5, expected: 0.5, score: 1 });
   });
   it('ist Standard in der Serientabelle', () => {
     const l = [g('1', 'uno', 1, [['a', 1, 10], ['b', 2, 5], ['c', 3, 4], ['d', 4, 3]]), g('2', 'uno', 0, [['b', 1, 1], ['a', 2, 1]])];
-    expect(seriesTable(l, DEFAULT_POINTS)[0]).toMatchObject({ playerId: 'a', perf: Math.round(1 / 0.75 * 100) / 100 });
+    expect(seriesTable(l, DEFAULT_POINTS)[0]).toMatchObject({ playerId: 'a', perf: Math.round(3 / 2 * 100) / 100 });
   });
 });

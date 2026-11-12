@@ -50,7 +50,7 @@ export function Profile() {
               {keys.map(([k, n]) => chip(n, profile.key === k, () => a.setProfile({ key: k }), k))}
             </div>
             <div className="tiles">
-              <div className="tile accent" id="perf-tile" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Leistung</small><b>{fmtPerf(performance(list, profile.id).score)}</b><span>der Erwartung</span></div>
+              <div className="tile accent" id="perf-tile" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Leistung</small><b>{fmtPerf(performance(list, profile.id).score)}</b><span>vom Schnitt</span></div>
               <div className="tile"><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
               <div className="tile"><small>Ø Platz</small><b>{list.length ? (list.reduce((x, g) => x + resultOf(g, profile.id)!.place, 0) / list.length).toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'}</b><span>&nbsp;</span></div>
             </div>

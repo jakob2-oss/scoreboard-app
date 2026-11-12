@@ -143,7 +143,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
   await shot('30-history');
   await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
-  check('Profil von Ben: Leistung 3,0× (ein Sieg zu dritt)', (await p.inputValue('#pf-name')) === 'Ben' && (await text('#perf-tile b')) === '3,0×', await text('#perf-tile b'));
+  check('Profil von Ben: Leistung 2,0× (ein Sieg zu dritt)', (await p.inputValue('#pf-name')) === 'Ben' && (await text('#perf-tile b')) === '2,0×', await text('#perf-tile b'));
   await p.click('.vs-p >> nth=0');
   check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
   check('Direktvergleich: Leistung und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung' && await p.isVisible('.rematch'));

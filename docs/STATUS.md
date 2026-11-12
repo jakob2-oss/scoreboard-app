@@ -82,5 +82,5 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt
   `navigator.storage.persist()`, Nachfrage bei laufender Partie, Spieler umbenennen, neue Szenen-Hintergründe (`sky()` in `art.ts`)
 
 ## Tests
-- Unit-Tests: 81 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 82 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen
