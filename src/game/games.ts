@@ -104,7 +104,7 @@ GAMES.push(
       params: { bonus: { at: 63, value: 35 }, categories: [
         { label: 'Einser', section: 'up', quick: mult(1) }, { label: 'Zweier', section: 'up', quick: mult(2) }, { label: 'Dreier', section: 'up', quick: mult(3) },
         { label: 'Vierer', section: 'up', quick: mult(4) }, { label: 'Fünfer', section: 'up', quick: mult(5) }, { label: 'Sechser', section: 'up', quick: mult(6) },
-        { label: 'Dreierpasch', section: 'low' }, { label: 'Viererpasch', section: 'low' }, { label: 'Full House', section: 'low', fixed: 25 },
+        { label: 'Dreierpasch', section: 'low', range: [5, 30] }, { label: 'Viererpasch', section: 'low', range: [5, 30] }, { label: 'Full House', section: 'low', fixed: 25 },
         { label: 'Kleine Straße', section: 'low', fixed: 30 }, { label: 'Große Straße', section: 'low', fixed: 40 }, { label: 'Kniffel', section: 'low', fixed: 50 },
         { label: 'Chance', section: 'low' }] } },
     points: [['Pro Zug', 'bis zu drei Würfe, dann ein freies Feld'], ['Oben', 'nur die passenden Augen zählen'], ['Bonus', '35 Punkte ab 63 oben'], ['Kategorien', 'im Menü der Partie anpassbar']],

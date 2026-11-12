@@ -63,3 +63,6 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] **Direktvergleich als Duell** (Vorbild Screenshot 12.11.): zwei Spieler gegenüber, gespiegelte Balken in Spielerfarben:
       Siege, besser platziert, Durchschnittsplatz, bei einem Spiel auch Durchschnitt und Bestwert, Kniffel gewürfelt und Bonus, Wizard-Ansagen,
       Siege je Spiel, gemeinsame Partien mit Revanche. Umschalter Anzahl und Quote (Prozent der gemeinsamen Partien). Ab drei Spielern bleibt die Mehrfach-Ansicht.
+- [x] **Kniffel ohne Zahlenfeld:** je Feld nur die passenden Werte (Einser 1 bis 5, Pasch 5 bis 30, feste Werte),
+      dazu Streichen; gestrichene Felder grau mit Strich. Chance und eigene Kategorien ohne Vorgabe behalten das Zahlenfeld.
+      Feld im Überblick antippen öffnet die Auswahl und führt danach zurück.

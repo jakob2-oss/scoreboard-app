@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, fieldsOf, fieldLabel, isSplit, type GameState, type RoundRef
+  currentRoundIndex, fieldsOf, fieldLabel, isSplit, catChoices, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -107,7 +107,9 @@ export function GameScreen() {
       {!s.pad && (
         <div className="dock gutter">
           {s.page < 0 ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
-            : s.edit && <Keypad g={g} edit={s.edit} canUndo={s.undo.length > 0} />}
+            : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
+              ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />
+              : <Keypad g={g} edit={s.edit} canUndo={s.undo.length > 0} />)}
         </div>
       )}
 
@@ -166,7 +168,8 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                     </td>
                   );
                 }
-                return <td key={p.id} className={cls} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>{v === null ? '' : fmt(v)}</td>;
+                const struck = !!r.cat && v === 0;
+                return <td key={p.id} className={cls + (struck ? ' struck' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}`}>{v === null ? '' : struck ? '–' : fmt(v)}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -237,7 +240,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
       {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : isSplit(g) ? <SplitEntry g={g} p={p} roundRef={ref} edit={edit} /> : <div className="pp-entry">
         <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : isCats(g) && ref !== 'new' ? <div className="lbl">{liveRounds(g).find(r => r.id === ref)?.cat?.label}</div> : <div className="lbl">Runde {roundNumber(g, ref)}</div>}</div>
         <span className={'val' + (value === null ? ' ph' : '') + (value !== null && value < 0 ? ' neg' : '')}>
-          {value === null ? (edit?.buf === '-' ? '−' : '0') : fmt(value)}
+          {value === null ? (edit?.buf === '-' ? '−' : isCats(g) ? '–' : '0') : isCats(g) && value === 0 ? '–' : fmt(value)}
         </span>
       </div>}
       {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
@@ -359,6 +362,27 @@ function SplitEntry({ g, p, roundRef, edit }: { g: GameState; p: Player; roundRe
   );
 }
 
+// ---------------------------------------------------------------- Kniffel: nur passende Werte zur Auswahl
+
+function CatPicker({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boolean }) {
+  const cat = g.rounds.find(r => r.id === edit.ref)?.cat;
+  const choices = catChoices(cat) ?? [];
+  const cur = numOf(edit.buf);
+  const a = act();
+  return (
+    <div className="pp-panel cat-pick">
+      <div className={'cp-grid' + (choices.length > 6 ? ' many' : '')}>
+        {choices.map(v => <button key={v} aria-pressed={cur === v} onClick={() => a.pick(v)}>{v}</button>)}
+      </div>
+      <div className="cp-row">
+        <button className="cp-fn" onClick={a.undo} disabled={!canUndo} aria-label="Rückgängig"><IconUndo /></button>
+        <button className="cp-fn" onClick={a.clear} disabled={cur === null}>Leeren</button>
+        <button className="cp-strike" id="cat-strike" aria-pressed={cur === 0} onClick={() => a.pick(0)}>Streichen</button>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- Kniffel, Phase 10, Nullsumme
 
 /** Schnelltasten einer Kategorie: Vielfache, fester Wert und Streichen */
@@ -377,7 +401,7 @@ function CatList({ g, p, current, onPick }: { g: GameState; p: Player; current: 
         return (
           <Fragment key={r.id}>
             <button className="pp-cat" aria-current={r.id === current} onClick={() => onPick(r.id)}>
-              <span>{r.cat?.label}</span><span className="v">{v === null ? '–' : fmt(v)}</span>
+              <span>{r.cat?.label}</span><span className={'v' + (v === 0 ? ' struck' : '')}>{v === null ? '' : v === 0 ? 'gestrichen' : fmt(v)}</span>
             </button>
             {b && r.cat?.section === 'up' && rounds[i + 1]?.cat?.section !== 'up' && (
               <div className={'pp-cat calc' + (u.bonus ? ' hit' : '')}><span>Oben {u.sum} von {b.at}</span><span>Bonus {u.bonus ? '+' + u.bonus : '–'}</span></div>

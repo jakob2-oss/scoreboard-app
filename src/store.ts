@@ -51,12 +51,14 @@ export interface AppState {
   editKey: string | null;
   /** Gelöschte eigene Spiele */
   goneKeys: string[];
+  /** Kniffel: Feld wurde aus dem Überblick geöffnet, danach dorthin zurück */
+  fromOverview: boolean;
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, goneKeys: []
+  events: [], histTab: 'games', series: null, editKey: null, goneKeys: [], fromOverview: false
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -247,7 +249,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       if (i < 0) { set({ page: -1, edit: null }); return; }
       const p = seated(g)[i]; if (!p) return;
-      set({ page: i, pad: false, edit: makeEdit(g, ref ?? defaultRef(g, p.id), p.id, field) });
+      set({ page: i, pad: false, fromOverview: false, edit: makeEdit(g, ref ?? defaultRef(g, p.id), p.id, field) });
     },
     selectRef(ref: RoundRef) {
       const g = state.game, e = state.edit; if (!g || !e) return;
@@ -304,6 +306,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
       // Kniffel: jeder trägt in ein Feld seiner Wahl ein, dann ist der Nächste dran
       if (isCats(g) && !state.pad) {
+        if (state.fromOverview) { set({ page: -1, edit: null, fromOverview: false }); return; }
         if (i < players.length - 1) { actions.goPage(i + 1); return; }
         set({ page: -1, edit: null }); toast('Zug fertig'); return;
       }
@@ -322,6 +325,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
       if (hasFields(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
+      // Kniffel: Auswahl auf der Spielerseite, danach zurück zum Überblick
+      if (isCats(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return; }
       set({ pad: true, edit: makeEdit(g, ref, playerId) });
     },
     closePad() { set({ pad: false, edit: null }); },

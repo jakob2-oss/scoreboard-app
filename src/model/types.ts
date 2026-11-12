@@ -90,7 +90,8 @@ export interface Game extends Base {
 }
 
 /** Kategorie eines Zettels (z. B. Kniffel): oben zählt für den Bonus */
-export interface Category { label: string; section: 'up' | 'low'; fixed?: number; quick?: number[] }
+/** Kniffel-Kategorie. quick: erlaubte Werte, fixed: fester Wert, range: Augensumme von bis (Pasch). Ohne alles: freie Eingabe. */
+export interface Category { label: string; section: 'up' | 'low'; fixed?: number; quick?: number[]; range?: [number, number] }
 
 export interface Round extends Base { gameId: string; index: number; cat?: Category }
 

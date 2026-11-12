@@ -32,6 +32,17 @@ export function liveRounds(s: GameState): Round[] {
 export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
 export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
 
+/** Kniffel: erlaubte Werte einer Kategorie (ohne Streichen) oder null für freie Eingabe (Chance, eigene ohne Vorgabe) */
+export function catChoices(cat: Category | undefined): number[] | null {
+  if (!cat) return null;
+  if (cat.quick && cat.quick.length) return cat.quick.filter(v => v > 0);
+  if (cat.fixed) return [cat.fixed];
+  if (cat.range) return Array.from({ length: cat.range[1] - cat.range[0] + 1 }, (_, k) => cat.range![0] + k);
+  // Ältere Partien: Pasch hatte noch keinen Bereich
+  if (/pasch$/i.test(cat.label)) return Array.from({ length: 26 }, (_, k) => 5 + k);
+  return null;
+}
+
 /** Summe der oberen Kategorien und ob der Bonus erreicht ist */
 export function upperSum(s: GameState, playerId: string): { sum: number; bonus: number } {
   const b = s.game.rules.params?.bonus;
