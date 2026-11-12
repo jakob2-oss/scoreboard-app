@@ -139,4 +139,12 @@ GAMES.push(
   }
 );
 
+GAMES.push({
+  template: { key: 'arschloch', version: 1, name: 'Arschloch', scoring: 'rank', win: 'high', end: { type: 'none' }, players: { min: 3, max: 8 } },
+  points: [['Jede Runde', 'wer zuerst alle Karten los ist, wird Präsident'], ['Rollen', 'Präsident, Vize, Bürger, Vize-Arschloch, Arschloch'],
+    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt dem Präsidenten seine besten Karten']],
+  acc: '#bba8e6', tint: '#ece6fb', text: '', example: [['+2', 'Präsident'], ['0', 'Bürger'], ['−2', 'Arschloch']],
+  endOptions: [{ label: 'Offen', end: { type: 'none' } }, { label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: '20 Runden', end: { type: 'rounds', value: 20 } }]
+});
+
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

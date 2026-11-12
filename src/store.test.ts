@@ -202,6 +202,29 @@ describe('Notizfelder', () => {
   });
 });
 
+describe('Arschloch', () => {
+  it('verteilt Rollen per Antippen, der Letzte bleibt automatisch übrig, erneutes Antippen nimmt heraus', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'arschloch')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    a.roundGo();
+    expect(st.get().sheet).toBe('ranks');
+    a.rankTap('id2'); a.rankTap('id1');
+    expect(st.get().sheet).toBeNull();
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 2, id3: -2 });
+    a.roundGo(); a.rankTap('id3'); a.rankTap('id3');
+    expect(st.get().sheet).toBe('ranks');
+    a.rankTap('id1'); a.rankTap('id3');
+    a.finishGame();
+    const ex = Object.fromEntries(mem.results.map(r => [r.playerId, r.extra]));
+    // Runde 1: B, A, C; Runde 2: A, C, B
+    expect(ex.id2).toMatchObject({ praes: 1, arsch: 1, praesStreak: 1 });
+    expect(ex.id1).toMatchObject({ praes: 1, arsch: 0 });
+    expect(ex.id3).toMatchObject({ praes: 0, arsch: 1 });
+  });
+});
+
 describe('Teams', () => {
   it('bildet Teams aus einzelnen Spielern; Mitglieder bekommen Platz und Punkte ihres Teams', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;

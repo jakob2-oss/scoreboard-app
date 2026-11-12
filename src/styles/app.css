@@ -307,3 +307,20 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 .team-chip { flex: none; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #2e2b4f; }
 .team-opts { display: flex; flex-direction: column; gap: 6px; }
 .team-opts .text-btn { align-self: flex-start; }
+
+/* ---------- Arschloch: Rollen ---------- */
+td.cell.rank { font-family: var(--f-display); font-size: 18px; font-weight: 700; }
+td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity: .7; }
+.r-p { background: color-mix(in srgb, #f2cf86 55%, transparent) !important; }
+.r-vp { background: color-mix(in srgb, #f2cf86 25%, transparent) !important; }
+.r-va { background: color-mix(in srgb, #b8956a 25%, transparent) !important; }
+.r-a { background: color-mix(in srgb, #b8956a 50%, transparent) !important; }
+.rank-list { display: flex; flex-direction: column; gap: 8px; }
+.rank-row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 14px; border-radius: 18px; background: var(--fill); text-align: left; }
+.rank-row .nm { flex: 1; font-family: var(--f-display); font-weight: 500; font-size: 17px; }
+.rank-row .rl { display: flex; align-items: baseline; gap: 6px; font-weight: 600; font-size: 15px; }
+.rank-row .rl small { font-family: var(--f-num); color: var(--muted); }
+.rank-row .rl.ph { color: var(--muted); }
+.rank-card { display: flex; justify-content: space-between; align-items: center; }
+.rank-card small { color: var(--muted); font-size: 13px; font-weight: 600; }
+.role-badge { min-width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; font-family: var(--f-display); font-size: 22px; font-weight: 700; background: var(--fill); }

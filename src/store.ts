@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -35,7 +35,9 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | null;
+  /** Rang-Spiele: Runde, die gerade verteilt wird */
+  rankRef: RoundRef | null;
   toast: { text: string; n: number } | null;
   history: HistGame[];
   profile: ProfileView | null;
@@ -70,7 +72,7 @@ export interface AppState {
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, formerPlayers: []
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -331,6 +333,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       if (i < 0) { set({ page: -1, edit: null }); return; }
       const p = seated(g)[i]; if (!p) return;
+      // Rang-Spiele: Spielerseite zeigt nur Rollen und Verlauf, Eingabe über die Verteilung
+      if (isRanks(g)) { set({ page: i, pad: false, edit: null }); return; }
       set({ page: i, pad: false, fromOverview: false, edit: makeEdit(g, ref ?? defaultRef(g, p.id), p.id, field) });
     },
     selectRef(ref: RoundRef) {
@@ -341,6 +345,26 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     selectField(field: BidField) {
       const g = state.game, e = state.edit; if (!g || !e) return;
       set({ edit: makeEdit(g, e.ref, e.playerId, field) });
+    },
+    // ---------- Rang pro Runde (Arschloch)
+    openRanks(ref: RoundRef) { set({ sheet: 'ranks', rankRef: ref, pad: false, edit: null }); },
+    /** Spieler in der Reihenfolge des Fertigwerdens antippen; erneutes Antippen nimmt ihn (und alle danach) heraus.
+     *  Wer als Letzter übrig bleibt, wird automatisch eingetragen. */
+    rankTap(playerId: string) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      const players = seated(g);
+      const cur = ref === 'new' ? [] : players.filter(p => rankIn(g, ref, p.id) !== null).sort((a, b) => rankIn(g, ref, a.id)! - rankIn(g, ref, b.id)!).map(p => p.id);
+      let order = cur.includes(playerId) ? cur.slice(0, cur.indexOf(playerId)) : [...cur, playerId];
+      if (order.length === players.length - 1) order = [...order, players.find(p => !order.includes(p.id))!.id];
+      const r = setOrder(g, ref, order, clock);
+      set({ game: r.state, undo: [...state.undo.slice(-99), g], rankRef: r.roundId });
+      persist(r.state);
+      if (order.length === players.length) { set({ sheet: null, rankRef: null }); toast(`Runde ${roundNumber(r.state, r.roundId)} verteilt`); }
+    },
+    rankReset() {
+      const g = state.game, ref = state.rankRef; if (!g || !ref || ref === 'new') return;
+      const r = setOrder(g, ref, [], clock);
+      set({ game: r.state, undo: [...state.undo.slice(-99), g] }); persist(r.state);
     },
     /** Notizfelder der laufenden Partie festlegen */
     setGameNotes(labels: string[]) {
@@ -374,6 +398,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       const step = nextStep(g);
       if (step.kind === 'result') { set({ sheet: 'result' }); return; }
+      if (isRanks(g)) { actions.openRanks(step.ref); return; }
       actions.goPage(step.playerIndex, step.ref, step.field);
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
@@ -414,6 +439,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
+      if (isRanks(g)) { actions.openRanks(ref); return; }
       if (hasFields(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
       // Kniffel: Auswahl auf der Spielerseite, danach zurück zum Überblick
       if (isCats(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return; }
@@ -450,7 +476,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes') { set({ sheet, pad: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks') { set({ sheet, pad: false }); },
     closeSheet() { set({ sheet: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;
@@ -478,6 +504,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
           if (notes.length) {
             extra = { ...extra };
             for (const n of notes) extra[noteKey(n)] = liveRounds(f).reduce((a, r) => a + (fieldOf(f, r.id, x.player.id, noteKey(n)) ?? 0), 0);
+          }
+          if (isRanks(f)) {
+            // Rollen-Statistik: wie oft Präsident und Arschloch, längste Präsidenten-Serie
+            const n = seated(f).length, ranks = liveRounds(f).map(r => rankIn(f, r.id, x.player.id));
+            let streak = 0, best = 0;
+            for (const rk2 of ranks) { streak = rk2 === 1 ? streak + 1 : 0; best = Math.max(best, streak); }
+            extra = { ...extra, praes: ranks.filter(v => v === 1).length, arsch: ranks.filter(v => v === n).length, praesStreak: best };
           }
           if (isBids(f)) {
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);

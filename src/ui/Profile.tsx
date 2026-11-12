@@ -179,7 +179,7 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
       {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
       {!placeOnly && d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
       {!placeOnly && d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
-      {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
+      {d.extras.map(x => row(x.label, x.a, x.b, x.lowBetter ? 'low' : 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
       {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name + (rate ? '' : `, ${x.n} ${x.n === 1 ? 'Partie' : 'Partien'}`), ...cnt(x.a, x.b, x.n), 'high', unit, true))}</>}
       <div className="eyebrow duel-last">Gemeinsame Partien</div>
       <div className="duel-games">

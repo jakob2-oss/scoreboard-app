@@ -20,6 +20,7 @@ const SHAPES: Record<string, (c: string) => string> = {
   hex: c => `<path d="M0-18l15.6 9v18L0 18l-15.6-9v-18z" fill="${c}"/>`,
   bars: c => `<rect x="-18" y="2" width="9" height="12" rx="3" fill="${c}"/><rect x="-5" y="-6" width="9" height="20" rx="3" fill="${c}"/><rect x="8" y="-14" width="9" height="28" rx="3" fill="${c}"/>`,
   tile: c => `<rect x="-16" y="-16" width="32" height="32" rx="7" fill="${c}"/><rect x="-6" y="-7" width="12" height="4" rx="2" ${HOLE}/><rect x="-2" y="-7" width="4" height="15" rx="2" ${HOLE}/>`,
+  crown: c => `<path d="M-16 8l-4-18 10 7 10-13 10 13 10-7-4 18z" fill="${c}"/>`,
   house: c => `<path d="M-15 0L0-14 15 0v14h-30z" fill="${c}"/><rect x="-4" y="5" width="8" height="9" rx="2" ${HOLE}/>`
 };
 
@@ -27,7 +28,7 @@ const SHAPES: Record<string, (c: string) => string> = {
 const MOTIFS: Record<string, string[]> = {
   kniffel: ['die', 'dot'], wizard: ['star', 'moon', 'dot'], romme: ['card', 'heart', 'spade'], uno: ['card', 'ring'],
   skyjo: ['card', 'dot'], schafkopf: ['card', 'heart', 'dot'], doppelkopf: ['card', 'heart'], binokel: ['card', 'spade', 'ring'],
-  siedler: ['hex', 'dot'], phase10: ['bars', 'dot'], scrabble: ['tile', 'dot'], monopoly: ['house', 'ring']
+  siedler: ['hex', 'dot'], phase10: ['bars', 'dot'], scrabble: ['tile', 'dot'], monopoly: ['house', 'ring'], arschloch: ['crown', 'card', 'spade']
 };
 
 // Feste Plätze, damit sich nichts sprunghaft verschiebt: [x, y, Größe, Drehung]

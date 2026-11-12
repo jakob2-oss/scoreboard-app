@@ -1,6 +1,6 @@
 /** Die wichtigsten Kennzahlen einer Partie für die Siegerseite. Reine Funktionen, keine Oberfläche. */
 import {
-  fieldOf, fieldsOf, hasPhases, isBids, isCats, isResultOnly, isSplit, liveRounds, noteKey, notesOf, phasesDone,
+  fieldOf, fieldsOf, hasPhases, isBids, isCats, isRanks, rankIn, isResultOnly, isSplit, liveRounds, noteKey, notesOf, phasesDone,
   ranking, roundFull, scoreOf, seated, upperSum, type GameState
 } from './engine';
 
@@ -26,6 +26,23 @@ export function highlights(s: GameState): Highlight[] {
     const best = vals.reduce<T | undefined>((m, x) => (m === undefined || better(x.v, m) ? x.v : m), undefined);
     return { v: best as T, who: names(vals.filter(x => x.v === best).map(x => x.name)) };
   };
+
+  // Arschloch: Rollen-Geschichten statt Punkte
+  if (isRanks(s)) {
+    const n = players.length;
+    const seq = players.map(p => ({ name: p.name, r: rounds.map(r => rankIn(s, r.id, p.id)).filter((x): x is number => x !== null) }));
+    const praes = top(seq.map(x => ({ name: x.name, v: x.r.filter(v => v === 1).length })), (a, c) => a > c);
+    if (praes.v > 0) out.push({ label: 'Am häufigsten Präsident', value: `${praes.v}×`, who: praes.who });
+    const streak = top(seq.map(x => { let c = 0, b = 0; for (const v of x.r) { c = v === 1 ? c + 1 : 0; b = Math.max(b, c); } return { name: x.name, v: b }; }), (a, c) => a > c);
+    if (streak.v >= 2) out.push({ label: 'Längste Amtszeit', value: `${streak.v} Runden`, who: streak.who });
+    const turns = (from: number, to: number) => seq.map(x => ({ name: x.name, v: x.r.slice(1).filter((v, i) => x.r[i] === from && v === to).length }));
+    const fall = top(turns(1, n), (a, c) => a > c), rise = top(turns(n, 1), (a, c) => a > c);
+    if (fall.v > 0) out.push({ label: 'Tiefster Fall', value: `${fall.v}×`, who: fall.who });
+    else if (rise.v > 0) out.push({ label: 'Vom Arschloch zum Präsidenten', value: `${rise.v}×`, who: rise.who });
+    const arsch = top(seq.map(x => ({ name: x.name, v: x.r.filter(v => v === n).length })), (a, c) => a > c);
+    if (arsch.v > 0) out.push({ label: 'Am häufigsten Arschloch', value: `${arsch.v}×`, who: arsch.who });
+    return out.slice(0, 3);
+  }
 
   // Spielspezifisch
   if (isBids(s)) {

@@ -30,6 +30,40 @@ export function liveRounds(s: GameState): Round[] {
 }
 
 export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
+/** Rang pro Runde (Arschloch): Reihenfolge des Fertigwerdens ergibt Rolle und Punkte */
+export const isRanks = (s: GameState) => s.game.rules.scoring === 'rank';
+
+export interface Role { name: string; short: string; points: number }
+/** Rolle für Platz 1..n: Präsident, Vize-Präsident, Bürger, Vize-Arschloch, Arschloch */
+export function roleOf(rank: number, n: number): Role {
+  if (rank === 1) return { name: 'Präsident', short: 'P', points: 2 };
+  if (rank === n) return { name: 'Arschloch', short: 'A', points: -2 };
+  if (n >= 4 && rank === 2) return { name: 'Vize-Präsident', short: 'VP', points: 1 };
+  if (n >= 4 && rank === n - 1) return { name: 'Vize-Arschloch', short: 'VA', points: -1 };
+  return { name: 'Bürger', short: 'B', points: 0 };
+}
+/** Platz eines Spielers in einer Runde (Rang-Spiele) */
+export function rankIn(s: GameState, roundId: string, playerId: string): number | null {
+  const e = s.entries.find(x => !x.deletedAt && x.roundId === roundId && x.playerId === playerId);
+  const r = e ? (e.values as { rank?: number }).rank : undefined;
+  return typeof r === 'number' ? r : null;
+}
+/** Reihenfolge einer Runde setzen (wer zuerst fertig war, steht vorn). Nicht Genannte verlieren ihren Platz. */
+export function setOrder(s: GameState, ref: RoundRef, order: string[], clock: Clock): { state: GameState; roundId: string } {
+  let state = s; let roundId = ref;
+  if (ref === 'new') { const a = addRound(state, clock); state = a.state; roundId = a.roundId; }
+  const t = clock.now();
+  let entries = state.entries.map(e => {
+    if (e.deletedAt || e.roundId !== roundId) return e;
+    const i = order.indexOf(e.playerId);
+    return i < 0 ? { ...e, updatedAt: t, deletedAt: t } : (e.values as { rank?: number }).rank === i + 1 ? e : { ...e, updatedAt: t, values: { rank: i + 1 } };
+  });
+  for (const [i, pid] of order.entries()) {
+    if (!entries.some(e => !e.deletedAt && e.roundId === roundId && e.playerId === pid))
+      entries = [...entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId: pid, values: { rank: i + 1 } }];
+  }
+  return { state: { ...state, game: touch(state, clock), entries }, roundId };
+}
 export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
 
 /** Kniffel: erlaubte Werte einer Kategorie (ohne Streichen) oder null für freie Eingabe (Chance, eigene ohne Vorgabe) */
@@ -100,6 +134,10 @@ export function fieldOf(s: GameState, roundId: string, playerId: string, field: 
 }
 
 export function scoreOf(s: GameState, roundId: string, playerId: string): number | null {
+  if (isRanks(s)) {
+    const r = rankIn(s, roundId, playerId);
+    return r === null ? null : roleOf(r, seated(s).length).points;
+  }
   if (isBids(s)) {
     const b = fieldOf(s, roundId, playerId, 'bid'), t = fieldOf(s, roundId, playerId, 'tricks');
     return b !== null && t !== null ? wizardScore(b, t) : null;

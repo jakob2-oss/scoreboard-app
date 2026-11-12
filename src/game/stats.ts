@@ -140,7 +140,7 @@ export interface Duel {
   /** Je Spiel: Siege (Platz 1) jedes Spielers */
   perGame: { key: string; name: string; n: number; a: number; b: number }[];
   /** Spielspezifisch, z. B. Kniffel gewürfelt, Wizard-Ansagen getroffen */
-  extras: { label: string; a: number; b: number; unit?: string }[];
+  extras: { label: string; a: number; b: number; unit?: string; lowBetter?: boolean }[];
   /** Gemeinsame Partien, neueste zuerst */
   games: HistGame[];
 }
@@ -174,6 +174,10 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
   const extras: Duel['extras'] = [];
   if (has('kniffel')) extras.push({ label: 'Kniffel gewürfelt', a: sumExtra(a, 'kniffel'), b: sumExtra(b, 'kniffel') });
   if (has('bonus')) extras.push({ label: 'Bonus oben', a: sumExtra(a, 'bonus'), b: sumExtra(b, 'bonus') });
+  if (has('praes')) {
+    extras.push({ label: 'Präsident', a: sumExtra(a, 'praes'), b: sumExtra(b, 'praes') });
+    extras.push({ label: 'Arschloch', a: sumExtra(a, 'arsch'), b: sumExtra(b, 'arsch'), lowBetter: true });
+  }
   if (has('hits')) {
     const rate = (id: string) => { const h = bidHits(games, id); return h.rate; };
     extras.push({ label: 'Ansagen getroffen', a: rate(a), b: rate(b), unit: '%' });
