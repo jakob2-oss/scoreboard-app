@@ -113,6 +113,6 @@ Beendet zeigt sie eine Abschlussseite: Otter mit Pokal (Band „GESAMTSIEG“), 
 
 ## 12.11.2026: Startseite: Name und Bild als ein Banner
 Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten, aber nicht so wuchtig getrennt vom Namen.
-Jetzt ein Banner: „OINA NO?“ links, das Bild rechts auf einer gemeinsamen Fläche (Farbe der früheren Bildfläche,
-mit einer langsam treibenden Form). Die Suche sitzt als Pille mit Lupe halb auf der Unterkante, der Hell/Dunkel-Schalter
-oben links in der Fläche. Darunter direkt die Spiele.
+Jetzt ein Banner: „OINA NO?“ links, das Bild rechts auf einer gemeinsamen organischen Fläche (unregelmäßige Kante,
+darin drei Formen, die langsam treiben, drehen und atmen). Die Suche steht als Pille mit Lupe frei darunter,
+nicht überlappend; der Hell/Dunkel-Schalter oben links in der Fläche. Darunter direkt die Spiele.

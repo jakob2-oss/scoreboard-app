@@ -34,6 +34,16 @@ export function Home() {
           {/* Kopf: Name und Bild auf einer Fläche, die Suche sitzt an ihrer Unterkante */}
           <div className="hero-banner">
             <div className="hb-card">
+              {/* Organische Fläche mit langsam treibenden Formen darin */}
+              <svg className="hb-bg" viewBox="0 0 360 180" preserveAspectRatio="none" aria-hidden="true">
+                <defs><clipPath id="hb-clip"><path d="M26 18C74 0 150 8 226 5s122 2 128 40c6 36-4 70-9 98-6 30-44 36-96 34-62-2-130 4-192 2C26 178 6 158 4 118S-4 34 26 18z" /></clipPath></defs>
+                <path className="hb-shape" d="M26 18C74 0 150 8 226 5s122 2 128 40c6 36-4 70-9 98-6 30-44 36-96 34-62-2-130 4-192 2C26 178 6 158 4 118S-4 34 26 18z" />
+                <g clipPath="url(#hb-clip)">
+                  <path className="hb-f hb-f1" d="M-40 150C0 96 70 110 120 140s90 60 60 90H-40z" />
+                  <path className="hb-f hb-f2" d="M250-30c60 0 120 40 110 100S300 140 260 110 190 40 200 10s20-40 50-40z" />
+                  <circle className="hb-f hb-f3" cx="150" cy="30" r="46" />
+                </g>
+              </svg>
               <button className="icon-btn hb-theme" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}>
                 {theme === 'dark' ? <IconSun /> : <IconMoon />}
               </button>
