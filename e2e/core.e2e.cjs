@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('16 Einträge (13 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 16 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('17 Einträge (14 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 17 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
   await shot('01-home');
 
@@ -178,7 +178,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const n of ['1', '5']) await p.click(`.step-chips .chip >> text="${n}"`);   // abwählen
   for (const n of ['2', '20', '50']) await p.click(`.step-chips .chip >> text="${n}"`);
   check('höchstens drei Zählschritte', (await p.locator('.step-chips .chip[aria-pressed="true"]').count()) === 3);
-  await p.click('.switch-row');   // diesmal als Vorlage speichern
+  await p.click('.switch-row >> text=Als Vorlage speichern');   // diesmal als Vorlage speichern
   await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
   check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');
@@ -338,6 +338,24 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#start-btn'); await p.waitForTimeout(300);
   check('Teams: Zettel mit Teamspalten', (await raw('.grid thead')).includes('&'));
   await shot('36b-team-game');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Arschloch: Rollen pro Runde
+  await p.click('[data-game="arschloch"]'); await shot('36c-arschloch'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  check('Arschloch: Knopf „Runde 1 verteilen“', (await raw('#round-go')).startsWith('Runde 1 verteilen'));
+  await p.click('#round-go'); await p.waitForTimeout(200);
+  const finish = await p.locator('.rank-row .nm').allTextContents();
+  await p.click(`.rank-row >> text=${finish[1]}`); await p.click(`.rank-row >> text=${finish[0]}`);
+  await shot('36d-arschloch-sheet');
+  for (const nm of finish.slice(2, -1)) await p.click(`.rank-row >> text=${nm}`);
+  await p.waitForTimeout(300);
+  check('Arschloch: Runde verteilt, Letzter automatisch', !(await p.isVisible('.rank-list')) && (await p.locator('td.cell.rank.r-a').count()) === 1 && (await p.locator('td.cell.rank.r-p').count()) === 1);
+  await p.click('#round-go'); for (const nm of finish) { if (await p.isVisible('.rank-list')) await p.click(`.rank-row >> text=${nm}`); } await p.waitForTimeout(300);
+  await shot('36e-arschloch-ov');
+  await p.click('#s-game .text-btn'); await p.waitForTimeout(400);
+  check('Arschloch: Siegerseite mit Rollen-Statistik', (await raw('.v-stats')).includes('Präsident'));
+  await shot('36f-arschloch-victory');
+  await p.click('.victory .pad-actions .secondary');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }

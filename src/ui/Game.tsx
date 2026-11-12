@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -16,10 +16,13 @@ const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf,
 
 /** Schnelltasten aus den Zählschritten der Vorlage: −10 −5 −1 +1 +5 +10 */
 export function quickKeys(g: GameState): QuickKey[] {
-  const own = g.game.rules.params?.quick;
-  if (own && own.length) return own;
+  const p = g.game.rules.params, own = p?.quick;
   const s = [...stepsOf(g.game.rules)].sort((a, b) => a - b);
-  return [...s].reverse().map(n => -n).concat(s).map(n => ({ label: n > 0 ? '+' + n : '\u2212' + -n, op: 'add' as const, v: n }));
+  let keys: QuickKey[] = own && own.length ? own : [...s].reverse().map(n => -n).concat(s).map(n => ({ label: n > 0 ? '+' + n : '\u2212' + -n, op: 'add' as const, v: n }));
+  // Nullsumme: Ausgleich-Taste; eigene Tasten aus dem Erstellungsmodus dahinter
+  if (p?.zeroSum && !keys.some(k => k.op === 'rest')) keys = [...keys, { label: 'Ausgleich', op: 'rest', v: 0 }];
+  if (p?.keys?.length) keys = [...keys, ...p.keys];
+  return keys;
 }
 
 function subtitle(g: GameState): string {
@@ -106,7 +109,7 @@ export function GameScreen() {
 
       {!s.pad && (
         <div className="dock gutter">
-          {s.page < 0 ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
+          {s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
             : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
               ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />
               : <Keypad g={g} edit={s.edit} canUndo={s.undo.length > 0} />)}
@@ -118,6 +121,8 @@ export function GameScreen() {
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
       {s.sheet === 'notes' && <NotesSheet g={g} />}
+      {s.sheet === 'ranks' && s.rankRef && <RankSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
     </section>
   );
 }
@@ -146,7 +151,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
           <tr>
             <th className="corner">#</th>
             {players.map((p, i) => (
-              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span></div></th>
+              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}</div></th>
             ))}
           </tr>
         </thead>
@@ -158,6 +163,14 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const v = scoreOf(g, r.id, p.id);
                 const active = !!edit && edit.ref === r.id && edit.playerId === p.id;
                 const cls = ['cell', v === null ? 'empty' : '', v !== null && v < 0 ? 'neg' : '', v === 0 ? 'zero' : '', active ? 'active' : ''].join(' ');
+                if (isRanks(g)) {
+                  const rk2 = rankIn(g, r.id, p.id), role = rk2 === null ? null : roleOf(rk2, players.length);
+                  return (
+                    <td key={p.id} className={'cell rank' + (role ? ' r-' + role.short.toLowerCase() : ' empty')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
+                      {role && <>{role.short}<small>{role.points > 0 ? '+' + role.points : fmt(role.points)}</small></>}
+                    </td>
+                  );
+                }
                 const fs = fieldsOf(g);
                 if (fs) {
                   const b = fieldOf(g, r.id, p.id, fs[0].key), t2 = fieldOf(g, r.id, p.id, fs[1].key), has = b !== null || t2 !== null;
@@ -196,7 +209,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
             {players.map(p => {
               const x = rk.find(y => y.player.id === p.id)!;
               let meta = started ? `${x.place}. Platz` : ' ';
-              if (started && end.type === 'target' && g.game.rules.win === 'high') meta = t[p.id] >= end.value ? 'Ziel erreicht' : `noch ${end.value - t[p.id]}`;
+              if (started && end.type === 'target') meta = g.game.rules.win === 'high'
+                ? (t[p.id] >= end.value ? 'Ziel erreicht' : `noch ${end.value - t[p.id]}`)
+                : (t[p.id] >= end.value ? 'Grenze erreicht' : `noch ${end.value - t[p.id]}`);
               const isLead = lead.includes(p.id);
               return (
                 <td key={p.id} className={isLead ? 'lead' : ''} style={css({ '--c': p.color, '--on': onColor(p.color) })}>
@@ -218,7 +233,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
-        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
+        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
   );
 }
@@ -232,7 +247,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
   const value = edit && !noteOn ? numOf(edit.buf) : ref === 'new' ? null : scoreOf(g, ref, p.id);
   const end = g.game.rules.end;
   let place = started ? `${x.place}. Platz` : 'Noch keine Punkte';
-  if (started && end.type === 'target' && g.game.rules.win === 'high') place += t[p.id] >= end.value ? ', Ziel erreicht' : `, noch ${end.value - t[p.id]} bis ${end.value}`;
+  if (started && end.type === 'target') place += t[p.id] >= end.value ? (g.game.rules.win === 'high' ? ', Ziel erreicht' : ', Grenze erreicht') : `, noch ${end.value - t[p.id]} bis ${end.value}`;
   const rounds = liveRounds(g);
   const pick = (r: RoundRef) => (edit ? act().selectRef(r) : act().goPage(i, r));
   return (
@@ -241,7 +256,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         <div className="who"><Avatar p={p} big /><div><h3>{p.name}</h3><div className="place">{started && x.place === 1 && <Crown />}{place}</div></div></div>
         <div className="score-pill"><small>Punkte</small><b>{fmt(t[p.id])}</b></div>
       </div>
-      {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : isSplit(g) ? <SplitEntry g={g} p={p} roundRef={ref} edit={edit} /> : <div className="pp-entry">
+      {isRanks(g) ? <RankCard g={g} p={p} /> : isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : isSplit(g) ? <SplitEntry g={g} p={p} roundRef={ref} edit={edit} /> : <div className="pp-entry">
         <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : isCats(g) && ref !== 'new' ? <div className="lbl">{liveRounds(g).find(r => r.id === ref)?.cat?.label}</div> : <div className="lbl">Runde {roundNumber(g, ref)}</div>}</div>
         <span className={'val' + (value === null ? ' ph' : '') + (value !== null && value < 0 ? ' neg' : '')}>
           {value === null ? (edit?.buf === '-' ? '−' : isCats(g) ? '–' : '0') : isCats(g) && value === 0 ? '–' : fmt(value)}
@@ -273,6 +288,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
             if (k > currentRoundIndex(g) && b === null) return null;
             return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1} {b ?? '–'}/{t2 ?? '–'}</small><b>{v === null ? '–' : (v > 0 ? '+' : '') + fmt(v)}</b></button>;
           }
+          if (isRanks(g)) { const rk2 = rankIn(g, r.id, p.id); return <button key={r.id} onClick={() => act().openRanks(r.id)}><small>R{k + 1}</small><b>{rk2 === null ? '–' : roleOf(rk2, seated(g).length).short}</b></button>; }
           return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1}</small><b>{v === null ? '–' : fmt(v)}</b></button>;
         })}
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
@@ -290,7 +306,8 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
   const bids = isBids(g) && edit.ref !== 'new';
   const order = edit.field && edit.ref !== 'new' ? inputOrder(g, edit.ref) : null;
   const splitKeys = isSplit(g) ? fieldsOf(g)!.find(f => f.key === edit.field)?.quick : undefined;
-  const nextP2 = players[order ? order[order.indexOf(i) + 1] : i + 1];
+  const back = useApp().fromOverview && !isCats(g);
+  const nextP2 = back ? undefined : players[order ? order[order.indexOf(i) + 1] : i + 1];
   const cards = bids ? roundNumber(g, edit.ref) : 0;
   return (
     <div className="pp-panel">
@@ -300,7 +317,7 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
         </div>
       ) : <div className="quick">
         {(isCats(g) ? catKeys(g, edit.ref) : splitKeys ?? quickKeys(g)).map(k => (
-          <button key={k.label} className={(k.op === 'set' || k.op === 'rest') && k.label.length > 2 ? 'strike wide' : k.v < 0 ? 'strike' : ''}
+          <button key={k.label} className={k.label.length > 3 || ((k.op === 'set' || k.op === 'rest') && k.label.length > 2) ? 'strike wide' : k.v < 0 ? 'strike' : ''}
             onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : k.op === 'rest' ? a.rest() : a.setValue(k.v))}>{k.label}</button>
         ))}
       </div>}
@@ -511,6 +528,77 @@ function NotesSheet({ g }: { g: GameState }) {
             <input id="game-note" value={label} onChange={e => setLabel(e.target.value)} placeholder="Neues Feld" maxLength={18} autoComplete="off" />
             <button className="primary" type="submit" disabled={!label.trim() || notes.length >= 4}>Hinzufügen</button>
           </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- Rang pro Runde (Arschloch)
+
+/** Spielerseite: aktuelle Rolle und wie oft welche Rolle */
+function RankCard({ g, p }: { g: GameState; p: Player }) {
+  const n = seated(g).length, rounds = liveRounds(g).filter(r => rankIn(g, r.id, p.id) !== null);
+  const last = rounds.length ? roleOf(rankIn(g, rounds[rounds.length - 1].id, p.id)!, n) : null;
+  const count = (name: string) => rounds.filter(r => roleOf(rankIn(g, r.id, p.id)!, n).name === name).length;
+  return (
+    <div className="pp-entry rank-card">
+      <div><div className="lbl">{last ? last.name : 'Noch keine Rolle'}</div>
+        <small>{rounds.length ? `${count('Präsident')}× Präsident, ${count('Arschloch')}× Arschloch` : ''}</small></div>
+      {last && <span className={'role-badge r-' + last.short.toLowerCase()}>{last.short}</span>}
+    </div>
+  );
+}
+
+/** Rollen verteilen: Spieler in der Reihenfolge antippen, in der sie fertig wurden */
+function RankSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const players = seated(g), n = players.length;
+  const rankOf = (id: string) => (roundRef === 'new' ? null : rankIn(g, roundRef, id));
+  const done = players.filter(p => rankOf(p.id) !== null).length;
+  return (
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet" role="dialog" aria-label="Rollen verteilen">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">{done < n ? `Wer wurde als ${done + 1}. fertig?` : 'Verteilt'}</div>
+          <div className="rank-list">
+            {players.map(p => {
+              const r = rankOf(p.id), role = r === null ? null : roleOf(r, n);
+              return (
+                <button key={p.id} className={'rank-row' + (role ? ' set r-' + role.short.toLowerCase() : '')} onClick={() => act().rankTap(p.id)}>
+                  <Avatar p={p} /><span className="nm">{p.name}</span>
+                  {role ? <span className="rl"><small>{r}.</small>{role.name}</span> : <span className="rl ph">–</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div className="pad-actions">
+            <button className="secondary" onClick={() => act().rankReset()} disabled={!done}>Zurücksetzen</button>
+            <button className="primary" onClick={() => act().closeSheet()}>Fertig</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Uno: Sieger der Runde antippen, alle anderen bekommen 0 */
+function WinnerSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  return (
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet" role="dialog" aria-label="Sieger der Runde">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">Wer hat gewonnen?</div>
+          <div className="rank-list">
+            {seated(g).map(p => (
+              <button key={p.id} className="rank-row" onClick={() => act().pickWinner(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>
+            ))}
+          </div>
         </div>
       </div>
     </>

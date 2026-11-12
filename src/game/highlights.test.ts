@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Player } from '../model/types';
 import type { Clock } from '../lib/id';
 import { TPL } from '../test/fixtures';
-import { createGame, liveRounds, setField, setScore, seated, type GameState } from './engine';
+import { createGame, liveRounds, roleOf, setField, setOrder, setScore, seated, totals, type GameState } from './engine';
 import { gameDef } from './games';
 import { highlights } from './highlights';
 
@@ -55,5 +55,26 @@ describe('Kennzahlen der Siegerseite', () => {
     let s = createGame(gameDef('monopoly')!.template, players('A', 'B'), c);
     s = round(s, [2, 1], c);
     expect(highlights(s).some(h => h.label === 'Vorsprung')).toBe(false);
+  });
+
+  it('Arschloch: Rollen, Punkte und Rollen-Geschichten', () => {
+    const c = clock();
+    let s = createGame(gameDef('arschloch')!.template, players('Anna', 'Ben', 'Clara', 'Dora'), c);
+    expect([1, 2, 3, 4].map(r => roleOf(r, 4).short)).toEqual(['P', 'VP', 'VA', 'A']);
+    expect([1, 2, 3].map(r => roleOf(r, 3).name)).toEqual(['Präsident', 'Bürger', 'Arschloch']);
+    let id = liveRounds(s)[0].id;
+    s = setOrder(s, id, ['p0', 'p1', 'p2', 'p3'], c).state;
+    s = setOrder(s, 'new', ['p0', 'p2', 'p1', 'p3'], c).state;
+    s = setOrder(s, 'new', ['p3', 'p1', 'p2', 'p0'], c).state;
+    // P +2, VP +1, VA −1, A −2 über drei Runden
+    expect(totals(s)).toEqual({ p0: 2, p1: 1, p2: -1, p3: -2 });
+    const h = highlights(s);
+    expect(h[0]).toEqual({ label: 'Am häufigsten Präsident', value: '2×', who: 'Anna' });
+    expect(h[1]).toEqual({ label: 'Längste Amtszeit', value: '2 Runden', who: 'Anna' });
+    expect(h[2]).toEqual({ label: 'Tiefster Fall', value: '1×', who: 'Anna' });
+    id = liveRounds(s)[0].id;
+    s = setOrder(s, id, ['p1'], c).state;
+    // Runde 1 neu: nur Ben eingetragen, die anderen ohne Rolle
+    expect(seated(s).map(p => totals(s)[p.id])).toEqual([0, 2, 0, 0]);
   });
 });

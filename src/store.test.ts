@@ -202,6 +202,70 @@ describe('Notizfelder', () => {
   });
 });
 
+describe('Arschloch', () => {
+  it('verteilt Rollen per Antippen, der Letzte bleibt automatisch übrig, erneutes Antippen nimmt heraus', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'arschloch')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    a.roundGo();
+    expect(st.get().sheet).toBe('ranks');
+    a.rankTap('id2'); a.rankTap('id1');
+    expect(st.get().sheet).toBeNull();
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 2, id3: -2 });
+    a.roundGo(); a.rankTap('id3'); a.rankTap('id3');
+    expect(st.get().sheet).toBe('ranks');
+    a.rankTap('id1'); a.rankTap('id3');
+    a.finishGame();
+    const ex = Object.fromEntries(mem.results.map(r => [r.playerId, r.extra]));
+    // Runde 1: B, A, C; Runde 2: A, C, B
+    expect(ex.id2).toMatchObject({ praes: 1, arsch: 1, praesStreak: 1 });
+    expect(ex.id1).toMatchObject({ praes: 1, arsch: 0 });
+    expect(ex.id3).toMatchObject({ praes: 0, arsch: 1 });
+  });
+});
+
+describe('Erstellungsmodus: Wertung, Nullsumme, eigene Tasten', () => {
+  async function fresh() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); return { mem, st, a };
+  }
+  it('Zwei Werte je Runde: Summe zählt', async () => {
+    const { st, a } = await fresh();
+    a.openSetup(true); a.updateSetup({ name: 'Tichu', kind: 'split', splitNames: ['Ansage', 'Karten'] }); a.setupNext();
+    await a.addPlayer('A'); await a.addPlayer('B'); a.start();
+    expect(st.get().game!.game.rules.params?.split?.map(f => f.label)).toEqual(['Ansage', 'Karten']);
+    a.roundGo(); a.add(100); a.next(); a.add(-100); a.next();
+    a.roundGo(); a.add(30); a.next(); a.add(70); a.next();
+    // id1 ist die Vorlage, die Spieler beginnen bei id2
+    expect(totals(st.get().game!)).toEqual({ id2: 130, id3: -30 });
+  });
+  it('Rang je Runde: Rollen wie bei Arschloch', async () => {
+    const { st, a } = await fresh();
+    a.openSetup(true); a.updateSetup({ name: 'Bohnanza', kind: 'rank' }); a.setupNext();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    expect(st.get().game!.game.rules).toMatchObject({ scoring: 'rank', win: 'high', players: { min: 3 } });
+    a.roundGo(); a.rankTap('id4'); a.rankTap('id2');
+    expect(totals(st.get().game!)).toEqual({ id2: 0, id3: -2, id4: 2 });
+  });
+  it('Nullsumme mit Ausgleich und eigene Tasten bleiben beim Bearbeiten erhalten', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(true); a.updateSetup({ name: 'Skat-Liste', zeroSum: true, keys: [{ label: 'Grand', op: 'add', v: 24 }] }); a.saveNewTemplate();
+    const t = mem.templates[0];
+    expect(t.params).toMatchObject({ zeroSum: true, keys: [{ label: 'Grand', op: 'add', v: 24 }] });
+    expect(st.get().setup).toMatchObject({ kind: 'points', zeroSum: true });
+    a.updateSetup({ name: 'Skat' }); a.saveSetupHome();
+    expect(mem.templates[0].params).toMatchObject({ zeroSum: true, keys: [{ label: 'Grand' }] });
+  });
+  it('Kopie von Wizard behält ihre Wertung beim Bearbeiten', async () => {
+    const { st, a } = await fresh();
+    a.customizeGame(GAMES.find(g => g.template.key === 'wizard')!.template);
+    a.updateSetup({ name: 'Wizard Haus' }); a.saveSetupHome();
+    expect(st.get().templates[0]).toMatchObject({ scoring: 'bids', name: 'Wizard Haus' });
+  });
+});
+
 describe('Teams', () => {
   it('bildet Teams aus einzelnen Spielern; Mitglieder bekommen Platz und Punkte ihres Teams', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
@@ -542,7 +606,13 @@ describe('Weitere Spiele', () => {
   });
   it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
     const u = await play('uno', ['A', 'B']);
-    u.a.roundGo(); u.a.digit(5); u.a.digit(0); u.a.digit(0); u.a.next(); u.a.digit(0); u.a.next();
+    u.a.roundGo();
+    expect(u.st.get().sheet).toBe('winner');
+    u.a.pickWinner('id1');
+    expect(u.st.get().edit?.playerId).toBe('id1');
+    u.a.digit(5); u.a.digit(0); u.a.digit(0); u.a.next();
+    expect(u.st.get().page).toBe(-1);
+    expect(totals(u.st.get().game!)).toEqual({ id1: 500, id2: 0 });
     expect(endState(u.st.get().game!)?.done).toBe(true);
     const s = await play('scrabble', ['A', 'B']);
     s.a.roundGo(); s.a.add(10); s.a.add(1); s.a.add(1); s.a.mul(3);

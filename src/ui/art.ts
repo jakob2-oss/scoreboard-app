@@ -248,6 +248,22 @@ Object.assign(GAME_ART, {
     + card(150, 150, -8, 'O', BAV.gras('#9cc77e'), '#5f8a44', 62) + card(214, 154, 8, 'U', BAV.schellen('#f2cf86'), '#b8862a', 62)
     + '<g transform="translate(292 96)"><rect x="-32" y="-18" width="64" height="36" rx="18" fill="#fffaf2"/><text y="8" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="22" fill="#d9634a">+40</text></g></svg>' }
 });
+// Arschloch: Thron gegen Hocker, Karten fliegen
+const throne = (x: number, y: number) => `<g transform="translate(${x} ${y})">
+  <rect x="-30" y="-92" width="60" height="70" rx="14" fill="#bba8e6"/><rect x="-22" y="-84" width="44" height="54" rx="10" fill="#a493d6"/>
+  <rect x="-38" y="-30" width="76" height="20" rx="8" fill="#bba8e6"/><rect x="-34" y="-12" width="10" height="34" rx="4" fill="#8f7ec7"/><rect x="24" y="-12" width="10" height="34" rx="4" fill="#8f7ec7"/>
+  <path d="M-18-104l-4-16 11 8 11-14 11 14 11-8-4 16z" fill="#f2cf86"/></g>`;
+const stool = (x: number, y: number) => `<g transform="translate(${x} ${y})"><ellipse cy="-26" rx="26" ry="8" fill="#d9b98a"/>
+  <rect x="-20" y="-24" width="7" height="44" rx="3" fill="#b8956a" transform="rotate(8 -16 -2)"/><rect x="13" y="-24" width="7" height="44" rx="3" fill="#b8956a" transform="rotate(-8 16 -2)"/></g>`;
+Object.assign(GAME_ART, {
+  arschloch: {
+    icon: ICON(`<path d="M14 44l-4-24 12 9 10-15 10 15 12-9-4 24z" fill="#f2cf86"/><rect x="14" y="42" width="36" height="8" rx="3" fill="#e0b96a"/>
+      <circle cx="10" cy="19" r="3.5" fill="#f2cf86"/><circle cx="32" cy="12" r="3.5" fill="#f2cf86"/><circle cx="54" cy="19" r="3.5" fill="#f2cf86"/>`),
+    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c', 'rays') + throne(130, 214) + stool(268, 214)
+      + card(200, 120, -18, 'A', BAV.herz('#f3a98f'), '#d9634a', 34) + card(236, 104, 14, 'K', BAV.eichel('#c9a06e'), '#7c9a5a', 30) + '</svg>'
+  }
+});
+
 const icon: Record<string, string> = {
   uno: ICON(`<g transform="rotate(-20 32 32)">${[0, 1, 2, 3].map(k => `<path d="M32 32L${32 + 22 * Math.cos(k * Math.PI / 2)} ${32 + 22 * Math.sin(k * Math.PI / 2)}A22 22 0 0 1 ${32 + 22 * Math.cos((k + 1) * Math.PI / 2)} ${32 + 22 * Math.sin((k + 1) * Math.PI / 2)}z" fill="${['#f3a98f', '#86cbb8', '#f2cf86', '#97c4e3'][k]}"/>`).join('')}
     <ellipse cx="32" cy="32" rx="9" ry="14" transform="rotate(40 32 32)" fill="#fffaf2"/></g>`),
