@@ -1,5 +1,6 @@
 import { act, useApp } from '../store';
-import { DEFAULT_POINTS, seriesGames, seriesPlaces, seriesTable, type SeriesRow, type SeriesSort } from '../game/stats';
+import { DEFAULT_POINTS, seriesAwards, seriesGames, seriesPlaces, seriesTable, type SeriesRow, type SeriesSort } from '../game/stats';
+import { trophyRoom } from './trophy';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
 import { Crown, IconBack } from './icons';
@@ -26,6 +27,12 @@ export function Series() {
     a.updateEvent(ev.id, { points: next });
   };
   const isDefault = JSON.stringify(pts) === JSON.stringify(DEFAULT_POINTS);
+  const awards = seriesAwards(games), names = (ids: string[]) => ids.map(id => playerOf(players, id).name).join(' und ');
+  // Beendet: Abschlussseite mit Otter, Sieger und Auszeichnungen. Bild: das meistgespielte Spiel
+  const done = !!ev.endedAt && !ev.active && games.length > 0;
+  const champ = rows.filter((_, i) => places[i] === 1).map(r => r.playerId);
+  const topGame = seriesGames(games)[0];
+  const hero = done && topGame ? trophyRoom(iconFor(topGame.key, topGame.name).icon, 'GESAMTSIEG') : null;
   return (
     <section className="screen" id="s-series">
       <div className="top gutter">
@@ -34,10 +41,21 @@ export function Series() {
       </div>
       <div className="scroll">
         <div className="gutter pf-body">
+          {hero && <div className="ser-trophy" dangerouslySetInnerHTML={{ __html: hero }} />}
           <div className="ser-hero">
+            {ev.active && <span className="ser-badge">Läuft</span>}
             <h1>{ev.name}</h1>
+            {done && champ.length > 0 && <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'gewinnen' : 'gewinnt'} die Serie</div>}
             <small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'} mit ${rows.length} ${rows.length === 1 ? 'Spieler' : 'Spielern'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small>
           </div>
+          {ev.active
+            ? <button className="secondary ser-end" id="series-end" onClick={() => a.endEvent(ev.id)}>Serie beenden</button>
+            : <button className="secondary ser-end" id="series-resume" onClick={() => a.resumeEvent(ev.id)}>{ev.endedAt ? 'Fortsetzen' : 'Starten'}</button>}
+          {awards.length > 0 && <div className="group"><div className="eyebrow">Auszeichnungen</div>
+            <div className="v-stats ser-awards">
+              {awards.map(x => <div key={x.label} className="v-stat"><small>{x.label}</small><b>{x.value}</b><span>{names(x.who)}</span></div>)}
+            </div>
+          </div>}
           {rows.length > 0 && <>
             <div className="seg" role="group" aria-label="Wertung">
               <button id="sort-perf" aria-pressed={series.sort === 'perf'} onClick={() => a.setSeriesSort('perf')}>Leistung</button>

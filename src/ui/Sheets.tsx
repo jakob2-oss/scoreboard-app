@@ -97,6 +97,8 @@ export function MenuSheet({ g }: { g: GameState }) {
 export function ResultSheet({ g }: { g: GameState }) {
   const { events } = useApp();
   const [eventId, setEventId] = useState<string | null>(() => {
+    // Laufende Serie zuerst, sonst die zuletzt gewählte
+    const live = events.find(e => e.active); if (live) return live.id;
     try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
   });
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;

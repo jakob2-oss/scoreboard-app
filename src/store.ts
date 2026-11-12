@@ -11,7 +11,7 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'history' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series';
+export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series';
 
 /** Filter und Vergleich auf der Profilseite */
 export interface ProfileView { id: string; time: TimeFilter; key: string | null; vs: string[] }
@@ -623,7 +623,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       toast('Oina no! Neue Partie läuft');
     },
     // ---------- Verlauf und Spieler
-    openTab(screen: 'home' | 'history' | 'people') { set({ screen, detail: null, profile: null, series: null }); },
+    openTab(screen: 'home' | 'history' | 'events' | 'people') { set({ screen, detail: null, profile: null, series: null }); },
     setHistTab(histTab: 'games' | 'series') { set({ histTab, detail: null }); },
     // ---------- Serien
     /** Neue Serie anlegen; gibt sie zurück (leerer Name: nichts) */
@@ -634,6 +634,27 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ events: [...state.events, e] });
       repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
       return e;
+    },
+    /** Serie starten (Spieleabend, Urlaub …): läuft, bis sie beendet wird; neue Partien gehören dazu */
+    startEvent(name: string): GameEvent | null {
+      const e = actions.createEvent(name); if (!e) return null;
+      actions.resumeEvent(e.id);
+      return state.events.find(x => x.id === e.id) ?? e;
+    },
+    /** Serie (wieder) laufen lassen; eine andere laufende pausiert dann */
+    resumeEvent(id: string) {
+      const t = clock.now();
+      const events = state.events.map(e => (e.id === id ? { ...e, active: true, endedAt: null, updatedAt: t } : e.active ? { ...e, active: false, updatedAt: t } : e));
+      set({ events });
+      for (const e of events.filter(x => x.updatedAt === t)) repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      try { localStorage.setItem('pz:lastEvent', id); } catch { /* egal */ }
+    },
+    /** Serie beenden: sie bekommt ihre Abschlussseite */
+    endEvent(id: string) {
+      const old = state.events.find(e => e.id === id); if (!old) return;
+      const e = { ...old, active: false, endedAt: clock.now(), updatedAt: clock.now() };
+      set({ events: state.events.map(x => (x.id === id ? e : x)) });
+      repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
     updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points'>>) {
       const old = state.events.find(e => e.id === id); if (!old) return;
@@ -657,7 +678,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     openSeries(id: string) { set({ screen: 'series', series: { id, sort: 'perf' }, detail: null }); },
     setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
-    closeSeries() { set({ screen: 'history', histTab: 'series', series: null }); },
+    closeSeries() { set({ screen: 'events', series: null }); },
     openDetail(id: string | null) { set({ detail: id }); },
     /** Revanche: dasselbe Spiel mit denselben Spielern */
     rematch(gameId: string) {

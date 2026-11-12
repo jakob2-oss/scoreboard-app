@@ -1,3 +1,5 @@
+import { heroSvg } from '../components/heroSvg';
+import { LiveSeries } from './Events';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { act, useApp } from '../store';
@@ -18,7 +20,8 @@ export function names(list: string[]): string {
 }
 
 export function Home() {
-  const { game, parked, templates } = useApp();
+  const { game, parked, templates, events } = useApp();
+  const live = events.find(e => e.active);
   const running = [game, ...parked].filter((x): x is NonNullable<typeof game> => !!x).sort((a, b) => b.game.updatedAt.localeCompare(a.game.updatedAt));
   const [q, setQ] = useState('');
   const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -34,19 +37,11 @@ export function Home() {
             </button>
           </div>
           <div className="brand">
-            {/* Logo wie das App-Icon: Würfel so hoch wie der zweizeilige Schriftzug, rollt ab und zu leicht */}
-            <div className="lockup">
-              <svg className="brand-die" viewBox="18 16 64 66" aria-hidden="true">
-                <g className="bd-roll"><g transform="rotate(-14 50 52)">
-                  <rect x="25" y="28" width="50" height="50" rx="13" className="die-side" />
-                  <rect x="25" y="23" width="50" height="50" rx="13" className="die-face" />
-                  <circle cx="50" cy="48" r="8" fill="#ef7a5c" />
-                </g></g>
-              </svg>
-              <h1 className="wordmark" aria-label="Oina no?"><span className="w1">OINA</span><span className="w2">NO?</span></h1>
-            </div>
+            <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
+            <h1 className="wordmark" aria-label="Oina no?"><span className="w1">OINA</span><span className="w2">NO?</span></h1>
           </div>
           <div className="home-body">
+            {live && <LiveSeries ev={live} />}
             {running.length > 0 && (
               <div className="group">
                 <div className="eyebrow">{running.length > 1 ? 'Laufende Partien' : 'Laufende Partie'}</div>

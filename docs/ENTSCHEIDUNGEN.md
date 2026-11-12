@@ -103,3 +103,14 @@ Version steigt mit jedem größeren Paket (0.9.0: Tisch-Modus, Chic, Oina no?).
 Das alte Punktezettel-Bild (Nachtlandschaft mit eigenem Oval) ist ersetzt durch den Würfel aus dem App-Icon, darunter
 „OINA NO?“; inzwischen als Logo-Block: Würfel links, so hoch wie die zwei Zeilen „OINA“ (Koralle wie das Würfelauge) und „NO?“ rechts. Der Würfel rollt alle paar Sekunden leicht. Hintergrundformen berühren die
 Oberkante nicht mehr, damit unter der Statusleiste keine harte Kante entsteht.
+
+## 12.11.2026: Serien als eigener Bereich, Abende und Serien gleich
+Spieleabende und Serien (Urlaub, Turnier) sind dasselbe: eine Serie. Eigener Reiter „Serien“ in der unteren Leiste.
+Eine Serie wird gestartet und läuft (`GameEvent.active`), bis sie beendet wird (`endedAt`); höchstens eine läuft.
+Solange sie läuft, ist sie beim Speichern vorgewählt und steht als Karte auf der Startseite (Partien, wer führt).
+Beendet zeigt sie eine Abschlussseite: Otter mit Pokal (Band „GESAMTSIEG“), wer die Serie gewinnt, Auszeichnungen
+(Meiste Siege, Längste Siegesserie, Allrounder, Pechvogel; `seriesAwards` in `stats.ts`). Fortsetzen ist möglich.
+
+## 12.11.2026: Startseite wieder mit dem Zettel-Bild
+Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten. Die Fläche dahinter atmet jetzt langsam
+wie die Hintergrundformen; die harte Kante unter der Statusleiste ist behoben.

@@ -146,6 +146,10 @@ export interface Result extends Base {
 /** Serie oder Spieleabend, z. B. „Südamerika 2026“. Partien verweisen per eventId darauf. */
 export interface GameEvent extends Base {
   name: string; from?: ISODate | null; to?: ISODate | null;
+  /** Läuft gerade: neue Partien gehören automatisch dazu (höchstens eine Serie gleichzeitig) */
+  active?: boolean;
+  /** Beendet am; die Serie bekommt dann ihre Abschlussseite */
+  endedAt?: ISODate | null;
   /** Platzpunkte je Platz (Index 0 = Platz 1); fehlt: Vorschlag 3, 2, 1 */
   points?: number[];
 }

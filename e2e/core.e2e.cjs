@@ -448,7 +448,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite
-  await p.click('#tab-history'); await p.click('#hist-series'); await p.waitForTimeout(200);
+  await p.click('#tab-events'); await p.waitForTimeout(200);
   check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
   await shot('40-series-list');
   await p.click('.series-row'); await p.waitForTimeout(200);
@@ -467,9 +467,22 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Serie: Vorschlag wieder herstellbar', await p.isVisible('.pt-reset'));
   await p.evaluate(() => document.querySelector('#s-series .scroll').scrollTo(0, 9999)); await shot('42-series-points');
   await p.click('.pt-reset');
+  // Serie starten: läuft, steht oben in Serien und auf der Startseite; beenden zeigt die Abschlussseite
+  await p.click('#series-resume'); await p.waitForTimeout(150);
+  check('Serie läuft', (await raw('.ser-badge')) === 'Läuft' && await p.isVisible('#series-end'));
   await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
-  check('zurück in der Serienliste', await p.isVisible('.series-row'));
-  await p.click('#hist-games'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Serien: laufende Serie als Karte', (await raw('#series-live .t b')) === 'Südamerika 2026' && (await raw('#series-live')).includes('führt'));
+  await shot('42b-series-live');
+  await p.click('#tab-home'); await p.waitForTimeout(150);
+  check('Startseite zeigt die laufende Serie', await p.isVisible('#series-live'));
+  await p.click('#series-live'); await p.waitForTimeout(150);
+  await p.click('#series-end'); await p.waitForTimeout(250);
+  check('Serie beendet: Abschluss mit Otter, Sieger und Auszeichnungen', await p.isVisible('.ser-trophy') && (await raw('.ser-champ')).endsWith('die Serie') && (await raw('.ser-awards')).includes('Meiste Siege'));
+  await shot('42c-series-done');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42c-series-done-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
+  check('zurück in der Serienliste', await p.isVisible('.series-row') && !(await p.isVisible('#series-live')));
+  await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
   check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
   await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
   check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');

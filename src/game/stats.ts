@@ -184,3 +184,26 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
   }
   return { shared: games.length, a: side(a, b), b: side(b, a), perGame: [...map.values()].sort((x, y) => y.n - x.n), extras, games };
 }
+
+/** Auszeichnung einer Serie (Abend, Urlaub …): Titel, Wert und wer */
+export interface Award { label: string; value: string; who: string[] }
+
+/** Auszeichnungen einer Serie: meiste Siege, längste Siegesserie, Allrounder, Pechvogel. Partien in beliebiger Reihenfolge. */
+export function seriesAwards(list: HistGame[]): Award[] {
+  const games = [...list].sort((a, b) => a.finishedAt.localeCompare(b.finishedAt)).filter(g => g.results.length > 1);
+  const ids = [...new Set(games.flatMap(g => g.results.map(r => r.playerId)))];
+  const best = (score: (id: string) => number, min: number) => {
+    const v = Math.max(0, ...ids.map(score));
+    return v >= min ? { v, who: ids.filter(id => score(id) === v) } : null;
+  };
+  const out: Award[] = [];
+  const wins = best(id => games.filter(g => isWin(g, id)).length, 1);
+  if (wins) out.push({ label: 'Meiste Siege', value: `${wins.v}×`, who: wins.who });
+  const streak = best(id => { let c = 0, m = 0; for (const g of games) { const r = resultOf(g, id); if (!r) continue; c = r.place === 1 ? c + 1 : 0; m = Math.max(m, c); } return m; }, 2);
+  if (streak) out.push({ label: 'Längste Siegesserie', value: `${streak.v} in Folge`, who: streak.who });
+  const kinds = best(id => new Set(games.filter(g => isWin(g, id)).map(g => g.key)).size, 2);
+  if (kinds) out.push({ label: 'Allrounder', value: `${kinds.v} Spiele`, who: kinds.who });
+  const last = best(id => games.filter(g => { const r = resultOf(g, id); return !!r && r.place === Math.max(...g.results.map(x => x.place)) && r.place > 1; }).length, 1);
+  if (last) out.push({ label: 'Pechvogel', value: `${last.v}× Letzter`, who: last.who });
+  return out;
+}
