@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('15 Einträge (13 Spiele, Freies Spiel, Eigene Vorlage erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 15 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('16 Einträge (13 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 16 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
   await shot('01-home');
 

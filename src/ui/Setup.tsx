@@ -95,6 +95,8 @@ export function Setup() {
     setNote('');
   };
   const look = lookOf(own?.key ?? 'neu', setup.look ?? own?.params?.look);
+  // Neue Vorlage: das Aussehen der Vorschau mitspeichern, damit es nach dem Speichern gleich bleibt
+  const keepLook = () => { if (setupTemplate && !own && !setup.look) a.updateSetup({ look: { color: look.color, pattern: look.pattern } }); };
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
   const result = setup.mode === 'result';
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || (result ? 'Eigene Endwertung' : 'Eigene Vorlage')) : 'Freies Spiel';
@@ -102,8 +104,8 @@ export function Setup() {
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
       dock={<>
         {own && <button className="secondary" id="setup-save" disabled={!valid} onClick={() => { a.saveSetupHome(); setEditing(false); }}>Speichern</button>}
-        {!own && setupTemplate && <button className="secondary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => a.saveNewTemplate()}>Speichern</button>}
-        <button className="primary" id="setup-next" disabled={!valid || (setupTemplate && !own && !setup.name.trim())} onClick={() => a.setupNext()}>Spieler wählen</button>
+        {!own && setupTemplate && <button className="secondary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}
+        <button className="primary" id="setup-next" disabled={!valid || (setupTemplate && !own && !setup.name.trim())} onClick={() => { keepLook(); a.setupNext(); }}>Spieler wählen</button>
       </>}>
         <div className="setup-body">
           <div className="field">
