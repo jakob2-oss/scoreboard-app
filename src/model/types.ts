@@ -45,13 +45,19 @@ export interface Template {
 }
 
 /** Schnelltaste: Wert addieren, setzen oder multiplizieren */
-export interface QuickKey { label: string; op: 'add' | 'set' | 'mul'; v: number }
+/** Schnelltaste. 'rest': Wert so setzen, dass die Runde 0 ergibt (Nullsumme) */
+export interface QuickKey { label: string; op: 'add' | 'set' | 'mul' | 'rest'; v: number }
+
+/** Ein Feld einer zweiteiligen Runde, z. B. Binokel: Meldung und Stiche */
+export interface SplitField { key: string; label: string; /** Mehrzahl für den Ablauf („Meldungen Runde 2“) */ phase: string; quick?: QuickKey[] }
 
 export interface TemplateParams {
   /** Zählschritte für die Schnelltasten, z. B. [1, 5, 10] → −10 −5 −1 +1 +5 +10 */
   steps?: number[];
   /** Eigene Schnelltasten eines Spiels; ersetzt die aus steps abgeleiteten */
   quick?: QuickKey[];
+  /** Zweiteilige Runde: erst alle das erste Feld, dann alle das zweite; Rundenwert ist die Summe */
+  split?: SplitField[];
   /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
   resultOnly?: boolean;
   /** Kategorien-Zettel (Kniffel); jede Kategorie ist eine Zeile */

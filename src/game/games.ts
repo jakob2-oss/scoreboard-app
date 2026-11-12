@@ -96,6 +96,7 @@ GAMES.push(
 const setTo = (label: string, v: number) => ({ label, op: 'set' as const, v });
 const times = (label: string, v: number) => ({ label, op: 'mul' as const, v });
 const mult = (n: number) => [1, 2, 3, 4, 5].map(k => k * n);
+const rest = { label: 'Ausgleich', op: 'rest' as const, v: 0 };
 
 GAMES.push(
   {
@@ -117,21 +118,23 @@ GAMES.push(
   },
   {
     template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
-      params: { zeroSum: true, quick: [add('\u221250', -50), add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+      params: { zeroSum: true, quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
     points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider, Laufende', 'erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
   },
   {
     template: { key: 'doppelkopf', version: 1, name: 'Doppelkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 5 },
-      params: { zeroSum: true, quick: [add('\u22123', -3), add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3)] } },
-    points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
+      params: { zeroSum: true, quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
+    points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Ansagen', 'Re, Kontra und Absagen erhöhen den Wert'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },
   {
     template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'target', value: 1000 }, players: { min: 3, max: 4 },
-      params: { quick: [add('+10', 10), add('+20', 20), add('+40', 40), add('+100', 100), times('×\u22122', -2)] } },
-    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Melden und Stiche', 'zählen zusammen als Rundenpunkte'], ['Gebot verfehlt', 'das Gebot zählt doppelt negativ'], ['Ziel', '1000 Punkte']],
-    acc: '#f09a4a', tint: '#fbe9d6', text: '', example: [['300', 'Gebot'], ['×−2', 'verfehlt'], ['−600', 'Punkte']],
+      params: { split: [
+        { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
+        { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('×\u22122', -2)] }] } },
+    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
+    acc: '#f09a4a', tint: '#fbe9d6', text: '', example: [['80', 'Meldung'], ['+170', 'Stiche'], ['250', 'Punkte']],
     endOptions: [{ label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Bei 1500', end: { type: 'target', value: 1500 } }, { label: 'Offen', end: { type: 'none' } }]
   }
 );

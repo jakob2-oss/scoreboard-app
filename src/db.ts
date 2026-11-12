@@ -38,6 +38,8 @@ export interface Repo {
   /** Abgeschlossene Partien mit Ergebnissen, neueste zuerst */
   loadHistory(): Promise<HistGame[]>;
   saveTemplate(t: Template): Promise<void>;
+  /** Schlüssel gelöschter eigener Vorlagen (damit sie beim Beenden nicht neu entstehen) */
+  loadDeletedTemplateKeys(): Promise<string[]>;
   saveGame(s: GameState): Promise<void>;
   loadEvents(): Promise<GameEvent[]>;
   saveEvent(e: GameEvent): Promise<void>;
@@ -57,6 +59,7 @@ export function createRepo(db: PzDb): Repo {
       return (await db.templates.toArray()).filter(t => !t.deletedAt).sort((a, b) => key(b).localeCompare(key(a)));
     },
     async saveTemplate(t) { await db.templates.put(t); },
+    async loadDeletedTemplateKeys() { return (await db.templates.toArray()).filter(t => t.deletedAt).map(t => t.key); },
     async saveResults(r) { await db.results.bulkPut(r); },
     async loadHistory() {
       const games = (await db.games.where('status').equals('finished').toArray()).filter(g => !g.deletedAt);

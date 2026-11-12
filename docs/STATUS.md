@@ -69,7 +69,11 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
   - Beim Beenden Serie wählen oder neu anlegen (letzte vorbelegt), im Verlauf änderbar
   - Verlauf mit Umschalter Partien und Serien, Statistikseite `src/ui/Series.tsx`
   - Wertung in `stats.ts`: `seriesTable` (Punkte, Schnitt, Quote), `seriesGames`, Platzpunkte anpassbar
+- **Eigene Spiele bearbeiten/löschen, Binokel zweiteilig, Ausgleich** (PR #5)
+  - `params.split` (zwei Felder je Runde, Summe) nutzt dieselbe Mechanik wie Wizard (`fieldsOf`, `bidPhase`, `setField`)
+  - Schnelltaste `op: 'rest'` für Nullsummen-Spiele
+  - `updateFreeTemplate`, `deleteTemplate` (weich), `goneKeys`
 
 ## Tests
-- Unit-Tests: 69 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 108 Prüfungen
+- Unit-Tests: 73 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 115 Prüfungen

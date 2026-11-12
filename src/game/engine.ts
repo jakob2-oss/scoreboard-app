@@ -1,4 +1,4 @@
-import type { Category, Entry, Game, Player, Round, Template } from '../model/types';
+import type { Category, Entry, Game, Player, Round, SplitField, Template } from '../model/types';
 import type { Clock } from '../lib/id';
 import { wizardOrder, wizardRounds, wizardScore } from '../rules/wizard';
 
@@ -66,14 +66,25 @@ function entryOf(s: GameState, roundId: string, playerId: string): Entry | undef
 export const isResultOnly = (s: GameState) => !!s.game.rules.params?.resultOnly;
 export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
 
-export type BidField = 'bid' | 'tricks';
+/** Feldname einer zweiteiligen Runde: Wizard 'bid' und 'tricks', sonst aus der Vorlage (z. B. Binokel 'meld', 'play') */
+export type BidField = string;
 export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
+const WIZARD_FIELDS: SplitField[] = [{ key: 'bid', label: 'Ansage', phase: 'Ansagen' }, { key: 'tricks', label: 'Stiche', phase: 'Stiche' }];
+/** Felder einer zweiteiligen Runde oder null */
+export function fieldsOf(s: GameState): SplitField[] | null {
+  if (isBids(s)) return WIZARD_FIELDS;
+  const f = s.game.rules.params?.split;
+  return f && f.length === 2 ? f : null;
+}
+export const hasFields = (s: GameState) => !!fieldsOf(s);
+/** Zweiteilig, aber nicht Wizard (Rundenwert ist die Summe der Felder) */
+export const isSplit = (s: GameState) => !isBids(s) && hasFields(s);
 
-/** Ansage oder Stiche eines Spielers in einer Runde (Wizard) */
+/** Wert eines Feldes (Ansage, Stiche, Meldung …) eines Spielers in einer Runde */
 export function fieldOf(s: GameState, roundId: string, playerId: string, field: BidField): number | null {
   const e = entryOf(s, roundId, playerId);
   if (!e) return null;
-  const v = (e.values as { bid?: number | null; tricks?: number | null })[field];
+  const v = (e.values as Record<string, unknown>)[field];
   return typeof v === 'number' ? v : null;
 }
 
@@ -81,6 +92,11 @@ export function scoreOf(s: GameState, roundId: string, playerId: string): number
   if (isBids(s)) {
     const b = fieldOf(s, roundId, playerId, 'bid'), t = fieldOf(s, roundId, playerId, 'tricks');
     return b !== null && t !== null ? wizardScore(b, t) : null;
+  }
+  const sp = fieldsOf(s);
+  if (sp) {
+    const a = fieldOf(s, roundId, playerId, sp[0].key), b = fieldOf(s, roundId, playerId, sp[1].key);
+    return b !== null ? (a ?? 0) + b : null;
   }
   const e = entryOf(s, roundId, playerId);
   return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
@@ -181,22 +197,35 @@ export function nextStep(s: GameState): NextStep {
     return open ? { kind: 'round', ref: open.id, roundNo: 0, playerIndex: pi } : { kind: 'result' };
   }
   const i = rounds.findIndex(r => !roundFull(s, r.id));
-  if (i >= 0 && isBids(s)) {
+  if (i >= 0 && hasFields(s)) {
     const r = rounds[i], field = bidPhase(s, r.id);
-    const first = wizardOrder(players.length, i).find(k => fieldOf(s, r.id, players[k].id, field) === null) ?? 0;
+    const first = inputOrder(s, r.id).find(k => fieldOf(s, r.id, players[k].id, field) === null) ?? 0;
     return { kind: 'round', ref: r.id, roundNo: i + 1, playerIndex: first, field };
   }
   if (i >= 0) {
     const r = rounds[i];
     return { kind: 'round', ref: r.id, roundNo: i + 1, playerIndex: players.findIndex(p => scoreOf(s, r.id, p.id) === null) };
   }
-  if (canAddRound(s)) return { kind: 'round', ref: 'new', roundNo: rounds.length + 1, playerIndex: 0 };
+  if (canAddRound(s)) return { kind: 'round', ref: 'new', roundNo: rounds.length + 1, playerIndex: 0, field: fieldsOf(s)?.[0].key };
   return { kind: 'result' };
 }
 
-/** Wizard: erst alle Ansagen, dann alle Stiche */
-export function bidPhase(s: GameState, roundId: string): BidField {
-  return seated(s).every(p => fieldOf(s, roundId, p.id, 'bid') !== null) ? 'tricks' : 'bid';
+/** Zweiteilige Runde: erst alle das erste Feld (Ansagen, Meldungen), dann alle das zweite */
+export function bidPhase(s: GameState, roundId: RoundRef): BidField {
+  const [a, b] = fieldsOf(s) ?? WIZARD_FIELDS;
+  if (roundId === 'new') return a.key;
+  return seated(s).every(p => fieldOf(s, roundId, p.id, a.key) !== null) ? b.key : a.key;
+}
+/** Beschriftung eines Feldes */
+export const fieldLabel = (s: GameState, f: BidField, plural = false) => {
+  const x = (fieldsOf(s) ?? WIZARD_FIELDS).find(y => y.key === f);
+  return x ? (plural ? x.phase : x.label) : f;
+};
+
+/** Wert, mit dem die Runde zusammen 0 ergibt (ohne den eigenen Eintrag) */
+export function restOf(s: GameState, ref: RoundRef, playerId: string): number {
+  if (ref === 'new') return 0;
+  return -seated(s).filter(p => p.id !== playerId).reduce((a, p) => a + (scoreOf(s, ref, p.id) ?? 0), 0);
 }
 
 /** Reihenfolge der Eingabe in einer Runde: bei Wizard beginnt der Spieler links vom Geber. */
@@ -297,7 +326,8 @@ export function removeCategory(s: GameState, roundId: string, clock: Clock): Gam
 export function setField(s: GameState, roundId: string, playerId: string, field: BidField, value: number | null, clock: Clock): GameState {
   const t = clock.now();
   const cards = liveRounds(s).findIndex(r => r.id === roundId) + 1;
-  const v = value === null ? null : Math.min(Math.max(0, value), cards);
+  // Wizard: 0 bis Kartenzahl; sonst frei
+  const v = value === null ? null : isBids(s) ? Math.min(Math.max(0, value), cards) : value;
   const existing = s.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
   const entries: Entry[] = existing
     ? s.entries.map(e => (e !== existing ? e : { ...e, updatedAt: t, values: { ...e.values, [field]: v } }))

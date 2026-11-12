@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, type GameState, type RoundRef
+  currentRoundIndex, fieldsOf, fieldLabel, isSplit, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -155,11 +155,14 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const v = scoreOf(g, r.id, p.id);
                 const active = !!edit && edit.ref === r.id && edit.playerId === p.id;
                 const cls = ['cell', v === null ? 'empty' : '', v !== null && v < 0 ? 'neg' : '', v === 0 ? 'zero' : '', active ? 'active' : ''].join(' ');
-                if (isBids(g)) {
-                  const b = fieldOf(g, r.id, p.id, 'bid'), t2 = fieldOf(g, r.id, p.id, 'tricks'), has = b !== null || t2 !== null;
+                const fs = fieldsOf(g);
+                if (fs) {
+                  const b = fieldOf(g, r.id, p.id, fs[0].key), t2 = fieldOf(g, r.id, p.id, fs[1].key), has = b !== null || t2 !== null;
+                  const wiz = isBids(g);
                   return (
-                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
-                      {v === null ? '' : (v > 0 ? '+' : '') + fmt(v)}{has && <small>{b ?? '–'}/{t2 ?? '–'}</small>}
+                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
+                      {v === null ? (wiz || b === null ? '' : fmt(b)) : (wiz && v > 0 ? '+' : '') + fmt(v)}
+                      {has && (wiz ? <small>{b ?? '–'}/{t2 ?? '–'}</small> : v !== null && <small>{fmt(b ?? 0)} + {fmt(t2!)}</small>)}
                     </td>
                   );
                 }
@@ -209,7 +212,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
-        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field === 'bid' ? `Ansagen Runde ${step.roundNo}` : step.field === 'tricks' ? `Stiche Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
+        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
   );
 }
@@ -231,7 +234,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         <div className="who"><Avatar p={p} big /><div><h3>{p.name}</h3><div className="place">{started && x.place === 1 && <Crown />}{place}</div></div></div>
         <div className="score-pill"><small>Punkte</small><b>{fmt(t[p.id])}</b></div>
       </div>
-      {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : <div className="pp-entry">
+      {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : isSplit(g) ? <SplitEntry g={g} p={p} roundRef={ref} edit={edit} /> : <div className="pp-entry">
         <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : isCats(g) && ref !== 'new' ? <div className="lbl">{liveRounds(g).find(r => r.id === ref)?.cat?.label}</div> : <div className="lbl">Runde {roundNumber(g, ref)}</div>}</div>
         <span className={'val' + (value === null ? ' ph' : '') + (value !== null && value < 0 ? ' neg' : '')}>
           {value === null ? (edit?.buf === '-' ? '−' : '0') : fmt(value)}
@@ -263,8 +266,9 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
   const players = seated(g), i = players.findIndex(p => p.id === edit.playerId);
   const a = act();
   const d = (n: number) => <button key={n} className="key" onClick={() => a.digit(n)}>{n}</button>;
-  const bids = !!edit.field && edit.ref !== 'new';
-  const order = bids ? inputOrder(g, edit.ref as string) : null;
+  const bids = isBids(g) && edit.ref !== 'new';
+  const order = edit.field && edit.ref !== 'new' ? inputOrder(g, edit.ref) : null;
+  const splitKeys = isSplit(g) ? fieldsOf(g)!.find(f => f.key === edit.field)?.quick : undefined;
   const nextP2 = players[order ? order[order.indexOf(i) + 1] : i + 1];
   const cards = bids ? roundNumber(g, edit.ref) : 0;
   return (
@@ -274,9 +278,9 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
           {Array.from({ length: cards + 1 }, (_, k) => <button key={k} onClick={() => a.pick(k)}>{k}</button>)}
         </div>
       ) : <div className="quick">
-        {(isCats(g) ? catKeys(g, edit.ref) : quickKeys(g)).map(k => (
-          <button key={k.label} className={k.op === 'set' && k.label.length > 2 ? 'strike wide' : k.v < 0 ? 'strike' : ''}
-            onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : a.setValue(k.v))}>{k.label}</button>
+        {(isCats(g) ? catKeys(g, edit.ref) : splitKeys ?? quickKeys(g)).map(k => (
+          <button key={k.label} className={(k.op === 'set' || k.op === 'rest') && k.label.length > 2 ? 'strike wide' : k.v < 0 ? 'strike' : ''}
+            onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : k.op === 'rest' ? a.rest() : a.setValue(k.v))}>{k.label}</button>
         ))}
       </div>}
       <div className="keys pp-keys">
@@ -324,6 +328,33 @@ function BidEntry({ g, p, roundId, edit }: { g: GameState; p: Player; roundId: s
       </div>
       <div className="wz-fields">{box('bid', 'Ansage')}{box('tricks', 'Stiche')}</div>
       <div className={'wz-hint' + (wrong ? ' warn' : '')}>{hint}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Zweiteilige Runde (Binokel: Meldung und Stiche)
+
+function SplitEntry({ g, p, roundRef, edit }: { g: GameState; p: Player; roundRef: RoundRef; edit: Edit | null }) {
+  const fs = fieldsOf(g)!;
+  const field = edit?.field ?? fs[0].key;
+  const val = (f: string) => (edit && edit.field === f ? numOf(edit.buf) : roundRef === 'new' ? null : fieldOf(g, roundRef, p.id, f));
+  const a = val(fs[0].key), b = val(fs[1].key);
+  const sum = b === null ? null : (a ?? 0) + b;
+  const box = (f: string, label: string) => {
+    const v = val(f);
+    return (
+      <button className="wz-f" data-field={f} aria-pressed={f === field} onClick={() => { if (edit) act().selectField(f); }}>
+        <small>{label}</small><b className={(v === null ? 'ph' : '') + (v !== null && v < 0 ? ' neg' : '')}>{v === null ? '–' : fmt(v)}</b>
+      </button>
+    );
+  };
+  return (
+    <div className="pp-entry wz">
+      <div className="wz-top">
+        <div><div className="lbl">Runde {roundNumber(g, roundRef)}</div></div>
+        <span className={'wz-sc' + (sum !== null && sum < 0 ? ' neg' : '')}>{sum === null ? '' : fmt(sum)}</span>
+      </div>
+      <div className="wz-fields">{box(fs[0].key, fs[0].label)}{box(fs[1].key, fs[1].label)}</div>
     </div>
   );
 }

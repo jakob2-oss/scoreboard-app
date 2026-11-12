@@ -50,3 +50,13 @@ Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Pa
 Umgesetzt (12.11.): Platzpunkte mit Vorschlag 3, 2, 1, je Serie anpassbar. Wertung umschaltbar: Punkte (Summe),
 Schnitt (Punkte pro Partie, gleicht fehlende Abende aus), Quote (Anteil geschlagener Gegner, gleicht große und kleine Runden aus).
 Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
+
+## F. Feedback vom 12.11. (abends)
+- [x] **Eigene Spiele bearbeiten und löschen.** Antippen öffnet die Seite des Spiels mit Speichern, Spieler wählen, Löschen.
+      Robust: Partien frieren ihre Regeln ein, Änderungen gelten nur für neue Partien; Schlüssel bleibt, Version steigt;
+      Löschen markiert nur, Verlauf und Statistik bleiben; gelöschte Spiele entstehen beim Beenden nicht neu.
+- [x] **Binokel zweiteilig:** erst alle Meldungen, dann alle Stiche; Rundenwert ist die Summe. Leere Meldung zählt 0.
+- [x] **Spiele durchgesehen:** Schafkopf und Doppelkopf mit Taste „Ausgleich“ (ergänzt die Runde zu 0).
+      Wizard, Kniffel, Phase 10 waren schon spielspezifisch; Rommé, Skyjo, Scrabble haben passende Faktoren (×2, ×3).
+- [ ] Ideen für später: Uno „Sieger bekommt die Karten der anderen“ automatisch, Skyjo „Beender verdoppelt“ automatisch,
+      Doppelkopf Re/Kontra als Partei je Runde.

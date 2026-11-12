@@ -19,7 +19,7 @@ function memRepo() {
   const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
   const repo: Repo = {
     saveResults: async r => { results.push(...r); }, loadHistory: async () => [],
-    loadEvents: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined,
+    loadEvents: async () => [], loadDeletedTemplateKeys: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined,
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
     loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
@@ -148,6 +148,35 @@ describe('Spieler', () => {
     const { st, a } = await setup('free', ['A', 'B']);
     a.goHome(); a.pickTemplate(TPL.t500);
     expect(st.get().selected).toEqual(['id1', 'id2']);
+  });
+});
+
+describe('Eigene Spiele bearbeiten und löschen', () => {
+  it('ändert die Vorlage, behält den Schlüssel und lässt laufende Partien unberührt', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openSetup(); a.updateSetup({ name: 'Wohnzimmer' }); a.setupNext();
+    await a.addPlayer('A'); a.start();
+    const key = st.get().templates[0].key;
+    a.goHome(); a.editTemplate(st.get().templates[0]);
+    expect(st.get().setup.name).toBe('Wohnzimmer');
+    a.updateSetup({ name: 'Küche', win: 'low' }); a.saveSetupHome();
+    expect(st.get().templates[0]).toMatchObject({ key, name: 'Küche', win: 'low', version: 2 });
+    expect(st.get().game!.game.rules).toMatchObject({ name: 'Wohnzimmer', win: 'high' });
+    a.editTemplate(st.get().templates[0]); a.saveSetupHome();
+    expect(st.get().templates[0].version).toBe(2);
+  });
+  it('löscht weich und legt die Vorlage beim Beenden nicht neu an', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openSetup(); a.updateSetup({ name: 'Garten' }); a.setupNext();
+    await a.addPlayer('A'); a.start();
+    a.roundGo(); a.add(5); a.next();
+    const key = st.get().templates[0].key;
+    a.goHome(); a.deleteTemplate(key);
+    expect(st.get().templates).toHaveLength(0);
+    expect(mem.templates[0].deletedAt).toBeTruthy();
+    a.finishGame();
+    expect(st.get().templates).toHaveLength(0);
+    expect(st.get().history[0].name).toBe('Garten');
   });
 });
 
@@ -312,6 +341,24 @@ describe('Weitere Spiele', () => {
     a.start();
     return { st, a };
   }
+  it('Binokel: erst alle Meldungen, dann Stiche; Rundenwert ist die Summe', async () => {
+    const { st, a } = await play('binokel');
+    a.roundGo();
+    expect(st.get().edit).toMatchObject({ field: 'meld', playerId: 'id1' });
+    a.add(40); a.next(); a.add(20); a.next(); a.next();
+    expect(st.get().page).toBe(-1);
+    a.roundGo();
+    expect(st.get().edit).toMatchObject({ field: 'play', playerId: 'id1' });
+    a.add(50); a.add(50); a.next(); a.add(20); a.next(); a.digit(3); a.digit(0); a.digit(0); a.mul(-2); a.next();
+    const g = st.get().game!;
+    expect(totals(g)).toEqual({ id1: 140, id2: 40, id3: -600 });
+    expect(liveRounds(g)).toHaveLength(1);
+  });
+  it('Schafkopf: Ausgleich ergänzt die Runde zu 0', async () => {
+    const { st, a } = await play('schafkopf', ['A', 'B', 'C', 'D']);
+    a.roundGo(); a.add(20); a.next(); a.add(20); a.next(); a.add(-20); a.next(); a.rest(); a.next();
+    expect(totals(st.get().game!)).toEqual({ id1: 20, id2: 20, id3: -20, id4: -20 });
+  });
   it('alle festen Spiele haben eindeutige Schlüssel und gültige Spielerzahlen', () => {
     const keys = GAMES.map(g => g.template.key);
     expect(new Set(keys).size).toBe(keys.length);

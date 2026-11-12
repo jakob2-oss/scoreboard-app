@@ -160,9 +160,13 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Gespeicherte Vorlage erneut spielen
   check('„Testspiel“ unter Meine Spiele', (await text('#my-games')).includes('Testspiel'));
   await p.click('#my-games .row >> text=Testspiel');
+  check('eigenes Spiel öffnet seine Seite', (await p.inputValue('#setup-name')) === 'Testspiel' && await p.isVisible('#tpl-delete'));
+  await p.click('#setup-next');
   check('letzte Spieler vorausgewählt', (await raw('#start-btn')) === 'Los mit 3 Spielern');
   await p.click('[aria-label="Zurück"]');
-  check('Zurück führt zur Startseite (Vorlage schon gespeichert)', await p.isVisible('#s-home'));
+  check('Zurück führt zur Seite des Spiels', await p.isVisible('#s-setup'));
+  await p.click('#s-setup [aria-label="Zurück"]');
+  check('dann zur Startseite', await p.isVisible('#s-home'));
 
   // Zweites freies Spiel: feste Rundenzahl, eigene Zählschritte, ohne Vorlage
   await p.click('#new-free');
@@ -267,6 +271,22 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('35-phase10-page');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
+  // Binokel: erst Meldungen, dann Stiche
+  await p.click('[data-game="binokel"]'); await p.click('#quick-start');
+  check('Binokel: Knopf „Meldungen Runde 1“', (await raw('#round-go')).startsWith('Meldungen Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(400);
+  check('Binokel: Feld Meldung aktiv', (await p.getAttribute('section[aria-label="Anna"] .wz-f[data-field="meld"]', 'aria-pressed')) === 'true');
+  await p.click('.pp-panel .quick >> text="+40"'); await shot('44-binokel-meld');
+  await p.click('.pp-keys .go'); await p.waitForTimeout(300);
+  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-keys .go'); await p.waitForTimeout(300);
+  await p.click('.pp-keys .go'); await p.waitForTimeout(400);
+  check('Binokel: weiter mit „Stiche Runde 1“', (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(400);
+  for (const k of ['+50', '+20', '+10']) { await p.click(`.pp-panel .quick >> text="${k}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(300); }
+  check('Binokel: Runde 90, 40, 10', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '190\n40+5040\n20+2010\n0+10'.replace(/\s/g, ''), await text('tbody tr:nth-child(1)'));
+  await shot('45-binokel-ov');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite
@@ -296,7 +316,14 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');
   await p.mouse.click(30, 40); await p.click('#tab-home');
 
-  await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
+  // Eigenes Spiel bearbeiten und löschen
+  await p.click('#my-games .row >> nth=1'); await shot('43-own-game');
+  await p.fill('#setup-name', 'Umbenannt'); await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('eigenes Spiel umbenannt', (await text('#my-games')).includes('Umbenannt') && (await text('.toast')) === 'Gespeichert');
+  await p.click('#my-games .row >> text=Umbenannt'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+  check('eigenes Spiel gelöscht', (await p.locator('#my-games .row').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+
+  await p.click('#my-games .row >> nth=0'); await p.click('#setup-next'); await p.click('#start-btn');
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);
