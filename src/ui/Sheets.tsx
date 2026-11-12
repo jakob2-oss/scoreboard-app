@@ -148,6 +148,9 @@ export function ResultSheet({ g }: { g: GameState }) {
             <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
             <button className="primary" onClick={() => act().finishGame(eventId)}>Speichern</button>
           </div>
+          {started && <button className="again" id="oina-no" onClick={() => act().oinaNo(eventId)}>
+            <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)"><rect x="25" y="28" width="50" height="50" rx="13" fill="#c9bda5"/><rect x="25" y="23" width="50" height="50" rx="13" fill="#f3ead6"/><circle cx="50" cy="48" r="8" fill="#ef7a5c"/></g></svg>
+            Oina no</button>}
         </div>
       </div>
     </>

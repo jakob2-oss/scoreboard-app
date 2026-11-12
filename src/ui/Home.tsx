@@ -36,7 +36,7 @@ export function Home() {
           </div>
           <div className="brand">
             <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
-            <h1 className="wordmark" aria-label="Punktezettel"><span className="w1">PUNKTE</span><span className="w2">ZETTEL</span></h1>
+            <h1 className="wordmark" aria-label="Oina no"><span className="w1">OINA</span><span className="w2">NO</span></h1>
           </div>
           <div className="home-body">
             {running.length > 0 && (
@@ -131,9 +131,9 @@ function Feedback() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const send = async () => {
-    const body = `${text.trim()}\n\nPunktezettel ${__APP_VERSION__}\n${navigator.userAgent}`;
+    const body = `${text.trim()}\n\nOina no ${__APP_VERSION__}\n${navigator.userAgent}`;
     try {
-      if (navigator.share) await navigator.share({ title: 'Feedback zum Punktezettel', text: body });
+      if (navigator.share) await navigator.share({ title: 'Feedback zu Oina no', text: body });
       else { await navigator.clipboard.writeText(body); act().notify('Text kopiert'); }
       setText(''); setOpen(false);
     } catch { /* Teilen abgebrochen */ }

@@ -431,3 +431,9 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .vo-tear { animation: vo-tear 3.2s ease-in infinite; }
 @keyframes vo-tear { 0%, 30% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .vr-drop, .vr-cloud, .vo-tear { animation: none !important; } }
+/* Ergebnisseite: „Oina no“ startet sofort die Revanche */
+.victory .again { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 54px; margin-top: 10px; border: 0; border-radius: var(--r);
+  background: #272748; color: #f3ead6; font-family: var(--f-display); font-weight: 600; font-size: 19px; letter-spacing: .02em; }
+.victory .again svg { width: 30px; height: 30px; }
+:root[data-theme="dark"] .victory .again { background: #3a3970; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .victory .again { background: #3a3970; } }

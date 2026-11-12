@@ -425,8 +425,14 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.dock .primary'); await p.waitForTimeout(400);
   check('Schwimmen: Siegerseite mit Tisch-Statistik', (await raw('.v-stats')).includes('Zuerst raus'));
   await shot('37c-schwimmen-victory');
-  await p.click('.victory .pad-actions .secondary');
+  // Oina no: speichern und gleich noch eine Partie mit denselben Plätzen
+  const swimSeats = await seatNames();
+  await p.click('#oina-no'); await p.waitForTimeout(400);
+  check('Oina no: neue Partie mit denselben Plätzen', await p.isVisible('.tbl') && (await seatNames()).join() === swimSeats.join() && (await raw('#s-game .sub')) === 'Runde 1' && (await p.locator('.tb-seat.out').count()) === 0);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  // Die gespeicherte Schwimmen-Partie wieder aus dem Verlauf nehmen, damit Serien- und Duell-Prüfungen gleich bleiben
+  await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.click('#hist-delete'); await p.click('#hist-delete-yes'); await p.waitForTimeout(300);
+  await p.click('#tab-home');
 
   await p.click('[data-game="schocken"]'); await shot('37d-schocken'); await p.click('#quick-start'); await p.waitForTimeout(300);
   await seat(0).click(); await p.waitForTimeout(150);
@@ -557,7 +563,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game [aria-label="Zurück"]').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
   await p.click('#feedback'); await p.fill('#feedback-text', 'Testnachricht'); await shot('49-feedback'); await p.click('#feedback-send'); await p.waitForTimeout(300);
   check('Feedback: Text kopiert, wenn Teilen fehlt', (await text('.toast')) === 'Text kopiert');
-  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Punktezettel '));
+  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Oina no '));
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

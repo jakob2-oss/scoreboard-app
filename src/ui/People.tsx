@@ -48,7 +48,7 @@ function Backup() {
     const name = `punktezettel-${new Date().toISOString().slice(0, 10)}.json`;
     const f = new File([text], name, { type: 'application/json' });
     try {
-      if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'Punktezettel' });
+      if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'Oina no' });
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
       const t = new Date().toISOString();
       try { localStorage.setItem(LAST, t); } catch { /* egal */ }

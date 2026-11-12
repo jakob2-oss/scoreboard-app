@@ -608,6 +608,20 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
+    /** Oina no: Partie speichern und gleich noch eine mit denselben Regeln, Spielern und Plätzen */
+    oinaNo(eventId: string | null = null) {
+      const g = state.game; if (!g) return;
+      const rules = structuredClone(g.game.rules), order = seated(g), teams = g.game.teams;
+      const person = (id: string) => state.players.find(p => p.id === id);
+      actions.finishGame(eventId);
+      const ng = teams?.length
+        ? createTeamGame(rules, order.map(tp => ({ members: (teams.find(t => t.id === tp.id)?.members ?? []).map(person).filter((p): p is Player => !!p) })), clock)
+        : createGame(rules, order.map(p => person(p.id)).filter((p): p is Player => !!p), clock);
+      if (seated(ng).length < Math.max(1, rules.players.min)) return;
+      set({ game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
+      persist(ng);
+      toast('Oina no! Neue Partie läuft');
+    },
     // ---------- Verlauf und Spieler
     openTab(screen: 'home' | 'history' | 'people') { set({ screen, detail: null, profile: null, series: null }); },
     setHistTab(histTab: 'games' | 'series') { set({ histTab, detail: null }); },
