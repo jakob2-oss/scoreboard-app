@@ -41,3 +41,6 @@ Notizfelder zählen nie zur Summe; ihre Summen je Spieler stehen beim Beenden in
 ## 12.11.2026: Feedback über das Teilen-Menü
 Kein fester Empfänger im Code (Repo ist öffentlich, keine E-Mail-Adresse). Tester schicken den Text über das Teilen-Menü
 ihres Geräts, Version und Gerät hängen automatisch an.
+
+## 12.11.2026: App-Hintergrund bleibt Mitternachtsblau
+Varianten Pflaume, Petrol und Dämmerung wurden gezeigt; Jakob bleibt beim Indigo des Designs „Mitternacht“.
