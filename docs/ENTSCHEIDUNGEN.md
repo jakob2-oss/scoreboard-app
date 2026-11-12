@@ -70,3 +70,8 @@ Die Bar mit Rückwand wird ersetzt durch einen ovalen Kneipentisch von oben auf 
 (Weizen, Pils, Maß, Caña), Rotwein, Oliven, Tapas, Brotkorb und Servietten. Namensschilder sind zum jeweiligen Platz
 gedreht, Phase steht zweimal in der Mitte (für beide Seiten). Plätze liegen in gleichen Abständen auf dem Oval.
 Phasen sind Teil der Vorlage: `params.swim` (Schwimmen nach dem letzten Leben) und `params.halves` (Hälften bis zum Verlieren).
+
+## 12.11.2026: Hintergrund am Tisch
+Statt Terrakotta-Fliesen ein tiefes Mitternachtsblau mit großen, weichen Formen (Indigo, Petrol, Pflaume), die sehr langsam
+treiben, sich drehen und atmen; unter dem Tisch ein warmer Lichtschein. So hebt sich das Holz klar ab.
+Bei „Bewegung reduzieren“ steht alles still.
