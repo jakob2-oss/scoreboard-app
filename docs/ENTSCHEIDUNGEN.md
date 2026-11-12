@@ -93,3 +93,8 @@ leicht gekippt, auf Mitternachtsblau mit weicher Form (Entwurf W1 auf dem Hinter
 Startseite „OINA / NO“ statt „PUNKTE / ZETTEL“. Interne Namen (Datenbank `punktezettel`, Sicherungsformat) bleiben,
 damit vorhandene Daten und Sicherungen weiter funktionieren.
 Auf der Ergebnisseite startet „Oina no“ nach dem Speichern sofort eine neue Partie mit denselben Regeln, Spielern und Plätzen.
+
+## 12.11.2026: Updates auf dem iPhone
+Die App vom Homescreen startet auf iOS oft nicht neu und blieb so auf alten Versionen. Sie fragt jetzt beim
+Zurückkehren in die App und alle 30 Minuten nach einer neuen Version und lädt sie selbst (`registerSW` in `src/main.tsx`).
+Version steigt mit jedem größeren Paket (0.9.0: Tisch-Modus, Chic, Oina no?).
