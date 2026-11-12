@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, type HistGame } from './stats';
+import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -50,7 +50,7 @@ describe('Serien', () => {
     g('4', 'skyjo', 0, [['a', 1, 10], ['d', 2, 30]])
   ];
   it('vergibt Platzpunkte und zählt Siege', () => {
-    const t = seriesTable(list, DEFAULT_POINTS);
+    const t = seriesTable(list, DEFAULT_POINTS, 'points');
     expect(t[0]).toMatchObject({ playerId: 'a', played: 4, wins: 2, points: 3 + 2 + 2 + 3 });
     expect(t.find(r => r.playerId === 'd')!.points).toBe(0 + 2);
   });
@@ -62,7 +62,7 @@ describe('Serien', () => {
     expect(rate.find(r => r.playerId === 'a')!.rate).toBe(Math.round((1 + 0 + 2 + 1) / (1 + 1 + 3 + 1) * 100));
   });
   it('nimmt eigene Platzpunkte und teilt Plätze bei Gleichstand', () => {
-    const t = seriesTable(list, [5, 3, 1, 0]);
+    const t = seriesTable(list, [5, 3, 1, 0], 'points');
     expect(t.find(r => r.playerId === 'b')!.points).toBe(3 + 5 + 1);
     const rows = seriesTable([g('x', 'uno', 0, [['a', 1, 1], ['b', 1, 1]])], DEFAULT_POINTS);
     expect(seriesPlaces(rows, 'points')).toEqual([1, 1]);
@@ -89,5 +89,27 @@ describe('Direktvergleich', () => {
     const mixed = duel([...l, g('4', 'uno', 0, [['a', 1, 1], ['b', 2, 2]])], 'a', 'b');
     expect(mixed.a.avgPts).toBeNull();
     expect(mixed.perGame.map(x => [x.key, x.a, x.b])).toEqual([['kniffel', 1, 1], ['uno', 1, 0]]);
+  });
+});
+
+describe('Leistung', () => {
+  it('misst Siege an der Erwartung 1 ÷ Spieleranzahl', () => {
+    // a: gewinnt eine 4er-Partie und verliert eine 4er-Partie: 1 Sieg bei 0,5 erwarteten = 2
+    const l = [
+      g('1', 'uno', 1, [['a', 1, 10], ['b', 2, 5], ['c', 3, 4], ['d', 4, 3]]),
+      g('2', 'uno', 0, [['b', 1, 10], ['a', 2, 5], ['c', 3, 4], ['d', 4, 3]]),
+      g('3', 'uno', 0, [['c', 1, 1], ['d', 2, 1]])
+    ];
+    expect(performance(l, 'a')).toMatchObject({ played: 2, wins: 1, expected: 0.5, score: 2 });
+    expect(performance(l, 'c').score).toBe(Math.round(1 / 1 * 100) / 100);
+    expect(performance(l, 'd').score).toBe(0);
+  });
+  it('teilt einen geteilten Sieg', () => {
+    const l = [g('1', 'uno', 0, [['a', 1, 1], ['b', 1, 1]])];
+    expect(performance(l, 'a')).toMatchObject({ wins: 0.5, expected: 0.5, score: 1 });
+  });
+  it('ist Standard in der Serientabelle', () => {
+    const l = [g('1', 'uno', 1, [['a', 1, 10], ['b', 2, 5], ['c', 3, 4], ['d', 4, 3]]), g('2', 'uno', 0, [['b', 1, 1], ['a', 2, 1]])];
+    expect(seriesTable(l, DEFAULT_POINTS)[0]).toMatchObject({ playerId: 'a', perf: Math.round(1 / 0.75 * 100) / 100 });
   });
 });

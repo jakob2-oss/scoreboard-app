@@ -30,3 +30,6 @@ export function spanOf(dates: string[]): string {
   if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()) return m(a, true);
   return `${m(a, a.getFullYear() !== b.getFullYear())} bis ${m(b, true)}`;
 }
+
+/** Leistung als Faktor der Erwartung, z. B. „1,6×“ */
+export const fmtPerf = (x: number) => x.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '×';

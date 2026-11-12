@@ -20,6 +20,22 @@ export function filterGames(list: HistGame[], pid: string, time: TimeFilter, key
     .filter(g => !key || g.key === key);
 }
 
+/**
+ * Leistung: tatsächliche Siege im Verhältnis zu den erwarteten.
+ * Erwartung je Partie: 1 ÷ Spieleranzahl. Geteilter Sieg zählt anteilig.
+ * 1 = wie erwartet, 2 = doppelt so oft gewonnen wie erwartet.
+ */
+export function performance(list: HistGame[], pid: string) {
+  let wins = 0, expected = 0, played = 0;
+  for (const g of list) {
+    const r = resultOf(g, pid); if (!r) continue;
+    played++;
+    expected += 1 / g.results.length;
+    if (r.place === 1) wins += 1 / g.results.filter(x => x.place === 1).length;
+  }
+  return { played, wins, expected, score: expected ? Math.round(wins / expected * 100) / 100 : 0 };
+}
+
 export function summary(list: HistGame[], pid: string) {
   const played = list.length, wins = list.filter(g => isWin(g, pid)).length;
   return { played, wins, losses: played - wins, rate: played ? Math.round(wins / played * 100) : 0 };
@@ -71,14 +87,16 @@ export interface SeriesRow {
   avg: number;
   /** Anteil der geschlagenen Gegner in Prozent; gleicht unterschiedlich große Runden aus */
   rate: number;
+  /** Leistung: Siege im Verhältnis zur Erwartung */
+  perf: number;
 }
-export type SeriesSort = 'points' | 'avg' | 'rate';
+export type SeriesSort = 'perf' | 'points' | 'avg' | 'rate';
 
 /** Tabelle einer Serie. Wer nicht dabei war, bekommt für die Partie nichts; Schnitt und Quote gleichen das aus. */
-export function seriesTable(list: HistGame[], pts: number[], sort: SeriesSort = 'points'): SeriesRow[] {
+export function seriesTable(list: HistGame[], pts: number[], sort: SeriesSort = 'perf'): SeriesRow[] {
   const map = new Map<string, SeriesRow & { beaten: number; faced: number }>();
   for (const g of list) for (const r of g.results) {
-    const x = map.get(r.playerId) ?? { playerId: r.playerId, played: 0, wins: 0, points: 0, avg: 0, rate: 0, beaten: 0, faced: 0 };
+    const x = map.get(r.playerId) ?? { playerId: r.playerId, played: 0, wins: 0, points: 0, avg: 0, rate: 0, perf: 0, beaten: 0, faced: 0 };
     x.played++; if (r.place === 1) x.wins++;
     x.points += placePoints(r.place, pts);
     x.beaten += g.results.filter(o => o.place > r.place).length;
@@ -86,7 +104,8 @@ export function seriesTable(list: HistGame[], pts: number[], sort: SeriesSort = 
     map.set(r.playerId, x);
   }
   const rows = [...map.values()].map(({ beaten, faced, ...x }) => ({
-    ...x, avg: Math.round(x.points / x.played * 10) / 10, rate: faced ? Math.round(beaten / faced * 100) : 0
+    ...x, avg: Math.round(x.points / x.played * 10) / 10, rate: faced ? Math.round(beaten / faced * 100) : 0,
+    perf: performance(list, x.playerId).score
   }));
   const val = (r: SeriesRow) => r[sort];
   return rows.sort((a, b) => val(b) - val(a) || b.points - a.points || b.played - a.played);
@@ -114,7 +133,7 @@ export function seriesGames(list: HistGame[]) {
 
 // ---------------------------------------------------------------- Direktvergleich zweier Spieler
 
-export interface DuelSide { wins: number; ahead: number; avgPlace: number; avgPts: number | null; best: number | null }
+export interface DuelSide { perf: number; wins: number; ahead: number; avgPlace: number; avgPts: number | null; best: number | null }
 export interface Duel {
   shared: number;
   a: DuelSide; b: DuelSide;
@@ -133,6 +152,7 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
     const rs = games.map(g => resultOf(g, id)!);
     const sameGame = new Set(games.map(g => g.key)).size === 1;
     return {
+      perf: performance(games, id).score,
       wins: rs.filter(r => r.place === 1).length,
       ahead: games.filter(g => resultOf(g, id)!.place < resultOf(g, other)!.place).length,
       avgPlace: rs.length ? Math.round(rs.reduce((x, r) => x + r.place, 0) / rs.length * 10) / 10 : 0,

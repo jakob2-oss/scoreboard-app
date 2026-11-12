@@ -1,13 +1,13 @@
 import { act, useApp } from '../store';
 import { useState } from 'react';
-import { bidHits, byGame, duel, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
+import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
 import { gameDef } from '../game/games';
 import type { Player } from '../model/types';
 import { fmt, onColor } from '../lib/color';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
 import { Crown, IconBack } from './icons';
-import { dateShort, iconFor, playerOf } from './lookup';
+import { dateShort, fmtPerf, iconFor, playerOf } from './lookup';
 
 const css = (v: Record<string, string>) => v as React.CSSProperties;
 const same = (a: TimeFilter, b: TimeFilter) => JSON.stringify(a) === JSON.stringify(b);
@@ -50,9 +50,9 @@ export function Profile() {
               {keys.map(([k, n]) => chip(n, profile.key === k, () => a.setProfile({ key: k }), k))}
             </div>
             <div className="tiles">
-              <div className="tile accent" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
+              <div className="tile accent" id="perf-tile" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Leistung</small><b>{fmtPerf(performance(list, profile.id).score)}</b><span>der Erwartung</span></div>
+              <div className="tile"><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
               <div className="tile"><small>Siegquote</small><b>{s.rate}%</b><span>&nbsp;</span></div>
-              <div className="tile"><small>Partien</small><b>{s.played}</b><span>&nbsp;</span></div>
             </div>
             <div className="wl">
               <div className="wl-bar"><i style={{ flex: s.wins || 0.0001, background: me.color }} /><i style={{ flex: s.losses || 0.0001 }} /></div>
@@ -61,13 +61,13 @@ export function Profile() {
             {profile.key === null && byGame(list, profile.id).length > 0 && (
               <div className="group"><div className="eyebrow">Stärken</div>
                 <div className="list">
-                  {byGame(list, profile.id).map(x => {
-                    const ic = iconFor(x.key), rate = Math.round(x.wins / x.played * 100);
+                  {byGame(list, profile.id).sort((x, y) => performance(list.filter(g => g.key === y.key), profile.id).score - performance(list.filter(g => g.key === x.key), profile.id).score).map(x => {
+                    const ic = iconFor(x.key), pf = performance(list.filter(g => g.key === x.key), profile.id).score;
                     return (
                       <button key={x.key} className="row" onClick={() => a.setProfile({ key: x.key })}>
                         <GameIcon icon={ic.icon} tint={ic.tint} />
                         <span className="t"><b>{x.name}</b><small>{x.wins} von {x.played} gewonnen</small></span>
-                        <span className="mini-bar"><i style={{ width: rate + '%', background: me.color }} /></span><span className="mini-pct">{rate}%</span>
+                        <span className="mini-bar"><i style={{ width: Math.min(pf / 2, 1) * 100 + '%', background: me.color }} /></span><span className="mini-pct">{fmtPerf(pf)}</span>
                       </button>
                     );
                   })}
@@ -168,6 +168,7 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
         <button id="duel-count" aria-pressed={!rate} onClick={() => setRate(false)}>Anzahl</button>
         <button id="duel-rate" aria-pressed={rate} onClick={() => setRate(true)}>Quote</button>
       </div>
+      {row('Leistung', d.a.perf, d.b.perf, 'high', fmtPerf)}
       {row(rate ? 'Siegquote' : 'Siege', ...cnt(d.a.wins, d.b.wins, d.shared), 'high', unit)}
       {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', ...cnt(d.a.ahead, d.b.ahead, d.shared), 'high', unit)}
       {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}

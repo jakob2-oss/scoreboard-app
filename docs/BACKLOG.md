@@ -66,3 +66,5 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] **Kniffel ohne Zahlenfeld:** je Feld nur die passenden Werte (Einser 1 bis 5, Pasch 5 bis 30, feste Werte),
       dazu Streichen; gestrichene Felder grau mit Strich. Chance und eigene Kategorien ohne Vorgabe behalten das Zahlenfeld.
       Feld im Überblick antippen öffnet die Auswahl und führt danach zurück.
+- [x] **Leistung als Hauptkennzahl:** Siege im Verhältnis zur Erwartung (je Partie 1 ÷ Spieleranzahl, geteilter Sieg anteilig).
+      1,0× = wie erwartet. Erste Kachel im Profil, Stärken je Spiel, Spielerliste, Standard-Wertung der Serien, erste Zeile im Duell.

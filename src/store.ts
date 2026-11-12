@@ -427,7 +427,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ history: state.history.map(h => (h.id === gameId ? { ...h, eventId: ev?.id ?? null, occasion: ev?.name ?? null } : h)) });
       repo.setGameEvent(gameId, ev?.id ?? null, clock.now()).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
-    openSeries(id: string) { set({ screen: 'series', series: { id, sort: 'points' }, detail: null }); },
+    openSeries(id: string) { set({ screen: 'series', series: { id, sort: 'perf' }, detail: null }); },
     setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
     closeSeries() { set({ screen: 'history', histTab: 'series', series: null }); },
     openDetail(id: string | null) { set({ detail: id }); },

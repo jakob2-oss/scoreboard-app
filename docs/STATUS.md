@@ -77,7 +77,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt
   Kniffel speichert beim Beenden `extra.kniffel` und `extra.bonus`
 - **Kniffel-Auswahl** (PR #6): `catChoices()` in `engine.ts`, `CatPicker` in `Game.tsx`, `Category.range`
 - Hinweis: Serien, eigene Spiele bearbeiten, Binokel zweiteilig und Duell kamen nach dem Merge von PR #5 und gehen mit PR #6 live.
+- **Leistung** (PR #6): `performance()` in `stats.ts`, Anzeige mit `fmtPerf` („1,6×“)
 
 ## Tests
-- Unit-Tests: 74 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 77 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen

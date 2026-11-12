@@ -3,11 +3,11 @@ import { DEFAULT_POINTS, seriesGames, seriesPlaces, seriesTable, type SeriesRow,
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
 import { Crown, IconBack } from './icons';
-import { dateShort, iconFor, playerOf, spanOf } from './lookup';
+import { dateShort, fmtPerf, iconFor, playerOf, spanOf } from './lookup';
 
 const dec = (n: number) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
 const VALUE: Record<SeriesSort, (r: SeriesRow) => string> = {
-  points: r => String(r.points), avg: r => dec(r.avg), rate: r => r.rate + ' %'
+  perf: r => fmtPerf(r.perf), points: r => String(r.points), avg: r => dec(r.avg), rate: r => r.rate + ' %'
 };
 
 /** Statistikseite einer Serie: Tabelle, Spiele, Partien und die Platzpunkte */
@@ -40,6 +40,7 @@ export function Series() {
           </div>
           {rows.length > 0 && <>
             <div className="seg" role="group" aria-label="Wertung">
+              <button id="sort-perf" aria-pressed={series.sort === 'perf'} onClick={() => a.setSeriesSort('perf')}>Leistung</button>
               <button id="sort-points" aria-pressed={series.sort === 'points'} onClick={() => a.setSeriesSort('points')}>Punkte</button>
               <button id="sort-avg" aria-pressed={series.sort === 'avg'} onClick={() => a.setSeriesSort('avg')}>Schnitt</button>
               <button id="sort-rate" aria-pressed={series.sort === 'rate'} onClick={() => a.setSeriesSort('rate')}>Quote</button>

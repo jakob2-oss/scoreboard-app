@@ -143,11 +143,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
   await shot('30-history');
   await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
-  check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
+  check('Profil von Ben: Leistung 3,0× (ein Sieg zu dritt)', (await text('.pf-hero h1')) === 'Ben' && (await text('#perf-tile b')) === '3,0×', await text('#perf-tile b'));
   await p.click('.vs-p >> nth=0');
   check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
-  check('Direktvergleich: Balken „Siege“ und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Siege' && await p.isVisible('.rematch'));
-  await shot('31-profile');
+  check('Direktvergleich: Leistung und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung' && await p.isVisible('.rematch'));
+  await shot('31-profile'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('31-profile-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('[aria-label="Zurück"]');
   check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
   await shot('32-people');
@@ -313,6 +313,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const nSer = Number((await text('.ser-hero small')).split(' ')[0]);
   check('Serie: Partien von späteren Abschlüssen vorbelegt', nSer >= 2, await text('.ser-hero small'));
   check('Serie: Tabelle mit drei Spielern', (await p.locator('.ser-table .prow').count()) === 3);
+  check('Serie: Leistung ist Standard', (await p.getAttribute('#sort-perf', 'aria-pressed')) === 'true' && (await text('.ser-table .prow .pts >> nth=0')).endsWith('×'));
   await shot('41-series');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('#sort-rate'); await p.waitForTimeout(100);
@@ -335,9 +336,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tab-people'); await p.click('.person-row >> text=Anna'); await p.click('.vs-p >> text=Ben'); await p.waitForTimeout(200);
   await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('46-duel');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('46-duel-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  check('Duell: Leistung als erste Zeile', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung');
   check('Duell: mehrere Spiele als eigene Zeilen', (await p.locator('.duel-row').count()) >= 4, String(await p.locator('.duel-row').count()));
   await p.click('#duel-rate'); await p.waitForTimeout(100);
-  check('Duell: Quote in Prozent', (await raw('.duel-row .eyebrow >> nth=0')) === 'Siegquote' && (await text('.duel-line b >> nth=0')).endsWith('%'));
+  check('Duell: Quote in Prozent', (await raw('.duel-row .eyebrow >> nth=1')) === 'Siegquote' && (await text('.duel-row >> nth=1')).includes('%'));
   await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('47-duel-rate');
   await p.click('.rematch >> nth=0'); await p.waitForTimeout(200);
   check('Revanche öffnet die Spielerauswahl mit denselben Spielern', await p.isVisible('#start-btn') && (await raw('#start-btn')).includes('3'));
