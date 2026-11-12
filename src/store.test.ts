@@ -319,6 +319,27 @@ describe('Freies Spiel', () => {
     expect(st.get().templates[0]).toMatchObject({ win: 'high', params: { resultOnly: true, unit: 'Punkte' } });
     expect(st.get().templates[0].params?.quick).toBeUndefined();
   });
+  it('Festes Spiel anpassen: Kopie mit eigenem Schlüssel, Regeln und Schnelltasten bleiben, Original unverändert', async () => {
+    const { st, a, mem } = await fresh();
+    const romme = GAMES.find(g => g.template.key === 'romme')!.template;
+    a.customizeGame(romme);
+    const c = st.get().templates[0];
+    expect(c).toMatchObject({ name: 'Rommé eigen', custom: true, scoring: 'rounds', win: 'low', params: { base: 'romme' } });
+    expect(c.key).not.toBe('romme');
+    expect(st.get().setupEditing).toBe(true);
+    a.updateSetup({ name: 'Rommé bei Oma', notes: ['Joker'] }); a.saveSetupHome();
+    const saved = mem.templates.find(t => t.key === c.key)!;
+    expect(saved).toMatchObject({ name: 'Rommé bei Oma', params: { base: 'romme', notes: ['Joker'] } });
+    expect(saved.params?.quick?.[0]).toMatchObject({ label: 'Raus' });
+    expect(romme.name).toBe('Rommé');
+  });
+  it('Kopie von Siedler behält Einheit und Schnelltasten', async () => {
+    const { st, a } = await fresh();
+    a.customizeGame(GAMES.find(g => g.template.key === 'siedler')!.template);
+    a.updateSetup({ notes: ['Häfen'] }); a.saveSetupHome();
+    expect(st.get().templates[0].params).toMatchObject({ resultOnly: true, unit: 'Siegpunkte', notes: ['Häfen'] });
+    expect(st.get().templates[0].params?.quick?.length).toBeGreaterThan(0);
+  });
   it('Eigene Vorlage erstellen speichert sofort, mit Notizfeldern', async () => {
     const { st, a, mem } = await fresh();
     a.openSetup(true); a.updateSetup({ name: 'Carcassonne', notes: ['Wiesen'] }); a.setupNext();

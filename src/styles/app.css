@@ -239,3 +239,7 @@ td small.nt { display: block; font-size: 10.5px; font-weight: 600; color: var(--
 .feedback-row { background: var(--surface); border-radius: var(--r); box-shadow: var(--stick); margin-top: 6px; }
 .fb-text { width: 100%; min-height: 120px; border-radius: 16px; background: var(--fill); border: 0; padding: 12px 14px; font: inherit; font-size: 16px; color: inherit; resize: vertical; margin-bottom: 12px; }
 .pf-del { margin-top: 6px; }
+
+/* ---------- Spielsuche ---------- */
+.game-search { width: 100%; min-height: 46px; border-radius: 999px; border: 0; background: var(--surface); box-shadow: var(--stick); padding: 0 18px; font: inherit; font-size: 16px; color: inherit; margin-bottom: 4px; }
+.game-search::placeholder { color: var(--muted); }

@@ -1,3 +1,4 @@
+import { GAMES } from '../game/games';
 import { pastel } from '../lib/color';
 // Illustrationen für Spielseiten (flach, geometrisch, eigene Zeichnungen). Siehe docs/DESIGN.md.
 const st = (x: number, y: number, r: number) =>
@@ -304,4 +305,11 @@ export function customArt(key: string, name: string, look?: { color: string; pat
     ${[0, 1, 2, 3].map(r => `<rect x="-42" y="${-28 + r * 22}" width="${[60, 72, 48, 66][r]}" height="7" rx="3.5" fill="${mix(color, .55)}"/><circle cx="${36}" cy="${-24 + r * 22}" r="5" fill="${DOTS[(hash(key) + r) % DOTS.length]}"/>`).join('')}</g>`;
   const scene = sky(mix(color, .72), mix(color, .82), mix(color, .5), '#f5d58c', pattern) + sheet + '</g></svg>';
   return { icon: icon.replace(/#[0-9a-f]{6}/gi, m => pastel(m)), scene, tint: mix(color, .7) };
+}
+
+/** Bild eines eigenen Spiels: Kopien fester Spiele behalten das Originalbild, bis Farbe oder Muster gewählt werden */
+export function ownArt(key: string, name: string, params?: { look?: { color: string; pattern: string }; base?: string }) {
+  const base = params?.base, def = base ? GAMES.find(g => g.template.key === base) : undefined;
+  if (base && !params?.look && GAME_ART[base] && def) return { icon: GAME_ART[base].icon, scene: GAME_ART[base].scene, tint: def.tint };
+  return customArt(key, name, params?.look);
 }

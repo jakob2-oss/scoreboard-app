@@ -84,7 +84,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 - **Teil D** (PR #9): Endwertung, Notizfelder (`params.notes`, Werte als `n:<Feld>` im Eintrag), eigene Spiele mit
   `customArt()` (Icon, Szene, `params.look`), Spielseite mit Ansicht und Bearbeiten (`Setup.tsx`), „Eigene Vorlage erstellen“
 - **Spieler löschen, Feedback** (PR #10): `deletePlayer` (weich, `formerPlayers` für Namen im Verlauf), Feedback über `navigator.share`
+- **Eigene Endwertung, Spielsuche, Kopie fester Spiele** (PR #11): `copyAsOwn`, `customizeGame`, `ownArt` (Originalbild bis eigene Farbe gewählt)
 
 ## Tests
-- Unit-Tests: 87 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 90 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen

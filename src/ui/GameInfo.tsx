@@ -41,6 +41,9 @@ export function GameInfo() {
           </div>
         </div>
       )}
+      <div className="menu-list own-actions">
+        <button id="customize" onClick={() => a.customizeGame(def.template)}>Als eigenes Spiel anpassen</button>
+      </div>
     </GamePage>
   );
 }

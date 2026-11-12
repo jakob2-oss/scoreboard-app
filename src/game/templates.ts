@@ -39,6 +39,13 @@ export function fallbackName(date = new Date()): string {
 }
 
 /** Aus den Einstellungen des freien Spiels eine eigene Vorlage machen (eigener Schlüssel, eigene Statistik). */
+/** Festes Spiel als eigenes Spiel kopieren (eigener Schlüssel, Regeln und Bild des Originals) */
+export function copyAsOwn(t: Template, clock: Clock): Template {
+  const now = clock.now();
+  return { ...structuredClone(t), key: clock.uid(), version: 1, name: `${t.name} eigen`, custom: true,
+    params: { ...structuredClone(t.params ?? {}), base: t.key }, createdAt: now, updatedAt: now, lastUsedAt: null };
+}
+
 export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
   const t = clock.now();
   const steps = [...new Set(cfg.steps)].filter(n => n > 0).sort((a, b) => a - b).slice(0, MAX_STEPS);
@@ -54,7 +61,11 @@ export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
 /** Freies Spiel bearbeiten: Einstellungen übernehmen, Schlüssel bleibt (Statistik bleibt zusammen), Version steigt bei Änderung */
 export function updateFreeTemplate(t: Template, cfg: FreeConfig, clock: Clock): Template {
   const steps = [...new Set(cfg.steps)].filter(n => n > 0).sort((a, b) => a - b).slice(0, MAX_STEPS);
-  const m = modeRules(cfg);
+  // Art und Wertung nur neu setzen, wenn sie sich ändern; sonst bleiben Schnelltasten und Einheit
+  // (z. B. bei Kopien fester Spiele wie Siedler oder Rommé) erhalten
+  const cur = configOf(t);
+  const m = cur.mode !== cfg.mode || cur.unit !== cfg.unit ? modeRules(cfg)
+    : { win: cfg.mode === 'result' && cfg.unit === 'Platz' ? t.win : cfg.win, end: cfg.mode === 'result' ? t.end : cfg.end, params: {} };
   const params = clean({ ...t.params, steps: steps.length ? steps : [...DEFAULT_STEPS], notes: [...cfg.notes], ...(cfg.look ? { look: cfg.look } : {}), ...m.params });
   const next: Template = { ...t, name: cfg.name.trim() || t.name, win: m.win, end: m.end, params };
   const same = JSON.stringify([next.name, next.win, next.end, next.params]) === JSON.stringify([t.name, t.win, t.end, t.params]);

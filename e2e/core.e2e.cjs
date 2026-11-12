@@ -363,6 +363,25 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('43b-own-game-saved');
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
   check('eigenes Spiel gelöscht', (await p.locator('#my-games .row[data-own]').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+  // Spielsuche
+  await p.fill('#game-search', 'romm'); await p.waitForTimeout(100);
+  check('Suche findet Rommé', (await p.locator('#search-results .row.tpl').count()) === 1 && (await text('#search-results')).includes('Rommé'));
+  await p.fill('#game-search', 'xyz');
+  check('Suche ohne Treffer', (await text('#search-results')).includes('Keine Treffer'));
+  await p.fill('#game-search', 'Testspiel');
+  check('Suche findet eigene Spiele', (await p.locator('#search-results .row[data-own]').count()) === 1);
+  await shot('45b-search');
+  await p.fill('#game-search', '');
+  // Festes Spiel als eigenes Spiel anpassen
+  await p.click('[data-game="skyjo"]'); await p.click('#customize'); await p.waitForTimeout(200);
+  check('Anpassen öffnet die Bearbeitung der Kopie', (await p.inputValue('#setup-name')) === 'Skyjo eigen' && (await text('.toast')) === 'Als eigenes Spiel gespeichert');
+  await p.fill('#setup-name', 'Skyjo Hausregel'); await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('Kopie behält Bild und Regeln des Originals', (await text('#s-setup .rule-points')).includes('Kartenwerte'));
+  await shot('45c-copy');
+  await p.click('#s-setup [aria-label="Zurück"]');
+  check('Kopie unter Meine Spiele, Original unverändert', (await raw('#my-games')).includes('Skyjo Hausregel') && (await raw('[data-game="skyjo"]')).includes('Skyjo'));
+  await p.click('.row[data-own] >> text=Skyjo Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+
   // Eigene Endwertung erstellen
   await p.click('#new-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
   check('Endwertung: ohne Spielende und Zählschritte, Gewinner nicht wählbar', !(await p.isVisible('#setup-end')) && !(await p.isVisible('.step-chips')) && !(await raw('#s-setup')).includes('Wer gewinnt'));

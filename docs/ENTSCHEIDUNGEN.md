@@ -45,7 +45,6 @@ ihres Geräts, Version und Gerät hängen automatisch an.
 ## 12.11.2026: App-Hintergrund bleibt Mitternachtsblau
 Varianten Pflaume, Petrol und Dämmerung wurden gezeigt; Jakob bleibt beim Indigo des Designs „Mitternacht“.
 
-## 12.11.2026: Gestaltung frei wählbar, mit Rechten erst bei Accounts
-Bild und Farbe sollen für jede Spielseite und jedes Spielerprofil anpassbar sein. Offline darf man alles anpassen.
-Mit Accounts (Sync, Phase 4) nur noch eigene Spiele, das eigene Profil und Offline-Spieler. Umsetzung am Ende vorgemerkt;
-Datenmodell: Aussehen als eigenes Feld (`look`) an Vorlage bzw. Spieler, damit es später an Besitzrechte gebunden werden kann.
+## 12.11.2026: Gestaltung nur bei Spielerprofilen, feste Spiele bleiben
+Profilbild und Farbe der Spieler werden anpassbar (offline alle, später mit Accounts nur das eigene Profil und Offline-Spieler).
+Feste Spielseiten bleiben gleich; wer ein festes Spiel anpassen will, speichert es als eigenes Spiel (Kopie mit `params.base`).
