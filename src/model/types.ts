@@ -64,6 +64,10 @@ export interface TemplateParams {
   lives?: number;
   /** Tisch-Modus: Deckel in der Mitte (Schocken) */
   tokens?: number;
+  /** Tisch-Modus, Phasen: nach dem letzten Leben schwimmen (Standard ja) */
+  swim?: boolean;
+  /** Tisch-Modus, Phasen: so viele verlorene Hälften verlieren die Partie (Standard 2) */
+  halves?: number;
   /** Eigene Schnelltasten (Erstellungsmodus), zusätzlich zu den Zählschritten */
   keys?: QuickKey[];
   /** Notizfelder neben den Punkten (z. B. „Längste Straße“), zählen nicht zur Summe */

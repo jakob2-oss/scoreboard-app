@@ -358,6 +358,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.victory .pad-actions .secondary');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
+  // Eigenes Tisch-Spiel mit Phasen anlegen und bearbeiten
+  await p.click('#new-own'); await p.fill('#setup-name', 'Meiern'); await p.click('#kind-tokens'); await p.click('#phase-halves-1');
+  check('Erstellen: Phasen für Deckel', (await p.getAttribute('#phase-halves-1', 'aria-pressed')) === 'true' && !(await p.isVisible('#phase-swim')));
+  await p.click('#kind-lives');
+  check('Erstellen: Schwimmen als Phase schaltbar', await p.isChecked('#phase-swim'));
+  await p.click('#phase-swim'); await shot('37g-setup-phasen'); await p.click('#kind-tokens'); await p.click('#setup-save'); await p.waitForTimeout(300);
+  await p.goto(URL); await p.waitForSelector('.wordmark');
+  await p.click('.row[data-own] >> text=Meiern'); await p.waitForTimeout(200);
+  check('Eigenes Tisch-Spiel: Phasen in den Regeln', (await raw('.rule-points')).includes('wer die erste Hälfte verliert'), await raw('.rule-points'));
+  await p.click('#tpl-edit'); await p.waitForTimeout(200);
+  await p.click('#phase-halves-3'); await p.click('#setup-save'); await p.waitForTimeout(300);
+  check('Eigenes Tisch-Spiel: Phasen bearbeitet', (await raw('.rule-points')).includes('wer 3 Hälften verliert'), await raw('.rule-points'));
+  await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);
+  check('Eigenes Tisch-Spiel wieder gelöscht', !(await raw('#s-home')).includes('Meiern'));
+
   // Tisch-Modus: Schwimmen (Leben) und Schocken (Deckel)
   await p.click('[data-game="schwimmen"]'); await shot('37a-schwimmen'); await p.click('#quick-start'); await p.waitForTimeout(300);
   const seat = i => p.locator('.tb-seat').nth(i);

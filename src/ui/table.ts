@@ -1,97 +1,130 @@
 /**
- * Tisch-Modus als Bar: dunkle Rückwand mit Spiegel und Flaschenregal, Neon, Messinglampen,
- * Schachbrettboden und ein runder Spieltisch mit grünem Filz. Flach und geometrisch, Licht nur über
- * halbdurchsichtige Flächen (siehe docs/DESIGN.md). Die Zeichnung reicht über den viewBox hinaus,
- * damit sie jede Bildschirmhöhe füllt.
+ * Tisch-Modus: Bartisch von oben, wie in einer Kneipe oder Tapas-Bar. Das Handy liegt in der Mitte,
+ * jeder sieht von seinem Platz aus Leben, Deckel und die laufende Phase.
+ * Flach und geometrisch, Licht und Schatten nur über halbdurchsichtige Flächen (siehe docs/DESIGN.md).
+ * Der Boden reicht über den viewBox hinaus, damit er jede Bildschirmgröße füllt.
  */
 export const VIEW = { w: 390, h: 640 };
-/** Mittelpunkt und Radien des Tisches; Sitzplätze liegen auf einer größeren Ellipse */
-export const TABLE = { cx: 195, cy: 390, rx: 132, ry: 120 };
-export const SEATS = { rx: 156, ry: 172 };
-/** Ellipse, auf der Leben bzw. Deckel vor jedem Spieler liegen */
-export const FRONT = { rx: 84, ry: 84 };
-const WALL = 214;
+/** Ovaler Tisch; Sitzplätze am Rand, davor liegen Leben bzw. Deckel */
+export const TABLE = { cx: 195, cy: 320, rx: 178, ry: 296 };
+export const SEATS = { rx: 134, ry: 248 };
+export const FRONT = { rx: 64, ry: 168 };
+/** Zwischen den Plätzen stehen Getränke und Teller */
+const PROPS = { rx: 64, ry: 146 };
 
 export const C = {
-  wall: '#17282a', wall2: '#1d3134', panel: '#2a1d19', panel2: '#33241e', brass: '#c9a45c', brass2: '#9c7a3c',
-  mirror: '#22393b', shelf: '#3a2820', ink: '#121018', cream: '#efe4cf', light: '#ffd58a',
-  felt: '#1f4d42', felt2: '#245a4d', rim: '#3a2219', rim2: '#4a2c20',
-  tile1: '#1a1820', tile2: '#2a2631', neonA: '#ff8fb1', neonB: '#ffc874'
+  tile1: '#4a2e25', tile2: '#55352a', grout: '#2f1d17',
+  wood1: '#7a4e33', wood2: '#71472e', grain: '#8a5d40', rim: '#4a2c1f', rim2: '#5a3624',
+  cream: '#f3ead6', brass: '#c9a45c', ink: '#1c1611', light: '#ffd58a'
 };
 
-// ---------------------------------------------------------------- Rückwand mit Bar
-function bottle(x: number, y: number, h: number, w: number, c: string, k: number): string {
-  const neck = w * .34, sh = h * .42;
-  return `<g transform="translate(${x} ${y})">
-    <path d="M${-w / 2} 0v${-h + sh}q0-${sh * .35} ${w / 2 - neck / 2}-${sh * .5}v-${sh * .5}h${neck}v${sh * .5}q${w / 2 - neck / 2} ${sh * .15} ${w / 2 - neck / 2} ${sh * .5}v${h - sh}z" fill="${c}"/>
-    <rect x="${-neck / 2}" y="${-h - 3}" width="${neck}" height="5" rx="1" fill="${k % 2 ? C.brass2 : C.ink}"/>
-    <rect x="${-w / 2 + 2}" y="${-h * .48}" width="${w - 4}" height="${h * .22}" fill="${C.cream}" opacity=".82"/>
-    <rect x="${-w / 2 + 2.5}" y="${-h + sh + 2}" width="2.2" height="${h - sh - 4}" rx="1.1" fill="#fff" opacity=".22"/></g>`;
+// Gleich lange Abstände auf dem Oval (nicht gleiche Winkel), sonst drängen sich oben und unten die Plätze
+const ARC: [number, number][] = (() => {
+  const out: [number, number][] = []; let len = 0, px = 0, py = 0;
+  for (let k = 0; k <= 720; k++) {
+    const t = Math.PI / 2 + (k / 720) * Math.PI * 2, x = SEATS.rx * Math.cos(t), y = SEATS.ry * Math.sin(t);
+    if (k) len += Math.hypot(x - px, y - py);
+    out.push([t, len]); px = x; py = y;
+  }
+  return out;
+})();
+/** Parameter-Winkel für Platz i von n (auch halbe Plätze für Dinge dazwischen), unten beginnend im Uhrzeigersinn */
+export function seatAngle(i: number, n: number): number {
+  const total = ARC[ARC.length - 1][1], want = (((i / n) % 1) + 1) % 1 * total;
+  const k = ARC.findIndex(([, l]) => l >= want);
+  return ARC[Math.max(0, k)][0];
 }
-const BOTTLES = ['#b5732e', '#3f6b48', '#6f2632', '#8fa8a2', '#c98a3c', '#2f4f6e', '#7a5a2e', '#a23e48'];
+/** Drehung in Grad, damit etwas am Platz mit Winkel t zum Spieler zeigt (Normale des Ovals) */
+export const facing = (t: number) => (Math.atan2(Math.sin(t) / SEATS.ry, Math.cos(t) / SEATS.rx) * 180) / Math.PI - 90;
+const shadow = (r: number, ry = r) => `<ellipse cx="3" cy="5" rx="${r}" ry="${ry}" fill="#000" opacity=".3"/>`;
 
-function backBar(kind: 'lives' | 'tokens'): string {
-  const shelfRow = (y: number, seed: number) => {
-    let x = 34, out = '', k = seed;
-    while (x < 356) {
-      const w = 11 + (k * 7) % 8, h = 34 + (k * 13) % 22;
-      out += bottle(x + w / 2, y, h, w, BOTTLES[k % BOTTLES.length], k);
-      x += w + 6 + (k % 3) * 2; k++;
-      if (k % 5 === 0) x += 18;
-    }
-    return out;
-  };
-  const neon = kind === 'lives'
-    // Wellen
-    ? [0, 1, 2].map(k => `<path d="M-38 ${k * 11 - 11}q9.5-9 19 0t19 0 19 0 19 0" fill="none" stroke="${C.neonA}" stroke-width="3.4" stroke-linecap="round"/>`).join('')
-    // Würfel mit drei Augen
-    : `<rect x="-17" y="-17" width="34" height="34" rx="8" fill="none" stroke="${C.neonB}" stroke-width="3.4"/>${[[-8, -8], [0, 0], [8, 8]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="3" fill="${C.neonB}"/>`).join('')}`;
-  return `<rect x="-220" y="-520" width="830" height="${WALL + 520}" fill="${C.wall}"/>
-  ${Array.from({ length: 14 }, (_, k) => `<rect x="${-220 + k * 62}" y="-520" width="31" height="${WALL + 520}" fill="${C.wall2}" opacity=".55"/>`).join('')}
-  <rect x="14" y="20" width="362" height="170" rx="4" fill="${C.panel}"/>
-  <rect x="22" y="26" width="346" height="158" fill="${C.mirror}"/>
-  <path d="M60 26h70l-76 158h-32v-40zM180 26h26l-76 158h-26zM300 26h50l-76 158h-50z" fill="#fff" opacity=".035"/>
-  <g class="tb-neon" transform="translate(195 54)"><g filter="url(#tb-blur)" opacity=".9">${neon}</g>${neon}</g>
-  ${shelfRow(110, 1)}<rect x="22" y="110" width="346" height="7" fill="${C.shelf}"/><rect x="22" y="117" width="346" height="3" fill="#000" opacity=".25"/>
-  ${shelfRow(178, 4)}<rect x="22" y="178" width="346" height="7" fill="${C.shelf}"/>
-  <rect x="-220" y="${WALL - 30}" width="830" height="30" fill="${C.panel2}"/>
-  <rect x="-220" y="${WALL - 32}" width="830" height="4" fill="${C.brass}"/>
-  ${Array.from({ length: 16 }, (_, k) => `<rect x="${-200 + k * 52}" y="${WALL - 24}" width="40" height="18" rx="2" fill="${C.panel}"/>`).join('')}`;
-}
-
-/** Zwei Messinglampen mit Lichtkegel */
-function lamps(): string {
-  const lamp = (x: number, y: number) => `<rect x="${x - 1}" y="-520" width="2" height="${520 + y - 20}" fill="${C.ink}"/>
-    <path d="M${x - 60} ${TABLE.cy + 30}L${x - 18} ${y}h36L${x + 60} ${TABLE.cy + 30}z" fill="${C.light}" opacity=".04"/>
-    <path d="M${x - 8} ${y - 22}h16l14 22h-44z" fill="${C.brass}"/><path d="M${x - 22} ${y}h44l-4 4h-36z" fill="${C.brass2}"/>
-    <ellipse cx="${x}" cy="${y + 4}" rx="16" ry="4" fill="#fff4cf"/><circle cx="${x}" cy="${y + 6}" r="22" fill="${C.light}" opacity=".12"/>`;
-  return lamp(96, 134) + lamp(294, 134);
-}
-
-// ---------------------------------------------------------------- Boden
+// ---------------------------------------------------------------- Boden und Tisch
 function floor(): string {
-  const s = 30;
-  let tiles = `<rect x="-220" y="${WALL}" width="830" height="900" fill="${C.tile1}"/>`;
-  for (let r = 0; r < 30; r++) for (let c = 0; c < 28; c++) if ((r + c) % 2) tiles += `<rect x="${-220 + c * s}" y="${WALL + r * s}" width="${s}" height="${s}" fill="${C.tile2}"/>`;
-  return tiles + `<rect x="-220" y="${WALL}" width="830" height="14" fill="#000" opacity=".35"/>`;
+  const s = 46;
+  let t = `<rect x="-240" y="-240" width="870" height="1120" fill="${C.grout}"/>`;
+  for (let r = 0; r < 25; r++) for (let c = 0; c < 19; c++) {
+    t += `<rect x="${-240 + c * s + 2}" y="${-240 + r * s + 2}" width="${s - 4}" height="${s - 4}" rx="3" fill="${(r + c) % 2 ? C.tile1 : C.tile2}"/>`;
+  }
+  return t;
 }
 
-// ---------------------------------------------------------------- Tisch und Dinge darauf
-const coaster = (x: number, y: number, r: number, c: string) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="${C.cream}"/><circle r="${r * .78}" fill="${c}"/><circle r="${r * .52}" fill="${C.cream}"/></g>`;
-const tumbler = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="14" fill="#000" opacity=".3"/>
-  <circle r="14" fill="#d6e6e2" opacity=".28"/><circle r="11" fill="#c98a3c" opacity=".85"/>
-  <rect x="-6" y="-7" width="8" height="8" rx="1.5" fill="#fff" opacity=".55" transform="rotate(14)"/><rect x="1" y="-1" width="7" height="7" rx="1.5" fill="#fff" opacity=".45" transform="rotate(-10)"/></g>`;
-const beer = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="18" fill="#000" opacity=".3"/>
-  ${coaster(0, 0, 19, '#b5452f')}<circle r="13" fill="#d99a3a"/><circle r="10.5" fill="#f3ead6"/>
-  <circle cx="-3" cy="-2" r="2.6" fill="#fff"/><circle cx="3" cy="2" r="1.8" fill="#fff"/></g>`;
-const candle = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle r="20" fill="${C.light}" opacity=".1" class="tb-flicker"/>
-  <circle cx="2" cy="3" r="11" fill="#000" opacity=".3"/><circle r="11" fill="#7a2632"/><circle r="8" fill="#a33a46"/><circle r="4" fill="#ffd58a" class="tb-flicker"/><circle r="1.6" fill="#fff4cf"/></g>`;
-const olives = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="2" cy="3" r="15" fill="#000" opacity=".3"/><circle r="15" fill="${C.cream}"/><circle r="11" fill="#e3d6bd"/>
-  ${[[-4, -3], [4, -4], [0, 4], [6, 3], [-5, 5]].map(([a, b]) => `<ellipse cx="${a}" cy="${b}" rx="3.6" ry="2.8" fill="#6f7d3a"/><circle cx="${a + 1}" cy="${b}" r="1" fill="#b5452f"/>`).join('')}</g>`;
-const deck = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y}) rotate(${r})">${[3, 1.5, 0].map(o => `<rect x="${-14 + o}" y="${-20 - o}" width="28" height="40" rx="3" fill="${o ? '#e3d6bd' : '#6f2632'}"/>`).join('')}
-  <rect x="-10" y="-16" width="20" height="32" rx="2" fill="${C.brass}" opacity=".25"/><path d="M0-8l6 8-6 8-6-8z" fill="${C.brass}" opacity=".8"/></g>`;
+function tableTop(): string {
+  const { cx, cy, rx, ry } = TABLE;
+  const planks = Array.from({ length: 10 }, (_, k) => `<rect x="${cx - rx + k * 36}" y="${cy - ry}" width="35" height="${2 * ry}" fill="${k % 2 ? C.wood1 : C.wood2}"/>`).join('');
+  const grain = Array.from({ length: 22 }, (_, k) => {
+    const x = cx - rx + 8 + (k % 10) * 36 + (k * 7) % 18, y = cy - ry + 30 + (k * 97) % (2 * ry - 120), h = 60 + (k * 31) % 90;
+    return `<rect x="${x}" y="${y}" width="2.4" height="${h}" rx="1.2" fill="${C.grain}" opacity=".55"/>`;
+  }).join('');
+  return `<ellipse cx="${cx + 8}" cy="${cy + 14}" rx="${rx + 6}" ry="${ry + 6}" fill="#000" opacity=".45"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${C.rim}"/>
+  <ellipse cx="${cx}" cy="${cy - 2}" rx="${rx - 4}" ry="${ry - 4}" fill="${C.rim2}"/>
+  <clipPath id="tb-clip"><ellipse cx="${cx}" cy="${cy}" rx="${rx - 10}" ry="${ry - 10}"/></clipPath>
+  <g clip-path="url(#tb-clip)">${planks}${grain}
+    <ellipse cx="${cx}" cy="${cy}" rx="${rx - 10}" ry="${ry - 10}" fill="${C.light}" opacity=".05"/>
+    <ellipse cx="${cx}" cy="${cy}" rx="${rx - 60}" ry="${ry - 90}" fill="${C.light}" opacity=".05"/></g>`;
+}
 
-/** Offene Karte (Schwimmen) */
+// ---------------------------------------------------------------- Getränke und Teller (von oben)
+const coaster = (r: number, c: string, inner = C.cream) => `<circle r="${r}" fill="${C.cream}"/><circle r="${r * .8}" fill="${c}"/><circle r="${r * .56}" fill="${inner}"/>`;
+const foam = (r: number) => `<circle r="${r}" fill="#f6eedb"/><circle cx="${-r * .3}" cy="${-r * .25}" r="${r * .22}" fill="#fff"/><circle cx="${r * .3}" cy="${r * .2}" r="${r * .15}" fill="#fff"/><circle cx="${r * .1}" cy="${-r * .45}" r="${r * .1}" fill="#fff"/>`;
+const ITEMS: Record<string, () => string> = {
+  /** Weizen auf weiß-blauem Deckel */
+  weizen: () => `${shadow(20)}<circle r="20" fill="${C.cream}"/>${[0, 1, 2, 3].map(k => `<path d="M0 0L${20 * Math.cos(k * 1.57)} ${20 * Math.sin(k * 1.57)}A20 20 0 0 1 ${20 * Math.cos(k * 1.57 + .79)} ${20 * Math.sin(k * 1.57 + .79)}z" fill="#7aa7cf"/>`).join('')}
+    <circle r="16" fill="#e9dcc0" opacity=".45"/><circle r="14.5" fill="#e09a33"/>${foam(11.5)}`,
+  /** Pils auf rotem Deckel */
+  pils: () => `${shadow(17)}${coaster(17, '#b5452f')}<circle r="11" fill="#e9dcc0" opacity=".5"/><circle r="9.5" fill="#efc04f"/>${foam(7.5)}`,
+  /** Maßkrug mit Henkel */
+  krug: () => `${shadow(21)}<rect x="14" y="-6" width="16" height="12" rx="6" fill="#d8ccab" opacity=".9"/><rect x="18" y="-2.5" width="8" height="5" rx="2.5" fill="${C.wood2}"/>
+    <circle r="20" fill="#d8ccab"/><circle r="17" fill="#d58f2c"/>${foam(14)}`,
+  /** Rotwein, Glas mit Fuß */
+  tinto: () => `<circle cx="6" cy="8" r="11" fill="#000" opacity=".22"/><circle r="13" fill="#f2e6e6" opacity=".3"/><circle r="10" fill="#6a1f2b"/><circle cx="-3" cy="-3" r="2.6" fill="#fff" opacity=".35"/>`,
+  /** Caña: kleines Bier */
+  cana: () => `${shadow(10)}<circle r="10" fill="#e9dcc0" opacity=".5"/><circle r="8.5" fill="#eab64a"/>${foam(6.2)}`,
+  /** Oliven mit Zahnstochern */
+  olives: () => `${shadow(22, 16)}<ellipse rx="22" ry="16" fill="${C.cream}"/><ellipse rx="17" ry="11.5" fill="#e6dcc5"/>
+    ${[[-9, -3, '#6f7d3a'], [-1, -5, '#3b3a2c'], [7, -2, '#6f7d3a'], [-4, 4, '#6f7d3a'], [5, 5, '#3b3a2c'], [12, 3, '#6f7d3a']].map(([a, b, c]) => `<ellipse cx="${a}" cy="${b}" rx="4" ry="3.2" fill="${c}"/><circle cx="${+a + 1.2}" cy="${b}" r="1.1" fill="${c === '#3b3a2c' ? '#55533f' : '#b5452f'}"/>`).join('')}
+    <rect x="-12" y="-1" width="15" height="1.4" rx=".7" fill="#d9b98a" transform="rotate(-30 -9 -3)"/>`,
+  /** Tapas: Käse und Schinken */
+  tapas: () => `${shadow(24)}<circle r="24" fill="${C.cream}"/><circle r="19" fill="#ece3cf"/>
+    ${[0, 1, 2].map(k => `<g transform="rotate(${k * 38 - 60}) translate(8 0)"><path d="M0-5l12 5-12 5z" fill="#f0d58c"/><path d="M10.5-.6l1.5.6-1.5.6z" fill="#c99a3e"/></g>`).join('')}
+    ${[0, 1].map(k => `<path d="M${-14 + k * 6} ${4 + k * 3}q4-6 8 0t8 0" stroke="#b8505a" stroke-width="5" fill="none" stroke-linecap="round"/>`).join('')}`,
+  /** Brotkorb */
+  bread: () => `${shadow(24, 17)}<ellipse rx="24" ry="17" fill="#a8733f"/><ellipse rx="20" ry="13.5" fill="#8a5a2f"/>
+    ${[-8, 0, 8].map((x, k) => `<ellipse cx="${x}" cy="${k % 2 ? 1 : -1}" rx="7" ry="10" fill="#b9813f" transform="rotate(${k * 12 - 12} ${x} 0)"/><ellipse cx="${x}" cy="${k % 2 ? 1 : -1}" rx="5" ry="8" fill="#ebcb92" transform="rotate(${k * 12 - 12} ${x} 0)"/>`).join('')}`,
+  /** Serviettenspender */
+  napkins: () => `${shadow(15, 10)}<rect x="-15" y="-9" width="30" height="18" rx="3" fill="#9aa3a6"/><rect x="-12" y="-6" width="24" height="12" rx="1.5" fill="#fff"/>
+    <rect x="-12" y="-1" width="24" height="1" fill="#dcd6cc"/><rect x="-15" y="-9" width="30" height="3" rx="1.5" fill="#b9c0c2"/>`,
+  /** Salz und Pfeffer */
+  salt: () => `<circle cx="-6" cy="0" r="6" fill="#000" opacity=".25" transform="translate(2 3)"/><circle cx="-6" r="6" fill="#f4f1ea"/><circle cx="-6" r="2.2" fill="#c9c3b6"/>
+    <circle cx="8" cy="3" r="6" fill="#000" opacity=".25"/><circle cx="7" r="6" fill="#3b332d"/><circle cx="7" r="2.2" fill="#6b6058"/>`,
+  /** Erdnüsse im Holzschälchen */
+  nuts: () => `${shadow(16)}<circle r="16" fill="#8a5a2f"/><circle r="12.5" fill="#6e4425"/>
+    ${[[-5, -4], [4, -5], [0, 3], [6, 3], [-6, 4], [1, -1]].map(([a, b], k) => `<ellipse cx="${a}" cy="${b}" rx="3.4" ry="2.4" fill="#d9a35a" transform="rotate(${k * 47} ${a} ${b})"/>`).join('')}`,
+  /** Loser Bierdeckel */
+  deckel: () => `${shadow(14)}${coaster(14, '#2f5d8a')}`
+};
+const ORDER = ['weizen', 'olives', 'tinto', 'pils', 'tapas', 'krug', 'bread', 'cana', 'nuts', 'napkins'];
+
+/** Dinge zwischen den Plätzen, je nach Zahl der Spieler verteilt */
+function props(n: number): string {
+  const { cx, cy } = TABLE;
+  const at = (x: number, y: number, key: string, r = 0) => `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r})">${ITEMS[key]()}</g>`;
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const a = seatAngle(i + .5, n);
+    // Neben der Mitte (links und rechts) weiter nach außen, damit nichts auf den Karten steht
+    const side = Math.abs(Math.sin(a)) < .45 ? 1.55 : 1;
+    out += at(cx + PROPS.rx * side * Math.cos(a), cy + PROPS.ry * Math.sin(a), ORDER[i % ORDER.length], (i * 47) % 360);
+    // Bis sechs Spieler ist zwischen den Plätzen am Rand noch Platz für mehr
+    if (n <= 6) out += at(cx + 118 * Math.cos(a), cy + 222 * Math.sin(a), ORDER[(i + 5) % ORDER.length], (i * 71) % 360);
+  }
+  // Dazu ein paar Dinge näher an der Mitte, oberhalb und unterhalb der Mitte
+  // Bei wenigen Spielern ist mehr Platz: noch ein paar Dinge oben und unten
+  if (n <= 4) out += at(cx - 40, cy - 96, 'salt', 20) + at(cx + 40, cy + 100, 'deckel') + at(cx + 44, cy - 100, 'nuts') + at(cx - 40, cy + 104, 'tinto', 30);
+  return out;
+}
+
+// ---------------------------------------------------------------- Mitte
 function faceCard(x: number, y: number, r: number, t: string, suit: 'herz' | 'karo' | 'pik' | 'kreuz'): string {
   const red = suit === 'herz' || suit === 'karo', c = red ? '#a8343d' : '#1c1a26';
   const sym: Record<string, string> = {
@@ -100,56 +133,39 @@ function faceCard(x: number, y: number, r: number, t: string, suit: 'herz' | 'ka
     pik: '<path d="M0-10C-9-2-10 3-6 5c2 1 4 0 5-1l-2 6h6l-2-6c1 1 3 2 5 1 4-2 3-7-6-15z"/>',
     kreuz: '<circle cx="0" cy="-5" r="4.2"/><circle cx="-5" cy="2" r="4.2"/><circle cx="5" cy="2" r="4.2"/><path d="M-1.5 2h3l1.5 8h-6z"/>'
   };
-  return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-18" y="-25" width="40" height="56" rx="4" fill="#000" opacity=".35"/>
+  return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-18" y="-25" width="40" height="56" rx="4" fill="#000" opacity=".3"/>
   <rect x="-20" y="-28" width="40" height="56" rx="4" fill="${C.cream}"/>
   <text x="-14" y="-12" font-family="Jost, sans-serif" font-weight="600" font-size="12" fill="${c}">${t}</text>
   <g transform="translate(2 6)" fill="${c}">${sym[suit]}</g></g>`;
 }
-
-/** Lederbecher mit Würfeln (Schocken) */
+const deck = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y}) rotate(${r})">${[3, 1.5, 0].map(o => `<rect x="${-14 + o}" y="${-20 - o}" width="28" height="40" rx="3" fill="${o ? '#e3d6bd' : '#6f2632'}"/>`).join('')}
+  <rect x="-10" y="-16" width="20" height="32" rx="2" fill="${C.brass}" opacity=".25"/><path d="M0-8l6 8-6 8-6-8z" fill="${C.brass}" opacity=".8"/></g>`;
 function cupAndDice(x: number, y: number): string {
-  const die = (dx: number, dy: number, r: number) => `<g transform="translate(${dx} ${dy}) rotate(${r})"><rect x="-7" y="-5.5" width="15" height="15" rx="3" fill="#000" opacity=".35"/>
+  const die = (dx: number, dy: number, r: number) => `<g transform="translate(${dx} ${dy}) rotate(${r})"><rect x="-7" y="-5.5" width="15" height="15" rx="3" fill="#000" opacity=".3"/>
     <rect x="-7.5" y="-7.5" width="15" height="15" rx="3" fill="${C.cream}"/><circle r="2.2" fill="#a8343d"/></g>`;
-  return `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="20" fill="#000" opacity=".3"/><circle r="20" fill="${C.brass2}"/><circle r="18" fill="#3a2219"/><circle r="13" fill="#20130e"/>
-    ${die(30, -10, 18)}${die(36, 10, -22)}${die(18, 24, 40)}</g>`;
+  return `<g transform="translate(${x} ${y})">${shadow(20)}<circle r="20" fill="#2a1a12"/><circle r="15" fill="#160d09"/>
+    ${die(30, -12, 18)}${die(34, 10, -22)}${die(14, 28, 40)}</g>`;
 }
 
-/** Bierdeckelstapel in der Mitte (Schocken) */
-export function stack(n: number): string {
-  const { cx, cy } = TABLE, shown = Math.min(n, 13), x0 = cx - 18;
-  const layers = Array.from({ length: shown }, (_, k) => `<circle cx="${x0 + (k % 3) * 1.2}" cy="${cy - k * 2.6}" r="25" fill="${k % 2 ? '#d9cbb0' : '#e6d9bf'}"/>`).join('');
-  const top = cy - Math.max(0, shown - 1) * 2.6;
-  return `<ellipse cx="${x0 + 3}" cy="${cy + 6}" rx="28" ry="26" fill="#000" opacity=".35"/>${n > 0
-    ? layers + `<g transform="translate(${x0} ${top})"><circle r="25" fill="${C.cream}"/><circle r="20" fill="#b5452f"/><circle r="13.5" fill="${C.cream}"/></g>`
-    : `<circle cx="${x0}" cy="${cy}" r="25" fill="${C.cream}" opacity=".08"/>`}`;
-}
-
-function tableTop(): string {
-  const { cx, cy, rx, ry } = TABLE;
-  return `<ellipse cx="${cx + 6}" cy="${cy + 20}" rx="${rx + 10}" ry="${ry + 10}" fill="#000" opacity=".45"/>
-  <ellipse cx="${cx}" cy="${cy + 8}" rx="${rx}" ry="${ry}" fill="${C.rim}"/>
-  <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${C.rim2}"/>
-  <ellipse cx="${cx}" cy="${cy}" rx="${rx - 9}" ry="${ry - 9}" fill="${C.brass2}"/>
-  <ellipse cx="${cx}" cy="${cy}" rx="${rx - 11}" ry="${ry - 11}" fill="${C.felt}"/>
-  <ellipse cx="${cx - 6}" cy="${cy - 8}" rx="${rx - 40}" ry="${ry - 38}" fill="${C.felt2}"/>
-  <ellipse cx="${cx - 12}" cy="${cy - 14}" rx="${rx - 76}" ry="${ry - 72}" fill="#2a6555" opacity=".7"/>`;
-}
-
-/** Ganze Szene ohne Mitte und ohne Spielersachen (die zeichnet der Aufrufer dazu) */
-export function room(kind: 'lives' | 'tokens'): string {
-  const { cx, cy } = TABLE;
-  const props = kind === 'lives' ? deck(cx + 42, cy - 30, 18) : cupAndDice(cx + 30, cy + 2);
-  return `<defs><filter id="tb-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>
-  ${backBar(kind)}${floor()}${tableTop()}
-  ${candle(cx - 44, cy - 34)}${tumbler(cx + 44, cy + 32)}${beer(cx - 40, cy + 34)}${olives(cx + 4, cy + 46)}${props}
-  ${lamps()}`;
-}
-
-/** Schwimmen: drei offene Karten in der Mitte, sie wechseln mit jeder Runde */
 const SUITS = ['herz', 'karo', 'pik', 'kreuz'] as const;
 const VALUES = ['7', '8', '9', '10', 'B', 'D', 'K', 'A'];
+/** Schwimmen: drei offene Karten in der Mitte (wechseln mit jeder Runde), daneben der Stapel */
 export function middleCards(round: number): string {
   const { cx, cy } = TABLE;
   const pick = (k: number) => { const n = (round * 7 + k * 11 + 3) % 32; return { t: VALUES[n % 8], s: SUITS[Math.floor(n / 8)] }; };
-  return [-1, 0, 1].map(k => { const c = pick(k + 1); return faceCard(cx - 14 + k * 26, cy - 8 + Math.abs(k) * 4, k * 12, c.t, c.s); }).join('');
+  return deck(cx + 44, cy + 6, 74) + [-1, 0, 1].map(k => { const c = pick(k + 1); return faceCard(cx - 22 + k * 24, cy + Math.abs(k) * 4, k * 12, c.t, c.s); }).join('');
+}
+/** Schocken: Deckelstapel in der Mitte, daneben Becher und Würfel */
+export function stack(n: number): string {
+  const { cx, cy } = TABLE, shown = Math.min(n, 13), x0 = cx - 20;
+  const layers = Array.from({ length: shown }, (_, k) => `<circle cx="${x0 + (k % 3) * 1.2}" cy="${cy - k * 2.6}" r="25" fill="${k % 2 ? '#d9cbb0' : '#e6d9bf'}"/>`).join('');
+  const top = cy - Math.max(0, shown - 1) * 2.6;
+  return cupAndDice(cx + 32, cy + 8) + `<ellipse cx="${x0 + 3}" cy="${cy + 6}" rx="28" ry="26" fill="#000" opacity=".3"/>${n > 0
+    ? layers + `<g transform="translate(${x0} ${top})"><circle r="25" fill="${C.cream}"/><circle r="20" fill="#b5452f"/><circle r="13.5" fill="${C.cream}"/></g>`
+    : `<circle cx="${x0}" cy="${cy}" r="25" fill="${C.cream}" opacity=".1"/>`}`;
+}
+
+/** Ganzer Tisch mit Boden und Dingen, ohne Mitte und ohne Spielersachen */
+export function room(n: number): string {
+  return `${floor()}${tableTop()}${props(n)}`;
 }

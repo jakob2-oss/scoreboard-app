@@ -16,6 +16,13 @@ const PATTERN_NAMES: Record<string, string> = {
 /** Regeln eines eigenen Spiels als Stichpunkte */
 function pointsOf(t: Template): [string, string][] {
   // Kopie eines festen Spiels: dessen Regeln, dazu eigene Notizfelder
+  // Tisch-Modus: Regeln aus den eigenen Phasen (auch bei Kopien von Schwimmen und Schocken)
+  if (t.scoring === 'lives') return [['Am Tisch', `${t.params?.lives ?? 3} Leben je Spieler`], ['Phasen', t.params?.swim === false ? 'ohne Leben ist man raus' : 'ohne Leben schwimmt man, danach raus'], ['Gewinner', 'wer als Letzter übrig bleibt']];
+  if (t.scoring === 'tokens') {
+    const h = t.params?.halves ?? 2;
+    return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'wer alle Deckel hat, verliert sie'],
+      ['Verlierer', h === 1 ? 'wer die erste Hälfte verliert' : `wer ${h} Hälften verliert${h === 2 ? ', sonst entscheidet das Finale' : ''}`]];
+  }
   const base = t.params?.base ? gameDef(t.params.base) : undefined;
   if (base?.points) return [...base.points, ...(t.params?.notes?.length ? [['Notizfelder', names(t.params.notes)] as [string, string]] : [])];
   if (t.params?.resultOnly) {
@@ -31,8 +38,7 @@ function pointsOf(t: Template): [string, string][] {
     ['Zählschritte', names(stepsOf(t).map(String))]
   ];
   if (t.scoring === 'rank') p.splice(0, 1, ['Wertung', 'Rang je Runde, Präsident bis Arschloch']);
-  if (t.scoring === 'lives') return [['Am Tisch', `${t.params?.lives ?? 3} Leben je Spieler, dann schwimmen`], ['Gewinner', 'wer als Letzter übrig bleibt']];
-  if (t.scoring === 'tokens') return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'wer alle Deckel hat, verliert sie'], ['Verlierer', 'wer zwei Hälften verliert']];
+
   if (t.params?.split?.length === 2) p.push(['Je Runde', `${t.params.split[0].label} und ${t.params.split[1].label}`]);
   if (t.params?.zeroSum) p.push(['Nullsumme', 'jede Runde ergibt 0']);
   if (t.params?.keys?.length) p.push(['Tasten', names(t.params.keys.map(k => k.label))]);
@@ -170,6 +176,16 @@ export function Setup() {
             <label htmlFor="table-start">{setup.kind === 'lives' ? 'Leben je Spieler' : 'Deckel in der Mitte'}</label>
             <input id="table-start" inputMode="numeric" pattern="[0-9]*" value={setup.start || TABLE_START[setup.kind as 'lives' | 'tokens']}
               onChange={e => a.updateSetup({ start: Math.min(99, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0) })} />
+          </div>}
+          {tableKind && setup.kind === 'lives' && <label className="switch-row">
+            <input type="checkbox" id="phase-swim" checked={setup.swim} onChange={e => a.updateSetup({ swim: e.target.checked })} />
+            <span className="t"><b>Schwimmen nach dem letzten Leben</b></span>
+          </label>}
+          {tableKind && setup.kind === 'tokens' && <div className="field">
+            <label>Verloren nach</label>
+            <div className="seg">
+              {[1, 2, 3].map(h => <button key={h} id={`phase-halves-${h}`} aria-pressed={setup.halves === h} onClick={() => a.updateSetup({ halves: h })}>{h === 1 ? 'Einer Hälfte' : `${h} Hälften`}</button>)}
+            </div>
           </div>}
           {!(result && setup.unit === 'Platz') && !rank && <div className="field">
             <label>Wer gewinnt?</label>

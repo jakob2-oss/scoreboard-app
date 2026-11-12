@@ -337,13 +337,14 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .key-add button[type="submit"]:disabled { opacity: .45; }
 
 /* ---------- Tisch-Modus (Schwimmen, Schocken): Bar mit rundem Spieltisch, Farben fest in src/ui/table.ts ---------- */
-.tbl { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; display: grid; place-items: center; background: #1a1820; }
-#s-game:has(.tbl) .top { background: #17282a; color: #efe4cf; }
+.tbl { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; display: grid; place-items: center; background: #2f1d17; }
+.tb-phase text { font-family: var(--f-display); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; fill: #e2c068; }
+#s-game:has(.tbl) .top { background: #241611; color: #efe4cf; }
 #s-game:has(.tbl) .top .sub { color: #a9b8b2; }
 #s-game:has(.tbl) .top .icon-btn { background: rgba(255, 255, 255, .08); color: #efe4cf; }
-#s-game:has(.tbl) .dock { background: #1a1820; }
+#s-game:has(.tbl) .dock { background: #241611; }
 #s-game:has(.tbl) .top .text-btn { color: #c9a45c; }
-#s-game:has(.tbl) .dock .secondary, #s-game:has(.tbl) .tb-half { background: #2a2631; color: #efe4cf; box-shadow: none; }
+#s-game:has(.tbl) .dock .secondary, #s-game:has(.tbl) .tb-half { background: #3a2a22; color: #efe4cf; box-shadow: none; }
 #s-game:has(.tbl) .dock .primary, #s-game:has(.tbl) .tb-half.cur { background: #c9a45c; color: #17151d; box-shadow: none; }
 #s-game:has(.tbl) .tb-half:not(.cur) { color: #8f8a9c; }
 #s-game:has(.tbl) .tb-ask { color: #efe4cf; }
@@ -357,6 +358,9 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
   background: none; border: 0; padding: 0; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   transition: transform .18s ease, opacity .25s ease, filter .25s ease; z-index: 2; color: var(--fg); }
 .tb-seat.drag { transition: none; z-index: 5; }
+.tbl.many .tb-av .av { width: 40px; height: 40px; font-size: 17px; }
+.tbl.many .tb-plate { min-width: 58px; padding: 7px 6px 4px; }
+.tbl.many .tb-name { font-size: 13px; }
 .tb-seat.target .tb-av .av { transform: scale(1.14); }
 .tb-seat:active:not(.drag) .tb-av .av { transform: scale(.92); }
 .tb-av { position: relative; }
@@ -404,12 +408,13 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .tb-glow { animation: tb-glowp 7s ease-in-out infinite; }
 @keyframes tb-glowp { 50% { opacity: .82; } }
 /* Münzen fallen weg, Deckel kommen dazu, Neon flackert selten */
-.tb-coin { transition: opacity .35s ease, transform .35s ease; transform-box: fill-box; }
-.tb-coin.gone { opacity: .22; }
-.tb-pile { animation: tb-in .3s ease-out; }
+.tb-coin { transition: opacity .4s ease, transform .4s ease; transform-box: fill-box; transform-origin: center; }
+.tb-coin.gone { opacity: 0; transform: scale(.3) translateY(-20px); }
+.tb-coaster { animation: tb-fade .35s ease-out; }
+@keyframes tb-fade { from { opacity: 0; } }
 .tb-wave { animation: tb-swim 2.4s ease-in-out infinite; }
 @keyframes tb-swim { 50% { transform: translateX(3px); } }
 .tb-neon { animation: tb-neon 9s steps(1) infinite; }
 @keyframes tb-neon { 0%, 100% { opacity: 1; } 91% { opacity: .55; } 92% { opacity: 1; } 94% { opacity: .7; } 95% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .tb-neon, .tb-wave, .tb-pile, .tb-blink, .tb-flicker, .tb-sway, .tb-glow, .tb-mid-art, .tb-dk, .tbl.fire .tb-av .av { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .tb-neon, .tb-wave, .tb-coaster, .tb-blink, .tb-flicker, .tb-sway, .tb-glow, .tb-mid-art, .tb-dk, .tbl.fire .tb-av .av { animation: none !important; } }
 .seg.seg-2 { margin-top: 8px; }

@@ -64,3 +64,9 @@ Annahmen: Schwimmen mit 3 Leben plus Schwimmen; Schocken mit 13 Deckeln, zwei H�
 Der erste Entwurf (helle Holzwand mit Pastell-Dingen) wirkte zu kindlich. Neu: eine Bar mit dunkler Rückwand,
 Spiegel und Flaschenregal, Neon-Zeichen, Messinglampen, Schachbrettboden und Spieltisch mit grünem Filz. Feste Farben
 in beiden Modi. Leben liegen bei Schwimmen als Münzen vor jedem Spieler auf dem Tisch, Deckel bei Schocken als Stapel.
+
+## 12.11.2026: Tisch nur von oben, Handy in der Mitte
+Die Bar mit Rückwand wird ersetzt durch einen ovalen Kneipentisch von oben auf Terrakotta-Fliesen, voll mit Bier
+(Weizen, Pils, Maß, Caña), Rotwein, Oliven, Tapas, Brotkorb und Servietten. Namensschilder sind zum jeweiligen Platz
+gedreht, Phase steht zweimal in der Mitte (für beide Seiten). Plätze liegen in gleichen Abständen auf dem Oval.
+Phasen sind Teil der Vorlage: `params.swim` (Schwimmen nach dem letzten Leben) und `params.halves` (Hälften bis zum Verlieren).

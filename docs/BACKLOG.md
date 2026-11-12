@@ -130,3 +130,6 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Annahmen prüfen lassen: Schwimmen mit 3 Leben plus Schwimmen; Schocken mit Finale nur, wenn zwei verschiedene Spieler je eine Hälfte verloren haben.
 - [ ] Idee: Schocken-Wurf antippen (Schock 2 bis 6, General, Straße) statt Zahl, falls gewünscht.
 - [ ] Statistik im Profil für Tisch-Spiele (wie oft geschwommen, Hälften verloren).
+- [x] Tisch von oben ohne Wand, Bartisch mit Bier, Wein, Oliven und Tapas; Namen zum jeweiligen Platz gedreht (Handy in der Mitte).
+- [x] Deckel liegen einzeln vor dem Spieler, Leben als Münzen.
+- [x] Phasen im Erstellungsmodus: Schwimmen an oder aus, verloren nach einer, zwei oder drei Hälften; auch nachträglich bearbeitbar.
