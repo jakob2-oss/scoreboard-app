@@ -49,3 +49,7 @@ mit langsam bewegten Formen darüber, die zum jeweiligen Spiel passen (Variante 
 ## 12.11.2026: Gestaltung nur bei Spielerprofilen, feste Spiele bleiben
 Profilbild und Farbe der Spieler werden anpassbar (offline alle, später mit Accounts nur das eigene Profil und Offline-Spieler).
 Feste Spielseiten bleiben gleich; wer ein festes Spiel anpassen will, speichert es als eigenes Spiel (Kopie mit `params.base`).
+
+## 12.11.2026: Mehrere laufende Partien
+Eine neue Partie parkt die laufende (leere werden verworfen); die Nachfrage „speichern oder verwerfen“ entfällt.
+Alle laufenden Partien stehen auf der Startseite, zuletzt geänderte zuerst.

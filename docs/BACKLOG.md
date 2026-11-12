@@ -80,7 +80,7 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] Texte: „Ben und Clara gewinnen“ statt „Ben & Clara gewinnt“, „haben Phase 10 geschafft“, „mit 1 Spieler“.
 - [x] **Spieler löschen** im Profil (nicht während er mitspielt); Name bleibt im Verlauf.
 - [x] **Feedback-Knopf** auf der Startseite: Text, dann Teilen-Menü des Geräts, Version und Gerät hängen an.
-- [ ] Offen: mehrere laufende Partien gleichzeitig.
+- [x] **Mehrere Partien gleichzeitig:** Neue Partie parkt die laufende, Startseite listet alle laufenden Partien; Beenden und Verwerfen betreffen nur die geöffnete.
 - [x] **Szenen lebendiger (12.11.):** eigenes Muster je Spiel (Rauten, Strahlen, Waben, Raster, Wellen, Streifen, Stufen, Blöcke),
       dezente Bewegung (Konfetti schwebt, Sonne pulsiert, Figuren wippen; aus bei „Bewegung reduzieren“).
       Icons als Einzelsymbol, Szene erzählt die Situation (Kniffel: Würfel und Becher, Schafkopf: Eichel und Bierdeckel,
@@ -100,3 +100,4 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 - [x] **Festes Spiel als eigenes Spiel anpassen:** Kopie mit Regeln, Schnelltasten und Bild des Originals, sofort in Bearbeitung.
 - [x] **Siegerseite (12.11.):** ganze Seite mit Szene des Spiels, Sieger mit Krone, Treppchen, bis zu drei Kennzahlen je Spiel (`src/game/highlights.ts`), Serie zuordnen und speichern.
 - [x] **App-Hintergrund mit Formen (12.11.):** blau bleibt, Formen passend zum Spiel, alles langsam in Bewegung; Szenen-Konfetti verlangsamt.
+- [x] **Otter auf der Siegerseite (12.11.):** Trophäenzimmer mit Otter (Krone, Pokal), gerahmtes Bild des Spiels, Punktezettel an der Wand, Band „Gewonnen“; langsam fallendes Konfetti. Stil erwachsen, angelehnt an das Vorbild, eigene Zeichnung (`src/ui/trophy.ts`).

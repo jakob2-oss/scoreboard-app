@@ -3,7 +3,7 @@ import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
 import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
-import { Crown } from './icons';
+import { trophyRoom } from './trophy';
 import { names } from './Home';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -101,7 +101,8 @@ export function ResultSheet({ g }: { g: GameState }) {
   });
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
   const winners = rk.filter(x => x.place === 1);
-  const scene = GAME_ART[rules.key]?.scene ?? ownArt(rules.key, rules.name, rules.params).scene;
+  const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
+  const scene = trophyRoom(icon);
   const stats = started ? highlights(g) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
@@ -111,9 +112,6 @@ export function ResultSheet({ g }: { g: GameState }) {
       <div className="bsheet victory" role="dialog" aria-label="Ergebnis">
         <div className="v-hero">
           <div className="v-scene" dangerouslySetInnerHTML={{ __html: scene }} />
-          {started && <div className="v-winner">{winners.slice(0, 2).map(w => (
-            <span key={w.player.id} className="v-av" style={{ background: w.player.color, color: onColor(w.player.color) }}><Crown />{w.player.name[0]?.toUpperCase()}</span>
-          ))}</div>}
         </div>
         <div className="sheet-body">
           <div className="eyebrow v-meta">{rules.name}, {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>

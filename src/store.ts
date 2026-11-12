@@ -59,14 +59,14 @@ export interface AppState {
   fromOverview: boolean;
   /** Gelöschte Spieler: nur für Namen im Verlauf */
   formerPlayers: Player[];
-  /** Neue Partie soll starten, obwohl eine mit Punkten läuft */
-  confirmStart: boolean;
+  /** Weitere laufende Partien (geparkt), zuletzt geänderte zuerst */
+  parked: GameState[];
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, confirmStart: false, formerPlayers: []
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -140,7 +140,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const actions = {
     async init() {
       try {
-        const [loaded, game, templates, hist0, ev0] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates(), repo.loadHistory(), repo.loadEvents()]);
+        const [loaded, running, templates, hist0, ev0] = await Promise.all([repo.loadPlayers(), repo.loadRunningGames(), repo.loadTemplates(), repo.loadHistory(), repo.loadEvents()]);
         const goneKeys = await repo.loadDeletedTemplateKeys();
         const formerPlayers = await repo.loadDeletedPlayers();
         // Frühere Freitext-Anlässe einmalig zu Serien machen
@@ -162,8 +162,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         // Ältere, kräftige Spielerfarben einmalig auf Pastell umstellen
         const players = loaded.map(p => (pastel(p.color) === p.color ? p : { ...p, color: pastel(p.color), updatedAt: clock.now() }));
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
-        const g = game && { ...game, players: game.players.map(p => ({ ...p, color: pastel(p.color) })) };
-        set({ ready: true, players, game: g, templates, history: named(history, templates), events, goneKeys, formerPlayers });
+        const soft = (x: GameState) => ({ ...x, players: x.players.map(p => ({ ...p, color: pastel(p.color) })) });
+        const [g = null, ...parked] = running.map(soft);
+        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -272,15 +273,17 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ players: [...state.players, p], selected: [...state.selected, p.id] });
       repo.savePlayer(p).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
-    /** Neue Partie starten. Läuft noch eine mit Punkten, wird erst gefragt: speichern oder verwerfen. */
-    start(old?: 'save' | 'discard') {
+    /** Neue Partie starten. Eine laufende wird geparkt (leere werden verworfen) und bleibt unter „Laufende Partien“. */
+    start() {
       const t = state.template; if (!t) return;
       const chosen = state.selected.map(id => state.players.find(p => p.id === id)).filter((p): p is Player => !!p);
       if (chosen.length < t.players.min || chosen.length > t.players.max) return;
       const running = state.game;
-      if (running && anyScore(running) && !old) { set({ confirmStart: true }); return; }
-      set({ confirmStart: false });
-      if (running) { if (old === 'save') actions.finishGame(); else actions.discardGame(true); }
+      if (running) {
+        // Leer heißt: gar nichts eingetragen (auch kein Haken, keine Notiz)
+        if (running.entries.some(e => !e.deletedAt)) set({ parked: [running, ...state.parked], game: null });
+        else { const parked = state.parked; actions.discardGame(true); set({ parked }); }
+      }
       writeLast(state.selected);
       // Vorlage merken bzw. als zuletzt gespielt markieren
       const known = state.templates.some(x => x.key === t.key);
@@ -289,7 +292,15 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
       persist(g);
     },
-    resume() { if (state.game) set({ screen: 'game', page: -1, edit: null, pad: false, sheet: null }); },
+    /** Partie fortsetzen; ohne ID die aktive, sonst eine geparkte (die aktive wird dafür geparkt) */
+    resume(id?: string) {
+      if (id && state.game?.game.id !== id) {
+        const target = state.parked.find(x => x.game.id === id); if (!target) return;
+        const parked = [...(state.game ? [state.game] : []), ...state.parked.filter(x => x !== target)];
+        set({ game: target, parked, undo: [] });
+      }
+      if (state.game) set({ screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+    },
 
     // ---------- Navigation in der Partie
     /** Seite wechseln; optional mit festem Ziel (Runde), sonst Standardziel des Spielers. */
@@ -514,13 +525,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       if (!quiet || anyScore(g)) toast('Partie verworfen');
     },
-    cancelStart() { set({ confirmStart: false }); },
     /** Kurze Meldung (z. B. aus der Oberfläche) */
     notify(text: string) { toast(text); },
     /** Spieler löschen: verschwindet aus Auswahl und Liste, der Name bleibt im Verlauf */
     deletePlayer(id: string) {
       const p = state.players.find(x => x.id === id); if (!p) return;
-      if (state.game && seated(state.game).some(x => x.id === id)) { toast(`${p.name} spielt gerade mit`); return; }
+      if ([state.game, ...state.parked].some(x => x && seated(x).some(y => y.id === id))) { toast(`${p.name} spielt gerade mit`); return; }
       const t = clock.now(), gone = { ...p, updatedAt: t, deletedAt: t };
       const selected = state.selected.filter(x => x !== id);
       writeLast(readLast().filter(x => x !== id));

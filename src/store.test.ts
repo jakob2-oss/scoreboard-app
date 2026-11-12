@@ -25,6 +25,7 @@ function memRepo() {
     loadPlayers: async () => players.filter(p => !p.deletedAt), savePlayer: async p => { const i = players.findIndex(x => x.id === p.id); if (i >= 0) players[i] = p; else players.push(p); },
     loadDeletedPlayers: async () => players.filter(p => !!p.deletedAt),
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
+    loadRunningGames: async () => (saved && saved.game.status === 'running' ? [saved] : []),
     saveGame: async s => { saved = s; saves++; }
   };
   return { repo, last: () => saved, saves: () => saves, templates, results };
@@ -220,22 +221,39 @@ describe('Spieler löschen', () => {
 });
 
 describe('Laufende Partie beim Neustart', () => {
-  it('fragt nach, speichert auf Wunsch und startet dann neu', async () => {
-    const { st, a } = await setup('free', ['A', 'B']);
+  it('parkt die laufende Partie beim Neustart und setzt beide fort', async () => {
+    const { st, a, mem } = await setup('free', ['A', 'B']);
     a.roundGo(); a.add(10); a.next(); a.add(5); a.next();
     const first = st.get().game!.game.id;
     a.goHome(); a.pickTemplate(TPL.t500); a.start();
-    expect(st.get().confirmStart).toBe(true);
+    const second = st.get().game!.game.id;
+    expect(second).not.toBe(first);
+    expect(st.get().parked.map(x => x.game.id)).toEqual([first]);
+    a.roundGo(); a.add(7); a.next();
+    a.goHome(); a.resume(first);
     expect(st.get().game!.game.id).toBe(first);
-    a.start('save');
-    expect(st.get().history[0].id).toBe(first);
-    expect(st.get().game!.game.id).not.toBe(first);
+    expect(st.get().parked.map(x => x.game.id)).toEqual([second]);
     expect(st.get().screen).toBe('game');
+    expect(totals(st.get().game!).id1).toBe(10);
+    a.finishGame();
+    expect(st.get().history[0].id).toBe(first);
+    expect(st.get().parked.map(x => x.game.id)).toEqual([second]);
+    a.resume(second);
+    expect(st.get().game!.game.id).toBe(second);
+    expect(mem.saves()).toBeGreaterThan(0);
   });
-  it('startet ohne Nachfrage, wenn die laufende Partie noch leer ist', async () => {
+  it('parkt auch eine Partie, in der nur ein Haken gesetzt ist', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'phase10')!.template); a.toPlayers();
+    await a.addPlayer('A'); await a.addPlayer('B'); a.start();
+    a.roundGo(); a.togglePhase();
+    a.goHome(); a.pickTemplate(TPL.free); a.start();
+    expect(st.get().parked).toHaveLength(1);
+  });
+  it('verwirft eine leere laufende Partie beim Neustart, statt sie zu parken', async () => {
     const { st, a, mem } = await setup('free', ['A']);
     a.goHome(); a.pickTemplate(TPL.t500); a.start();
-    expect(st.get().confirmStart).toBe(false);
+    expect(st.get().parked).toHaveLength(0);
     expect(st.get().game!.game.rules.key).toBe('t500');
     expect(mem.last()!.game.rules.key).toBe('t500');
   });

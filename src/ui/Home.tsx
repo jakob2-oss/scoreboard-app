@@ -18,7 +18,8 @@ export function names(list: string[]): string {
 }
 
 export function Home() {
-  const { game, templates } = useApp();
+  const { game, parked, templates } = useApp();
+  const running = [game, ...parked].filter((x): x is NonNullable<typeof game> => !!x).sort((a, b) => b.game.updatedAt.localeCompare(a.game.updatedAt));
   const [q, setQ] = useState('');
   const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const hit = (name: string) => norm(name).includes(norm(q.trim()));
@@ -37,16 +38,20 @@ export function Home() {
             <h1 className="wordmark" aria-label="Punktezettel"><span className="w1">PUNKTE</span><span className="w2">ZETTEL</span></h1>
           </div>
           <div className="home-body">
-            {game && (
+            {running.length > 0 && (
               <div className="group">
-                <div className="eyebrow">Laufende Partie</div>
-                <button className="resume" onClick={() => act().resume()}>
-                  <span className="t">
-                    <b>{game.game.rules.name}</b>
-                    <small>{isCats(game) || isResultOnly(game) ? 'Mit' : `Runde ${currentRoundIndex(game) + 1} mit`} {names(seated(game).map(p => p.name))}</small>
-                  </span>
-                  <span className="go-pill">Weiter</span>
-                </button>
+                <div className="eyebrow">{running.length > 1 ? 'Laufende Partien' : 'Laufende Partie'}</div>
+                <div className="resume-list">
+                  {running.map(g => (
+                    <button key={g.game.id} className="resume" onClick={() => act().resume(g.game.id)}>
+                      <span className="t">
+                        <b>{g.game.rules.name}</b>
+                        <small>{isCats(g) || isResultOnly(g) ? 'Mit' : `Runde ${currentRoundIndex(g) + 1} mit`} {names(seated(g).map(p => p.name))}</small>
+                      </span>
+                      <span className="go-pill">Weiter</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <input className="game-search" id="game-search" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Spiel suchen" aria-label="Spiel suchen" autoComplete="off" />
