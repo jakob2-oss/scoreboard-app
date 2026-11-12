@@ -5,6 +5,7 @@ import { PLAYER_COLORS } from '../lib/color';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
+import { TabBar } from './TabBar';
 import { GameIcon } from './GamePage';
 import { FREE_ICON, GAME_ART } from './art';
 import { GAMES } from '../game/games';
@@ -91,6 +92,7 @@ export function Home() {
           </div>
         </div>
       </div>
+      <TabBar active="home" />
     </section>
   );
 }

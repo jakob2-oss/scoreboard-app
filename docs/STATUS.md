@@ -34,6 +34,14 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
   - Startseite: Gruppen „Neues Spiel“ und „Nur das Ergebnis“
   - Kompakte Szenen über Helfer in `src/ui/art.ts` (`sky`, `unoCard`, `tile`, `hex`, `house`, `podium`)
 
+- **Paket 3 (Teil B Backlog):** lokal vollständig nutzbar
+  - Beim Beenden: Platz, Endpunktzahl und Anlass je Partie in Tabelle `results` (DB v3); Wizard zusätzlich Trefferquote
+  - Untere Navigation (`TabBar`): Spielen, Verlauf, Spieler
+  - Verlauf nach Monat mit Detailansicht, Spielerliste, Profil mit Zeitraum-, Anlass- und Spielfilter,
+    Stärken je Spiel, Direktvergleich, letzte Partien. Logik in `src/game/stats.ts`
+- Teil A Backlog erledigt: Überblick mit leerer Zeile für die nächste Runde, Pastell-Spielerfarben, kein Farbring,
+  Regeln als Stichpunkte
+
 ## Als Nächstes
 **Siehe `docs/BACKLOG.md`** (vollständiges Feedback vom 12.11.2026, nach Priorität geordnet).
 
@@ -51,9 +59,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
 - „Anderes Spiel“ hat noch kein Namensfeld; Idee: Name wählbar, dann eigene Vorlage wie beim freien Spiel.
 - Gespeicherte Vorlagen lassen sich noch nicht bearbeiten oder löschen.
 - Vorlagen zusammenführen (für Statistik) ist vorbereitet (`rules.key`), aber noch ohne Oberfläche.
-- Anlass/Ort beim Speichern einer Partie fehlt noch (kommt mit Paket 3).
 - JSON-Backup fehlt noch (wichtig gegen Datenverlust, Paket 3).
 
 ## Tests
-- Unit-Tests: 52 (Logik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 79 Prüfungen
+- Unit-Tests: 61 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 90 Prüfungen

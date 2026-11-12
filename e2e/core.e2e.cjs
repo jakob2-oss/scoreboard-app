@@ -132,6 +132,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
   await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('Meldung nach dem Speichern', (await text('.toast')) === 'Partie gespeichert');
+  // Verlauf und Profil
+  await p.click('#tab-history');
+  check('Verlauf zeigt die Partie', (await p.locator('.hist-row').count()) === 1);
+  await p.click('.hist-row'); await p.waitForTimeout(200);
+  check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
+  await shot('30-history');
+  await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
+  check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
+  await p.click('.vs-p >> nth=0');
+  check('Direktvergleich zeigt gemeinsame Partie', (await text('.vs-sum')) === '1 gemeinsame Partie');
+  await shot('31-profile');
+  await p.click('[aria-label="Zurück"]');
+  check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
+  await shot('32-people');
+  await p.click('#tab-home');
   check('nach Beenden auf der Startseite', await p.isVisible('#s-home'));
   check('keine laufende Partie mehr', !(await p.isVisible('.resume')));
   await p.reload(); await p.waitForSelector('.wordmark');

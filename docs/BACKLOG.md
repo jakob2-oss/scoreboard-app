@@ -12,12 +12,12 @@ Reihenfolge = Priorität. Erledigtes abhaken und nach STATUS.md übernehmen.
 - [ ] **Hintergründe der Szenen** runder und verspielter, stärker an Two Dots orientiert (Muster, weiche Formen).
 
 ## B. Nächster Entwicklungsschritt: lokal vollständig nutzbar
-- [ ] **Partien speichern** beim Beenden (Platzierung und Endpunktzahl je Spieler, Spiel, Datum, optional Anlass).
+- [x] **Partien speichern** beim Beenden (Platzierung und Endpunktzahl je Spieler, Spiel, Datum, optional Anlass).
       Keine Rundendetails nötig.
-- [ ] **Verlauf/Log:** Liste aller gespielten Partien (Spiel, Datum, Sieger, Platzierungen, Punkte).
-- [ ] **Spielerprofile mit Statistik** wie im Prototyp: Siege, Siegquote, Sieg/Niederlage, Filter Zeitraum und Spiel,
+- [x] **Verlauf/Log:** Liste aller gespielten Partien (Spiel, Datum, Sieger, Platzierungen, Punkte).
+- [x] **Spielerprofile mit Statistik** wie im Prototyp: Siege, Siegquote, Sieg/Niederlage, Filter Zeitraum und Spiel,
       „Worin X gut ist“, Direktvergleich mit einem oder mehreren, spielspezifische Werte, letzte Partien.
-- [ ] **Navigation:** Untere Leiste mit drei Bereichen: Spielen, Verlauf, Spieler. Daumenfreundlich, ruhig.
+- [x] **Navigation:** Untere Leiste mit drei Bereichen: Spielen, Verlauf, Spieler. Daumenfreundlich, ruhig.
 
 ## C. Spiele
 - [ ] **Phase 10:** Haken „Phase geschafft“ je Runde, Phasenanzeige, Rang erst nach Phase dann Punkten.

@@ -94,6 +94,10 @@ export interface Entry extends Base {
   updatedBy?: string | null;
 }
 
-export interface Result extends Base { gameId: string; playerId: string; total: number; place: number }
+export interface Result extends Base {
+  gameId: string; playerId: string; total: number; place: number;
+  /** Spielspezifische Kennzahlen, z. B. Wizard: { hits, rounds } */
+  extra?: Record<string, number | boolean>;
+}
 
 export interface GameEvent extends Base { name: string; from?: ISODate | null; to?: ISODate | null }

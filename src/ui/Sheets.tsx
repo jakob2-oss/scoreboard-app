@@ -88,6 +88,8 @@ export function MenuSheet({ g }: { g: GameState }) {
 // ---------------------------------------------------------------- Ergebnis
 
 export function ResultSheet({ g }: { g: GameState }) {
+  const lastOccasion = (() => { try { return localStorage.getItem('pz:lastOccasion') || ''; } catch { return ''; } })();
+  const [occasion, setOccasion] = useState('');
   const rk = ranking(g), started = anyScore(g);
   return (
     <Sheet label="Ergebnis">
@@ -100,9 +102,12 @@ export function ResultSheet({ g }: { g: GameState }) {
           </div>
         ))}
       </div>
+      <div className="field"><label htmlFor="occasion">Anlass oder Ort</label>
+        <input id="occasion" value={occasion} maxLength={32} autoComplete="off" placeholder={lastOccasion || 'Optional'} onChange={e => setOccasion(e.target.value)} />
+      </div>
       <div className="pad-actions">
         <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
-        <button className="primary" onClick={() => act().finishGame()}>Speichern</button>
+        <button className="primary" onClick={() => act().finishGame(occasion)}>Speichern</button>
       </div>
     </Sheet>
   );

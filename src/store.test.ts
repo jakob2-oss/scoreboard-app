@@ -7,7 +7,7 @@ import type { GameState } from './game/engine';
 import { endState, liveRounds, ranking, seated, totals } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
-import type { Template } from './model/types';
+import type { Result, Template } from './model/types';
 
 function testClock(): Clock {
   let n = 0; let t = Date.UTC(2026, 0, 1);
@@ -16,14 +16,15 @@ function testClock(): Clock {
 /** Speicher im Arbeitsspeicher, merkt sich den zuletzt gespeicherten Stand */
 function memPrefs(): Prefs { let last: string[] = []; return { getLast: () => last, setLast: ids => { last = ids; } }; }
 function memRepo() {
-  const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = [];
+  const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
   const repo: Repo = {
+    saveResults: async r => { results.push(...r); }, loadHistory: async () => [],
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
     loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
     saveGame: async s => { saved = s; saves++; }
   };
-  return { repo, last: () => saved, saves: () => saves, templates };
+  return { repo, last: () => saved, saves: () => saves, templates, results };
 }
 async function setup(tplKey = 'free', names = ['Anna', 'Ben', 'Clara']) {
   const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
@@ -338,5 +339,41 @@ describe('Weitere Spiele', () => {
     const s = await play('scrabble', ['A', 'B']);
     s.a.roundGo(); s.a.add(10); s.a.add(1); s.a.add(1); s.a.mul(3);
     expect(totals(s.st.get().game!).id1).toBe(36);
+  });
+});
+
+describe('Verlauf und Statistik', () => {
+  it('speichert beim Beenden Platz und Endpunktzahl je Spieler samt Anlass', async () => {
+    const { st, a, mem } = await setup('free', ['A', 'B']);
+    a.roundGo(); a.add(10); a.next(); a.add(5); a.next();
+    a.finishGame('Urlaub');
+    expect(mem.results.map(r => [r.playerId, r.place, r.total])).toEqual([['id1', 1, 10], ['id2', 2, 5]]);
+    expect(st.get().history).toHaveLength(1);
+    expect(st.get().history[0]).toMatchObject({ occasion: 'Urlaub', results: [{ playerId: 'id1', place: 1 }, { playerId: 'id2', place: 2 }] });
+    expect(mem.last()!.game.place).toBe('Urlaub');
+  });
+  it('speichert keine Ergebnisse für eine Partie ohne Punkte', async () => {
+    const { st, a, mem } = await setup('free', ['A']);
+    a.finishGame();
+    expect(mem.results).toHaveLength(0);
+    expect(st.get().history).toHaveLength(0);
+  });
+  it('Wizard: merkt sich getroffene Ansagen für die Statistik', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); a.roundGo(); a.pick(1); a.pick(0); a.pick(0); a.roundGo(); a.pick(1); a.pick(0); a.pick(1);
+    a.finishGame();
+    const ex = Object.fromEntries(mem.results.map(r => [r.playerId, r.extra]));
+    expect(ex.id2).toEqual({ rounds: 1, hits: 1 });
+    expect(ex.id1).toEqual({ rounds: 1, hits: 0 });
+  });
+  it('öffnet Profil und setzt Filter', async () => {
+    const { st, a } = await setup('free', ['A', 'B']);
+    a.openProfile('id1'); a.setProfile({ time: '30', vs: ['id2'] });
+    expect(st.get().screen).toBe('profile');
+    expect(st.get().profile).toMatchObject({ id: 'id1', time: '30', vs: ['id2'] });
+    a.openTab('history');
+    expect(st.get().profile).toBeNull();
   });
 });
