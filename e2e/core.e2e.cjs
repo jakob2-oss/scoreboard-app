@@ -128,7 +128,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.menu-list >> text=Beenden und speichern');
   check('Ergebnis zeigt Ben vorn', (await text('.bsheet h3')) === 'Ben gewinnt');
   await shot('07-result-dark');
-  await p.click('.scrim', { position: { x: 30, y: 40 } });
+  await p.click('.victory .pad-actions .secondary');
+  check('Weiterspielen schließt die Siegerseite', !(await p.isVisible('.victory')));
   await p.click('#s-game .text-btn');
   check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
   check('Serie: anfangs keine gewählt', (await p.getAttribute('.ser-chips .fchip >> nth=0', 'aria-pressed')) === 'true');
