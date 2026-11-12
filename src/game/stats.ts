@@ -114,11 +114,11 @@ export function seriesGames(list: HistGame[]) {
 
 // ---------------------------------------------------------------- Direktvergleich zweier Spieler
 
-export interface DuelSide { ahead: number; avgPlace: number; avgPts: number | null; best: number | null }
+export interface DuelSide { wins: number; ahead: number; avgPlace: number; avgPts: number | null; best: number | null }
 export interface Duel {
   shared: number;
   a: DuelSide; b: DuelSide;
-  /** Je Spiel: wie oft jeder vorn lag */
+  /** Je Spiel: Siege (Platz 1) jedes Spielers */
   perGame: { key: string; name: string; a: number; b: number }[];
   /** Spielspezifisch, z. B. Kniffel gewürfelt, Wizard-Ansagen getroffen */
   extras: { label: string; a: number; b: number; unit?: string }[];
@@ -133,6 +133,7 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
     const rs = games.map(g => resultOf(g, id)!);
     const sameGame = new Set(games.map(g => g.key)).size === 1;
     return {
+      wins: rs.filter(r => r.place === 1).length,
       ahead: games.filter(g => resultOf(g, id)!.place < resultOf(g, other)!.place).length,
       avgPlace: rs.length ? Math.round(rs.reduce((x, r) => x + r.place, 0) / rs.length * 10) / 10 : 0,
       avgPts: sameGame && rs.length ? Math.round(rs.reduce((x, r) => x + r.total, 0) / rs.length) : null,
@@ -143,7 +144,8 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
   for (const g of games) {
     const x = map.get(g.key) ?? { key: g.key, name: g.name, a: 0, b: 0 };
     const pa = resultOf(g, a)!.place, pb = resultOf(g, b)!.place;
-    if (pa < pb) x.a++; else if (pb < pa) x.b++;
+    if (pa === 1) x.a++;
+    if (pb === 1) x.b++;
     map.set(g.key, x);
   }
   const sumExtra = (id: string, k: string) => games.reduce((x, g) => x + Number(resultOf(g, id)!.extra?.[k] || 0), 0);

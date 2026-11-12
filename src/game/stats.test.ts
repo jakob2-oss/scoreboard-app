@@ -74,7 +74,7 @@ describe('Serien', () => {
 });
 
 describe('Direktvergleich', () => {
-  it('zählt, wer vorn lag, und rechnet Punkte nur bei gleichem Spiel', () => {
+  it('zählt Siege und wer besser platziert war, und rechnet Punkte nur bei gleichem Spiel', () => {
     const l = [
       g('1', 'kniffel', 2, [['a', 1, 250], ['b', 2, 200], ['c', 3, 100]]),
       g('2', 'kniffel', 1, [['b', 1, 300], ['a', 2, 220]]),
@@ -83,7 +83,7 @@ describe('Direktvergleich', () => {
     l[0].results[0].extra = { kniffel: 1, bonus: 1 }; l[0].results[1].extra = { kniffel: 0, bonus: 0 };
     const d = duel(l, 'a', 'b');
     expect(d.shared).toBe(2);
-    expect([d.a.ahead, d.b.ahead]).toEqual([1, 1]);
+    expect([d.a.wins, d.b.wins, d.a.ahead, d.b.ahead]).toEqual([1, 1, 1, 1]);
     expect([d.a.avgPts, d.b.best]).toEqual([235, 300]);
     expect(d.extras.find(x => x.label === 'Kniffel gewürfelt')).toMatchObject({ a: 1, b: 0 });
     const mixed = duel([...l, g('4', 'uno', 0, [['a', 1, 1], ['b', 2, 2]])], 'a', 'b');

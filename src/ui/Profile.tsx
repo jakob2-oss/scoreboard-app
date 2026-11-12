@@ -159,12 +159,13 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
         <small>{d.shared} gemeinsame {d.shared === 1 ? 'Partie' : 'Partien'}</small>
         <div><Avatar p={other} big /><span>{other.name}</span></div>
       </div>
-      {row('Vorn', d.a.ahead, d.b.ahead)}
+      {row('Siege', d.a.wins, d.b.wins)}
+      {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', d.a.ahead, d.b.ahead)}
       {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
       {d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
       {d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
       {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
-      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Vorn je Spiel</div>{d.perGame.map(x => row(x.name, x.a, x.b, 'high', dec, true))}</>}
+      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name, x.a, x.b, 'high', dec, true))}</>}
       <div className="eyebrow duel-last">Gemeinsame Partien</div>
       <div className="duel-games">
         {d.games.slice(0, 5).map(g => {

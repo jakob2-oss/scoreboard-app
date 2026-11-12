@@ -146,7 +146,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
   await p.click('.vs-p >> nth=0');
   check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
-  check('Direktvergleich: Balken „Vorn“ und Revanche', (await p.locator('.duel-row').count()) >= 3 && await p.isVisible('.rematch'));
+  check('Direktvergleich: Balken „Siege“ und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Siege' && await p.isVisible('.rematch'));
   await shot('31-profile');
   await p.click('[aria-label="Zurück"]');
   check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
