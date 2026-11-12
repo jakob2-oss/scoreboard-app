@@ -122,3 +122,8 @@ Spiele stehen in aufklappbaren Gruppen nach Spielart: Kartenspiele, Würfelspiel
 (dort auch Freies Spiel, Anderes Spiel und Erstellen). Favoriten (Herz auf der Spielseite) stehen ganz oben.
 Offene/geschlossene Gruppen und Favoriten merkt sich das Gerät (localStorage), noch nicht in der Sicherung.
 Eigene Spiele bekommen beim Erstellen eine Spielart (`params.family`); Kopien fester Spiele übernehmen sie.
+
+## 12.11.2026: Startseite aufgeräumt, ein Weg zum eigenen Spiel
+„Freies Spiel“ heißt jetzt „Schnelles Spiel“ und steht immer ganz oben bei den Favoriten. „Anderes Spiel“ entfällt
+(doppelte sich mit der eigenen Endwertung; alte Partien bleiben im Verlauf). Unten gibt es nur noch „Eigenes Spiel
+erstellen“; ob jede Runde oder nur am Ende gezählt wird, wählt man im Erstellen („Gezählt wird“).

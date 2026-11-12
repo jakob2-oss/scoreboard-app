@@ -114,7 +114,7 @@ Verbesserungswürdig:
 - [x] **Phase 10:** Phasenstand ist im Überblick nicht sichtbar (nur auf der Spielerseite). Besser: Phase je Spieler im Kopf oder in der Summenzeile.
 - [x] **Rommé, Skyjo (wenig gewinnt, mit Grenze):** Summenzeile zeigt bei hohem Ziel „noch X“, bei Grenze nichts. Besser: „noch X bis 500“ als Warnung.
 - [x] **Binokel:** „Abgehen“ (Spieler gibt vor dem Spiel auf: Gebot einfach negativ) fehlt als eigene Taste.
-- [ ] **Anderes Spiel:** doppelt sich mit „Eigene Endwertung erstellen“; zusammenlegen oder als Schnellstart lassen.
+- [x] **Anderes Spiel:** entfernt, „Eigenes Spiel erstellen“ mit „Nur am Ende“ deckt es ab.
 
 Erstellungsmodus, fehlende Bausteine:
 - [x] Wertungsart wählbar: Punkte je Runde, zwei Werte je Runde (wie Binokel), Rang je Runde (wie Arschloch), nur Endergebnis.

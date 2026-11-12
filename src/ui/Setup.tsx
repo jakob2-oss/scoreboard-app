@@ -133,7 +133,7 @@ export function Setup() {
   const rank = !result && (setup.kind === 'rank' || tableKind);
   // Wertung nur bei normalen Rundenspielen umstellbar (Kopien von Wizard, Kniffel, Phase 10 bleiben, wie sie sind)
   const kindEditable = !own || (['rounds', 'rank', 'lives', 'tokens'].includes(own.scoring) && !own.params?.phases);
-  const title = own ? own.name : setupTemplate ? (setup.name.trim() || (result ? 'Eigene Endwertung' : 'Eigene Vorlage')) : 'Freies Spiel';
+  const title = own ? own.name : setupTemplate ? (setup.name.trim() || 'Eigenes Spiel') : 'Schnelles Spiel';
   return (
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
       dock={<>
@@ -147,6 +147,15 @@ export function Setup() {
             <input id="setup-name" value={setup.name} maxLength={28} autoComplete="off" placeholder={setupTemplate ? 'Name des Spiels' : fallbackName()}
               onChange={e => a.updateSetup({ name: e.target.value })} />
           </div>
+          {setupTemplate && !own && (
+            <div className="field">
+              <label>Gezählt wird</label>
+              <div className="seg">
+                <button id="mode-rounds" aria-pressed={!result} onClick={() => a.updateSetup({ mode: 'rounds' })}>Jede Runde</button>
+                <button id="mode-result" aria-pressed={result} onClick={() => a.updateSetup({ mode: 'result' })}>Nur am Ende</button>
+              </div>
+            </div>
+          )}
           {setupTemplate && (
             <div className="field">
               <label>Spielart</label>
