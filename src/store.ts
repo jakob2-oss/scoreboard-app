@@ -280,7 +280,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (chosen.length < t.players.min || chosen.length > t.players.max) return;
       const running = state.game;
       if (running) {
-        if (anyScore(running)) set({ parked: [running, ...state.parked], game: null });
+        // Leer heißt: gar nichts eingetragen (auch kein Haken, keine Notiz)
+        if (running.entries.some(e => !e.deletedAt)) set({ parked: [running, ...state.parked], game: null });
         else { const parked = state.parked; actions.discardGame(true); set({ parked }); }
       }
       writeLast(state.selected);

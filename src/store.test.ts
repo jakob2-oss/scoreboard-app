@@ -242,6 +242,14 @@ describe('Laufende Partie beim Neustart', () => {
     expect(st.get().game!.game.id).toBe(second);
     expect(mem.saves()).toBeGreaterThan(0);
   });
+  it('parkt auch eine Partie, in der nur ein Haken gesetzt ist', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'phase10')!.template); a.toPlayers();
+    await a.addPlayer('A'); await a.addPlayer('B'); a.start();
+    a.roundGo(); a.togglePhase();
+    a.goHome(); a.pickTemplate(TPL.free); a.start();
+    expect(st.get().parked).toHaveLength(1);
+  });
   it('verwirft eine leere laufende Partie beim Neustart, statt sie zu parken', async () => {
     const { st, a, mem } = await setup('free', ['A']);
     a.goHome(); a.pickTemplate(TPL.t500); a.start();
