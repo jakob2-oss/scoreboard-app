@@ -100,3 +100,4 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 - [x] **Festes Spiel als eigenes Spiel anpassen:** Kopie mit Regeln, Schnelltasten und Bild des Originals, sofort in Bearbeitung.
 - [x] **Siegerseite (12.11.):** ganze Seite mit Szene des Spiels, Sieger mit Krone, Treppchen, bis zu drei Kennzahlen je Spiel (`src/game/highlights.ts`), Serie zuordnen und speichern.
 - [x] **App-Hintergrund mit Formen (12.11.):** blau bleibt, Formen passend zum Spiel, alles langsam in Bewegung; Szenen-Konfetti verlangsamt.
+- [x] **Otter auf der Siegerseite (12.11.):** Trophäenzimmer mit Otter (Krone, Pokal), gerahmtes Bild des Spiels, Punktezettel an der Wand, Band „Gewonnen“; langsam fallendes Konfetti. Stil erwachsen, angelehnt an das Vorbild, eigene Zeichnung (`src/ui/trophy.ts`).

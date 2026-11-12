@@ -87,3 +87,7 @@ Kernpunkten und einem Rechenbeispiel statt Stichpunktlisten.
 - Grundton bleibt (Mitternachtsblau bzw. Papier). Darüber große, blasse Kreise und kleine Formen in Pastell (`src/ui/Backdrop.tsx`).
 - Formen passen zum Spiel (Würfel, Karten, Sterne, Waben, Stufen, Steine, Häuser), sonst Punkte und Ringe.
 - Bewegung sehr langsam (26–42 s), in der laufenden Partie noch blasser; bei „Bewegung reduzieren“ still.
+
+## Siegerseite (Stand 12.11.)
+- Trophäenzimmer mit Otter als Maskottchen: warmes Holz, Lampe, Bild des gespielten Spiels, Punktezettel, Band „Gewonnen“.
+- Erwachsener Stil: schlanke Proportionen, keine Kinderbacken, gedeckte warme Töne mit Pastell-Akzenten.

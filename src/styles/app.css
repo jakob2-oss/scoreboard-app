@@ -292,3 +292,13 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 .scene .an-drift { animation-duration: 22s; }
 .backdrop.dim .bd-m { opacity: calc(var(--bd-op) * .45); }
 .resume-list { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- Siegerseite: Trophäenzimmer ---------- */
+.victory .v-hero { height: 300px; margin-bottom: 6px; }
+.vc-fall { animation: vc-fall 10s linear infinite; }
+@keyframes vc-fall { from { transform: translate(0, -20px) rotate(0deg); } to { transform: translate(14px, 310px) rotate(320deg); } }
+.vl-glow { animation: vl-glow 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes vl-glow { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .65; transform: scale(1.08); } }
+.vo-breathe { animation: vo-breathe 5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes vo-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015, 1.025); } }
+@media (prefers-reduced-motion: reduce) { .vc-fall, .vl-glow, .vo-breathe { animation: none !important; } }

@@ -252,7 +252,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('22-monopoly-ov');
   await p.click('.dock .primary');
   check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
-  check('Siegerseite: Treppchen und Kennzahlen', (await p.locator('.v-podium .v-step').count()) === 3 && (await p.isVisible('.v-hero .v-av')));
+  check('Siegerseite: Treppchen und Kennzahlen', (await p.locator('.v-podium .v-step').count()) === 3 && (await raw('.v-hero')).includes('GEWONNEN'));
   await shot('22b-victory');
   await p.click('.bsheet .primary'); await p.waitForTimeout(300);
 
