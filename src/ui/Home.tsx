@@ -11,7 +11,7 @@ import { Chevron, IconMoon, IconSun } from './icons';
 import { TabBar } from './TabBar';
 import { GameIcon } from './GamePage';
 import { FREE_ICON, GAME_ART, ownArt } from './art';
-import { GAMES } from '../game/games';
+import { FAMILIES, GAMES, gameDef, type GameDef } from '../game/games';
 import { FREE_TINT } from './Setup';
 
 /** „Anna, Ben und Clara“ */
@@ -20,12 +20,21 @@ export function names(list: string[]): string {
 }
 
 export function Home() {
-  const { game, parked, templates, events } = useApp();
+  const { game, parked, templates, events, favs } = useApp();
   const live = events.find(e => e.active);
   const running = [game, ...parked].filter((x): x is NonNullable<typeof game> => !!x).sort((a, b) => b.game.updatedAt.localeCompare(a.game.updatedAt));
   const [q, setQ] = useState('');
   const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const hit = (name: string) => norm(name).includes(norm(q.trim()));
+  // Favoriten oben, dann nach Spielart; eigene Spiele ohne Spielart in „Eigene Spiele“
+  const favGames = GAMES.filter(d => favs.includes(d.template.key)), favOwn = templates.filter(t => favs.includes(t.key));
+  const ownOther = templates.filter(t => !familyOf(t));
+  const [closed, setClosed] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('pz:closed') || '[]'); } catch { return []; } });
+  const isOpen = (id: string) => !closed.includes(id);
+  const toggle = (id: string) => {
+    const next = closed.includes(id) ? closed.filter(x => x !== id) : [...closed, id];
+    setClosed(next); try { localStorage.setItem('pz:closed', JSON.stringify(next)); } catch { /* privater Modus */ }
+  };
   const theme = useTheme();
   return (
     <section className="screen" id="s-home">
@@ -88,50 +97,38 @@ export function Home() {
                 </div>
               </div>
             ) : <>
-            <div className="group">
-              <div className="eyebrow">Neues Spiel</div>
-              <div className="list">
-                {GAMES.filter(d => !d.group).map(d => (
-                  <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
-                    <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
-                    <span className="t"><b>{d.template.name}</b></span>
-                    <Chevron />
-                  </button>
-                ))}
-                <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
-                  <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
-                  <span className="t"><b>Freies Spiel</b></span>
-                  <Chevron />
-                </button>
-              </div>
-            </div>
-            <div className="group">
-              <div className="eyebrow">Endwertung</div>
-              <div className="list">
-                {GAMES.filter(d => d.group === 'result').map(d => (
-                  <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
-                    <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
-                    <span className="t"><b>{d.template.name}</b></span>
-                    <Chevron />
-                  </button>
-                ))}
-                {templates.filter(t => t.params?.resultOnly).map(t => <OwnRow key={t.key} t={t} />)}
-                <button className="row tpl new-own" id="new-result" onClick={() => act().openSetup(true, 'result')}>
-                  <span className="plus-ic" aria-hidden="true">+</span>
-                  <span className="t"><b>Eigene Endwertung erstellen</b></span>
-                </button>
-              </div>
-            </div>
-            <div className="group">
-              <div className="eyebrow">Meine Spiele</div>
-              <div className="list" id="my-games">
-                {templates.filter(t => !t.params?.resultOnly).map(t => <OwnRow key={t.key} t={t} />)}
-                <button className="row tpl new-own" id="new-own" onClick={() => act().openSetup(true)}>
-                  <span className="plus-ic" aria-hidden="true">+</span>
-                  <span className="t"><b>Eigene Vorlage erstellen</b></span>
-                </button>
-              </div>
-            </div>
+            {favGames.length + favOwn.length > 0 && (
+              <Section id="favs" title="Favoriten" count={favGames.length + favOwn.length} open={isOpen('favs')} onToggle={toggle}>
+                {favGames.map(d => <GameRow key={d.template.key} d={d} />)}
+                {favOwn.map(t => <OwnRow key={t.key} t={t} />)}
+              </Section>
+            )}
+            {FAMILIES.map(f => {
+              const fixed = GAMES.filter(d => d.family === f.id), own = templates.filter(t => familyOf(t) === f.id);
+              return (
+                <Section key={f.id} id={f.id} title={f.label} count={fixed.length + own.length} open={isOpen(f.id)} onToggle={toggle}>
+                  {fixed.map(d => <GameRow key={d.template.key} d={d} />)}
+                  {own.map(t => <OwnRow key={t.key} t={t} />)}
+                </Section>
+              );
+            })}
+            <Section id="own" title="Eigene Spiele" count={ownOther.length} open={isOpen('own')} onToggle={toggle} listId="my-games">
+              {ownOther.map(t => <OwnRow key={t.key} t={t} />)}
+              <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
+                <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
+                <span className="t"><b>Freies Spiel</b></span>
+                <Chevron />
+              </button>
+              {GAMES.filter(d => !d.family).map(d => <GameRow key={d.template.key} d={d} />)}
+              <button className="row tpl new-own" id="new-own" onClick={() => act().openSetup(true)}>
+                <span className="plus-ic" aria-hidden="true">+</span>
+                <span className="t"><b>Eigene Vorlage erstellen</b></span>
+              </button>
+              <button className="row tpl new-own" id="new-result" onClick={() => act().openSetup(true, 'result')}>
+                <span className="plus-ic" aria-hidden="true">+</span>
+                <span className="t"><b>Eigene Endwertung erstellen</b></span>
+              </button>
+            </Section>
             </>}
             <Feedback />
             <p className="version">Version {__APP_VERSION__}</p>
@@ -188,5 +185,31 @@ function OwnRow({ t }: { t: Template }) {
       <span className="t"><b>{t.name}</b><small>{t.params?.resultOnly ? (t.params.unit === 'Platz' ? 'Platz am Ende' : 'Punkte am Ende') : describeTemplate(t)}</small></span>
       <Chevron />
     </button>
+  );
+}
+
+/** Spielart eines eigenen Spiels: selbst gewählt oder vom festen Spiel, von dem es kopiert ist */
+const familyOf = (t: Template) => t.params?.family ?? (t.params?.base ? gameDef(t.params.base)?.family : undefined);
+
+function GameRow({ d }: { d: GameDef }) {
+  return (
+    <button className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
+      <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
+      <span className="t"><b>{d.template.name}</b></span>
+      <Chevron />
+    </button>
+  );
+}
+
+/** Aufklappbare Gruppe mit Zahl der Spiele */
+function Section({ id, title, count, open, onToggle, listId, children }: { id: string; title: string; count: number; open: boolean; onToggle: (id: string) => void; listId?: string; children: React.ReactNode }) {
+  return (
+    <div className={'group grp' + (open ? ' open' : '')}>
+      <button className="grp-head" id={`grp-${id}`} aria-expanded={open} onClick={() => onToggle(id)}>
+        <span className="eyebrow">{title}</span>{count > 0 && <span className="grp-count">{count}</span>}
+        <svg className="grp-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+      </button>
+      {open && <div className="list" id={listId}>{children}</div>}
+    </div>
   );
 }

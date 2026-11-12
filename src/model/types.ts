@@ -60,6 +60,8 @@ export interface TemplateParams {
   split?: SplitField[];
   /** Nur der Rundensieger bekommt Punkte (Uno): erst Sieger wählen, alle anderen 0 */
   winnerOnly?: boolean;
+  /** Spielart für die Startseite (eigene Spiele): Karten, Würfel, Brett und Legen */
+  family?: 'karten' | 'wuerfel' | 'brett';
   /** Tisch-Modus: Leben je Spieler (Schwimmen) */
   lives?: number;
   /** Tisch-Modus: Deckel in der Mitte (Schocken) */

@@ -14,6 +14,8 @@ export interface GameDef {
   example?: [string, string][];
   /** Gruppe auf der Startseite: Rundenspiele oder Spiele, bei denen nur das Ergebnis zählt */
   group?: 'result';
+  /** Spielart auf der Startseite; ohne (z. B. „Anderes Spiel“) steht es bei den eigenen Spielen */
+  family?: Family;
   endOptions?: { label: string; end: End }[];
 }
 
@@ -160,5 +162,14 @@ GAMES.push({
     ['Schock aus', 'alle Deckel auf einmal'], ['Hälfte', 'wer alle Deckel hat, verliert sie'], ['Partie', 'zwei Hälften verloren, sonst entscheidet das Finale']],
   acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
 });
+
+/** Spielarten für die Startseite, in dieser Reihenfolge */
+export type Family = 'karten' | 'wuerfel' | 'brett';
+export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label: 'Kartenspiele' }, { id: 'wuerfel', label: 'Würfelspiele' }, { id: 'brett', label: 'Brett- und Legespiele' }];
+const FAMILY: Record<string, Family> = {
+  wizard: 'karten', romme: 'karten', skyjo: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
+  arschloch: 'karten', schwimmen: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
+};
+for (const d of GAMES) d.family = FAMILY[d.template.key];
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

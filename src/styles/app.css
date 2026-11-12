@@ -485,3 +485,15 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .ser-trophy svg { display: block; width: 100%; height: auto; }
 .ser-end { width: 100%; margin: 4px 0 18px; }
 .ser-awards { margin-bottom: 4px; }
+/* Favorit auf der Spielseite: Herz oben rechts */
+.tpl-fav { position: absolute; top: 10px; right: max(12px, env(safe-area-inset-right, 0px)); width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .92);
+  color: #2e2b4f; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+.tpl-fav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; transition: transform .2s ease; }
+.tpl-fav[aria-pressed="true"] svg { fill: #ef7a5c; stroke: #ef7a5c; transform: scale(1.08); }
+/* Startseite: aufklappbare Gruppen nach Spielart */
+.grp-head { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 4px 6px 8px 0; color: var(--muted); text-align: left; }
+.grp-head .eyebrow { padding-left: 6px; }
+.grp-count { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--fill); border-radius: 999px; padding: 1px 8px; }
+.grp-chev { width: 20px; height: 20px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transform: rotate(-90deg); transition: transform .2s ease; }
+.grp.open .grp-chev { transform: none; }
+.grp:not(.open) { margin-bottom: 2px; }

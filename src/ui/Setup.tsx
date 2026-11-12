@@ -54,7 +54,7 @@ function pointsOf(t: Template): [string, string][] {
  * (Ansicht mit Regeln, Bearbeiten, Löschen).
  */
 export function Setup() {
-  const { setup, editKey, templates, setupTemplate, selected, players } = useApp();
+  const { setup, editKey, templates, setupTemplate, selected, players, favs } = useApp();
   const a = act();
   const own = editKey ? templates.find(t => t.key === editKey) : undefined;
   const editing = useApp().setupEditing, setEditing = (on: boolean) => act().setSetupEditing(on);
@@ -84,7 +84,7 @@ export function Setup() {
     const n = selected.filter(id => players.some(p => p.id === id)).length;
     const ready = n >= own.players.min && n <= own.players.max;
     return (
-      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goHome()}
+      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goHome()} fav={{ on: favs.includes(own.key), toggle: () => a.toggleFav(own.key) }}
         dock={ready
           ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
           : <button className="primary" id="setup-next" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
@@ -147,6 +147,16 @@ export function Setup() {
             <input id="setup-name" value={setup.name} maxLength={28} autoComplete="off" placeholder={setupTemplate ? 'Name des Spiels' : fallbackName()}
               onChange={e => a.updateSetup({ name: e.target.value })} />
           </div>
+          {setupTemplate && (
+            <div className="field">
+              <label>Spielart</label>
+              <div className="seg">
+                {([['karten', 'Karten'], ['wuerfel', 'Würfel'], ['brett', 'Brett'], [null, 'Andere']] as const).map(([f, l]) => (
+                  <button key={l} id={`family-${f ?? 'none'}`} aria-pressed={setup.family === f} onClick={() => a.updateSetup({ family: f })}>{l}</button>
+                ))}
+              </div>
+            </div>
+          )}
           {result && (
             <div className="field">
               <label>Gewertet wird</label>

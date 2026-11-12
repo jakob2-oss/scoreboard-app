@@ -116,3 +116,9 @@ Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten,
 Jetzt ein Banner: „OINA NO?“ links, das Bild rechts auf einer gemeinsamen organischen Fläche (unregelmäßige Kante,
 darin drei Formen, die langsam treiben, drehen und atmen). Die Suche steht als Pille mit Lupe frei darunter,
 nicht überlappend; der Hell/Dunkel-Schalter oben links in der Fläche. Darunter direkt die Spiele.
+
+## 12.11.2026: Startseite nach Spielart, Favoriten oben
+Spiele stehen in aufklappbaren Gruppen nach Spielart: Kartenspiele, Würfelspiele, Brett- und Legespiele, Eigene Spiele
+(dort auch Freies Spiel, Anderes Spiel und Erstellen). Favoriten (Herz auf der Spielseite) stehen ganz oben.
+Offene/geschlossene Gruppen und Favoriten merkt sich das Gerät (localStorage), noch nicht in der Sicherung.
+Eigene Spiele bekommen beim Erstellen eine Spielart (`params.family`); Kopien fester Spiele übernehmen sie.

@@ -70,21 +70,25 @@ export interface AppState {
   teamMode: boolean;
   teamOf: Record<string, number>;
   teamCount: number;
+  /** Lieblingsspiele (Schlüssel), stehen oben auf der Startseite */
+  favs: string[];
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false,
+  tokenTo: null, fireMode: false, favs: [],
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
-export interface Prefs { getLast(): string[]; setLast(ids: string[]): void }
+export interface Prefs { getLast(): string[]; setLast(ids: string[]): void; getFavs?(): string[]; setFavs?(keys: string[]): void }
 const LAST_KEY = 'pz:lastPlayers';
 export const browserPrefs: Prefs = {
   getLast: () => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '[]'); } catch { return []; } },
-  setLast: ids => { try { localStorage.setItem(LAST_KEY, JSON.stringify(ids)); } catch { /* privater Modus */ } }
+  setLast: ids => { try { localStorage.setItem(LAST_KEY, JSON.stringify(ids)); } catch { /* privater Modus */ } },
+  getFavs: () => { try { return JSON.parse(localStorage.getItem('pz:favs') || '[]'); } catch { return []; } },
+  setFavs: keys => { try { localStorage.setItem('pz:favs', JSON.stringify(keys)); } catch { /* privater Modus */ } }
 };
 
 /** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
@@ -183,7 +187,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
         const soft = (x: GameState) => ({ ...x, players: x.players.map(p => ({ ...p, color: pastel(p.color) })) });
         const [g = null, ...parked] = running.map(soft);
-        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers });
+        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, favs: prefs.getFavs?.() ?? [] });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -383,6 +387,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game, ref = state.rankRef; if (!g || !ref || ref === 'new') return;
       const r = setOrder(g, ref, [], clock);
       set({ game: r.state, undo: [...state.undo.slice(-99), g] }); persist(r.state);
+    },
+    /** Spiel als Favorit markieren oder wieder lösen */
+    toggleFav(key: string) {
+      const favs = state.favs.includes(key) ? state.favs.filter(k => k !== key) : [...state.favs, key];
+      set({ favs }); prefs.setFavs?.(favs);
+      toast(favs.includes(key) ? 'Bei den Favoriten' : 'Aus den Favoriten entfernt');
     },
     // ---------- Tisch-Modus
     /** Schwimmen: Antippen kostet ein Leben; im Feuer-Modus verlieren alle anderen eins */
