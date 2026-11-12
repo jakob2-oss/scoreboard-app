@@ -306,7 +306,8 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
   const bids = isBids(g) && edit.ref !== 'new';
   const order = edit.field && edit.ref !== 'new' ? inputOrder(g, edit.ref) : null;
   const splitKeys = isSplit(g) ? fieldsOf(g)!.find(f => f.key === edit.field)?.quick : undefined;
-  const nextP2 = players[order ? order[order.indexOf(i) + 1] : i + 1];
+  const back = useApp().fromOverview && !isCats(g);
+  const nextP2 = back ? undefined : players[order ? order[order.indexOf(i) + 1] : i + 1];
   const cards = bids ? roundNumber(g, edit.ref) : 0;
   return (
     <div className="pp-panel">

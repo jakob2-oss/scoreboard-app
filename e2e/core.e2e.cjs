@@ -178,7 +178,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const n of ['1', '5']) await p.click(`.step-chips .chip >> text="${n}"`);   // abwählen
   for (const n of ['2', '20', '50']) await p.click(`.step-chips .chip >> text="${n}"`);
   check('höchstens drei Zählschritte', (await p.locator('.step-chips .chip[aria-pressed="true"]').count()) === 3);
-  await p.click('.switch-row');   // diesmal als Vorlage speichern
+  await p.click('.switch-row >> text=Als Vorlage speichern');   // diesmal als Vorlage speichern
   await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
   check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');

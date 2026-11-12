@@ -328,7 +328,10 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 
 /* ---------- Erstellungsmodus: Wertung, eigene Tasten ---------- */
 .split-names { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.key-add { display: grid; grid-template-columns: 1fr auto 72px; gap: 8px; }
-.key-add .key-op button { min-width: 38px; }
+.key-add { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px; gap: 8px; }
+.key-add input, .split-names input { min-width: 0; width: 100%; }
+.key-add .key-op button { min-width: 32px; padding: 0 6px; }
 .key-add button[type="submit"] { grid-column: 1 / -1; }
 .switch-row .t small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
+.key-add button[type="submit"] { min-height: 44px; border-radius: 999px; background: var(--fill); font-family: var(--f-display); font-weight: 500; }
+.key-add button[type="submit"]:disabled { opacity: .45; }
