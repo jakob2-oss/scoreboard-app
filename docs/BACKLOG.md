@@ -36,3 +36,13 @@ Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Pa
 - [ ] **Eigene Spiele bekommen Szene und Icon** (Muster im Stil der anderen Spiele) und eine klassische Spielseite.
 - [ ] **Eigenes Label** für „Eigene Vorlage erstellen“, getrennt vom „Freien Spiel“.
 - [ ] **Spezialregeln** im freien Spiel / eigenen Spiel: Notizfelder rechts neben dem Punktwert (ohne Verrechnung).
+
+## E. Spieleabende und Serien (Wunsch vom 12.11.)
+- [ ] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
+      Nicht an einen Tag gebunden: Partien lassen sich jederzeit einer Serie zuordnen, auch nachträglich.
+- [ ] **Partien zuordnen:** beim Start oder Beenden die Serie wählen (ersetzt das Freitextfeld „Anlass oder Ort“),
+      im Verlauf nachträglich ändern. Eine Serie kann verschiedene Spiele enthalten.
+- [ ] **Übersicht je Serie:** Gesamtwertung über alle Partien (Siege, Platzpunkte), Partien der Serie,
+      Bilanz je Spiel. Eigener Bereich in der Navigation oder unter „Verlauf“.
+- [ ] **Gemeinschaftlich:** Eine Freundesgruppe nutzt dieselbe Serie. Lokal zunächst auf einem Gerät;
+      teilen zwischen Handys erst mit Sync (Phase 4). Datenmodell: Tabelle `events` mit `groupId`.
