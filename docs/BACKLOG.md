@@ -79,3 +79,7 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] **Partie im Verlauf löschen** (mit Rückfrage), Statistik rechnet ohne sie.
 - [x] Texte: „Ben und Clara gewinnen“ statt „Ben & Clara gewinnt“, „haben Phase 10 geschafft“, „mit 1 Spieler“.
 - [ ] Offen: mehrere laufende Partien gleichzeitig, Spieler löschen.
+- [x] **Szenen lebendiger (12.11.):** eigenes Muster je Spiel (Rauten, Strahlen, Waben, Raster, Wellen, Streifen, Stufen, Blöcke),
+      dezente Bewegung (Konfetti schwebt, Sonne pulsiert, Figuren wippen; aus bei „Bewegung reduzieren“).
+      Icons als Einzelsymbol, Szene erzählt die Situation (Kniffel: Würfel und Becher, Schafkopf: Eichel und Bierdeckel,
+      Binokel: Schelle und Ober-Unter-Paar, Uno: Farbrad und Karten, Siedler: Schaf und Waben).

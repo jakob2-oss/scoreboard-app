@@ -84,4 +84,4 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5, #6, #7
 
 ## Tests
 - Unit-Tests: 83 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen
+- Klicktest `e2e/core.e2e.cjs`: 133 Prüfungen

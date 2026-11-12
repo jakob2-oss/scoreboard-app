@@ -103,29 +103,43 @@ export const GAME_ART: Record<string, { icon: string; scene: string }> = {
 
 // ---------------------------------------------------------------- Weitere Spiele (kompakte Szenen)
 const ICON = (body: string) => `<svg viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`;
-/** Hintergrund der Spielszenen: runde Hügel, weiche Kreise, Punkteraster, Sonne mit Hof, Konfetti. Flach, ohne Konturen. */
+/** Hintergrund der Spielszenen: Muster je Spiel, runde Hügel, Sonne mit Hof, schwebendes Konfetti. Flach, ohne Konturen.
+ *  Klassen an-* werden in app.css animiert (bei „Bewegung reduzieren“ ruhig). */
 const DOTS = ['#f3a98f', '#86cbb8', '#f2cf86', '#eda7bf', '#97c4e3', '#bba8e6'];
-const sky = (bg: string, band: string, ground: string, sun: string) => {
-  // Punkteraster oben links (Two-Dots-Motiv), Farben reihum
-  const grid = Array.from({ length: 4 }, (_, r) => Array.from({ length: 5 }, (_, c) =>
-    `<circle cx="${22 + c * 16}" cy="${86 + r * 16}" r="${3.4 - r * .5}" fill="${DOTS[(r + c) % DOTS.length]}" opacity="${.75 - r * .14}"/>`).join('')).join('');
-  // Konfetti: Punkte, Halbkreise, Pillen
-  const conf = [
-    `<circle cx="132" cy="34" r="5" fill="${DOTS[0]}"/>`, `<circle cx="262" cy="96" r="4" fill="${DOTS[4]}"/>`,
-    `<circle cx="118" cy="128" r="6" fill="${DOTS[3]}"/>`, `<circle cx="366" cy="150" r="5" fill="${DOTS[1]}"/>`,
-    `<path d="M212 26a9 9 0 0 1 18 0z" fill="${DOTS[2]}"/>`, `<path d="M104 70a8 8 0 0 0 16 0z" fill="${DOTS[5]}"/>`,
-    `<rect x="300" y="112" width="22" height="9" rx="4.5" transform="rotate(-24 311 116)" fill="${DOTS[3]}"/>`,
-    `<rect x="170" y="62" width="18" height="8" rx="4" transform="rotate(18 179 66)" fill="${DOTS[1]}"/>`
-  ].join('');
+export type Pattern = 'dots' | 'rays' | 'lozenge' | 'checker' | 'hex' | 'waves' | 'stripes' | 'steps' | 'blocks';
+const PATTERNS: Record<Pattern, (c: string) => string> = {
+  dots: () => Array.from({ length: 4 }, (_, r) => Array.from({ length: 5 }, (_, k) =>
+    `<circle class="an-tw" style="animation-delay:${-(r + k) * .4}s" cx="${22 + k * 16}" cy="${86 + r * 16}" r="${3.4 - r * .5}" fill="${DOTS[(r + k) % DOTS.length]}"/>`).join('')).join(''),
+  rays: c => `<g class="an-spin" style="transform-origin:195px 270px">${Array.from({ length: 16 }, (_, k) => {
+    const a = k * Math.PI / 8, b = a + Math.PI / 16, R = 480, f = (t: number) => `${195 + Math.cos(t) * R} ${270 + Math.sin(t) * R}`;
+    return `<path d="M195 270L${f(a)}L${f(b)}z" fill="${c}"/>`; }).join('')}</g>`,
+  lozenge: c => Array.from({ length: 7 }, (_, r) => Array.from({ length: 12 }, (_, k) => (r + k) % 2 ? '' :
+    `<path d="M${k * 36 - 6} ${r * 30 + 15}l18-15 18 15-18 15z" fill="${c}"/>`).join('')).join(''),
+  checker: c => Array.from({ length: 6 }, (_, r) => Array.from({ length: 11 }, (_, k) => (r + k) % 2 ? '' :
+    `<rect x="${k * 36 + 4}" y="${r * 36 + 4}" width="28" height="28" rx="8" fill="${c}"/>`).join('')).join(''),
+  hex: c => Array.from({ length: 5 }, (_, r) => Array.from({ length: 10 }, (_, k) => (r * 3 + k) % 3 === 0 ? '' : (() => {
+    const x = k * 42 + (r % 2) * 21, y = r * 37 + 10, R = 20;
+    return `<path d="M${x} ${y - R}l${R * .87} ${R * .5}v${R}l${-R * .87} ${R * .5}l${-R * .87} ${-R * .5}v${-R}z" fill="${c}"/>`; })()).join('')).join(''),
+  waves: c => Array.from({ length: 5 }, (_, k) => `<path class="an-drift" style="animation-delay:${-k * 1.6}s" d="M-40 ${30 + k * 36}q30-14 60 0t60 0 60 0 60 0 60 0 60 0 60 0 60 0v14q-30-14-60 0t-60 0-60 0-60 0-60 0-60 0-60 0-60 0z" fill="${c}"/>`).join(''),
+  stripes: c => Array.from({ length: 9 }, (_, k) => `<path d="M${k * 56 - 120} 0h26l-150 250h-26z" fill="${c}"/>`).join(''),
+  steps: c => Array.from({ length: 10 }, (_, k) => Array.from({ length: k + 1 }, (_, r) => `<circle cx="${20 + k * 38}" cy="${190 - r * 17}" r="5" fill="${c}"/>`).join('')).join(''),
+  blocks: c => Array.from({ length: 4 }, (_, r) => Array.from({ length: 7 }, (_, k) => `<rect x="${k * 58 + 8}" y="${r * 52 + 8}" width="42" height="36" rx="10" fill="${c}"/>`).join('')).join('')
+};
+const sky = (bg: string, band: string, ground: string, sun: string, pattern: Pattern = 'dots') => {
+  const conf: [number, number, string][] = [
+    [132, 34, `<circle r="5" fill="${DOTS[0]}"/>`], [262, 96, `<circle r="4" fill="${DOTS[4]}"/>`], [118, 128, `<circle r="6" fill="${DOTS[3]}"/>`],
+    [366, 150, `<circle r="5" fill="${DOTS[1]}"/>`], [221, 22, `<path d="M-9 0a9 9 0 0 1 18 0z" fill="${DOTS[2]}"/>`], [112, 70, `<path d="M-8 0a8 8 0 0 0 16 0z" fill="${DOTS[5]}"/>`],
+    [311, 116, `<rect x="-11" y="-4.5" width="22" height="9" rx="4.5" transform="rotate(-24)" fill="${DOTS[3]}"/>`], [179, 66, `<rect x="-9" y="-4" width="18" height="8" rx="4" transform="rotate(18)" fill="${DOTS[1]}"/>`],
+    [40, 52, `<circle r="3.5" fill="#fff"/>`], [350, 200, `<circle r="3" fill="#fff"/>`]
+  ];
   return `${SCENE_OPEN}<rect width="390" height="250" fill="${bg}"/>
-  <circle cx="-10" cy="250" r="150" fill="${band}"/><circle cx="410" cy="-10" r="120" fill="${band}"/><circle cx="96" cy="-40" r="70" fill="${band}" opacity=".7"/>
-  ${grid}
-  <circle cx="318" cy="56" r="40" fill="#fff" opacity=".35"/><circle cx="318" cy="56" r="26" fill="${sun}"/>
-  <g opacity=".9">${conf}</g>
+  <g opacity=".85">${PATTERNS[pattern](band)}</g>
+  <circle class="an-drift" cx="-10" cy="250" r="150" fill="${band}"/><circle class="an-drift" style="animation-delay:-4s" cx="410" cy="-10" r="120" fill="${band}"/>
+  <circle class="an-pulse" cx="318" cy="56" r="40" fill="#fff" opacity=".35"/><circle cx="318" cy="56" r="26" fill="${sun}"/>
+  ${conf.map(([x, y, el], k) => `<g transform="translate(${x} ${y})"><g class="an-float" style="animation-delay:${-k * .7}s;animation-duration:${5 + (k % 4)}s">${el}</g></g>`).join('')}
   <path d="M-10 196c60-34 120-34 170-8s120 20 240-22v84H-10z" fill="${band}"/>
   <path d="M-10 214c80-26 150-22 210-4s120 16 200-10v50H-10z" fill="${ground}"/>
-  <g fill="#fff" opacity=".45"><circle cx="40" cy="232" r="3"/><circle cx="96" cy="240" r="2.5"/><circle cx="300" cy="236" r="3"/><circle cx="352" cy="226" r="2.5"/></g>
-  <ellipse cx="195" cy="214" rx="110" ry="8" fill="#000" opacity=".12"/>`;
+  <ellipse cx="195" cy="214" rx="110" ry="8" fill="#000" opacity=".12"/><g class="an-bob">`;
 };
 const unoCard = (x: number, y: number, rot: number, c: string, t: string, w = 46) => `<g transform="translate(${x} ${y}) rotate(${rot})">
   <rect x="${-w / 2}" y="${-w * .75}" width="${w}" height="${w * 1.5}" rx="${w * .16}" fill="#fbf6ec"/><rect x="${-w / 2 + 4}" y="${-w * .75 + 4}" width="${w - 8}" height="${w * 1.5 - 8}" rx="${w * .12}" fill="${c}"/>
@@ -140,25 +154,25 @@ const podium = (x: number, y: number, k: number) => `<g transform="translate(${x
 Object.assign(GAME_ART, {
   uno: {
     icon: ICON(unoCard(22, 34, -14, '#5fa8d3', '7', 24) + unoCard(40, 32, 12, '#ef7a5c', '2', 24)),
-    scene: sky('#f6d5cb', '#f9e0d8', '#efc0b3', '#f5d58c') + unoCard(120, 150, -22, '#5fa8d3', '7') + unoCard(170, 134, -8, '#3fb39b', '3') + unoCard(222, 134, 8, '#f0b13e', '9') + unoCard(272, 152, 22, '#ef7a5c', '0') + '</svg>'
+    scene: sky('#f6d5cb', '#f9e0d8', '#efc0b3', '#f5d58c', 'rays') + unoCard(120, 150, -22, '#5fa8d3', '7') + unoCard(170, 134, -8, '#3fb39b', '3') + unoCard(222, 134, 8, '#f0b13e', '9') + unoCard(272, 152, 22, '#ef7a5c', '0') + '</svg>'
   },
   scrabble: {
     icon: ICON(tile(22, 32, -10, 'A', 24) + tile(42, 34, 8, 'Z', 24)),
-    scene: sky('#d3eadd', '#dff0e6', '#b7dcc8', '#f5d58c') + ['W', 'O', 'R', 'T'].map((l, i) => tile(126 + i * 46, 168 - (i % 2) * 8, (i - 1.5) * 6, l)).join('') + tile(196, 108, -8, '★', 34) + '</svg>'
+    scene: sky('#d3eadd', '#dff0e6', '#b7dcc8', '#f5d58c', 'checker') + ['W', 'O', 'R', 'T'].map((l, i) => tile(126 + i * 46, 168 - (i % 2) * 8, (i - 1.5) * 6, l)).join('') + tile(196, 108, -8, '★', 34) + '</svg>'
   },
   siedler: {
     icon: ICON(hex(32, 22, 14, '#f0b13e') + hex(20, 43, 14, '#3fb39b') + hex(44, 43, 14, '#f09a4a')),
-    scene: sky('#d3e6f4', '#e0eef8', '#b5d4ea', '#f5d58c') + hex(150, 118, 34, '#f0b13e') + hex(210, 118, 34, '#3fb39b') + hex(180, 170, 34, '#f09a4a') + hex(240, 170, 34, '#c9c6dc') + hex(120, 170, 34, '#7cb85a')
+    scene: sky('#d3e6f4', '#e0eef8', '#b5d4ea', '#f5d58c', 'hex') + hex(150, 118, 34, '#f0b13e') + hex(210, 118, 34, '#3fb39b') + hex(180, 170, 34, '#f09a4a') + hex(240, 170, 34, '#c9c6dc') + hex(120, 170, 34, '#7cb85a')
       + house(150, 126, 1, '#ef7a5c', '#d9634a') + house(214, 178, .9, '#fbf6ec', '#5fa8d3') + '</svg>'
   },
   monopoly: {
     icon: ICON(house(22, 38, 1, '#3fb39b', '#2f9a84') + house(42, 38, 1.15, '#ef7a5c', '#d9634a')),
-    scene: sky('#d9eed6', '#e4f3e2', '#bcdfb8', '#f5d58c') + house(120, 186, 1.6, '#3fb39b', '#2f9a84') + house(168, 180, 2, '#3fb39b', '#2f9a84') + house(232, 172, 2.6, '#ef7a5c', '#d9634a')
+    scene: sky('#d9eed6', '#e4f3e2', '#bcdfb8', '#f5d58c', 'blocks') + house(120, 186, 1.6, '#3fb39b', '#2f9a84') + house(168, 180, 2, '#3fb39b', '#2f9a84') + house(232, 172, 2.6, '#ef7a5c', '#d9634a')
       + '<circle cx="290" cy="170" r="20" fill="#f5d58c"/><text x="290" y="179" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="24" fill="#8a5a10">€</text></svg>'
   },
   ergebnis: {
     icon: ICON(podium(32, 38, .3)),
-    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c') + podium(195, 172, 1) + '</svg>'
+    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c', 'dots') + podium(195, 172, 1) + '</svg>'
   }
 });
 
@@ -184,37 +198,80 @@ const card = (x: number, y: number, rot: number, letter: string, sym: string, c:
 Object.assign(GAME_ART, {
   kniffel: {
     icon: ICON(die(24, 34, 26, -12, 5, '#fffaf2', '#f3a98f', '#ead9c4') + die(42, 30, 22, 14, 3, '#86cbb8', '#ffffff', '#6db3a0')),
-    scene: sky('#d6eee9', '#e2f3ef', '#bfe1d9', '#f5d58c') + die(108, 168, 46, 18, 2, '#bba8e6', '#ffffff', '#a493d6') + die(170, 158, 64, -12, 5, '#fffaf2', '#f3a98f', '#ead9c4')
+    scene: sky('#d6eee9', '#e2f3ef', '#bfe1d9', '#f5d58c', 'checker') + die(108, 168, 46, 18, 2, '#bba8e6', '#ffffff', '#a493d6') + die(170, 158, 64, -12, 5, '#fffaf2', '#f3a98f', '#ead9c4')
       + die(246, 160, 58, 10, 3, '#f3a98f', '#ffffff', '#e0927a') + die(310, 128, 46, 14, 6, '#f2cf86', '#5b5a8f', '#e0b96a') + '</svg>'
   },
   phase10: {
     icon: ICON('<rect x="9" y="40" width="14" height="14" rx="4" fill="#f3a98f"/><rect x="25" y="30" width="14" height="24" rx="4" fill="#97c4e3"/><rect x="41" y="20" width="14" height="34" rx="4" fill="#86cbb8"/><path d="M48 20V8" stroke="#5b5a8f" stroke-width="2.4" stroke-linecap="round"/><path d="M48 8l9 3.5-9 3.5z" fill="#f2cf86"/>'),
-    scene: sky('#fbe9d2', '#fdf0e0', '#f3d9b8', '#f5d58c') + Array.from({ length: 10 }, (_, k) => { const h = 18 + k * 13, x = 38 + k * 32;
+    scene: sky('#fbe9d2', '#fdf0e0', '#f3d9b8', '#f5d58c', 'steps') + Array.from({ length: 10 }, (_, k) => { const h = 18 + k * 13, x = 38 + k * 32;
       const c = ['#f3a98f', '#97c4e3', '#86cbb8', '#f2cf86'][k % 4];
       return `<rect x="${x}" y="${216 - h}" width="28" height="${h + 30}" rx="8" fill="${c}"/><text x="${x + 14}" y="${216 - h + 18}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="12" fill="#fffaf2">${k + 1}</text>`; }).join('')
       + '<path d="M348 86V50" stroke="#5b5a8f" stroke-width="3" stroke-linecap="round"/><path d="M348 50l20 7-20 7z" fill="#f3a98f"/></svg>'
   },
   schafkopf: {
     icon: ICON(card(24, 34, -12, 'O', BAV.eichel('#c9a06e'), '#7c9a5a', 26) + card(40, 34, 10, 'U', BAV.herz('#f3a98f'), '#d9634a', 26)),
-    scene: sky('#e3efd8', '#ecf4e4', '#cfe3bf', '#f5d58c') + card(120, 150, -22, 'O', BAV.eichel('#c9a06e'), '#7c9a5a') + card(172, 136, -8, 'U', BAV.gras('#9cc77e'), '#5f8a44')
+    scene: sky('#e3efd8', '#ecf4e4', '#cfe3bf', '#f5d58c', 'lozenge') + card(120, 150, -22, 'O', BAV.eichel('#c9a06e'), '#7c9a5a') + card(172, 136, -8, 'U', BAV.gras('#9cc77e'), '#5f8a44')
       + card(224, 136, 8, 'A', BAV.herz('#f3a98f'), '#d9634a') + card(276, 150, 22, 'K', BAV.schellen('#f2cf86'), '#b8862a') + '</svg>'
   },
   doppelkopf: {
     icon: ICON(card(24, 34, -12, 'D', BAV.herz('#bba8e6'), '#7b66b8', 26) + card(40, 34, 10, 'D', BAV.herz('#f3a98f'), '#d9634a', 26)),
-    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c') + card(150, 144, -14, 'D', BAV.herz('#bba8e6'), '#7b66b8', 58) + card(214, 140, 12, 'D', BAV.herz('#f3a98f'), '#d9634a', 58)
+    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c', 'stripes') + card(150, 144, -14, 'D', BAV.herz('#bba8e6'), '#7b66b8', 58) + card(214, 140, 12, 'D', BAV.herz('#f3a98f'), '#d9634a', 58)
       + '<circle cx="96" cy="120" r="10" fill="#f2cf86"/><circle cx="300" cy="104" r="8" fill="#86cbb8"/></svg>'
   },
   binokel: {
     icon: ICON(card(22, 34, -14, 'A', BAV.eichel('#c9a06e'), '#b8865a', 24) + card(32, 32, 0, '10', BAV.herz('#f3a98f'), '#d9634a', 24) + card(42, 34, 14, 'K', BAV.schellen('#f2cf86'), '#b8862a', 24)),
-    scene: sky('#f8e3cf', '#fbecdd', '#efd0b2', '#f5d58c') + card(126, 150, -24, 'A', BAV.eichel('#c9a06e'), '#b8865a') + card(176, 136, -8, '10', BAV.herz('#f3a98f'), '#d9634a')
+    scene: sky('#f8e3cf', '#fbecdd', '#efd0b2', '#f5d58c', 'waves') + card(126, 150, -24, 'A', BAV.eichel('#c9a06e'), '#b8865a') + card(176, 136, -8, '10', BAV.herz('#f3a98f'), '#d9634a')
       + card(226, 136, 8, 'K', BAV.gras('#9cc77e'), '#5f8a44') + card(276, 150, 24, 'O', BAV.schellen('#f2cf86'), '#b8862a') + '</svg>'
   }
 });
 
+// ---------------------------------------------------------------- Icons als Einzelsymbol, Szene erzählt die Situation dazu
+const cup = (x: number, y: number, rot: number) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <path d="M-34-44h68l-10 88h-48z" fill="#bba8e6"/><path d="M-34-44h68l-2 14h-64z" fill="#a493d6"/>
+  <ellipse cx="0" cy="-44" rx="34" ry="9" fill="#8f7ec7"/><circle cx="-12" cy="0" r="4" fill="#fff" opacity=".5"/><circle cx="6" cy="14" r="3" fill="#fff" opacity=".5"/></g>`;
+Object.assign(GAME_ART, {
+  kniffel: {
+    icon: ICON(die(32, 31, 34, -10, 5, '#fffaf2', '#f3a98f', '#ead9c4')),
+    scene: sky('#d6eee9', '#e2f3ef', '#bfe1d9', '#f5d58c', 'checker') + cup(118, 150, -58)
+      + '<g fill="#fff" opacity=".7"><circle cx="164" cy="120" r="3"/><circle cx="182" cy="108" r="2.5"/><circle cx="198" cy="102" r="2"/></g>'
+      + die(196, 168, 40, 16, 6, '#f2cf86', '#5b5a8f', '#e0b96a') + die(248, 150, 46, -14, 5, '#fffaf2', '#f3a98f', '#ead9c4')
+      + die(304, 174, 38, 22, 3, '#86cbb8', '#ffffff', '#6db3a0') + '</svg>'
+  }
+});
+const coaster = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle r="38" fill="#fffaf2"/><circle r="31" fill="#f2cf86" opacity=".45"/>
+  ${[0, 1, 2, 3].map(k => `<rect x="${-16 + k * 8}" y="-14" width="4" height="26" rx="2" fill="#5b5a8f"/>`).join('')}<rect x="-22" y="-3" width="40" height="4" rx="2" transform="rotate(-24)" fill="#5b5a8f"/></g>`;
+Object.assign(GAME_ART, {
+  schafkopf: { ...GAME_ART.schafkopf, scene: sky('#e3efd8', '#ecf4e4', '#cfe3bf', '#f5d58c', 'lozenge') + coaster(92, 160)
+    + card(196, 150, -14, 'O', BAV.eichel('#c9a06e'), '#7c9a5a', 54) + card(250, 146, 6, 'U', BAV.gras('#9cc77e'), '#5f8a44', 54) + card(304, 156, 22, 'A', BAV.herz('#f3a98f'), '#d9634a', 54) + '</svg>' },
+  binokel: { ...GAME_ART.binokel, scene: sky('#f8e3cf', '#fbecdd', '#efd0b2', '#f5d58c', 'waves')
+    + card(150, 150, -8, 'O', BAV.gras('#9cc77e'), '#5f8a44', 62) + card(214, 154, 8, 'U', BAV.schellen('#f2cf86'), '#b8862a', 62)
+    + '<g transform="translate(292 96)"><rect x="-32" y="-18" width="64" height="36" rx="18" fill="#fffaf2"/><text y="8" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="22" fill="#d9634a">+40</text></g></svg>' }
+});
+const icon: Record<string, string> = {
+  uno: ICON(`<g transform="rotate(-20 32 32)">${[0, 1, 2, 3].map(k => `<path d="M32 32L${32 + 22 * Math.cos(k * Math.PI / 2)} ${32 + 22 * Math.sin(k * Math.PI / 2)}A22 22 0 0 1 ${32 + 22 * Math.cos((k + 1) * Math.PI / 2)} ${32 + 22 * Math.sin((k + 1) * Math.PI / 2)}z" fill="${['#f3a98f', '#86cbb8', '#f2cf86', '#97c4e3'][k]}"/>`).join('')}
+    <ellipse cx="32" cy="32" rx="9" ry="14" transform="rotate(40 32 32)" fill="#fffaf2"/></g>`),
+  scrabble: ICON(tile(32, 31, -8, 'S', 34) + '<text x="44" y="46" font-family="Jost, sans-serif" font-weight="600" font-size="8" fill="#3a2f22" transform="rotate(-8 32 31)">1</text>'),
+  siedler: ICON(`<g transform="translate(32 34)"><circle cx="-10" cy="-2" r="9" fill="#fffaf2"/><circle cx="0" cy="-7" r="10" fill="#fffaf2"/><circle cx="10" cy="-2" r="9" fill="#fffaf2"/>
+    <circle cx="0" cy="4" r="11" fill="#fffaf2"/><ellipse cx="17" cy="-6" rx="6" ry="7" fill="#5b5a8f"/><circle cx="19" cy="-8" r="1.4" fill="#fff"/>
+    <rect x="-9" y="12" width="4" height="9" rx="2" fill="#5b5a8f"/><rect x="5" y="12" width="4" height="9" rx="2" fill="#5b5a8f"/></g>`),
+  monopoly: ICON(`${[0, 1, 2].map(k => `<ellipse cx="32" cy="${46 - k * 8}" rx="16" ry="6" fill="#d9b25f"/><ellipse cx="32" cy="${43 - k * 8}" rx="16" ry="6" fill="#f2cf86"/>`).join('')}
+    <circle cx="32" cy="27" r="3.5" fill="#fffaf2"/>`),
+  ergebnis: ICON(`<path d="M22 8h8l6 16h-8zM42 8h-8l-6 16h8z" fill="#97c4e3"/><circle cx="32" cy="38" r="15" fill="#f2cf86"/><circle cx="32" cy="38" r="9" fill="#fffaf2"/>
+    <text x="32" y="42" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="12" fill="#c99a3a">1</text>`),
+  phase10: ICON(`<circle cx="32" cy="32" r="22" fill="#f3a98f"/><circle cx="32" cy="32" r="16" fill="#fffaf2"/>
+    <text x="32" y="38.5" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="17" fill="#d9634a">10</text>`),
+  schafkopf: ICON(`<g transform="translate(32 34) scale(2.1)">${BAV.eichel('#c9a06e')}</g>`),
+  doppelkopf: ICON(`<g transform="translate(32 32) scale(1.9)">${BAV.herz('#eda7bf')}</g><text x="32" y="36" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="13" fill="#fffaf2">10</text>`),
+  binokel: ICON(`<g transform="translate(32 33)"><circle r="19" fill="#f2cf86"/><circle r="12" fill="#fffaf2" opacity=".55"/><rect x="-11" y="-2" width="22" height="4" rx="2" fill="#c99a3a"/>
+    <circle cy="7" r="3" fill="#c99a3a"/><rect x="-3" y="-25" width="6" height="8" rx="3" fill="#c99a3a"/></g>`)
+};
+for (const k of Object.keys(icon)) GAME_ART[k] = { ...GAME_ART[k], icon: icon[k] };
+
 // Alle Illustrationen in Pastell: frühere kräftige Farben werden ersetzt (siehe docs/DESIGN.md)
 for (const k of Object.keys(GAME_ART)) {
   const a = GAME_ART[k], soft = (x: string) => x.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
-  GAME_ART[k] = { icon: soft(a.icon), scene: soft(a.scene) };
+  const scene = a.scene.includes('class="an-bob"') ? a.scene.replace(/<\/svg>\s*$/, '</g></svg>') : a.scene;
+  GAME_ART[k] = { icon: soft(a.icon), scene: soft(scene) };
 }
 export const FREE_ICON = FREE_ICON_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
 export const FREE_SCENE = FREE_SCENE_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
