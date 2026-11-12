@@ -1,9 +1,10 @@
+import { pastel } from '../lib/color';
 // Illustrationen für Spielseiten (flach, geometrisch, eigene Zeichnungen). Siehe docs/DESIGN.md.
 const st = (x: number, y: number, r: number) =>
   `M${x} ${y - r}l${r * .3} ${r * .7} ${r * .7} ${r * .3}-${r * .7} ${r * .3}-${r * .3} ${r * .7}-${r * .3}-${r * .7}-${r * .7}-${r * .3} ${r * .7}-${r * .3}z`;
 
 /** Icon „Freies Spiel“: leerer Zettel mit Bleistift */
-export const FREE_ICON = `<svg viewBox="0 0 64 64" aria-hidden="true">
+const FREE_ICON_RAW = `<svg viewBox="0 0 64 64" aria-hidden="true">
   <g transform="rotate(-8 30 34)">
     <rect x="14" y="12" width="32" height="42" rx="6" fill="#ffffff"/>
     <path d="M14 18a6 6 0 0 1 6-6h20a6 6 0 0 1 6 6v3H14z" fill="#ef7a5c"/>
@@ -15,7 +16,7 @@ export const FREE_ICON = `<svg viewBox="0 0 64 64" aria-hidden="true">
 </svg>`;
 
 /** Szene „Freies Spiel“: leere Zettel auf Indigo mit Farbpunkten */
-export const FREE_SCENE = `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+const FREE_SCENE_RAW = `<svg class="scene" viewBox="0 0 390 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
   <rect width="390" height="250" fill="#e4def2"/>
   <path d="M-20 60L110-20h70L-20 120z" fill="#ece7f7"/><path d="M250 270L410 100v70L320 270z" fill="#ece7f7"/>
   <circle cx="195" cy="270" r="175" fill="#d9d1ef"/><circle cx="195" cy="270" r="125" fill="#cfc5ea"/>
@@ -102,10 +103,30 @@ export const GAME_ART: Record<string, { icon: string; scene: string }> = {
 
 // ---------------------------------------------------------------- Weitere Spiele (kompakte Szenen)
 const ICON = (body: string) => `<svg viewBox="0 0 64 64" aria-hidden="true">${body}</svg>`;
-const sky = (bg: string, band: string, ground: string, sun: string) => `${SCENE_OPEN}<rect width="390" height="250" fill="${bg}"/>
-  <path d="M-20 70L130-20h90L-20 140z" fill="${band}"/><path d="M190 270L410 90v80L300 270z" fill="${band}"/><circle cx="318" cy="56" r="28" fill="${sun}"/>
-  <g fill="#fff" opacity=".8"><circle cx="60" cy="44" r="3"/><circle cx="250" cy="30" r="2.5"/><circle cx="150" cy="60" r="2.5"/><circle cx="350" cy="130" r="2.5"/></g>
-  <path d="M0 200q195-36 390 0v50H0z" fill="${ground}"/><ellipse cx="195" cy="212" rx="110" ry="8" fill="#000" opacity=".14"/>`;
+/** Hintergrund der Spielszenen: runde Hügel, weiche Kreise, Punkteraster, Sonne mit Hof, Konfetti. Flach, ohne Konturen. */
+const DOTS = ['#f3a98f', '#86cbb8', '#f2cf86', '#eda7bf', '#97c4e3', '#bba8e6'];
+const sky = (bg: string, band: string, ground: string, sun: string) => {
+  // Punkteraster oben links (Two-Dots-Motiv), Farben reihum
+  const grid = Array.from({ length: 4 }, (_, r) => Array.from({ length: 5 }, (_, c) =>
+    `<circle cx="${22 + c * 16}" cy="${86 + r * 16}" r="${3.4 - r * .5}" fill="${DOTS[(r + c) % DOTS.length]}" opacity="${.75 - r * .14}"/>`).join('')).join('');
+  // Konfetti: Punkte, Halbkreise, Pillen
+  const conf = [
+    `<circle cx="132" cy="34" r="5" fill="${DOTS[0]}"/>`, `<circle cx="262" cy="96" r="4" fill="${DOTS[4]}"/>`,
+    `<circle cx="118" cy="128" r="6" fill="${DOTS[3]}"/>`, `<circle cx="366" cy="150" r="5" fill="${DOTS[1]}"/>`,
+    `<path d="M212 26a9 9 0 0 1 18 0z" fill="${DOTS[2]}"/>`, `<path d="M104 70a8 8 0 0 0 16 0z" fill="${DOTS[5]}"/>`,
+    `<rect x="300" y="112" width="22" height="9" rx="4.5" transform="rotate(-24 311 116)" fill="${DOTS[3]}"/>`,
+    `<rect x="170" y="62" width="18" height="8" rx="4" transform="rotate(18 179 66)" fill="${DOTS[1]}"/>`
+  ].join('');
+  return `${SCENE_OPEN}<rect width="390" height="250" fill="${bg}"/>
+  <circle cx="-10" cy="250" r="150" fill="${band}"/><circle cx="410" cy="-10" r="120" fill="${band}"/><circle cx="96" cy="-40" r="70" fill="${band}" opacity=".7"/>
+  ${grid}
+  <circle cx="318" cy="56" r="40" fill="#fff" opacity=".35"/><circle cx="318" cy="56" r="26" fill="${sun}"/>
+  <g opacity=".9">${conf}</g>
+  <path d="M-10 196c60-34 120-34 170-8s120 20 240-22v84H-10z" fill="${band}"/>
+  <path d="M-10 214c80-26 150-22 210-4s120 16 200-10v50H-10z" fill="${ground}"/>
+  <g fill="#fff" opacity=".45"><circle cx="40" cy="232" r="3"/><circle cx="96" cy="240" r="2.5"/><circle cx="300" cy="236" r="3"/><circle cx="352" cy="226" r="2.5"/></g>
+  <ellipse cx="195" cy="214" rx="110" ry="8" fill="#000" opacity=".12"/>`;
+};
 const unoCard = (x: number, y: number, rot: number, c: string, t: string, w = 46) => `<g transform="translate(${x} ${y}) rotate(${rot})">
   <rect x="${-w / 2}" y="${-w * .75}" width="${w}" height="${w * 1.5}" rx="${w * .16}" fill="#fbf6ec"/><rect x="${-w / 2 + 4}" y="${-w * .75 + 4}" width="${w - 8}" height="${w * 1.5 - 8}" rx="${w * .12}" fill="${c}"/>
   <ellipse rx="${w * .34}" ry="${w * .5}" transform="rotate(30)" fill="#fbf6ec"/><text y="${w * .14}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="${w * .42}" fill="${c}">${t}</text></g>`;
@@ -189,3 +210,11 @@ Object.assign(GAME_ART, {
       + card(226, 136, 8, 'K', BAV.gras('#9cc77e'), '#5f8a44') + card(276, 150, 24, 'O', BAV.schellen('#f2cf86'), '#b8862a') + '</svg>'
   }
 });
+
+// Alle Illustrationen in Pastell: frühere kräftige Farben werden ersetzt (siehe docs/DESIGN.md)
+for (const k of Object.keys(GAME_ART)) {
+  const a = GAME_ART[k], soft = (x: string) => x.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
+  GAME_ART[k] = { icon: soft(a.icon), scene: soft(a.scene) };
+}
+export const FREE_ICON = FREE_ICON_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
+export const FREE_SCENE = FREE_SCENE_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));

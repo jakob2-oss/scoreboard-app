@@ -37,7 +37,7 @@ export function Profile() {
       </div>
       <div className="scroll">
         <div className="gutter pf-body">
-          <div className="pf-hero"><Avatar p={me} big /><div><h1>{me.name}</h1><small>{mine.length ? `${mine.length} ${mine.length === 1 ? 'Partie' : 'Partien'}` : 'Noch keine Partie'}</small></div></div>
+          <div className="pf-hero"><Avatar p={me} big /><div><h1><input className="pf-name" id="pf-name" key={me.name} defaultValue={me.name} maxLength={18} aria-label="Name" onBlur={e => a.renamePlayer(profile.id, e.target.value)} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} /></h1><small>{mine.length ? `${mine.length} ${mine.length === 1 ? 'Partie' : 'Partien'}` : 'Noch keine Partie'}</small></div></div>
           {mine.length > 0 && <>
             <div className="fchips">
               {chip('Immer', same(profile.time, 'all'), () => a.setProfile({ time: 'all' }))}
@@ -52,11 +52,7 @@ export function Profile() {
             <div className="tiles">
               <div className="tile accent" id="perf-tile" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Leistung</small><b>{fmtPerf(performance(list, profile.id).score)}</b><span>der Erwartung</span></div>
               <div className="tile"><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
-              <div className="tile"><small>Siegquote</small><b>{s.rate}%</b><span>&nbsp;</span></div>
-            </div>
-            <div className="wl">
-              <div className="wl-bar"><i style={{ flex: s.wins || 0.0001, background: me.color }} /><i style={{ flex: s.losses || 0.0001 }} /></div>
-              <div className="wl-lbl"><span><b>{s.wins}</b> {s.wins === 1 ? 'Sieg' : 'Siege'}</span><span><b>{s.losses}</b> {s.losses === 1 ? 'Niederlage' : 'Niederlagen'}</span></div>
+              <div className="tile"><small>Ø Platz</small><b>{list.length ? (list.reduce((x, g) => x + resultOf(g, profile.id)!.place, 0) / list.length).toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'}</b><span>&nbsp;</span></div>
             </div>
             {profile.key === null && byGame(list, profile.id).length > 0 && (
               <div className="group"><div className="eyebrow">Stärken</div>
@@ -134,6 +130,8 @@ export function Profile() {
 /** Direktvergleich zweier Spieler: gespiegelte Balken in den Spielerfarben */
 function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; other: Player; low: boolean }) {
   const d = duel(list, me.id, other.id, low);
+  // Spiele, die nur den Platz notieren (Monopoly): Punkte wären bloß Platzzahlen
+  const placeOnly = d.games.length > 0 && d.games.every(g => gameDef(g.key)?.template.params?.unit === 'Platz');
   const [rate, setRate] = useState(false);
   if (!d.shared) return <p className="vs-sum">Keine gemeinsamen Partien</p>;
   const pct = (x: number, n: number) => (n ? Math.round(x / n * 100) : 0);
@@ -170,15 +168,14 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
       </div>
       {row('Leistung', d.a.perf, d.b.perf, 'high', fmtPerf)}
       {row(rate ? 'Siegquote' : 'Siege', ...cnt(d.a.wins, d.b.wins, d.shared), 'high', unit)}
-      {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', ...cnt(d.a.ahead, d.b.ahead, d.shared), 'high', unit)}
       {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
-      {d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
-      {d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
+      {!placeOnly && d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
+      {!placeOnly && d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
       {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
       {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name + (rate ? '' : `, ${x.n} ${x.n === 1 ? 'Partie' : 'Partien'}`), ...cnt(x.a, x.b, x.n), 'high', unit, true))}</>}
       <div className="eyebrow duel-last">Gemeinsame Partien</div>
       <div className="duel-games">
-        {d.games.slice(0, 5).map(g => {
+        {d.games.slice(0, 3).map(g => {
           const ra = resultOf(g, me.id)!, rb = resultOf(g, other.id)!, ic = iconFor(g.key);
           return (
             <div key={g.id} className="duel-game">

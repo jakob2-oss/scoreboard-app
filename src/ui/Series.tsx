@@ -43,7 +43,6 @@ export function Series() {
               <button id="sort-perf" aria-pressed={series.sort === 'perf'} onClick={() => a.setSeriesSort('perf')}>Leistung</button>
               <button id="sort-points" aria-pressed={series.sort === 'points'} onClick={() => a.setSeriesSort('points')}>Punkte</button>
               <button id="sort-avg" aria-pressed={series.sort === 'avg'} onClick={() => a.setSeriesSort('avg')}>Schnitt</button>
-              <button id="sort-rate" aria-pressed={series.sort === 'rate'} onClick={() => a.setSeriesSort('rate')}>Quote</button>
             </div>
             <div className="podium ser-table">
               {rows.map((r, i) => {

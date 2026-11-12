@@ -143,7 +143,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
   await shot('30-history');
   await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
-  check('Profil von Ben: Leistung 3,0× (ein Sieg zu dritt)', (await text('.pf-hero h1')) === 'Ben' && (await text('#perf-tile b')) === '3,0×', await text('#perf-tile b'));
+  check('Profil von Ben: Leistung 3,0× (ein Sieg zu dritt)', (await p.inputValue('#pf-name')) === 'Ben' && (await text('#perf-tile b')) === '3,0×', await text('#perf-tile b'));
   await p.click('.vs-p >> nth=0');
   check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
   check('Direktvergleich: Leistung und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung' && await p.isVisible('.rematch'));
@@ -316,8 +316,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Serie: Leistung ist Standard', (await p.getAttribute('#sort-perf', 'aria-pressed')) === 'true' && (await text('.ser-table .prow .pts >> nth=0')).endsWith('×'));
   await shot('41-series');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
-  await p.click('#sort-rate'); await p.waitForTimeout(100);
-  check('Serie: Quote in Prozent', (await text('.ser-table .prow .pts >> nth=0')).endsWith('%'));
+  await p.click('#sort-avg'); await p.waitForTimeout(100);
+  check('Serie: Schnitt umschaltbar, keine Quote mehr', (await p.getAttribute('#sort-avg', 'aria-pressed')) === 'true' && !(await p.isVisible('#sort-rate')));
   await p.click('#sort-points');
   const before = await text('.ser-table .prow .pts >> nth=0');
   await p.click('[aria-label="Platz 1 mehr"]'); await p.click('[aria-label="Platz 1 mehr"]'); await p.waitForTimeout(100);
@@ -351,6 +351,20 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('eigenes Spiel umbenannt', (await text('#my-games')).includes('Umbenannt') && (await text('.toast')) === 'Gespeichert');
   await p.click('#my-games .row >> text=Umbenannt'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
   check('eigenes Spiel gelöscht', (await p.locator('#my-games .row').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+
+  // Sicherung speichern und wieder einlesen
+  await p.click('#tab-people');
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#backup-save')]);
+  check('Sicherung als Datei', dl.suggestedFilename().startsWith('punktezettel-') && (await text('#backup-save small')).startsWith('Zuletzt am'));
+  await p.setInputFiles('#backup-file', await dl.path()); await p.waitForTimeout(500);
+  check('Sicherung einlesen ohne Doppelte', (await text('.toast')) === 'Nichts Neues in der Sicherung', await text('.toast'));
+  await p.setInputFiles('#backup-file', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"a":1}') }); await p.waitForTimeout(400);
+  check('falsche Datei wird abgelehnt', (await text('.toast')) === 'Diese Datei ist keine Sicherung');
+  await shot('48-people-backup');
+  await p.click('.person-row >> text=Clara'); await p.fill('#pf-name', 'Clara M'); await p.press('#pf-name', 'Enter'); await p.waitForTimeout(200);
+  await p.click('[aria-label="Zurück"]');
+  check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
+  await p.click('#tab-home');
 
   await p.click('#my-games .row >> nth=0'); await p.click('#setup-next'); await p.click('#start-btn');
 
