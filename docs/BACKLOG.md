@@ -90,3 +90,6 @@ Teil D umgesetzt (12.11.): Gruppe „Endwertung“; Notizfelder (zählen nicht z
 über das Menü jeder Rundenpartie, Siedler mit „Längste Straße“ und „Rittermacht“; eigene Spiele mit Icon (Anfangsbuchstabe),
 Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen; „Eigene Vorlage erstellen“ getrennt vom
 „Freien Spiel“, das jetzt eine Einmal-Partie ist (Vorlage nur per Schalter).
+
+## H. Für das Ende vorgemerkt
+- [ ] **Bilder frei wählbar:** Szene und Icon eigener Spiele individuell gestalten (eigene Motive, evtl. Foto), nicht nur Farbe und Muster.

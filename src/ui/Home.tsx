@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
+import type { Template } from '../model/types';
 import { currentRoundIndex, seated, isCats, isResultOnly } from '../game/engine';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -72,21 +73,17 @@ export function Home() {
                     <Chevron />
                   </button>
                 ))}
+                {templates.filter(t => t.params?.resultOnly).map(t => <OwnRow key={t.key} t={t} />)}
+                <button className="row tpl new-own" id="new-result" onClick={() => act().openSetup(true, 'result')}>
+                  <span className="plus-ic" aria-hidden="true">+</span>
+                  <span className="t"><b>Eigene Endwertung erstellen</b></span>
+                </button>
               </div>
             </div>
             <div className="group">
               <div className="eyebrow">Meine Spiele</div>
               <div className="list" id="my-games">
-                {templates.map(t => {
-                  const ic = customArt(t.key, t.name, t.params?.look);
-                  return (
-                    <button key={t.key} className="row tpl" data-own={t.key} onClick={() => act().editTemplate(t)}>
-                      <GameIcon icon={ic.icon} tint={ic.tint} />
-                      <span className="t"><b>{t.name}</b><small>{describeTemplate(t)}</small></span>
-                      <Chevron />
-                    </button>
-                  );
-                })}
+                {templates.filter(t => !t.params?.resultOnly).map(t => <OwnRow key={t.key} t={t} />)}
                 <button className="row tpl new-own" id="new-own" onClick={() => act().openSetup(true)}>
                   <span className="plus-ic" aria-hidden="true">+</span>
                   <span className="t"><b>Eigene Vorlage erstellen</b></span>
@@ -137,5 +134,16 @@ function Feedback() {
         </>
       )}
     </>
+  );
+}
+
+function OwnRow({ t }: { t: Template }) {
+  const ic = customArt(t.key, t.name, t.params?.look);
+  return (
+    <button className="row tpl" data-own={t.key} onClick={() => act().editTemplate(t)}>
+      <GameIcon icon={ic.icon} tint={ic.tint} />
+      <span className="t"><b>{t.name}</b><small>{t.params?.resultOnly ? (t.params.unit === 'Platz' ? 'Platz am Ende' : 'Punkte am Ende') : describeTemplate(t)}</small></span>
+      <Chevron />
+    </button>
   );
 }

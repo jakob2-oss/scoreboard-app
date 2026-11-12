@@ -363,6 +363,18 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('43b-own-game-saved');
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
   check('eigenes Spiel gelöscht', (await p.locator('#my-games .row[data-own]').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+  // Eigene Endwertung erstellen
+  await p.click('#new-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
+  check('Endwertung: ohne Spielende und Zählschritte, Gewinner nicht wählbar', !(await p.isVisible('#setup-end')) && !(await p.isVisible('.step-chips')) && !(await raw('#s-setup')).includes('Wer gewinnt'));
+  await p.fill('#note-name', 'Reihen'); await p.press('#note-name', 'Enter'); await shot('44b-own-result-edit');
+  await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('Endwertung gespeichert mit Regeln', (await text('#s-setup .rule-points')).includes('Platz je Spieler') && (await text('#s-setup .rule-points')).includes('Reihen'));
+  await shot('44c-own-result');
+  await p.click('#s-setup [aria-label="Zurück"]');
+  check('Endwertung steht in der Gruppe Endwertung', (await p.locator('#my-games .row[data-own]').count()) === 1 && (await raw('#s-home')).includes('Azul'));
+  await p.click('.row[data-own] >> text=Azul'); await p.click('#quick-start');
+  check('Partie zeigt Endstand', (await raw('.top .sub')) === 'Endstand');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   // Partie im Verlauf löschen
   await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('#tab-history');

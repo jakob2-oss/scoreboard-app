@@ -181,7 +181,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
 
     // ---------- Freies Spiel einrichten
     /** Freies Spiel (Einmal-Partie) oder eigene Vorlage erstellen */
-    openSetup(asTemplate = false) { set({ setup: { ...defaultFreeConfig(), save: asTemplate }, screen: 'setup', editKey: null, setupTemplate: asTemplate }); },
+    openSetup(asTemplate = false, mode: 'rounds' | 'result' = 'rounds') { set({ setup: { ...defaultFreeConfig(), save: asTemplate, mode }, screen: 'setup', editKey: null, setupTemplate: asTemplate }); },
     /** Eigenes Spiel öffnen: Einstellungen ansehen, ändern, löschen oder spielen */
     editTemplate(t: Template) {
       const known = new Set(state.players.map(p => p.id));

@@ -304,6 +304,21 @@ describe('Freies Spiel', () => {
     expect(st.get().history).toHaveLength(1);
     expect(st.get().toast?.text).toBe('Partie gespeichert');
   });
+  it('Eigene Endwertung: nur das Ergebnis, nach Platz gewertet', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(true, 'result'); a.updateSetup({ name: 'Azul', unit: 'Platz', notes: ['Reihen'] }); a.setupNext();
+    await a.addPlayer('A'); await a.addPlayer('B'); a.start();
+    const r = st.get().game!.game.rules;
+    expect(r).toMatchObject({ win: 'low', end: { type: 'rounds', value: 1 }, params: { resultOnly: true, unit: 'Platz', notes: ['Reihen'] } });
+    expect(r.params?.quick?.[0]).toMatchObject({ label: '1.', op: 'set', v: 1 });
+    a.roundGo(); a.setValue(2); a.next(); a.setValue(1); a.next();
+    expect(ranking(st.get().game!)[0].player.name).toBe('B');
+    a.goHome(); a.editTemplate(mem.templates[0]);
+    expect(st.get().setup).toMatchObject({ mode: 'result', unit: 'Platz' });
+    a.updateSetup({ unit: 'Punkte', win: 'high' }); a.saveSetupHome();
+    expect(st.get().templates[0]).toMatchObject({ win: 'high', params: { resultOnly: true, unit: 'Punkte' } });
+    expect(st.get().templates[0].params?.quick).toBeUndefined();
+  });
   it('Eigene Vorlage erstellen speichert sofort, mit Notizfeldern', async () => {
     const { st, a, mem } = await fresh();
     a.openSetup(true); a.updateSetup({ name: 'Carcassonne', notes: ['Wiesen'] }); a.setupNext();
