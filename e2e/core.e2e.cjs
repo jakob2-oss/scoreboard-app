@@ -76,6 +76,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Brett zeigt 12 · 7 · 15', (await text('tbody tr:nth-child(1)')) === '1 12 7 15');
   check('Summen und Führung', (await text('tfoot')).includes('15') && (await p.locator('tfoot td.lead').count()) === 1);
   check('nächster Knopf: Runde 2', (await raw('.dock .primary')).startsWith('Runde 2 eintragen'));
+  check('leere Zeile für Runde 2 im Überblick', (await p.locator('tr.new-row td').count()) === 3);
   await shot('04-overview');
 
   // Zelle bearbeiten
@@ -91,6 +92,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Ben R1 = 9', (await text('tbody tr:nth-child(1)')) === '1 12 9 15');
   await p.click('.dock .secondary'); await p.waitForTimeout(200);
   check('Rückgängig stellt 7 wieder her', (await text('tbody tr:nth-child(1)')) === '1 12 7 15');
+  // Runde 2 direkt im Überblick beginnen und wieder zurücknehmen
+  await p.click('tr.new-row td >> nth=0'); await p.click('#pad .key >> text="4"'); await p.click('#pad [aria-label="Ziffernblock schließen"]');
+  check('Runde 2 im Überblick angelegt', (await text('tbody tr:nth-child(2)')).startsWith('2 4'));
+  await p.click('.dock .secondary'); await p.waitForTimeout(200);
+  check('Rückgängig entfernt Runde 2 wieder', (await p.locator('tbody tr:not(.new-row)').count()) === 1);
 
   // Wischen & Seitenpunkte
   await p.click('.pp-tab[aria-label="Ben"]'); await p.waitForTimeout(600);
@@ -114,7 +120,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[aria-label="Menü"]');
   await p.click('.seg >> text=Niedrigste Summe'); await p.waitForTimeout(100);
   await p.click('.scrim', { position: { x: 30, y: 40 } });
-  check('„Wenig gewinnt“: Ben führt', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b'));
+  check('„Wenig gewinnt“: Ben führt', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8'));
   await p.click('[aria-label="Menü"]'); await p.click('.menu-list >> text=Design');
   check('Design wechselt', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
   await shot('06-menu-dark');
@@ -207,7 +213,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
   await shot('21-monopoly-page');
   for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
-  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b') && (await raw('.dock .primary')) === 'Ergebnis');
+  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8') && (await raw('.dock .primary')) === 'Ergebnis');
   await shot('22-monopoly-ov');
   await p.click('.dock .primary');
   check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');

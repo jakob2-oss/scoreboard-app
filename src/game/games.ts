@@ -8,6 +8,8 @@ export interface GameDef {
   tint: string;
   /** Kurzer Fließtext, <b> markiert Kernpunkte */
   text: string;
+  /** Regeln als Stichpunkte: [Schlüsselbegriff, kurzer Zusatz] */
+  points?: [string, string][];
   /** Rechenbeispiel als Kacheln: [Wert, Beschriftung] */
   example?: [string, string][];
   /** Gruppe auf der Startseite: Rundenspiele oder Spiele, bei denen nur das Ergebnis zählt */
@@ -18,6 +20,7 @@ export interface GameDef {
 export const GAMES: GameDef[] = [
   {
     template: { key: 'wizard', version: 1, name: 'Wizard', scoring: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, players: { min: 3, max: 6 } },
+    points: [['Jede Runde', 'eine Karte mehr'], ['Vor dem Spiel', 'jeder sagt seine Stiche an'], ['Genau getroffen', '20 Punkte plus 10 je Stich'], ['Daneben', 'minus 10 je Stich Abweichung']],
     acc: '#9a7ad6', tint: '#ece6fb',
     text: 'Jede Runde gibt es <b>eine Karte mehr</b>. Bevor gespielt wird, sagt jeder an, wie viele Stiche er holt. Wer <b>genau richtig liegt</b>, bekommt <b>20 Punkte plus 10 pro Stich</b>. Wer danebenliegt, verliert <b>10 Punkte pro Stich Abweichung</b>.',
     example: [['2', 'angesagt'], ['2', 'geholt'], ['+40', 'Punkte']]
@@ -27,6 +30,7 @@ export const GAMES: GameDef[] = [
       key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'target', value: 500 }, players: { min: 2, max: 6 },
       params: { quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
     },
+    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'an der Grenze, wenigste Punkte gewinnen']],
     acc: '#ef7a5c', tint: '#fde6df',
     text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Erreicht jemand die Grenze, ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
     example: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']],
@@ -37,6 +41,7 @@ export const GAMES: GameDef[] = [
       key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'target', value: 100 }, players: { min: 2, max: 8 },
       params: { quick: [{ label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '×2', op: 'mul', v: 2 }] }
     },
+    points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
     acc: '#5fa8d3', tint: '#e1f0fa',
     text: 'Am Ende jeder Runde zählt jeder seine Karten zusammen, von <b>−2 bis 12</b>. Wer die Runde beendet, aber nicht am wenigsten hat, zählt <b>doppelt</b>. Bei <b>100 Punkten</b> ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
     example: [['18', 'beendet'], ['×2', 'nicht niedrigster'], ['36', 'Punkte']],
@@ -51,6 +56,7 @@ GAMES.push(
   {
     template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'target', value: 500 }, players: { min: 2, max: 8 },
       params: { quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+    points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
     text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
     example: [['7 + 20', 'Karten der anderen'], ['+50', 'schwarze Karte'], ['77', 'für den Sieger']],
@@ -59,6 +65,7 @@ GAMES.push(
   {
     template: { key: 'scrabble', version: 1, name: 'Scrabble', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 4 },
       params: { quick: [add('\u22121', -1), add('+1', 1), add('+10', 10), add('+50', 50), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }] } },
+    points: [['Je Zug', 'Buchstabenwerte des Worts'], ['Prämienfelder', 'doppelt oder dreifach'], ['Alle sieben Steine', '50 Punkte extra'], ['Ende', 'Reststeine werden abgezogen']],
     acc: '#3fb39b', tint: '#dcf1e7',
     text: 'Nach jedem Zug werden die <b>Buchstabenwerte des Worts</b> notiert, samt Prämienfeldern für doppelten oder dreifachen Wert. Wer alle sieben Steine auf einmal legt, bekommt <b>50 Punkte extra</b>. Am Ende zählen übrige Steine als Abzug.',
     example: [['12', 'Wortwert'], ['×3', 'Prämienfeld'], ['36', 'Punkte']]
@@ -66,18 +73,21 @@ GAMES.push(
   {
     template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
       params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
+    points: [['Am Ende', 'Siegpunkte je Spieler'], ['Gewinner', 'die meisten Siegpunkte']],
     acc: '#f0b13e', tint: '#fbecc9', group: 'result',
     text: 'Am Ende trägt jeder seine <b>Siegpunkte</b> ein.'
   },
   {
     template: { key: 'monopoly', version: 1, name: 'Monopoly', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
+    points: [['Am Ende', 'Platz je Spieler'], ['Erster', 'wer zuletzt übrig bleibt']],
     acc: '#3fb39b', tint: '#daf1e6', group: 'result',
     text: 'Am Ende trägt jeder seinen <b>Platz</b> ein. Wer zuletzt übrig bleibt, ist Erster.'
   },
   {
     template: { key: 'ergebnis', version: 1, name: 'Anderes Spiel', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
+    points: [['Am Ende', 'Platz je Spieler']],
     acc: '#9a7ad6', tint: '#e7e4f7', group: 'result',
     text: 'Am Ende trägt jeder seinen <b>Platz</b> ein.'
   }

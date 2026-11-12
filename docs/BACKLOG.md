@@ -3,11 +3,11 @@
 Reihenfolge = Priorität. Erledigtes abhaken und nach STATUS.md übernehmen.
 
 ## A. Sofort (Bedienung und Optik)
-- [ ] **Eintragen im Überblick für jede Runde:** Nach einer vollen Runde muss die nächste Runde auch
+- [x] **Eintragen im Überblick für jede Runde:** Nach einer vollen Runde muss die nächste Runde auch
       direkt im Überblick eintragbar sein (leere Zeile „neue Runde“ zum Antippen), nicht nur über die Spielerseiten.
-- [ ] **Kein farbiger Ring** um die aktuelle Runde auf der Spielerseite (wirkt KI-generiert). Stattdessen ruhig hervorheben.
-- [ ] **Spielerfarben pastellig**, passend zum Layout. Vorhandene Spieler automatisch umstellen.
-- [ ] **Regeln als Stichpunkte, aber elegant:** Schlüsselbegriff als kleine Marke, kurzer Zusatz daneben.
+- [x] **Kein farbiger Ring** um die aktuelle Runde auf der Spielerseite (wirkt KI-generiert). Stattdessen ruhig hervorheben.
+- [x] **Spielerfarben pastellig**, passend zum Layout. Vorhandene Spieler automatisch umstellen.
+- [x] **Regeln als Stichpunkte, aber elegant:** Schlüsselbegriff als kleine Marke, kurzer Zusatz daneben.
       Keine Mini-Sätze im Fließtext.
 - [ ] **Hintergründe der Szenen** runder und verspielter, stärker an Two Dots orientiert (Muster, weiche Formen).
 

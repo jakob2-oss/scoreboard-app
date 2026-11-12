@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { Player, Template } from './model/types';
 import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
-import { PLAYER_COLORS } from './lib/color';
+import { PLAYER_COLORS, pastel } from './lib/color';
 import {
   bidPhase, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
@@ -99,8 +99,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const actions = {
     async init() {
       try {
-        const [players, game, templates] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates()]);
-        set({ ready: true, players, game, templates });
+        const [loaded, game, templates] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates()]);
+        // Ältere, kräftige Spielerfarben einmalig auf Pastell umstellen
+        const players = loaded.map(p => (pastel(p.color) === p.color ? p : { ...p, color: pastel(p.color), updatedAt: clock.now() }));
+        players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
+        const g = game && { ...game, players: game.players.map(p => ({ ...p, color: pastel(p.color) })) };
+        set({ ready: true, players, game: g, templates });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');

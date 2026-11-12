@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
-  anyScore, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
+  anyScore, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
   currentRoundIndex, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -165,6 +165,15 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
               })}
             </tr>
           ))}
+          {!isBids(g) && !isResultOnly(g) && canAddRound(g) && rounds.length > 0 && roundFull(g, rounds[rounds.length - 1].id) && (
+            <tr className="new-row">
+              <th className="rn">{rounds.length + 1}</th>
+              {players.map(p => {
+                const active = !!edit && edit.ref === 'new' && edit.playerId === p.id;
+                return <td key={p.id} className={'cell empty' + (active ? ' active' : '')} onClick={() => act().openPad('new', p.id)} aria-label={`${p.name}, Runde ${rounds.length + 1}`} />;
+              })}
+            </tr>
+          )}
         </tbody>
         <tfoot>
           <tr>

@@ -65,3 +65,19 @@ body { margin: 0; }
 
 /* Rechenbeispiel: schlichter Punkt statt Pfeil zwischen den Kacheln */
 .ex-op { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); flex: none; }
+
+/* Ruhige Hervorhebung statt Farbring */
+.pp-entry, .pp-entry.wz { box-shadow: var(--soft) !important; border: 0 !important; }
+.pp-hist button[aria-current="true"] { box-shadow: none !important; background: var(--fill-2); }
+.wz-f[aria-pressed="true"] { box-shadow: var(--soft) !important; background: var(--surface); }
+.grid tr.cur td.cell { box-shadow: none; }
+.grid td.cell.active { box-shadow: none; background: var(--fill-2); }
+.grid tr.new-row th.rn { color: var(--faint); }
+
+/* Regeln als Stichpunkte */
+.rule-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rule-points li { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.rule-points b { flex: none; font-weight: 600; font-size: 14px; padding: 3px 10px; border-radius: 999px; background: color-mix(in srgb, var(--acc) 22%, transparent); }
+.rule-points span { flex: 1; min-width: 140px; font-size: 15px; font-weight: 400; color: var(--fg); }
+.ex-t:last-child { background: color-mix(in srgb, var(--acc) 45%, var(--surface)); color: var(--fg); }
+.ex-t:last-child small { color: var(--muted); }
