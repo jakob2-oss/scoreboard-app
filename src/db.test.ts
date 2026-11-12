@@ -90,4 +90,12 @@ describe('Lokale Datenbank', () => {
     await repo.deleteGame('g1', '2026-01-02T00:00:00Z');
     expect(await repo.loadHistory()).toHaveLength(0);
   });
+
+  it('liefert gelöschte Spieler getrennt', async () => {
+    const repo = freshRepo();
+    await repo.savePlayer({ id: 'p1', name: 'Anna', color: '#000', createdAt: '1', updatedAt: '1' });
+    await repo.savePlayer({ id: 'p2', name: 'Ben', color: '#000', createdAt: '2', updatedAt: '2', deletedAt: '3' });
+    expect((await repo.loadPlayers()).map(p => p.name)).toEqual(['Anna']);
+    expect((await repo.loadDeletedPlayers()).map(p => p.name)).toEqual(['Ben']);
+  });
 });

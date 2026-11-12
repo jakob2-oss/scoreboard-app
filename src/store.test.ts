@@ -22,7 +22,8 @@ function memRepo() {
     exportAll: async () => ({ app: 'punktezettel', version: 1, exportedAt: '', tables: {} }), importAll: async () => 0,
     loadEvents: async () => [], loadDeletedTemplateKeys: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined, deleteGame: async () => undefined,
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
-    loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
+    loadPlayers: async () => players.filter(p => !p.deletedAt), savePlayer: async p => { const i = players.findIndex(x => x.id === p.id); if (i >= 0) players[i] = p; else players.push(p); },
+    loadDeletedPlayers: async () => players.filter(p => !!p.deletedAt),
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
     saveGame: async s => { saved = s; saves++; }
   };
@@ -197,6 +198,24 @@ describe('Notizfelder', () => {
     a.finishGame();
     expect(mem.results.find(x => x.playerId === 'id1')!.extra).toMatchObject({ 'n:Straße': 2 });
     expect(r).toBeTruthy();
+  });
+});
+
+describe('Spieler löschen', () => {
+  it('nicht während er mitspielt; danach weg aus Auswahl und Liste, Name bleibt im Verlauf', async () => {
+    const { st, a, mem } = await setup('free', ['Anna', 'Ben']);
+    a.roundGo(); a.add(5); a.next(); a.add(3); a.next();
+    a.deletePlayer('id2');
+    expect(st.get().players).toHaveLength(2);
+    expect(st.get().toast?.text).toBe('Ben spielt gerade mit');
+    a.finishGame();
+    a.deletePlayer('id2');
+    expect(st.get().players.map(p => p.name)).toEqual(['Anna']);
+    expect(st.get().formerPlayers.map(p => p.name)).toEqual(['Ben']);
+    expect(st.get().history[0].results.map(r => r.playerId)).toContain('id2');
+    expect(mem.repo).toBeTruthy();
+    a.pickTemplate(TPL.free);
+    expect(st.get().selected).toEqual(['id1']);
   });
 });
 

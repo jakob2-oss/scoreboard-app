@@ -55,6 +55,8 @@ export interface AppState {
   goneKeys: string[];
   /** Kniffel: Feld wurde aus dem Überblick geöffnet, danach dorthin zurück */
   fromOverview: boolean;
+  /** Gelöschte Spieler: nur für Namen im Verlauf */
+  formerPlayers: Player[];
   /** Neue Partie soll starten, obwohl eine mit Punkten läuft */
   confirmStart: boolean;
 }
@@ -62,7 +64,7 @@ export interface AppState {
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, goneKeys: [], fromOverview: false, confirmStart: false
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, goneKeys: [], fromOverview: false, confirmStart: false, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -138,6 +140,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       try {
         const [loaded, game, templates, hist0, ev0] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates(), repo.loadHistory(), repo.loadEvents()]);
         const goneKeys = await repo.loadDeletedTemplateKeys();
+        const formerPlayers = await repo.loadDeletedPlayers();
         // Frühere Freitext-Anlässe einmalig zu Serien machen
         const events = [...ev0]; let history = hist0;
         const loose = [...new Set(hist0.filter(h => h.occasion && !h.eventId).map(h => h.occasion!))];
@@ -158,7 +161,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         const players = loaded.map(p => (pastel(p.color) === p.color ? p : { ...p, color: pastel(p.color), updatedAt: clock.now() }));
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
         const g = game && { ...game, players: game.players.map(p => ({ ...p, color: pastel(p.color) })) };
-        set({ ready: true, players, game: g, templates, history: named(history, templates), events, goneKeys });
+        set({ ready: true, players, game: g, templates, history: named(history, templates), events, goneKeys, formerPlayers });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -501,6 +504,19 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (!quiet || anyScore(g)) toast('Partie verworfen');
     },
     cancelStart() { set({ confirmStart: false }); },
+    /** Kurze Meldung (z. B. aus der Oberfläche) */
+    notify(text: string) { toast(text); },
+    /** Spieler löschen: verschwindet aus Auswahl und Liste, der Name bleibt im Verlauf */
+    deletePlayer(id: string) {
+      const p = state.players.find(x => x.id === id); if (!p) return;
+      if (state.game && seated(state.game).some(x => x.id === id)) { toast(`${p.name} spielt gerade mit`); return; }
+      const t = clock.now(), gone = { ...p, updatedAt: t, deletedAt: t };
+      const selected = state.selected.filter(x => x !== id);
+      writeLast(readLast().filter(x => x !== id));
+      set({ players: state.players.filter(x => x.id !== id), formerPlayers: [...state.formerPlayers, gone], selected, screen: 'people', profile: null });
+      repo.savePlayer(gone).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      toast(`${p.name} gelöscht`);
+    },
     /** Spieler umbenennen (Name bleibt eindeutig) */
     renamePlayer(id: string, raw: string) {
       const name = raw.trim().slice(0, 18), p = state.players.find(x => x.id === id);

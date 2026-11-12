@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5, #6, #7 gemergt)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gemergt)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
@@ -83,7 +83,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5, #6, #7
 - **Durchlauf aller 14 Spiele** (starten, eintragen, neu laden, beenden) ohne Fehler; Partie im Verlauf löschen (`deleteGame`)
 - **Teil D** (PR #9): Endwertung, Notizfelder (`params.notes`, Werte als `n:<Feld>` im Eintrag), eigene Spiele mit
   `customArt()` (Icon, Szene, `params.look`), Spielseite mit Ansicht und Bearbeiten (`Setup.tsx`), „Eigene Vorlage erstellen“
+- **Spieler löschen, Feedback** (PR #10): `deletePlayer` (weich, `formerPlayers` für Namen im Verlauf), Feedback über `navigator.share`
 
 ## Tests
-- Unit-Tests: 85 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 87 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen

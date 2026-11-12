@@ -37,3 +37,7 @@ Statt nur Siegen zählt jede Platzierung: geschlagene Gegner (Gleichstand halb) 
 „Eigene Vorlage erstellen“ legt ein eigenes Spiel an. Das „Freie Spiel“ wird nicht mehr automatisch als Vorlage gespeichert
 (nur per Schalter), damit „Meine Spiele“ nicht mit „Freies Spiel vom …“ volläuft. Die Partie landet trotzdem im Verlauf.
 Notizfelder zählen nie zur Summe; ihre Summen je Spieler stehen beim Beenden in `Result.extra` (`n:<Feld>`).
+
+## 12.11.2026: Feedback über das Teilen-Menü
+Kein fester Empfänger im Code (Repo ist öffentlich, keine E-Mail-Adresse). Tester schicken den Text über das Teilen-Menü
+ihres Geräts, Version und Gerät hängen automatisch an.

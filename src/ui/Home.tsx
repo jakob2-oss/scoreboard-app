@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
 import { currentRoundIndex, seated, isCats, isResultOnly } from '../game/engine';
@@ -92,11 +93,49 @@ export function Home() {
                 </button>
               </div>
             </div>
+            <Feedback />
             <p className="version">Version {__APP_VERSION__}</p>
           </div>
         </div>
       </div>
       <TabBar active="home" />
     </section>
+  );
+}
+
+/** Feedback: kurzer Text, dann das Teilen-Menü des Geräts (Nachricht, Mail …). Version und Gerät hängen an. */
+function Feedback() {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const send = async () => {
+    const body = `${text.trim()}\n\nPunktezettel ${__APP_VERSION__}\n${navigator.userAgent}`;
+    try {
+      if (navigator.share) await navigator.share({ title: 'Feedback zum Punktezettel', text: body });
+      else { await navigator.clipboard.writeText(body); act().notify('Text kopiert'); }
+      setText(''); setOpen(false);
+    } catch { /* Teilen abgebrochen */ }
+  };
+  return (
+    <>
+      <button className="row feedback-row" id="feedback" onClick={() => setOpen(true)}>
+        <span className="t"><b>Feedback geben</b></span><Chevron />
+      </button>
+      {open && (
+        <>
+          <div className="scrim" onClick={() => setOpen(false)} />
+          <div className="bsheet" role="dialog" aria-label="Feedback">
+            <div className="grab" />
+            <div className="sheet-body">
+              <h3>Feedback</h3>
+              <textarea id="feedback-text" className="fb-text" value={text} rows={5} maxLength={2000} placeholder="Was ist dir aufgefallen?" onChange={e => setText(e.target.value)} />
+              <div className="pad-actions">
+                <button className="secondary" onClick={() => setOpen(false)}>Abbrechen</button>
+                <button className="primary" id="feedback-send" disabled={!text.trim()} onClick={send}>Senden</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }

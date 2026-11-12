@@ -8,7 +8,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
 (async () => {
   const b = await chromium.launch();
-  const c = await b.newContext({ ...devices['iPhone 13'] });
+  const c = await b.newContext({ ...devices['iPhone 13'] }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await c.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
@@ -385,9 +385,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.person-row >> text=Clara'); await p.fill('#pf-name', 'Clara M'); await p.press('#pf-name', 'Enter'); await p.waitForTimeout(200);
   await p.click('[aria-label="Zurück"]');
   check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
+  // Spieler löschen: weg aus der Liste, Name bleibt im Verlauf
+  await p.click('.person-row >> text=Clara M'); await p.click('#player-delete'); await p.click('#player-delete-yes'); await p.waitForTimeout(300);
+  check('Spieler gelöscht', (await p.locator('.person-row').count()) === 2 && !(await text('#s-people')).includes('Clara M'));
+  await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Name bleibt im Verlauf', (await text('.bsheet .podium')).includes('Clara M'));
+  await p.mouse.click(30, 40); await p.click('#tab-people');
   await p.click('#tab-home');
 
   await p.click('#my-games .row[data-own] >> nth=0'); await p.click('#quick-start');
+
+  // Feedback
+  await p.click('#s-game [aria-label="Zurück"]').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
+  await p.click('#feedback'); await p.fill('#feedback-text', 'Testnachricht'); await shot('49-feedback'); await p.click('#feedback-send'); await p.waitForTimeout(300);
+  check('Feedback: Text kopiert, wenn Teilen fehlt', (await text('.toast')) === 'Text kopiert');
+  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Punktezettel '));
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

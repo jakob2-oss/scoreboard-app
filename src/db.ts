@@ -38,6 +38,8 @@ export interface Repo {
   /** Sicherung einlesen: zusammenführen, bei gleicher ID gewinnt der neuere Stand. Liefert die Zahl übernommener Einträge. */
   importAll(b: Backup): Promise<number>;
   loadPlayers(): Promise<Player[]>;
+  /** Gelöschte Spieler (nur für Namen im Verlauf) */
+  loadDeletedPlayers(): Promise<Player[]>;
   savePlayer(p: Player): Promise<void>;
   loadRunningGame(): Promise<GameState | null>;
   loadTemplates(): Promise<Template[]>;
@@ -83,6 +85,7 @@ export function createRepo(db: PzDb): Repo {
       return (await db.players.toArray()).filter(p => !p.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     },
     async savePlayer(p) { await db.players.put(p); },
+    async loadDeletedPlayers() { return (await db.players.toArray()).filter(p => !!p.deletedAt); },
     /** Eigene Vorlagen, zuletzt gespielte zuerst */
     async loadTemplates() {
       const key = (t: Template) => t.lastUsedAt || t.createdAt || '';
