@@ -3,7 +3,7 @@ export const heroSvg = `<svg class="hero-ill" viewBox="0 0 320 230" role="img" a
           <defs>
             <clipPath id="blobclip"><path d="M40 120C30 60 90 18 160 20c75 2 140 30 136 98-4 64-60 96-136 94-76-2-110-32-120-92z"/></clipPath>
           </defs>
-          <path d="M40 120C30 60 90 18 160 20c75 2 140 30 136 98-4 64-60 96-136 94-76-2-110-32-120-92z" style="fill:var(--i-blob)"/>
+          <path class="hero-blob" d="M40 120C30 60 90 18 160 20c75 2 140 30 136 98-4 64-60 96-136 94-76-2-110-32-120-92z" style="fill:var(--i-blob)"/>
           <g style="fill:var(--i-star)">
             <circle cx="92" cy="58" r="2.2" opacity=".7"/><circle cx="196" cy="40" r="2" opacity=".6"/><circle cx="276" cy="100" r="2" opacity=".6"/><circle cx="120" cy="40" r="1.6" opacity=".5"/>
             <path d="M150 52l1.8-4.2 1.8 4.2 4.2 1.8-4.2 1.8-1.8 4.2-1.8-4.2-4.2-1.8z" opacity=".85"/>

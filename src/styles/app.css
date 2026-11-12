@@ -437,3 +437,63 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .victory .again svg { width: 30px; height: 30px; }
 :root[data-theme="dark"] .victory .again { background: #3a3970; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .victory .again { background: #3a3970; } }
+
+/* Startseite: Name und Bild auf einer gemeinsamen Fläche, Suche halb auf der Unterkante */
+.hero-banner { position: relative; margin: 10px 0 18px; }
+.hb-card { position: relative; height: 180px; }
+.hb-bg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hb-shape { fill: var(--i-blob); }
+.hb-f { transform-box: fill-box; transform-origin: center; }
+.hb-f1 { fill: var(--i-hill1); opacity: .45; animation: hb-a 24s ease-in-out infinite alternate; }
+.hb-f2 { fill: var(--i-hill2); opacity: .22; animation: hb-b 30s ease-in-out infinite alternate; }
+.hb-f3 { fill: var(--i-star); opacity: .07; animation: hb-c 20s ease-in-out infinite alternate; }
+@keyframes hb-a { to { transform: translate(18px, -10px) rotate(8deg) scale(1.06); } }
+@keyframes hb-b { to { transform: translate(-16px, 12px) rotate(-14deg) scale(.94); } }
+@keyframes hb-c { to { transform: translate(40px, 14px) scale(1.2); } }
+.hb-card .wordmark { position: absolute; left: 22px; top: 58px; margin: 0; padding: 0; align-items: flex-start; font-size: 38px; }
+.hb-theme { position: absolute; left: 12px; top: 10px; width: 38px; height: 38px; background: transparent; box-shadow: none; color: var(--muted); }
+.hb-ill { position: absolute; right: -22px; top: 4px; width: 236px; }
+.hb-ill .hero-ill { width: 100%; height: auto; display: block; }
+.hb-ill .hero-blob { display: none; }
+.hb-search { position: relative; margin-top: 14px; display: flex; align-items: center; gap: 10px; height: 50px; border-radius: 999px; padding: 0 18px;
+  background: var(--surface); box-shadow: var(--soft); color: var(--muted); }
+.hb-search svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.hb-search .game-search { flex: 1; min-width: 0; min-height: 0; height: 100%; margin: 0; padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
+.hb-search .game-search:focus { background: transparent; }
+.hb-search:focus-within { box-shadow: 0 8px 22px rgba(0, 0, 0, .2); color: var(--fg); }
+@media (prefers-reduced-motion: reduce) { .hb-f { animation: none; } }
+
+/* Serien: laufende Serie als Karte, Start, Abschlussseite */
+.ser-live { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; border-radius: 22px; padding: 14px 14px 14px 16px; margin: 4px 0 16px;
+  background: #272748; color: #f7eedc; box-shadow: var(--soft); }
+:root[data-theme="dark"] .ser-live { background: #3a3970; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ser-live { background: #3a3970; } }
+.ser-live .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ser-live .t small { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #ef7a5c; }
+.ser-live .t b { font-family: var(--f-display); font-size: 20px; font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ser-live .t .sub { font-size: 14px; color: #c9c6e4; }
+.ser-live svg { color: #c9c6e4; }
+.ser-live-dot { width: 10px; height: 10px; border-radius: 50%; background: #ef7a5c; flex: none; animation: ser-pulse 2.4s ease-in-out infinite; }
+@keyframes ser-pulse { 50% { transform: scale(1.5); opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .ser-live-dot { animation: none; } }
+.ser-start { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 16px; }
+.ser-start input { min-width: 0; height: 54px; border-radius: var(--r); border: 0; background: var(--surface); color: var(--fg); padding: 0 16px; font: inherit; font-size: 16px; box-shadow: var(--soft); }
+.ser-start .primary { flex: none; padding: 0 22px; }
+.ser-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #fff; background: #ef7a5c; border-radius: 999px; padding: 3px 10px; margin-bottom: 6px; }
+.ser-champ { font-family: var(--f-display); font-size: 18px; font-weight: 600; color: var(--fg); margin-top: 4px; }
+.ser-trophy { margin: 4px -16px 10px; border-radius: 0 0 32px 32px; overflow: hidden; }
+.ser-trophy svg { display: block; width: 100%; height: auto; }
+.ser-end { width: 100%; margin: 4px 0 18px; }
+.ser-awards { margin-bottom: 4px; }
+/* Favorit auf der Spielseite: Herz oben rechts */
+.tpl-fav { position: absolute; top: 10px; right: max(12px, env(safe-area-inset-right, 0px)); width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, .92);
+  color: #2e2b4f; display: grid; place-items: center; box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+.tpl-fav svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; transition: transform .2s ease; }
+.tpl-fav[aria-pressed="true"] svg { fill: #ef7a5c; stroke: #ef7a5c; transform: scale(1.08); }
+/* Startseite: aufklappbare Gruppen nach Spielart */
+.grp-head { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: 0; padding: 4px 6px 8px 0; color: var(--muted); text-align: left; }
+.grp-head .eyebrow { padding-left: 6px; }
+.grp-count { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--fill); border-radius: 999px; padding: 1px 8px; }
+.grp-chev { width: 20px; height: 20px; margin-left: auto; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transform: rotate(-90deg); transition: transform .2s ease; }
+.grp.open .grp-chev { transform: none; }
+.grp:not(.open) { margin-bottom: 2px; }

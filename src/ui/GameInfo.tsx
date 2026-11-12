@@ -6,7 +6,7 @@ import { GAME_ART } from './art';
 
 /** Spielseite eines festen Spiels: Szene, Regeln als Fließtext mit Beispiel, Optionen, Start */
 export function GameInfo() {
-  const { template, players, selected } = useApp();
+  const { template, players, selected, favs } = useApp();
   const def = template && gameDef(template.key);
   if (!template || !def) return null;
   const art = GAME_ART[template.key];
@@ -14,7 +14,7 @@ export function GameInfo() {
   const n = selected.filter(id => players.some(p => p.id === id)).length;
   const ready = n >= template.players.min && n <= template.players.max;
   return (
-    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goHome()}
+    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goHome()} fav={{ on: favs.includes(template.key), toggle: () => a.toggleFav(template.key) }}
       dock={ready
         ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
         : <button className="primary" id="to-players" onClick={() => a.toPlayers()}>Spieler wählen</button>}>

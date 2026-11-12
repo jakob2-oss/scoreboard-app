@@ -12,6 +12,7 @@ import { GameScreen } from './ui/Game';
 import { Toast } from './ui/Toast';
 import { registerFormer, registerLooks } from './ui/lookup';
 import { Backdrop } from './ui/Backdrop';
+import { Events } from './ui/Events';
 
 export default function App() {
   const s = useApp();
@@ -32,6 +33,7 @@ export default function App() {
       <Backdrop motif={motif} dim={s.screen === 'game'} />
       {s.screen === 'home' && <Home />}
       {s.screen === 'history' && <History />}
+      {s.screen === 'events' && <Events />}
       {s.screen === 'people' && <People />}
       {s.screen === 'profile' && <Profile />}
       {s.screen === 'series' && <Series />}

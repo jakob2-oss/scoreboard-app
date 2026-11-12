@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, type HistGame } from './stats';
+import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -116,4 +116,22 @@ describe('Leistung', () => {
     const l = [g('1', 'uno', 1, [['a', 1, 10], ['b', 2, 5], ['c', 3, 4], ['d', 4, 3]]), g('2', 'uno', 0, [['b', 1, 1], ['a', 2, 1]])];
     expect(seriesTable(l, DEFAULT_POINTS)[0]).toMatchObject({ playerId: 'a', perf: Math.round(3 / 2 * 100) / 100 });
   });
+});
+
+describe('Auszeichnungen einer Serie', () => {
+  const g = (id: string, key: string, at: string, places: [string, number][]) => ({ id, key, name: key, finishedAt: at, results: places.map(([playerId, place]) => ({ playerId, place, total: 0 })) });
+  it('meiste Siege, Serie in Folge, Allrounder und Pechvogel', () => {
+    const list = [
+      g('1', 'uno', '2026-11-01T20:00', [['a', 1], ['b', 2], ['c', 3]]),
+      g('2', 'kniffel', '2026-11-01T21:00', [['a', 1], ['b', 3], ['c', 2]]),
+      g('3', 'uno', '2026-11-01T22:00', [['b', 1], ['a', 2], ['c', 3]])
+    ];
+    expect(seriesAwards(list)).toEqual([
+      { label: 'Meiste Siege', value: '2×', who: ['a'] },
+      { label: 'Längste Siegesserie', value: '2 in Folge', who: ['a'] },
+      { label: 'Allrounder', value: '2 Spiele', who: ['a'] },
+      { label: 'Pechvogel', value: '2× Letzter', who: ['c'] }
+    ]);
+  });
+  it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
 });

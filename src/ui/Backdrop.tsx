@@ -33,8 +33,9 @@ const MOTIFS: Record<string, string[]> = {
 };
 
 // Feste Plätze, damit sich nichts sprunghaft verschiebt: [x, y, Größe, Drehung]
+// Keine Form berührt die Oberkante: sonst entsteht unter der Statusleiste eine harte Kante
 const SLOTS: [number, number, number, number][] = [
-  [52, 96, 1.1, -12], [330, 170, .9, 18], [210, 300, .7, 6], [40, 420, .9, 24], [350, 470, 1.2, -20],
+  [52, 170, 1.1, -12], [330, 240, .9, 18], [210, 300, .7, 6], [40, 420, .9, 24], [350, 470, 1.2, -20],
   [150, 560, .8, 10], [290, 660, 1, -8], [70, 740, 1.1, 14], [360, 800, .8, -16], [200, 130, .6, 30]
 ];
 
@@ -45,7 +46,7 @@ function build(key: string | null): string {
     return `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><g class="bd-a" style="--d:${26 + (i % 5) * 4}s;animation-delay:${-i * 3.1}s">${shape}</g></g>`;
   }).join('');
   return `<svg viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <g class="bd-big"><circle cx="372" cy="40" r="160" fill="currentColor"/><circle cx="-30" cy="520" r="180" fill="currentColor"/><circle cx="330" cy="790" r="120" fill="currentColor"/></g>
+    <g class="bd-big"><circle cx="380" cy="190" r="150" fill="currentColor"/><circle cx="-30" cy="520" r="180" fill="currentColor"/><circle cx="330" cy="790" r="120" fill="currentColor"/></g>
     <g class="bd-m">${motifs}</g></svg>`;
 }
 

@@ -93,3 +93,32 @@ leicht gekippt, auf Mitternachtsblau mit weicher Form (Entwurf W1 auf dem Hinter
 Startseite „OINA / NO“ statt „PUNKTE / ZETTEL“. Interne Namen (Datenbank `punktezettel`, Sicherungsformat) bleiben,
 damit vorhandene Daten und Sicherungen weiter funktionieren.
 Auf der Ergebnisseite startet „Oina no“ nach dem Speichern sofort eine neue Partie mit denselben Regeln, Spielern und Plätzen.
+
+## 12.11.2026: Updates auf dem iPhone
+Die App vom Homescreen startet auf iOS oft nicht neu und blieb so auf alten Versionen. Sie fragt jetzt beim
+Zurückkehren in die App und alle 30 Minuten nach einer neuen Version und lädt sie selbst (`registerSW` in `src/main.tsx`).
+Version steigt mit jedem größeren Paket (0.9.0: Tisch-Modus, Chic, Oina no?).
+
+## 12.11.2026: Startseite mit Logo statt Bild
+Das alte Punktezettel-Bild (Nachtlandschaft mit eigenem Oval) ist ersetzt durch den Würfel aus dem App-Icon, darunter
+„OINA NO?“; inzwischen als Logo-Block: Würfel links, so hoch wie die zwei Zeilen „OINA“ (Koralle wie das Würfelauge) und „NO?“ rechts. Der Würfel rollt alle paar Sekunden leicht. Hintergrundformen berühren die
+Oberkante nicht mehr, damit unter der Statusleiste keine harte Kante entsteht.
+
+## 12.11.2026: Serien als eigener Bereich, Abende und Serien gleich
+Spieleabende und Serien (Urlaub, Turnier) sind dasselbe: eine Serie. Eigener Reiter „Serien“ in der unteren Leiste.
+Eine Serie wird gestartet und läuft (`GameEvent.active`), bis sie beendet wird (`endedAt`); höchstens eine läuft.
+Solange sie läuft, ist sie beim Speichern vorgewählt und steht als Karte auf der Startseite (Partien, wer führt).
+Beendet zeigt sie eine Abschlussseite: Otter mit Pokal (Band „GESAMTSIEG“), wer die Serie gewinnt, Auszeichnungen
+(Meiste Siege, Längste Siegesserie, Allrounder, Pechvogel; `seriesAwards` in `stats.ts`). Fortsetzen ist möglich.
+
+## 12.11.2026: Startseite: Name und Bild als ein Banner
+Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten, aber nicht so wuchtig getrennt vom Namen.
+Jetzt ein Banner: „OINA NO?“ links, das Bild rechts auf einer gemeinsamen organischen Fläche (unregelmäßige Kante,
+darin drei Formen, die langsam treiben, drehen und atmen). Die Suche steht als Pille mit Lupe frei darunter,
+nicht überlappend; der Hell/Dunkel-Schalter oben links in der Fläche. Darunter direkt die Spiele.
+
+## 12.11.2026: Startseite nach Spielart, Favoriten oben
+Spiele stehen in aufklappbaren Gruppen nach Spielart: Kartenspiele, Würfelspiele, Brett- und Legespiele, Eigene Spiele
+(dort auch Freies Spiel, Anderes Spiel und Erstellen). Favoriten (Herz auf der Spielseite) stehen ganz oben.
+Offene/geschlossene Gruppen und Favoriten merkt sich das Gerät (localStorage), noch nicht in der Sicherung.
+Eigene Spiele bekommen beim Erstellen eine Spielart (`params.family`); Kopien fester Spiele übernehmen sie.

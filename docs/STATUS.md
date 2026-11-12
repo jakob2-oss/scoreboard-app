@@ -46,6 +46,10 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
   `giveTokens`, `schockOut`, `moveSeat`), Oberfläche `src/ui/Table.tsx`, Zeichnung `src/ui/table.ts`.
   Schwimmen und Schocken als feste Spiele, im Erstellungsmodus „Leben verlieren“ und „Deckel verteilen“.
 
+- **12.11. (später):** Name „Oina no?“, Würfel-Icon, Revanche-Knopf, Verlierer-Otter, Chic (zweite Phase „Zurück in die Mitte“),
+  Serien als eigener Reiter (starten, beenden, Abschlussseite mit Auszeichnungen), Startseite als Banner mit Suche,
+  Gruppen nach Spielart mit Favoriten, Updates in der Homescreen-App. Version 0.9.0.
+
 ## Als Nächstes
 **Siehe `docs/BACKLOG.md`** (vollständiges Feedback vom 12.11.2026, nach Priorität geordnet).
 

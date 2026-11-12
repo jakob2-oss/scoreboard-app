@@ -1,3 +1,4 @@
+import { gameDef } from './games';
 import type { End, QuickKey, Scoring, Template, Win } from '../model/types';
 import type { Clock } from '../lib/id';
 
@@ -36,6 +37,8 @@ export interface FreeConfig {
   halves: number;
   /** Zweite Phase bei leerer Mitte: weitergeben (Schocken) oder zurück in die Mitte (Chic) */
   phase2: 'pass' | 'return';
+  /** Spielart auf der Startseite (leer: nur bei den eigenen Spielen) */
+  family: 'karten' | 'wuerfel' | 'brett' | null;
 }
 
 export type Kind = 'points' | 'split' | 'rank' | 'lives' | 'tokens';
@@ -71,7 +74,7 @@ const table = (s?: Scoring) => s === 'lives' || s === 'tokens';
 const winOf = (s: Scoring | undefined, win: 'high' | 'low'): 'high' | 'low' => (s === 'rank' || s === 'lives' ? 'high' : s === 'tokens' ? 'low' : win);
 const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as T;
 
-export const defaultFreeConfig = (): FreeConfig => ({ name: '', win: 'high', end: { type: 'none' }, steps: [...DEFAULT_STEPS], save: false, notes: [], mode: 'rounds', unit: 'Punkte', kind: 'points', splitNames: ['', ''], zeroSum: false, keys: [], start: 0, swim: true, halves: 2, phase2: 'pass' });
+export const defaultFreeConfig = (): FreeConfig => ({ name: '', win: 'high', end: { type: 'none' }, steps: [...DEFAULT_STEPS], save: false, notes: [], mode: 'rounds', unit: 'Punkte', kind: 'points', splitNames: ['', ''], zeroSum: false, keys: [], start: 0, swim: true, halves: 2, phase2: 'pass', family: null });
 
 export function fallbackName(date = new Date()): string {
   return 'Freies Spiel vom ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
@@ -79,10 +82,13 @@ export function fallbackName(date = new Date()): string {
 
 /** Aus den Einstellungen des freien Spiels eine eigene Vorlage machen (eigener Schlüssel, eigene Statistik). */
 /** Festes Spiel als eigenes Spiel kopieren (eigener Schlüssel, Regeln und Bild des Originals) */
+/** Spielart eines festen Spiels (für Kopien) */
+const familyOf = (key: string) => gameDef(key)?.family;
+
 export function copyAsOwn(t: Template, clock: Clock): Template {
   const now = clock.now();
   return { ...structuredClone(t), key: clock.uid(), version: 1, name: `${t.name} eigen`, custom: true,
-    params: { ...structuredClone(t.params ?? {}), base: t.key }, createdAt: now, updatedAt: now, lastUsedAt: null };
+    params: { ...structuredClone(t.params ?? {}), base: t.key, ...(familyOf(t.key) ? { family: familyOf(t.key) } : {}) }, createdAt: now, updatedAt: now, lastUsedAt: null };
 }
 
 export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
@@ -92,7 +98,7 @@ export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
   return {
     key: clock.uid(), version: 1, name: cfg.name.trim() || fallbackName(new Date(t)), scoring: k.scoring ?? 'rounds', win: winOf(k.scoring, m.win),
     end: table(k.scoring) ? { type: 'none' } : m.end, players: { min: cfg.kind === 'rank' ? 3 : table(k.scoring) ? 2 : 1, max: table(k.scoring) ? 10 : 8 },
-    params: clean({ steps: steps.length ? steps : [...DEFAULT_STEPS], ...(cfg.notes.length ? { notes: [...cfg.notes] } : {}), ...(cfg.look ? { look: cfg.look } : {}), ...m.params, ...k.params,
+    params: clean({ steps: steps.length ? steps : [...DEFAULT_STEPS], family: cfg.family ?? undefined, ...(cfg.notes.length ? { notes: [...cfg.notes] } : {}), ...(cfg.look ? { look: cfg.look } : {}), ...m.params, ...k.params,
       keys: cfg.keys.length && cfg.mode !== 'result' && cfg.kind !== 'rank' && !isTableKind(cfg.kind) ? cfg.keys.slice(0, MAX_KEYS) : undefined }),
     custom: true, createdAt: t, updatedAt: t, lastUsedAt: null
   };
@@ -107,7 +113,7 @@ export function updateFreeTemplate(t: Template, cfg: FreeConfig, clock: Clock): 
   const m = cur.mode !== cfg.mode || cur.unit !== cfg.unit ? modeRules(cfg)
     : { win: cfg.mode === 'result' && cfg.unit === 'Platz' ? t.win : cfg.win, end: cfg.mode === 'result' ? t.end : cfg.end, params: {} };
   const k = kindRules(cfg, t);
-  const params = clean({ ...t.params, steps: steps.length ? steps : [...DEFAULT_STEPS], notes: [...cfg.notes], ...(cfg.look ? { look: cfg.look } : {}), ...m.params, ...k.params,
+  const params = clean({ ...t.params, steps: steps.length ? steps : [...DEFAULT_STEPS], family: cfg.family ?? undefined, notes: [...cfg.notes], ...(cfg.look ? { look: cfg.look } : {}), ...m.params, ...k.params,
     keys: cfg.keys.length && cfg.mode !== 'result' && cfg.kind !== 'rank' && !isTableKind(cfg.kind) ? cfg.keys.slice(0, MAX_KEYS) : undefined });
   const scoring = k.scoring ?? t.scoring;
   const next: Template = { ...t, name: cfg.name.trim() || t.name, scoring, win: winOf(scoring, m.win), end: table(scoring) ? { type: 'none' } : m.end, params,
@@ -120,7 +126,7 @@ export function updateFreeTemplate(t: Template, cfg: FreeConfig, clock: Clock): 
 export const configOf = (t: Template): FreeConfig => ({ name: t.name, win: t.win, end: t.end, steps: [...stepsOf(t)], save: true, notes: [...(t.params?.notes ?? [])], look: t.params?.look,
   mode: t.params?.resultOnly ? 'result' : 'rounds', unit: t.params?.unit === 'Platz' ? 'Platz' : 'Punkte',
   kind: t.scoring === 'rank' || t.scoring === 'lives' || t.scoring === 'tokens' ? t.scoring : t.params?.split?.length === 2 ? 'split' : 'points',
-  start: t.params?.lives ?? t.params?.tokens ?? 0, swim: t.params?.swim !== false, halves: t.params?.halves ?? 2, phase2: t.params?.phase2 === 'return' ? 'return' : 'pass',
+  start: t.params?.lives ?? t.params?.tokens ?? 0, swim: t.params?.swim !== false, halves: t.params?.halves ?? 2, phase2: t.params?.phase2 === 'return' ? 'return' : 'pass', family: t.params?.family ?? null,
   splitNames: [t.params?.split?.[0]?.label ?? '', t.params?.split?.[1]?.label ?? ''], zeroSum: !!t.params?.zeroSum, keys: [...(t.params?.keys ?? [])] });
 
 export function stepsOf(t: Template): number[] {

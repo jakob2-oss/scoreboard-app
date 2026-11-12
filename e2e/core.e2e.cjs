@@ -24,7 +24,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
   check('19 Einträge (16 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
-  check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
+  check('Eigene Endwertung erstellbar', (await raw('#s-home')).includes('Eigene Endwertung erstellen'));
   await shot('01-home');
 
   // Eigene Vorlage erstellen
@@ -397,6 +397,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.row[data-own] >> text=Chic'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);
   await p.goto(URL); await p.waitForSelector('.wordmark');
 
+  // Startseite: Gruppen nach Spielart, aufklappbar, Favoriten oben
+  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('2'));
+  await p.click('#grp-karten'); await p.waitForTimeout(100);
+  check('Gruppe zuklappbar', !(await p.isVisible('[data-game="wizard"]')) && (await p.getAttribute('#grp-karten', 'aria-expanded')) === 'false');
+  await p.reload(); await p.waitForSelector('.wordmark');
+  check('Zugeklappt bleibt zugeklappt', !(await p.isVisible('[data-game="wizard"]')));
+  await p.click('#grp-karten');
+  await p.click('[data-game="kniffel"]'); await p.click('#fav-toggle'); await p.waitForTimeout(100);
+  check('Favorit auf der Spielseite', (await p.getAttribute('#fav-toggle', 'aria-pressed')) === 'true');
+  await p.click('.tpl-back'); await p.waitForTimeout(150);
+  check('Favoriten stehen oben', await p.isVisible('#grp-favs') && (await p.locator('.grp >> nth=0').getAttribute('class')).includes('open') && (await raw('.grp >> nth=0')).includes('Kniffel'));
+  await shot('01c-home-favs');
+  await p.click('#grp-favs ~ .list [data-game="kniffel"]'); await p.click('#fav-toggle'); await p.click('.tpl-back'); await p.waitForTimeout(150);
+  check('Favorit wieder gelöst', !(await p.isVisible('#grp-favs')));
+
   // Tisch-Modus: Schwimmen (Leben) und Schocken (Deckel)
   await p.click('[data-game="schwimmen"]'); await shot('37a-schwimmen'); await p.click('#quick-start'); await p.waitForTimeout(300);
   const seat = i => p.locator('.tb-seat').nth(i);
@@ -448,7 +463,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite
-  await p.click('#tab-history'); await p.click('#hist-series'); await p.waitForTimeout(200);
+  await p.click('#tab-events'); await p.waitForTimeout(200);
   check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
   await shot('40-series-list');
   await p.click('.series-row'); await p.waitForTimeout(200);
@@ -467,9 +482,22 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Serie: Vorschlag wieder herstellbar', await p.isVisible('.pt-reset'));
   await p.evaluate(() => document.querySelector('#s-series .scroll').scrollTo(0, 9999)); await shot('42-series-points');
   await p.click('.pt-reset');
+  // Serie starten: läuft, steht oben in Serien und auf der Startseite; beenden zeigt die Abschlussseite
+  await p.click('#series-resume'); await p.waitForTimeout(150);
+  check('Serie läuft', (await raw('.ser-badge')) === 'Läuft' && await p.isVisible('#series-end'));
   await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
-  check('zurück in der Serienliste', await p.isVisible('.series-row'));
-  await p.click('#hist-games'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Serien: laufende Serie als Karte', (await raw('#series-live .t b')) === 'Südamerika 2026' && (await raw('#series-live')).includes('führt'));
+  await shot('42b-series-live');
+  await p.click('#tab-home'); await p.waitForTimeout(150);
+  check('Startseite zeigt die laufende Serie', await p.isVisible('#series-live'));
+  await p.click('#series-live'); await p.waitForTimeout(150);
+  await p.click('#series-end'); await p.waitForTimeout(250);
+  check('Serie beendet: Abschluss mit Otter, Sieger und Auszeichnungen', await p.isVisible('.ser-trophy') && (await raw('.ser-champ')).endsWith('die Serie') && (await raw('.ser-awards')).includes('Meiste Siege'));
+  await shot('42c-series-done');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42c-series-done-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
+  check('zurück in der Serienliste', await p.isVisible('.series-row') && !(await p.isVisible('#series-live')));
+  await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
   check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
   await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
   check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');
@@ -511,7 +539,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Kopie behält Bild und Regeln des Originals', (await text('#s-setup .rule-points')).includes('Kartenwerte'));
   await shot('45c-copy');
   await p.click('#s-setup [aria-label="Zurück"]');
-  check('Kopie unter Meine Spiele, Original unverändert', (await raw('#my-games')).includes('Skyjo Hausregel') && (await raw('[data-game="skyjo"]')).includes('Skyjo'));
+  check('Kopie steht bei den Kartenspielen, Original unverändert', (await raw('#grp-karten + .list')).includes('Skyjo Hausregel') && (await raw('[data-game="skyjo"]')).includes('Skyjo'));
   await p.click('.row[data-own] >> text=Skyjo Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
 
   // Eigene Endwertung erstellen
@@ -522,7 +550,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Endwertung gespeichert mit Regeln', (await text('#s-setup .rule-points')).includes('Platz je Spieler') && (await text('#s-setup .rule-points')).includes('Reihen'));
   await shot('44c-own-result');
   await p.click('#s-setup [aria-label="Zurück"]');
-  check('Endwertung steht in der Gruppe Endwertung', (await p.locator('#my-games .row[data-own]').count()) === 1 && (await raw('#s-home')).includes('Azul'));
+  check('Eigene Endwertung steht bei den eigenen Spielen', (await raw('#my-games')).includes('Azul'));
   await p.click('.row[data-own] >> text=Azul'); await p.click('#quick-start');
   check('Partie zeigt Endstand', (await raw('.top .sub')) === 'Endstand');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);

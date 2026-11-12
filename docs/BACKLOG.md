@@ -134,3 +134,8 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Deckel liegen einzeln vor dem Spieler, Leben als Münzen.
 - [x] Chic im Erstellungsmodus: zweite Phase „Zurück in die Mitte“ (ohne Deckel raus, Letzter mit Deckeln verliert).
 - [x] Phasen im Erstellungsmodus: Schwimmen an oder aus, verloren nach einer, zwei oder drei Hälften; auch nachträglich bearbeitbar.
+
+## K. Serien und Spieleabende (12.11.)
+- [x] Eigener Reiter „Serien“, Serie starten und beenden, laufende Serie auf der Startseite und beim Speichern vorgewählt.
+- [x] Abschlussseite mit Otter, Gesamtsieger und Auszeichnungen.
+- [ ] Ideen: Serien-Statistik im Profil (Seriensiege), Teilen der Abschlussseite als Bild, Serie mit festen Spielern.
