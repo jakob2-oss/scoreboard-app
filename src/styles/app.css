@@ -1,9 +1,6 @@
 /* Ergänzungen für die React-App */
 html, body, #root { height: 100%; }
 body { margin: 0; }
-.soon { display: flex; flex-wrap: wrap; gap: 6px; }
-.soon span { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--surface); font-size: 14px; color: var(--muted); }
-.soon i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 .confirm-row { display: flex; gap: 8px; padding: 10px 16px 14px; }
 .confirm-row button { flex: 1; min-height: 44px; border-radius: 999px; font-weight: 600; }
 .confirm-row .yes { background: var(--danger); color: #fff; }
@@ -17,7 +14,6 @@ body { margin: 0; }
 /* Freies Spiel */
 .setup-body { display: flex; flex-direction: column; gap: 22px; padding-block: 8px 24px; }
 .setup-body #setup-end { margin-top: 8px; }
-.tdot.plus { width: 26px; height: 26px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-weight: 600; font-size: 18px; line-height: 1; }
 .step-chips .chip { min-width: 52px; font-variant-numeric: tabular-nums; }
 .step-preview { margin-top: 10px; pointer-events: none; }
 .step-preview span { flex: 0 0 auto; min-width: 44px; height: 40px; padding: 0 10px; border-radius: 999px; background: var(--surface); display: grid; place-items: center; font-weight: 600; font-size: 15px; box-shadow: var(--soft); }
@@ -44,3 +40,28 @@ body { margin: 0; }
 .tpl-title { text-align: center; }
 .tpl-body .setup-body { padding-top: 0; }
 .field input::placeholder { color: var(--muted); opacity: .7; }
+
+/* Feste Spiele */
+.pp-panel .quick button.wide { flex: 1 0 auto; width: auto; border-radius: 999px; padding: 0 16px; }
+.own-step { margin-top: 10px; }
+.own-step button:disabled { opacity: .4; }
+.tpl-body .rule-card { margin-top: -4px; }
+
+/* Wizard */
+.pp-entry.wz { box-shadow: var(--soft); }
+.wz-hint.warn { color: var(--danger); font-weight: 600; }
+.grid td.cell.pend { background: var(--surface); }
+
+/* Wizard */
+.pp-entry.wz { box-shadow: var(--soft); }
+.wz-hint.warn { color: var(--danger); font-weight: 600; }
+.grid td.cell.pend { background: var(--surface); }
+.pp-panel .quick.bids { justify-content: flex-start; }
+.pp-hist.hide { display: none; }
+
+/* Pastell-Szenen: Zurück-Knopf und Rechenbeispiel passend dazu */
+.ex-t:last-child { color: #2e2b4f; }
+.ex-t:last-child small { color: rgba(46, 43, 79, .75); }
+
+/* Rechenbeispiel: schlichter Punkt statt Pfeil zwischen den Kacheln */
+.ex-op { width: 5px; height: 5px; border-radius: 50%; background: var(--faint); flex: none; }

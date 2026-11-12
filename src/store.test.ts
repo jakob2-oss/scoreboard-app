@@ -4,8 +4,9 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { liveRounds, seated, totals } from './game/engine';
+import { endState, liveRounds, ranking, seated, totals } from './game/engine';
 import { TPL } from './test/fixtures';
+import { GAMES } from './game/games';
 import type { Template } from './model/types';
 
 function testClock(): Clock {
@@ -217,5 +218,125 @@ describe('Freies Spiel', () => {
     const { st, a } = await fresh();
     a.openSetup(); a.setupNext(); a.playersBack();
     expect(st.get().screen).toBe('setup');
+  });
+});
+
+describe('Feste Spiele', () => {
+  it('Rommé: Raus, Schnelltasten und ×2, Ende per Option, keine eigene Vorlage', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init();
+    a.openGame(GAMES.find(g => g.template.key === 'romme')!.template);
+    expect(st.get().screen).toBe('gamepage');
+    a.setTemplateEnd({ type: 'target', value: 1000 });
+    a.toPlayers(); await a.addPlayer('A'); await a.addPlayer('B');
+    a.playersBack(); expect(st.get().screen).toBe('gamepage');
+    a.start();
+    const g = () => st.get().game!;
+    expect(g().game.rules).toMatchObject({ key: 'romme', win: 'low', end: { type: 'target', value: 1000 } });
+    a.roundGo(); a.setValue(0); a.next();
+    a.add(20); a.add(5); a.mul(2); a.next();
+    expect(totals(g())).toEqual({ id1: 0, id2: 50 });
+    expect(st.get().page).toBe(-1);
+    a.finishGame();
+    expect(mem.templates).toHaveLength(0);
+    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'target', value: 500 });
+  });
+  it('startet direkt mit den letzten Spielern', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free); await a.addPlayer('A'); await a.addPlayer('B'); a.start(); a.finishGame();
+    a.openGame(GAMES.find(g => g.template.key === 'skyjo')!.template);
+    expect(st.get().selected).toHaveLength(2);
+    a.start();
+    expect(st.get().game!.game.rules.key).toBe('skyjo');
+  });
+});
+
+describe('Wizard', () => {
+  async function wiz() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    return { st, a };
+  }
+  it('legt 60 ÷ Spieler Runden an und startet im Überblick', async () => {
+    const { st } = await wiz();
+    expect(liveRounds(st.get().game!)).toHaveLength(20);
+    expect(st.get().page).toBe(-1);
+  });
+  it('führt durch Ansagen, zurück zum Überblick, dann Stiche, und rechnet', async () => {
+    const { st, a } = await wiz();
+    a.roundGo();
+    expect(st.get().page).toBe(1);            // B beginnt, A gibt
+    expect(st.get().edit?.field).toBe('bid');
+    a.pick(1); expect(st.get().page).toBe(2);
+    a.pick(0); expect(st.get().page).toBe(0);
+    a.pick(0);
+    expect(st.get().page).toBe(-1);
+    expect(st.get().toast?.text).toBe('Ansagen komplett');
+    a.roundGo();
+    expect(st.get().edit?.field).toBe('tricks');
+    a.pick(1); a.pick(0); a.pick(0);
+    expect(st.get().page).toBe(-1);
+    expect(st.get().toast?.text).toBe('Runde 1 komplett');
+    expect(totals(st.get().game!)).toEqual({ id1: 20, id2: 30, id3: 20 });
+    a.roundGo();
+    expect(st.get().page).toBe(2);            // Runde 2: B gibt, C beginnt
+    expect(st.get().edit?.field).toBe('bid');
+  });
+  it('begrenzt Werte auf die Kartenzahl und erlaubt Korrektur über das Feld', async () => {
+    const { st, a } = await wiz();
+    a.roundGo(); a.digit(7);
+    expect(st.get().edit?.buf).toBe('1');
+    a.selectField('tricks'); a.digit(0);
+    a.selectField('bid'); a.digit(0);
+    expect(totals(st.get().game!).id2).toBe(20);
+    a.undo();
+    expect(totals(st.get().game!).id2).toBe(-10);
+  });
+  it('öffnet beim Antippen einer Zelle die Spielerseite statt des Ziffernblocks', async () => {
+    const { st, a } = await wiz();
+    a.openPad(liveRounds(st.get().game!)[0].id, 'id3');
+    expect(st.get().pad).toBe(false);
+    expect(st.get().page).toBe(2);
+  });
+});
+
+describe('Weitere Spiele', () => {
+  async function play(key: string, names = ['A', 'B', 'C']) {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); a.toPlayers();
+    for (const n of names) await a.addPlayer(n);
+    a.start();
+    return { st, a };
+  }
+  it('alle festen Spiele haben eindeutige Schlüssel und gültige Spielerzahlen', () => {
+    const keys = GAMES.map(g => g.template.key);
+    expect(new Set(keys).size).toBe(keys.length);
+    for (const g of GAMES) expect(g.template.players.min).toBeLessThanOrEqual(g.template.players.max);
+  });
+  it('Monopoly: nur Platzierung, eine Eingabe je Spieler, dann Ergebnis', async () => {
+    const { st, a } = await play('monopoly');
+    expect(liveRounds(st.get().game!)).toHaveLength(1);
+    a.roundGo(); a.setValue(2); a.next(); a.setValue(1); a.next(); a.setValue(3); a.next();
+    expect(st.get().toast?.text).toBe('Ergebnis komplett');
+    expect(ranking(st.get().game!).map(r => r.player.name)).toEqual(['B', 'A', 'C']);
+    expect(endState(st.get().game!)?.done).toBe(true);
+    a.roundGo();
+    expect(st.get().sheet).toBe('result');
+  });
+  it('Siedler: höchste Siegpunkte gewinnen', async () => {
+    const { st, a } = await play('siedler');
+    a.roundGo(); a.setValue(10); a.next(); a.add(2); a.add(2); a.add(1); a.next(); a.digit(7); a.next();
+    expect(totals(st.get().game!)).toEqual({ id1: 10, id2: 5, id3: 7 });
+    expect(ranking(st.get().game!)[0].player.name).toBe('A');
+  });
+  it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
+    const u = await play('uno', ['A', 'B']);
+    u.a.roundGo(); u.a.digit(5); u.a.digit(0); u.a.digit(0); u.a.next(); u.a.digit(0); u.a.next();
+    expect(endState(u.st.get().game!)?.done).toBe(true);
+    const s = await play('scrabble', ['A', 'B']);
+    s.a.roundGo(); s.a.add(10); s.a.add(1); s.a.add(1); s.a.mul(3);
+    expect(totals(s.st.get().game!).id1).toBe(36);
   });
 });

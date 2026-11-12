@@ -21,7 +21,7 @@ export function fallbackName(date = new Date()): string {
   return 'Freies Spiel vom ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
 }
 
-/** Aus den Einstellungen des freien Spiels eine eigene Vorlage machen (eigener Schlüssel → eigene Statistik). */
+/** Aus den Einstellungen des freien Spiels eine eigene Vorlage machen (eigener Schlüssel, eigene Statistik). */
 export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
   const t = clock.now();
   const steps = [...new Set(cfg.steps)].filter(n => n > 0).sort((a, b) => a - b).slice(0, MAX_STEPS);

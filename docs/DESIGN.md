@@ -34,6 +34,11 @@ Text auf Spielerfarbe wird nach Helligkeit automatisch weiß oder dunkel gesetzt
 | Skyjo | Himmelblau `#78bde6` | Kartenfarben −2 bis 12 |
 | Phase 10 | Warmes Orange `#f6b85e` | Stufen in Rot, Blau, Grün, Gelb |
 
+**Keine knalligen Farben.** Szenen und Icons der Spiele nutzen pastellige Hintergründe
+(Flieder `#e4def2`, Apricot `#f6d5cb`, Mint `#d3eadd`, Himmel `#d3e6f4`, Blassgrün `#d9eed6`)
+und für Objekte nur die Spielerfarben der Palette. Kräftige, gesättigte Flächen wirken
+künstlich und sind zu vermeiden. Die Tabelle unten beschreibt die Motive, nicht mehr die Farbwerte.
+
 ## Schrift
 
 - **Jost** (geometrisch, Futura-artig) für alles: Text, Überschriften, Zahlen.

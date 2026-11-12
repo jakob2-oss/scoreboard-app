@@ -61,7 +61,7 @@ export function PlayerSelect() {
                     <button className="rm" onClick={() => act().toggleSelect(p.id)} aria-label={`${p.name} entfernen`}>✕</button>
                   </div>
                 );
-              }) : <div className="empty-order">{players.length ? 'Tippe unten auf Namen, um Spieler hinzuzufügen.' : 'Lege unten die ersten Spieler an.'}</div>}
+              }) : <div className="empty-order">Noch niemand ausgewählt</div>}
             </div>
           </div>
           {players.length > 0 && (

@@ -1,5 +1,6 @@
 import type { Entry, Game, Player, Round, Template } from '../model/types';
 import type { Clock } from '../lib/id';
+import { wizardOrder, wizardRounds, wizardScore } from '../rules/wizard';
 
 /** Alles, was zu einer Partie gehört. Reine Daten, keine Oberfläche. */
 export interface GameState {
@@ -31,7 +32,26 @@ function entryOf(s: GameState, roundId: string, playerId: string): Entry | undef
   return s.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
 }
 
+/** Spiele, bei denen nur das Endergebnis notiert wird */
+export const isResultOnly = (s: GameState) => !!s.game.rules.params?.resultOnly;
+export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
+
+export type BidField = 'bid' | 'tricks';
+export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
+
+/** Ansage oder Stiche eines Spielers in einer Runde (Wizard) */
+export function fieldOf(s: GameState, roundId: string, playerId: string, field: BidField): number | null {
+  const e = entryOf(s, roundId, playerId);
+  if (!e) return null;
+  const v = (e.values as { bid?: number | null; tricks?: number | null })[field];
+  return typeof v === 'number' ? v : null;
+}
+
 export function scoreOf(s: GameState, roundId: string, playerId: string): number | null {
+  if (isBids(s)) {
+    const b = fieldOf(s, roundId, playerId, 'bid'), t = fieldOf(s, roundId, playerId, 'tricks');
+    return b !== null && t !== null ? wizardScore(b, t) : null;
+  }
   const e = entryOf(s, roundId, playerId);
   return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
 }
@@ -108,7 +128,7 @@ export function defaultRef(s: GameState, playerId: string): RoundRef {
 }
 
 export type NextStep =
-  | { kind: 'round'; ref: RoundRef; roundNo: number; playerIndex: number }
+  | { kind: 'round'; ref: RoundRef; roundNo: number; playerIndex: number; field?: BidField }
   | { kind: 'result' };
 
 /** Was als Nächstes eingetragen wird (für den Knopf im Überblick). */
@@ -118,12 +138,29 @@ export function nextStep(s: GameState): NextStep {
   const rounds = liveRounds(s);
   const players = seated(s);
   const i = rounds.findIndex(r => !roundFull(s, r.id));
+  if (i >= 0 && isBids(s)) {
+    const r = rounds[i], field = bidPhase(s, r.id);
+    const first = wizardOrder(players.length, i).find(k => fieldOf(s, r.id, players[k].id, field) === null) ?? 0;
+    return { kind: 'round', ref: r.id, roundNo: i + 1, playerIndex: first, field };
+  }
   if (i >= 0) {
     const r = rounds[i];
     return { kind: 'round', ref: r.id, roundNo: i + 1, playerIndex: players.findIndex(p => scoreOf(s, r.id, p.id) === null) };
   }
   if (canAddRound(s)) return { kind: 'round', ref: 'new', roundNo: rounds.length + 1, playerIndex: 0 };
   return { kind: 'result' };
+}
+
+/** Wizard: erst alle Ansagen, dann alle Stiche */
+export function bidPhase(s: GameState, roundId: string): BidField {
+  return seated(s).every(p => fieldOf(s, roundId, p.id, 'bid') !== null) ? 'tricks' : 'bid';
+}
+
+/** Reihenfolge der Eingabe in einer Runde: bei Wizard beginnt der Spieler links vom Geber. */
+export function inputOrder(s: GameState, roundId: string): number[] {
+  const n = seated(s).length;
+  if (!isBids(s)) return Array.from({ length: n }, (_, k) => k);
+  return wizardOrder(n, Math.max(0, liveRounds(s).findIndex(r => r.id === roundId)));
 }
 
 export function roundNumber(s: GameState, ref: RoundRef): number {
@@ -139,7 +176,9 @@ export function createGame(rules: Template, players: Player[], clock: Clock): Ga
     id: clock.uid(), createdAt: t, updatedAt: t, rules: structuredClone(rules), status: 'running', startedAt: t,
     seats: players.map((p, i) => ({ playerId: p.id, seat: i }))
   };
-  const n = rules.end.type === 'rounds' ? rules.end.value : 1;
+  if (rules.scoring === 'bids') game.rules.end = { type: 'rounds', value: wizardRounds(players.length) };
+  const end = game.rules.end;
+  const n = end.type === 'rounds' ? end.value : 1;
   const rounds: Round[] = Array.from({ length: n }, (_, index) => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: game.id, index }));
   return { game, players: players.map(p => ({ ...p })), rounds, entries: [] };
 }
@@ -175,6 +214,18 @@ export function setScore(s: GameState, ref: RoundRef, playerId: string, value: n
     entries = [...state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId, values: { score: value } }];
   } else entries = state.entries;
   return { state: { ...state, game: touch(state, clock), entries }, roundId };
+}
+
+/** Wizard: Ansage oder Stiche setzen (null löscht den Wert). Begrenzt auf 0 bis Kartenzahl der Runde. */
+export function setField(s: GameState, roundId: string, playerId: string, field: BidField, value: number | null, clock: Clock): GameState {
+  const t = clock.now();
+  const cards = liveRounds(s).findIndex(r => r.id === roundId) + 1;
+  const v = value === null ? null : Math.min(Math.max(0, value), cards);
+  const existing = s.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
+  const entries: Entry[] = existing
+    ? s.entries.map(e => (e !== existing ? e : { ...e, updatedAt: t, values: { ...e.values, [field]: v } }))
+    : [...s.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId, playerId, values: { [field]: v } }];
+  return { ...s, game: touch(s, clock), entries };
 }
 
 export function setWin(s: GameState, win: 'high' | 'low', clock: Clock): GameState {

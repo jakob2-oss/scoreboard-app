@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('nur „Freies Spiel“, noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 1 && !(await p.isVisible('#my-games')));
+  check('neun Einträge (acht Spiele und Freies Spiel), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 9 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
   // Freies Spiel einrichten
@@ -97,7 +97,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Punkt springt zu Ben', (await page()) === 1);
   check('Ben: neue Runde 2', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 2');
   await p.click('section[aria-label="Ben"] .pp-hist button >> nth=0');
-  check('Verlauf R1 antippen → Runde 1', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 1');
+  check('Verlauf R1 antippen öffnet Runde 1', (await text('section[aria-label="Ben"] .pp-entry .lbl')) === 'Runde 1');
   await p.evaluate(() => { const s = document.querySelector('.pp-swipe'); s.scrollLeft = s.clientWidth * 3; });
   await p.waitForTimeout(500);
   check('Wischen zu Clara übernimmt Seite', (await page()) === 2);
@@ -156,6 +156,63 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('Vorlage beim Beenden automatisch gespeichert', (await text('.toast')) === 'Partie und Vorlage gespeichert');
   check('zwei eigene Spiele', (await p.locator('#my-games .row').count()) === 2);
+  // Eigener Zählschritt
+  await p.click('#new-free');
+  await p.click('.step-chips .chip >> text="10"');
+  await p.fill('#own-step', '15'); await p.press('#own-step', 'Enter');
+  check('eigener Zählschritt 15 gewählt', (await p.getAttribute('.step-chips .chip >> text="15"', 'aria-pressed')) === 'true');
+  check('Vorschau zeigt +15', (await text('.step-preview')).includes('+15'));
+  await p.click('.tpl-back');
+
+  // Rommé: Spielseite, Option, direkter Start, ×2
+  await p.click('[data-game="romme"]');
+  check('Rommé-Spielseite', await p.isVisible('#s-gamepage .rule-card'));
+  await shot('08-romme');
+  await p.click('.seg >> text=Bei 1000');
+  check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
+  await p.click('#quick-start');
+  check('Untertitel mit Ziel 1000', (await raw('.top .sub')) === 'Runde 1, Ziel 1000');
+  await p.click('.dock .primary'); await p.waitForTimeout(500);
+  await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
+  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
+  check('Rommé: (20 + 5) × 2 = 50', (await text('section[aria-label="Ben"] .pp-entry .val')) === '50');
+  await shot('09-romme-play');
+  await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row').count()) === 2);
+  await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
+
+  // Wizard: Ansagen, zurück zum Überblick, Stiche
+  await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
+  check('Wizard: 20 Runden bei 3 Spielern', (await p.locator('tbody tr').count()) === 20);
+  check('Wizard: Knopf „Ansagen Runde 1“', (await raw('#round-go')).startsWith('Ansagen Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  check('Wizard: Ben sagt zuerst an', (await page()) === 1);
+  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
+  check('Wizard: nach Ansagen im Überblick', (await page()) === -1 && (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  await shot('12-wizard-bids');
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  await shot('13-wizard-page');
+  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
+  check('Wizard: Punkte 20, 30, 20', (await text('tbody tr:nth-child(1)')).replace(/ /g, '') === '1+200/0+301/1+200/0', await text('tbody tr:nth-child(1)'));
+  check('Wizard: weiter mit Ansagen Runde 2', (await raw('#round-go')).startsWith('Ansagen Runde 2'));
+  await shot('14-wizard-ov');
+  await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+
+  // Nur Ergebnis: Monopoly mit Platzierung
+  for (const k of ['uno', 'scrabble', 'siedler', 'ergebnis']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
+  await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
+  check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
+  check('Monopoly: Untertitel „Endstand“', (await raw('.top .sub')) === 'Endstand');
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
+  await shot('21-monopoly-page');
+  for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
+  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b') && (await raw('.dock .primary')) === 'Ergebnis');
+  await shot('22-monopoly-ov');
+  await p.click('.dock .primary');
+  check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
+  await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 
   // Offline
