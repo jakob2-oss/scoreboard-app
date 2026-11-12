@@ -4,6 +4,9 @@ import { Home } from './ui/Home';
 import { PlayerSelect } from './ui/PlayerSelect';
 import { Setup } from './ui/Setup';
 import { GameInfo } from './ui/GameInfo';
+import { History } from './ui/History';
+import { People } from './ui/People';
+import { Profile } from './ui/Profile';
 import { GameScreen } from './ui/Game';
 import { Toast } from './ui/Toast';
 
@@ -14,6 +17,9 @@ export default function App() {
   return (
     <>
       {s.screen === 'home' && <Home />}
+      {s.screen === 'history' && <History />}
+      {s.screen === 'people' && <People />}
+      {s.screen === 'profile' && <Profile />}
       {s.screen === 'setup' && <Setup />}
       {s.screen === 'gamepage' && <GameInfo />}
       {s.screen === 'players' && <PlayerSelect />}

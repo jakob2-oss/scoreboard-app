@@ -18,3 +18,7 @@ Kurzes Protokoll, damit Begründungen nicht verloren gehen. Neueste oben.
 | 11.11.2026 | Intern zuerst, Datenmodell aber veröffentlichungsfähig | Kein Login/Datenschutz-Aufwand jetzt, kein Umbau später |
 | 11.11.2026 | Werte speichern statt Punkte, Regeln pro Partie eingefroren | Korrigierbar, Statistik möglich, alte Partien bleiben richtig |
 | 11.11.2026 | PWA mit React/TS/Vite, GitHub Pages, PRs zum Live-Schalten | iPhone ohne Mac, kostenlos, Kontrolle über jede Version |
+
+## 12.11.2026: Spieleabende als Serien
+Spieleabende und Spieleserien werden ein Objekt „Serie“ (Tabelle `events`, im Datenmodell schon vorgesehen).
+Partien verweisen per `eventId` darauf, auch nachträglich. Teilen mit einer Gruppe kommt mit dem Sync (Phase 4).

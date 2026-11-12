@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
-import type { Entry, Game, Player, Round, Template } from './model/types';
+import type { Entry, Game, Player, Result, Round, Template } from './model/types';
+import type { HistGame } from './game/stats';
 import type { GameState } from './game/engine';
 
 /** Lokale Datenbank auf dem Gerät (IndexedDB). Tabellen entsprechen docs/DATENMODELL.md. */
@@ -9,6 +10,7 @@ export class PzDb extends Dexie {
   rounds!: Table<Round, string>;
   entries!: Table<Entry, string>;
   templates!: Table<Template, string>;
+  results!: Table<Result, string>;
   constructor(name = 'punktezettel') {
     super(name);
     this.version(1).stores({
@@ -19,6 +21,8 @@ export class PzDb extends Dexie {
     });
     // v2: eigene Vorlagen (freie Spiele)
     this.version(2).stores({ templates: 'key, updatedAt, lastUsedAt' });
+    // v3: Endergebnisse abgeschlossener Partien (Platz und Endpunktzahl je Spieler)
+    this.version(3).stores({ results: 'id, gameId, playerId' });
   }
 }
 
@@ -27,6 +31,9 @@ export interface Repo {
   savePlayer(p: Player): Promise<void>;
   loadRunningGame(): Promise<GameState | null>;
   loadTemplates(): Promise<Template[]>;
+  saveResults(r: Result[]): Promise<void>;
+  /** Abgeschlossene Partien mit Ergebnissen, neueste zuerst */
+  loadHistory(): Promise<HistGame[]>;
   saveTemplate(t: Template): Promise<void>;
   saveGame(s: GameState): Promise<void>;
 }
@@ -43,6 +50,16 @@ export function createRepo(db: PzDb): Repo {
       return (await db.templates.toArray()).filter(t => !t.deletedAt).sort((a, b) => key(b).localeCompare(key(a)));
     },
     async saveTemplate(t) { await db.templates.put(t); },
+    async saveResults(r) { await db.results.bulkPut(r); },
+    async loadHistory() {
+      const games = (await db.games.where('status').equals('finished').toArray()).filter(g => !g.deletedAt);
+      const results = await db.results.toArray();
+      return games.map(g => ({
+        id: g.id, key: g.rules.key, name: g.rules.name, finishedAt: g.finishedAt || g.updatedAt, occasion: g.place ?? null,
+        results: results.filter(r => r.gameId === g.id && !r.deletedAt).sort((a, b) => a.place - b.place)
+          .map(r => ({ playerId: r.playerId, total: r.total, place: r.place, extra: r.extra }))
+      })).filter(h => h.results.length).sort((a, b) => b.finishedAt.localeCompare(a.finishedAt));
+    },
     async loadRunningGame() {
       const running = (await db.games.where('status').equals('running').toArray())
         .filter(g => !g.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];

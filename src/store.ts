@@ -1,15 +1,19 @@
 import { useSyncExternalStore } from 'react';
-import type { Player, Template } from './model/types';
+import type { Category, Player, Result, Template } from './model/types';
+import type { HistGame, TimeFilter } from './game/stats';
 import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
-import { PLAYER_COLORS } from './lib/color';
+import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  bidPhase, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  bidPhase, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'setup' | 'gamepage' | 'players' | 'game';
+export type Screen = 'home' | 'history' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game';
+
+/** Filter und Vergleich auf der Profilseite */
+export interface ProfileView { id: string; time: TimeFilter; key: string | null; vs: string[] }
 
 /** Aktive Eingabe: Ziel (Runde × Spieler) und der Text im Ziffernblock. */
 export interface Edit { ref: RoundRef; playerId: string; buf: string; fresh: boolean; dirty: boolean; field?: BidField }
@@ -30,13 +34,17 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | null;
+  sheet: 'menu' | 'result' | 'cats' | null;
   toast: { text: string; n: number } | null;
+  history: HistGame[];
+  profile: ProfileView | null;
+  /** Geöffnete Partie im Verlauf */
+  detail: string | null;
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
-  page: -1, edit: null, pad: false, sheet: null, toast: null
+  page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -99,8 +107,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const actions = {
     async init() {
       try {
-        const [players, game, templates] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates()]);
-        set({ ready: true, players, game, templates });
+        const [loaded, game, templates, history] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates(), repo.loadHistory()]);
+        // Ältere, kräftige Spielerfarben einmalig auf Pastell umstellen
+        const players = loaded.map(p => (pastel(p.color) === p.color ? p : { ...p, color: pastel(p.color), updatedAt: clock.now() }));
+        players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
+        const g = game && { ...game, players: game.players.map(p => ({ ...p, color: pastel(p.color) })) };
+        set({ ready: true, players, game: g, templates, history });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -187,6 +199,25 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game, e = state.edit; if (!g || !e) return;
       set({ edit: makeEdit(g, e.ref, e.playerId, field) });
     },
+    /** Phase 10: Haken „Phase geschafft“ umschalten */
+    togglePhase() {
+      const g = state.game, e = state.edit; if (!g || !e) return;
+      const on = !(e.ref !== 'new' && phaseIn(g, e.ref, e.playerId));
+      const r = setPhase(g, e.ref, e.playerId, on, clock);
+      set({ game: r.state, undo: [...state.undo.slice(-99), g], edit: { ...e, ref: r.roundId } });
+      persist(r.state);
+    },
+    /** Kniffel: Kategorie hinzufügen oder entfernen */
+    addCategory(cat: Category) {
+      const g = state.game; if (!g || !cat.label.trim()) return;
+      const ng = addCategory(g, { ...cat, label: cat.label.trim() }, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
+    removeCategory(roundId: string) {
+      const g = state.game; if (!g) return;
+      const ng = removeCategory(g, roundId, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g], edit: null, page: -1 }); persist(ng);
+    },
     /** Wert setzen und gleich weiter (Wizard-Schnelltasten) */
     pick(n: number) { actions.setValue(n); actions.next(); },
     /** Knopf im Überblick: zum nächsten offenen Feld */
@@ -208,6 +239,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         else if (e.field === 'bid' && bidsDone) toast('Ansagen komplett');
         return;
+      }
+      // Kniffel: jeder trägt in ein Feld seiner Wahl ein, dann ist der Nächste dran
+      if (isCats(g) && !state.pad) {
+        if (i < players.length - 1) { actions.goPage(i + 1); return; }
+        set({ page: -1, edit: null }); toast('Zug fertig'); return;
       }
       if (i < players.length - 1) {
         const ref = e.ref;
@@ -255,7 +291,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result') { set({ sheet, pad: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats') { set({ sheet, pad: false }); },
     closeSheet() { set({ sheet: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;
@@ -263,15 +299,39 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo, g] }); persist(ng);
     },
     /** Beenden und speichern. Eine noch nicht gespeicherte Vorlage wird automatisch gesichert. */
-    finishGame() {
+    /** Beenden und speichern: Platz und Endpunktzahl je Spieler landen im Verlauf. */
+    finishGame(occasion = '') {
       const g = state.game; if (!g) return;
-      const f = finish(g, clock); persist(f);
+      const f0 = finish(g, clock);
+      const f = occasion.trim() ? { ...f0, game: { ...f0.game, place: occasion.trim() } } : f0;
+      persist(f);
+      const t = clock.now(), rk = ranking(f);
+      if (anyScore(f)) {
+        const results: Result[] = rk.map(x => {
+          let extra: Result['extra'];
+          if (isBids(f)) {
+            const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
+            extra = { rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
+          }
+          return { id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: x.player.id, total: x.total, place: x.place, ...(extra ? { extra } : {}) };
+        });
+        repo.saveResults(results).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+        const h: HistGame = { id: f.game.id, key: f.game.rules.key, name: f.game.rules.name, finishedAt: t, occasion: f.game.place ?? null,
+          results: results.map(r => ({ playerId: r.playerId, total: r.total, place: r.place, extra: r.extra })) };
+        set({ history: [h, ...state.history] });
+        if (occasion.trim()) { try { localStorage.setItem('pz:lastOccasion', occasion.trim()); } catch { /* egal */ } }
+      }
       const rules = g.game.rules;
       const auto = rules.custom && !state.templates.some(t => t.key === rules.key);
       if (auto) saveTemplate({ ...rules, lastUsedAt: clock.now(), updatedAt: clock.now() });
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
+    // ---------- Verlauf und Spieler
+    openTab(screen: 'home' | 'history' | 'people') { set({ screen, detail: null, profile: null }); },
+    openDetail(id: string | null) { set({ detail: id }); },
+    openProfile(id: string) { set({ screen: 'profile', profile: { id, time: 'all', key: null, vs: [] } }); },
+    setProfile(patch: Partial<ProfileView>) { if (state.profile) set({ profile: { ...state.profile, ...patch } }); },
     discardGame() {
       const g = state.game; if (!g) return;
       const t = clock.now();

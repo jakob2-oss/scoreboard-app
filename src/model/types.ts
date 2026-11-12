@@ -54,6 +54,14 @@ export interface TemplateParams {
   quick?: QuickKey[];
   /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
   resultOnly?: boolean;
+  /** Kategorien-Zettel (Kniffel); jede Kategorie ist eine Zeile */
+  categories?: Category[];
+  /** Bonus für die obere Hälfte, z. B. 35 ab 63 */
+  bonus?: { at: number; value: number };
+  /** Phase 10: Haken „Phase geschafft“ je Runde, Rang erst nach Phase */
+  phases?: boolean;
+  /** Nullsummenspiel (Schafkopf, Doppelkopf): Rundensumme muss 0 ergeben */
+  zeroSum?: boolean;
   /** Was eingetragen wird, z. B. „Siegpunkte“ oder „Platz“ */
   unit?: string;
   [key: string]: unknown;
@@ -75,14 +83,17 @@ export interface Game extends Base {
   groupId?: string | null;
 }
 
-export interface Round extends Base { gameId: string; index: number }
+/** Kategorie eines Zettels (z. B. Kniffel): oben zählt für den Bonus */
+export interface Category { label: string; section: 'up' | 'low'; fixed?: number; quick?: number[] }
+
+export interface Round extends Base { gameId: string; index: number; cat?: Category }
 
 /** Eingaben je Baustein. Punkte werden daraus berechnet, nicht gespeichert. */
 export type EntryValues =
   | { score: number }
   | { bid?: number | null; tricks?: number | null }
   | { rank: number }
-  | { phaseDone?: boolean; score?: number };
+  | { phase?: boolean; score?: number };
 
 /** Kleinste Einheit: eine Eingabe pro Spieler und Runde bzw. Kategorie. */
 export interface Entry extends Base {
@@ -94,6 +105,10 @@ export interface Entry extends Base {
   updatedBy?: string | null;
 }
 
-export interface Result extends Base { gameId: string; playerId: string; total: number; place: number }
+export interface Result extends Base {
+  gameId: string; playerId: string; total: number; place: number;
+  /** Spielspezifische Kennzahlen, z. B. Wizard: { hits, rounds } */
+  extra?: Record<string, number | boolean>;
+}
 
 export interface GameEvent extends Base { name: string; from?: ISODate | null; to?: ISODate | null }

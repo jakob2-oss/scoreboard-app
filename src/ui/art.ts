@@ -140,3 +140,52 @@ Object.assign(GAME_ART, {
     scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c') + podium(195, 172, 1) + '</svg>'
   }
 });
+
+// ---------------------------------------------------------------- Kniffel, Phase 10, Schafkopf, Doppelkopf, Binokel
+function die(x: number, y: number, s: number, rot: number, face: number, fill: string, pip: string, side: string) {
+  const o = s * .27;
+  const P: Record<number, number[][]> = { 1: [[0, 0]], 2: [[-o, -o], [o, o]], 3: [[-o, -o], [0, 0], [o, o]], 4: [[-o, -o], [o, -o], [-o, o], [o, o]],
+    5: [[-o, -o], [o, -o], [0, 0], [-o, o], [o, o]], 6: [[-o, -o], [o, -o], [-o, 0], [o, 0], [-o, o], [o, o]] };
+  return `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s * 1.1}" rx="${s * .2}" fill="${side}"/>
+    <rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" rx="${s * .2}" fill="${fill}"/>${P[face].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="${s * .085}" fill="${pip}"/>`).join('')}</g>`;
+}
+const BAV: Record<string, (c: string) => string> = {
+  herz: c => `<path d="M0-5C0-13-12-13-12-4c0 8 12 13 12 18 0-5 12-10 12-18 0-9-12-9-12-1z" fill="${c}"/>`,
+  eichel: c => `<ellipse cy="3" rx="8" ry="10" fill="${c}"/><path d="M-9-3a9 7 0 0 1 18 0z" fill="#b8865a"/><path d="M0-10v-5" stroke="#b8865a" stroke-width="2.5" stroke-linecap="round"/>`,
+  gras: c => `<path d="M0 14C-14 4-12-10 0-15 12-10 14 4 0 14z" fill="${c}"/><path d="M0 12V-10" stroke="#fff" stroke-width="1.6" opacity=".7"/>`,
+  schellen: c => `<circle r="11" fill="${c}"/><circle r="4" fill="#fff" opacity=".7"/>`
+};
+const card = (x: number, y: number, rot: number, letter: string, sym: string, c: string, w = 50) => `<g transform="translate(${x} ${y}) rotate(${rot})">
+  <rect x="${-w / 2}" y="${-w * .72}" width="${w}" height="${w * 1.44}" rx="${w * .14}" fill="#fffaf2"/>
+  <text x="${-w / 2 + 7}" y="${-w * .72 + 17}" font-family="Jost, sans-serif" font-weight="600" font-size="${w * .26}" fill="${c}">${letter}</text>
+  <g transform="translate(0 ${w * .12}) scale(${w / 50})">${sym}</g></g>`;
+
+Object.assign(GAME_ART, {
+  kniffel: {
+    icon: ICON(die(24, 34, 26, -12, 5, '#fffaf2', '#f3a98f', '#ead9c4') + die(42, 30, 22, 14, 3, '#86cbb8', '#ffffff', '#6db3a0')),
+    scene: sky('#d6eee9', '#e2f3ef', '#bfe1d9', '#f5d58c') + die(108, 168, 46, 18, 2, '#bba8e6', '#ffffff', '#a493d6') + die(170, 158, 64, -12, 5, '#fffaf2', '#f3a98f', '#ead9c4')
+      + die(246, 160, 58, 10, 3, '#f3a98f', '#ffffff', '#e0927a') + die(310, 128, 46, 14, 6, '#f2cf86', '#5b5a8f', '#e0b96a') + '</svg>'
+  },
+  phase10: {
+    icon: ICON('<rect x="9" y="40" width="14" height="14" rx="4" fill="#f3a98f"/><rect x="25" y="30" width="14" height="24" rx="4" fill="#97c4e3"/><rect x="41" y="20" width="14" height="34" rx="4" fill="#86cbb8"/><path d="M48 20V8" stroke="#5b5a8f" stroke-width="2.4" stroke-linecap="round"/><path d="M48 8l9 3.5-9 3.5z" fill="#f2cf86"/>'),
+    scene: sky('#fbe9d2', '#fdf0e0', '#f3d9b8', '#f5d58c') + Array.from({ length: 10 }, (_, k) => { const h = 18 + k * 13, x = 38 + k * 32;
+      const c = ['#f3a98f', '#97c4e3', '#86cbb8', '#f2cf86'][k % 4];
+      return `<rect x="${x}" y="${216 - h}" width="28" height="${h + 30}" rx="8" fill="${c}"/><text x="${x + 14}" y="${216 - h + 18}" text-anchor="middle" font-family="Jost, sans-serif" font-weight="600" font-size="12" fill="#fffaf2">${k + 1}</text>`; }).join('')
+      + '<path d="M348 86V50" stroke="#5b5a8f" stroke-width="3" stroke-linecap="round"/><path d="M348 50l20 7-20 7z" fill="#f3a98f"/></svg>'
+  },
+  schafkopf: {
+    icon: ICON(card(24, 34, -12, 'O', BAV.eichel('#c9a06e'), '#7c9a5a', 26) + card(40, 34, 10, 'U', BAV.herz('#f3a98f'), '#d9634a', 26)),
+    scene: sky('#e3efd8', '#ecf4e4', '#cfe3bf', '#f5d58c') + card(120, 150, -22, 'O', BAV.eichel('#c9a06e'), '#7c9a5a') + card(172, 136, -8, 'U', BAV.gras('#9cc77e'), '#5f8a44')
+      + card(224, 136, 8, 'A', BAV.herz('#f3a98f'), '#d9634a') + card(276, 150, 22, 'K', BAV.schellen('#f2cf86'), '#b8862a') + '</svg>'
+  },
+  doppelkopf: {
+    icon: ICON(card(24, 34, -12, 'D', BAV.herz('#bba8e6'), '#7b66b8', 26) + card(40, 34, 10, 'D', BAV.herz('#f3a98f'), '#d9634a', 26)),
+    scene: sky('#e4def2', '#ece7f7', '#cdc4ea', '#f5d58c') + card(150, 144, -14, 'D', BAV.herz('#bba8e6'), '#7b66b8', 58) + card(214, 140, 12, 'D', BAV.herz('#f3a98f'), '#d9634a', 58)
+      + '<circle cx="96" cy="120" r="10" fill="#f2cf86"/><circle cx="300" cy="104" r="8" fill="#86cbb8"/></svg>'
+  },
+  binokel: {
+    icon: ICON(card(22, 34, -14, 'A', BAV.eichel('#c9a06e'), '#b8865a', 24) + card(32, 32, 0, '10', BAV.herz('#f3a98f'), '#d9634a', 24) + card(42, 34, 14, 'K', BAV.schellen('#f2cf86'), '#b8862a', 24)),
+    scene: sky('#f8e3cf', '#fbecdd', '#efd0b2', '#f5d58c') + card(126, 150, -24, 'A', BAV.eichel('#c9a06e'), '#b8865a') + card(176, 136, -8, '10', BAV.herz('#f3a98f'), '#d9634a')
+      + card(226, 136, 8, 'K', BAV.gras('#9cc77e'), '#5f8a44') + card(276, 150, 24, 'O', BAV.schellen('#f2cf86'), '#b8862a') + '</svg>'
+  }
+});

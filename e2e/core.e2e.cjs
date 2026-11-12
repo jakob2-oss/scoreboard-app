@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('neun Einträge (acht Spiele und Freies Spiel), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 9 && !(await p.isVisible('#my-games')));
+  check('vierzehn Einträge (13 Spiele und Freies Spiel), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 14 && !(await p.isVisible('#my-games')));
   await shot('01-home');
 
   // Freies Spiel einrichten
@@ -76,6 +76,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Brett zeigt 12 · 7 · 15', (await text('tbody tr:nth-child(1)')) === '1 12 7 15');
   check('Summen und Führung', (await text('tfoot')).includes('15') && (await p.locator('tfoot td.lead').count()) === 1);
   check('nächster Knopf: Runde 2', (await raw('.dock .primary')).startsWith('Runde 2 eintragen'));
+  check('leere Zeile für Runde 2 im Überblick', (await p.locator('tr.new-row td').count()) === 3);
   await shot('04-overview');
 
   // Zelle bearbeiten
@@ -91,6 +92,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Ben R1 = 9', (await text('tbody tr:nth-child(1)')) === '1 12 9 15');
   await p.click('.dock .secondary'); await p.waitForTimeout(200);
   check('Rückgängig stellt 7 wieder her', (await text('tbody tr:nth-child(1)')) === '1 12 7 15');
+  // Runde 2 direkt im Überblick beginnen und wieder zurücknehmen
+  await p.click('tr.new-row td >> nth=0'); await p.click('#pad .key >> text="4"'); await p.click('#pad [aria-label="Ziffernblock schließen"]');
+  check('Runde 2 im Überblick angelegt', (await text('tbody tr:nth-child(2)')).startsWith('2 4'));
+  await p.click('.dock .secondary'); await p.waitForTimeout(200);
+  check('Rückgängig entfernt Runde 2 wieder', (await p.locator('tbody tr:not(.new-row)').count()) === 1);
 
   // Wischen & Seitenpunkte
   await p.click('.pp-tab[aria-label="Ben"]'); await p.waitForTimeout(600);
@@ -114,7 +120,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[aria-label="Menü"]');
   await p.click('.seg >> text=Niedrigste Summe'); await p.waitForTimeout(100);
   await p.click('.scrim', { position: { x: 30, y: 40 } });
-  check('„Wenig gewinnt“: Ben führt', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b'));
+  check('„Wenig gewinnt“: Ben führt', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8'));
   await p.click('[aria-label="Menü"]'); await p.click('.menu-list >> text=Design');
   check('Design wechselt', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark');
   await shot('06-menu-dark');
@@ -126,6 +132,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
   await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('Meldung nach dem Speichern', (await text('.toast')) === 'Partie gespeichert');
+  // Verlauf und Profil
+  await p.click('#tab-history');
+  check('Verlauf zeigt die Partie', (await p.locator('.hist-row').count()) === 1);
+  await p.click('.hist-row'); await p.waitForTimeout(200);
+  check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
+  await shot('30-history');
+  await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
+  check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
+  await p.click('.vs-p >> nth=0');
+  check('Direktvergleich zeigt gemeinsame Partie', (await text('.vs-sum')) === '1 gemeinsame Partie');
+  await shot('31-profile');
+  await p.click('[aria-label="Zurück"]');
+  check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
+  await shot('32-people');
+  await p.click('#tab-home');
   check('nach Beenden auf der Startseite', await p.isVisible('#s-home'));
   check('keine laufende Partie mehr', !(await p.isVisible('.resume')));
   await p.reload(); await p.waitForSelector('.wordmark');
@@ -207,11 +228,42 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
   await shot('21-monopoly-page');
   for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
-  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#3fb39b') && (await raw('.dock .primary')) === 'Ergebnis');
+  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8') && (await raw('.dock .primary')) === 'Ergebnis');
   await shot('22-monopoly-ov');
   await p.click('.dock .primary');
   check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
   await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+
+  // Kniffel: Kategorien, Bonuszeilen, Kategorien verwalten
+  await p.click('[data-game="kniffel"]'); await shot('30-kniffel'); await p.click('#quick-start');
+  check('Kniffel: 13 Kategorien + 2 Rechenzeilen', (await p.locator('tbody tr').count()) === 15, String(await p.locator('tbody tr').count()));
+  check('Kniffel: Zug von Anna', (await raw('#round-go')).includes('Anna'));
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  await shot('31-kniffel-page');
+  await p.click('.pp-panel .quick >> text="3"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
+  check('Kniffel: nach Annas Zug ist Ben dran', (await page()) === 1 || (await raw('#round-go')).includes('Ben'));
+  await p.goto(URL); await p.waitForTimeout(600);
+  await p.click('.resume'); await p.waitForTimeout(300);
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#open-cats');
+  await p.fill('#cat-name', 'Doppel-Kniffel'); await p.fill('#cat-fixed', '100'); await p.click('.cat-add .primary'); await p.waitForTimeout(300);
+  check('Kniffel: Kategorie hinzugefügt', (await p.locator('.cat-row').count()) === 14);
+  await shot('32-kniffel-cats');
+  await p.click('[aria-label="Chance entfernen"]'); await p.waitForTimeout(300);
+  check('Kniffel: Kategorie entfernt', (await p.locator('.cat-row').count()) === 13);
+  await p.mouse.click(30, 40); await p.waitForTimeout(300);
+  check('Kniffel: Doppel-Kniffel im Zettel', (await text('tbody')).includes('Doppel-Kniffel') && !(await text('tbody')).includes('Chance'));
+  await shot('33-kniffel-ov');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Phase 10: Haken auf der Spielerseite
+  await p.click('[data-game="phase10"]'); await shot('34-phase10'); await p.click('#quick-start');
+  await p.click('#round-go'); await p.waitForTimeout(500);
+  await p.click('#phase-toggle'); await p.waitForTimeout(200);
+  check('Phase 10: Haken gesetzt', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
+  await shot('35-phase10-page');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 

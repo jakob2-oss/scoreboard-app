@@ -4,8 +4,10 @@ import type { Clock } from '../lib/id';
 import { TPL } from '../test/fixtures';
 import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
-  ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState
+  ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
+  addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn
 } from './engine';
+import { gameDef } from './games';
 
 // Deterministische Uhr und IDs für die Tests
 function testClock(): Clock {
@@ -173,5 +175,52 @@ describe('Beenden', () => {
     const s = finish(createGame(tpl('free'), players('A'), c), c);
     expect(s.game.status).toBe('finished');
     expect(s.game.finishedAt).toBeTruthy();
+  });
+});
+
+describe('Kniffel, Phase 10 und Nullsumme', () => {
+  const kn = () => gameDef('kniffel')!.template;
+  it('legt je Kategorie eine Zeile an, zählt den Bonus und endet, wenn alles gefüllt ist', () => {
+    const c = testClock();
+    let s = createGame(kn(), players('Ann', 'Ben'), c);
+    expect(liveRounds(s)).toHaveLength(13);
+    const up = liveRounds(s).filter(r => r.cat?.section === 'up');
+    [3, 6, 9, 12, 15, 18].forEach((v, i) => { s = setScore(s, up[i].id, 'p0', v, c).state; });
+    expect(upperSum(s, 'p0')).toEqual({ sum: 63, bonus: 35 });
+    expect(totals(s).p0).toBe(98);
+    expect(catTurn(s)).toBe(1);
+    expect(canAddRound(s)).toBe(false);
+    liveRounds(s).forEach(r => { for (const pid of ['p0', 'p1']) if (scoreOf(s, r.id, pid) === null) s = setScore(s, r.id, pid, 0, c).state; });
+    expect(endState(s)).not.toBeNull();
+  });
+  it('fügt Kategorien hinzu und entfernt sie samt Werten', () => {
+    const c = testClock();
+    let s = createGame(kn(), players('Ann'), c);
+    s = addCategory(s, { label: 'Doppel-Kniffel', section: 'low', fixed: 100 }, c);
+    expect(liveRounds(s).slice(-1)[0].cat!.label).toBe('Doppel-Kniffel');
+    const id = liveRounds(s).slice(-1)[0].id;
+    s = setScore(s, id, 'p0', 100, c).state;
+    expect(totals(s).p0).toBe(100);
+    s = removeCategory(s, id, c);
+    expect(liveRounds(s)).toHaveLength(13);
+    expect(totals(s).p0).toBe(0);
+  });
+  it('Phase 10: Haken zählt vor Punkten und behält den Wert', () => {
+    const c = testClock();
+    let s = createGame(gameDef('phase10')!.template, players('Ann', 'Ben'), c);
+    let r = setScore(s, 'new', 'p0', 50, c); s = r.state;
+    s = setScore(s, r.roundId!, 'p1', 5, c).state;
+    s = setPhase(s, r.roundId!, 'p0', true, c).state;
+    expect(scoreOf(s, r.roundId!, 'p0')).toBe(50);
+    expect(phasesDone(s, 'p0')).toBe(1);
+    expect(ranking(s)[0].player.name).toBe('Ann');
+    s = setPhase(s, r.roundId!, 'p0', false, c).state;
+    expect(phasesDone(s, 'p0')).toBe(0);
+    expect(scoreOf(s, r.roundId!, 'p0')).toBe(50);
+  });
+  it('alle neuen Spiele sind definiert', () => {
+    for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
+    expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
+    expect(gameDef('binokel')!.template.end).toEqual({ type: 'target', value: 1000 });
   });
 });

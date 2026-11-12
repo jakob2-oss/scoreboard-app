@@ -19,7 +19,9 @@ export function GameInfo() {
         ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
         : <button className="primary" id="to-players" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
       <div className="rule-card" style={{ ['--acc' as string]: def.acc }}>
-        <p dangerouslySetInnerHTML={{ __html: def.text }} />
+        {def.points
+          ? <ul className="rule-points">{def.points.map(([k, t]) => <li key={k}><b>{k}</b><span>{t}</span></li>)}</ul>
+          : <p dangerouslySetInnerHTML={{ __html: def.text }} />}
         {def.example && <div className="rule-ex">
           {def.example.map(([v, l], i) => (
             <Fragment key={l}>
