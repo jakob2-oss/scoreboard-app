@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
-  anyScore, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
+  anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
   currentRoundIndex, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -24,6 +24,7 @@ export function quickKeys(g: GameState): QuickKey[] {
 
 function subtitle(g: GameState): string {
   const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
+  if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
   if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}, ${bidPhase(g, liveRounds(g)[n - 1].id) === 'bid' ? 'Ansagen' : 'Stiche'}`;
   if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
@@ -113,6 +114,7 @@ export function GameScreen() {
       {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} />}
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
+      {s.sheet === 'cats' && <CatSheet g={g} />}
     </section>
   );
 }
@@ -146,9 +148,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
           </tr>
         </thead>
         <tbody>
-          {rounds.map((r, ri) => (
+          {rounds.map((r, ri) => (<Fragment key={r.id}>
             <tr key={r.id} className={isBids(g) && ri === currentRoundIndex(g) ? 'cur' : ''}>
-              <th className="rn">{ri + 1}</th>
+              {r.cat ? <th className="cat">{r.cat.label}{r.cat.fixed ? <small>{r.cat.fixed} Punkte</small> : null}</th> : <th className="rn">{ri + 1}</th>}
               {players.map(p => {
                 const v = scoreOf(g, r.id, p.id);
                 const active = !!edit && edit.ref === r.id && edit.playerId === p.id;
@@ -164,7 +166,11 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 return <td key={p.id} className={cls} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>{v === null ? '' : fmt(v)}</td>;
               })}
             </tr>
-          ))}
+            {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
+              <tr className="calc"><th className="cat">Summe oben</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.sum}/{g.game.rules.params!.bonus!.at}</td>; })}</tr>
+              <tr className="calc"><th className="cat">Bonus</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.bonus ? '+' + u.bonus : '–'}</td>; })}</tr>
+            </>)}
+          </Fragment>))}
           {!isBids(g) && !isResultOnly(g) && canAddRound(g) && rounds.length > 0 && roundFull(g, rounds[rounds.length - 1].id) && (
             <tr className="new-row">
               <th className="rn">{rounds.length + 1}</th>
@@ -203,7 +209,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
-        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field === 'bid' ? `Ansagen Runde ${step.roundNo}` : step.field === 'tricks' ? `Stiche Runde ${step.roundNo}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
+        : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field === 'bid' ? `Ansagen Runde ${step.roundNo}` : step.field === 'tricks' ? `Stiche Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
   );
 }
@@ -226,13 +232,16 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         <div className="score-pill"><small>Punkte</small><b>{fmt(t[p.id])}</b></div>
       </div>
       {isBids(g) && ref !== 'new' ? <BidEntry g={g} p={p} roundId={ref} edit={edit} /> : <div className="pp-entry">
-        <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : <><div className="lbl">Runde {roundNumber(g, ref)}</div></>}</div>
+        <div>{isResultOnly(g) ? <div className="lbl">{unitOf(g)}</div> : isCats(g) && ref !== 'new' ? <div className="lbl">{liveRounds(g).find(r => r.id === ref)?.cat?.label}</div> : <div className="lbl">Runde {roundNumber(g, ref)}</div>}</div>
         <span className={'val' + (value === null ? ' ph' : '') + (value !== null && value < 0 ? ' neg' : '')}>
           {value === null ? (edit?.buf === '-' ? '−' : '0') : fmt(value)}
         </span>
       </div>}
-      {!isResultOnly(g) && <div className="eyebrow">Verlauf</div>}
-      <div className={'pp-hist' + (isResultOnly(g) ? ' hide' : '')}>
+      {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
+      {zeroSumHint(g, ref)}
+      {isCats(g) && <CatList g={g} p={p} current={ref} onPick={pick} />}
+      {!isResultOnly(g) && !isCats(g) && <div className="eyebrow">Verlauf</div>}
+      <div className={'pp-hist' + (isResultOnly(g) || isCats(g) ? ' hide' : '')}>
         {rounds.map((r, k) => {
           const v = scoreOf(g, r.id, p.id);
           if (isBids(g)) {
@@ -265,7 +274,7 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
           {Array.from({ length: cards + 1 }, (_, k) => <button key={k} onClick={() => a.pick(k)}>{k}</button>)}
         </div>
       ) : <div className="quick">
-        {quickKeys(g).map(k => (
+        {(isCats(g) ? catKeys(g, edit.ref) : quickKeys(g)).map(k => (
           <button key={k.label} className={k.op === 'set' && k.label.length > 2 ? 'strike wide' : k.v < 0 ? 'strike' : ''}
             onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : a.setValue(k.v))}>{k.label}</button>
         ))}
@@ -316,5 +325,94 @@ function BidEntry({ g, p, roundId, edit }: { g: GameState; p: Player; roundId: s
       <div className="wz-fields">{box('bid', 'Ansage')}{box('tricks', 'Stiche')}</div>
       <div className={'wz-hint' + (wrong ? ' warn' : '')}>{hint}</div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------- Kniffel, Phase 10, Nullsumme
+
+/** Schnelltasten einer Kategorie: Vielfache, fester Wert und Streichen */
+function catKeys(g: GameState, ref: RoundRef): QuickKey[] {
+  const cat = ref === 'new' ? undefined : liveRounds(g).find(r => r.id === ref)?.cat;
+  const vals = cat?.quick ?? (cat?.fixed ? [cat.fixed] : []);
+  return [...vals.filter(v => v > 0).map(v => ({ label: String(v), op: 'set' as const, v })), { label: 'Streichen', op: 'set' as const, v: 0 }];
+}
+
+function CatList({ g, p, current, onPick }: { g: GameState; p: Player; current: RoundRef; onPick: (r: RoundRef) => void }) {
+  const rounds = liveRounds(g), u = upperSum(g, p.id), b = g.game.rules.params?.bonus;
+  return (
+    <div className="pp-cats">
+      {rounds.map((r, i) => {
+        const v = scoreOf(g, r.id, p.id);
+        return (
+          <Fragment key={r.id}>
+            <button className="pp-cat" aria-current={r.id === current} onClick={() => onPick(r.id)}>
+              <span>{r.cat?.label}</span><span className="v">{v === null ? '–' : fmt(v)}</span>
+            </button>
+            {b && r.cat?.section === 'up' && rounds[i + 1]?.cat?.section !== 'up' && (
+              <div className={'pp-cat calc' + (u.bonus ? ' hit' : '')}><span>Oben {u.sum} von {b.at}</span><span>Bonus {u.bonus ? '+' + u.bonus : '–'}</span></div>
+            )}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+const PHASES = ['2 Drillinge', '1 Drilling und 1 Viererfolge', '1 Vierling und 1 Viererfolge', '1 Siebenerfolge', '1 Achterfolge',
+  '1 Neunerfolge', '2 Vierlinge', '7 Karten einer Farbe', '1 Fünfling und 1 Zwilling', '1 Fünfling und 1 Drilling'];
+
+function PhaseCard({ g, p, roundRef, active }: { g: GameState; p: Player; roundRef: RoundRef; active: boolean }) {
+  const rounds = liveRounds(g), ri = roundRef === 'new' ? rounds.length : rounds.findIndex(r => r.id === roundRef);
+  const before = phasesDone(g, p.id, ri), total = phasesDone(g, p.id), attempt = Math.min(before + 1, 10);
+  const ticked = roundRef !== 'new' && phaseIn(g, roundRef, p.id);
+  return (
+    <div className="ph-card" style={css({ '--c': p.color, '--on': onColor(p.color) })}>
+      <div className="ph-dots">{Array.from({ length: 10 }, (_, k) => <i key={k} className={k < total ? 'on' : k === total ? 'now' : ''} />)}</div>
+      <div className="ph-now"><small>Phase {attempt}</small><b>{PHASES[attempt - 1]}</b></div>
+      <button className="ph-toggle" id="phase-toggle" aria-pressed={ticked} disabled={!active} onClick={() => act().togglePhase()}>{ticked ? 'Geschafft' : 'Geschafft?'}</button>
+    </div>
+  );
+}
+
+/** Nullsumme (Schafkopf, Doppelkopf): Hinweis, wenn eine volle Runde nicht 0 ergibt */
+function zeroSumHint(g: GameState, ref: RoundRef) {
+  if (!g.game.rules.params?.zeroSum || ref === 'new' || !roundFull(g, ref)) return null;
+  const sum = seated(g).reduce((a, p) => a + (scoreOf(g, ref, p.id) ?? 0), 0);
+  return sum === 0 ? null : <div className="zs-hint">Die Runde ergibt {fmt(sum)} statt 0</div>;
+}
+
+/** Kniffel: Kategorien der laufenden Partie verwalten */
+function CatSheet({ g }: { g: GameState }) {
+  const [label, setLabel] = useState('');
+  const [section, setSection] = useState<'up' | 'low'>('low');
+  const [fixed, setFixed] = useState('');
+  const rounds = liveRounds(g);
+  const add = (e: React.FormEvent) => {
+    e.preventDefault();
+    act().addCategory({ label, section, ...(parseInt(fixed, 10) > 0 ? { fixed: parseInt(fixed, 10) } : {}) });
+    setLabel(''); setFixed('');
+  };
+  return (
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet" role="dialog" aria-label="Kategorien">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Kategorien</h3>
+          <div className="menu-list cat-edit">
+            {rounds.map(r => (
+              <div key={r.id} className="cat-row"><span>{r.cat?.label}</span><small>{r.cat?.section === 'up' ? 'oben' : 'unten'}</small>
+                <button aria-label={`${r.cat?.label} entfernen`} onClick={() => act().removeCategory(r.id)}>✕</button></div>
+            ))}
+          </div>
+          <form className="cat-add" onSubmit={add}>
+            <input id="cat-name" value={label} onChange={e => setLabel(e.target.value)} placeholder="Neue Kategorie" maxLength={24} autoComplete="off" />
+            <input id="cat-fixed" value={fixed} onChange={e => setFixed(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="Punkte" inputMode="numeric" aria-label="Feste Punkte" />
+            <div className="seg"><button type="button" aria-pressed={section === 'up'} onClick={() => setSection('up')}>Oben</button><button type="button" aria-pressed={section === 'low'} onClick={() => setSection('low')}>Unten</button></div>
+            <button className="primary" type="submit" disabled={!label.trim()}>Hinzufügen</button>
+          </form>
+        </div>
+      </div>
+    </>
   );
 }

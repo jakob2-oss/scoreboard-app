@@ -76,6 +76,7 @@ export function MenuSheet({ g }: { g: GameState }) {
       </div>
       <div className="menu-list">
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
+        {g.game.rules.scoring === 'categories' && <button id="open-cats" onClick={() => act().openSheet('cats')}>Kategorien</button>}
         <button onClick={() => act().openSheet('result')}>Beenden und speichern</button>
         {!confirm
           ? <button className="warn" onClick={() => setConfirm(true)}>Partie verwerfen</button>

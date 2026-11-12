@@ -93,4 +93,47 @@ GAMES.push(
   }
 );
 
+const setTo = (label: string, v: number) => ({ label, op: 'set' as const, v });
+const times = (label: string, v: number) => ({ label, op: 'mul' as const, v });
+const mult = (n: number) => [1, 2, 3, 4, 5].map(k => k * n);
+
+GAMES.push(
+  {
+    template: { key: 'kniffel', version: 1, name: 'Kniffel', scoring: 'categories', win: 'high', end: { type: 'categories' }, players: { min: 1, max: 8 },
+      params: { bonus: { at: 63, value: 35 }, categories: [
+        { label: 'Einser', section: 'up', quick: mult(1) }, { label: 'Zweier', section: 'up', quick: mult(2) }, { label: 'Dreier', section: 'up', quick: mult(3) },
+        { label: 'Vierer', section: 'up', quick: mult(4) }, { label: 'Fünfer', section: 'up', quick: mult(5) }, { label: 'Sechser', section: 'up', quick: mult(6) },
+        { label: 'Dreierpasch', section: 'low' }, { label: 'Viererpasch', section: 'low' }, { label: 'Full House', section: 'low', fixed: 25 },
+        { label: 'Kleine Straße', section: 'low', fixed: 30 }, { label: 'Große Straße', section: 'low', fixed: 40 }, { label: 'Kniffel', section: 'low', fixed: 50 },
+        { label: 'Chance', section: 'low' }] } },
+    points: [['Pro Zug', 'bis zu drei Würfe, dann ein freies Feld'], ['Oben', 'nur die passenden Augen zählen'], ['Bonus', '35 Punkte ab 63 oben'], ['Kategorien', 'im Menü der Partie anpassbar']],
+    acc: '#3fb39b', tint: '#dff1ee', text: '', example: [['3×', 'Vierer'], ['12', 'Punkte'], ['+35', 'ab 63 oben']]
+  },
+  {
+    template: { key: 'phase10', version: 1, name: 'Phase 10', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
+      params: { phases: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
+    points: [['Je Runde', 'eigene Phase auslegen, dann Haken setzen'], ['Handkarten', '1 bis 9 sind 5, 10 bis 12 sind 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
+    acc: '#f0b13e', tint: '#fdeccc', text: ''
+  },
+  {
+    template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
+      params: { zeroSum: true, quick: [add('\u221250', -50), add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+    points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider, Laufende', 'erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
+    acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
+  },
+  {
+    template: { key: 'doppelkopf', version: 1, name: 'Doppelkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 5 },
+      params: { zeroSum: true, quick: [add('\u22123', -3), add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3)] } },
+    points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
+    acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
+  },
+  {
+    template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'target', value: 1000 }, players: { min: 3, max: 4 },
+      params: { quick: [add('+10', 10), add('+20', 20), add('+40', 40), add('+100', 100), times('×\u22122', -2)] } },
+    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Melden und Stiche', 'zählen zusammen als Rundenpunkte'], ['Gebot verfehlt', 'das Gebot zählt doppelt negativ'], ['Ziel', '1000 Punkte']],
+    acc: '#f09a4a', tint: '#fbe9d6', text: '', example: [['300', 'Gebot'], ['×−2', 'verfehlt'], ['−600', 'Punkte']],
+    endOptions: [{ label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Bei 1500', end: { type: 'target', value: 1500 } }, { label: 'Offen', end: { type: 'none' } }]
+  }
+);
+
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

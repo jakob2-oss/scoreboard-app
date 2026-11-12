@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
@@ -61,6 +61,11 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
 - Vorlagen zusammenführen (für Statistik) ist vorbereitet (`rules.key`), aber noch ohne Oberfläche.
 - JSON-Backup fehlt noch (wichtig gegen Datenverlust, Paket 3).
 
+- **Teil C** (PR #5): Kniffel, Phase 10, Schafkopf, Doppelkopf, Binokel
+  - `scoring: 'categories'` (Kniffel): je Kategorie eine Zeile, Summe oben und Bonus, Zug-Reihenfolge, Kategorien im Menü verwalten
+  - `params.phases` (Phase 10): Haken je Runde, Rang nach Phasen, dann Punkten
+  - `params.zeroSum` (Schafkopf, Doppelkopf): Hinweis bei Rundensumme ungleich 0
+
 ## Tests
-- Unit-Tests: 61 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 90 Prüfungen
+- Unit-Tests: 65 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 96 Prüfungen

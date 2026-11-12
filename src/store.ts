@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import type { Player, Result, Template } from './model/types';
+import type { Category, Player, Result, Template } from './model/types';
 import type { HistGame, TimeFilter } from './game/stats';
 import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  bidPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  bidPhase, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -34,7 +34,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | null;
+  sheet: 'menu' | 'result' | 'cats' | null;
   toast: { text: string; n: number } | null;
   history: HistGame[];
   profile: ProfileView | null;
@@ -199,6 +199,25 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game, e = state.edit; if (!g || !e) return;
       set({ edit: makeEdit(g, e.ref, e.playerId, field) });
     },
+    /** Phase 10: Haken „Phase geschafft“ umschalten */
+    togglePhase() {
+      const g = state.game, e = state.edit; if (!g || !e) return;
+      const on = !(e.ref !== 'new' && phaseIn(g, e.ref, e.playerId));
+      const r = setPhase(g, e.ref, e.playerId, on, clock);
+      set({ game: r.state, undo: [...state.undo.slice(-99), g], edit: { ...e, ref: r.roundId } });
+      persist(r.state);
+    },
+    /** Kniffel: Kategorie hinzufügen oder entfernen */
+    addCategory(cat: Category) {
+      const g = state.game; if (!g || !cat.label.trim()) return;
+      const ng = addCategory(g, { ...cat, label: cat.label.trim() }, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
+    removeCategory(roundId: string) {
+      const g = state.game; if (!g) return;
+      const ng = removeCategory(g, roundId, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g], edit: null, page: -1 }); persist(ng);
+    },
     /** Wert setzen und gleich weiter (Wizard-Schnelltasten) */
     pick(n: number) { actions.setValue(n); actions.next(); },
     /** Knopf im Überblick: zum nächsten offenen Feld */
@@ -220,6 +239,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         else if (e.field === 'bid' && bidsDone) toast('Ansagen komplett');
         return;
+      }
+      // Kniffel: jeder trägt in ein Feld seiner Wahl ein, dann ist der Nächste dran
+      if (isCats(g) && !state.pad) {
+        if (i < players.length - 1) { actions.goPage(i + 1); return; }
+        set({ page: -1, edit: null }); toast('Zug fertig'); return;
       }
       if (i < players.length - 1) {
         const ref = e.ref;
@@ -267,7 +291,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result') { set({ sheet, pad: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats') { set({ sheet, pad: false }); },
     closeSheet() { set({ sheet: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;

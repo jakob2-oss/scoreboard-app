@@ -1,4 +1,4 @@
-import type { Entry, Game, Player, Round, Template } from '../model/types';
+import type { Category, Entry, Game, Player, Round, Template } from '../model/types';
 import type { Clock } from '../lib/id';
 import { wizardOrder, wizardRounds, wizardScore } from '../rules/wizard';
 
@@ -25,7 +25,37 @@ export function seated(s: GameState): Player[] {
 }
 
 export function liveRounds(s: GameState): Round[] {
-  return s.rounds.filter(alive).sort((a, b) => a.index - b.index);
+  const sec = (r: Round) => (r.cat ? (r.cat.section === 'up' ? 0 : 1) : 0);
+  return s.rounds.filter(alive).sort((a, b) => sec(a) - sec(b) || a.index - b.index);
+}
+
+export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
+export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
+
+/** Summe der oberen Kategorien und ob der Bonus erreicht ist */
+export function upperSum(s: GameState, playerId: string): { sum: number; bonus: number } {
+  const b = s.game.rules.params?.bonus;
+  const sum = liveRounds(s).filter(r => r.cat?.section === 'up').reduce((a, r) => a + (scoreOf(s, r.id, playerId) ?? 0), 0);
+  return { sum, bonus: b && sum >= b.at ? b.value : 0 };
+}
+
+/** Phase 10: Anzahl geschaffter Phasen (optional nur Runden vor einem Index) */
+export function phasesDone(s: GameState, playerId: string, beforeIndex = Infinity): number {
+  return liveRounds(s).slice(0, beforeIndex).filter(r => {
+    const e = entryOf(s, r.id, playerId);
+    return !!e && (e.values as { phase?: boolean }).phase === true;
+  }).length;
+}
+export function phaseIn(s: GameState, roundId: string, playerId: string): boolean {
+  const e = entryOf(s, roundId, playerId);
+  return !!e && (e.values as { phase?: boolean }).phase === true;
+}
+
+/** Kniffel: wer ist dran? Erster Spieler mit den wenigsten ausgefüllten Feldern. */
+export function catTurn(s: GameState): number {
+  const rounds = liveRounds(s);
+  const cnt = seated(s).map(p => rounds.filter(r => scoreOf(s, r.id, p.id) !== null).length);
+  return cnt.indexOf(Math.min(...cnt));
 }
 
 function entryOf(s: GameState, roundId: string, playerId: string): Entry | undefined {
@@ -67,7 +97,7 @@ export function anyScore(s: GameState): boolean {
 export function totals(s: GameState): Record<string, number> {
   const t: Record<string, number> = {};
   const rounds = liveRounds(s);
-  for (const p of seated(s)) t[p.id] = rounds.reduce((sum, r) => sum + (scoreOf(s, r.id, p.id) ?? 0), 0);
+  for (const p of seated(s)) t[p.id] = rounds.reduce((sum, r) => sum + (scoreOf(s, r.id, p.id) ?? 0), 0) + (isCats(s) ? upperSum(s, p.id).bonus : 0);
   return t;
 }
 
@@ -77,10 +107,11 @@ export interface Rank { player: Player; total: number; place: number }
 export function ranking(s: GameState): Rank[] {
   const t = totals(s);
   const high = s.game.rules.win === 'high';
-  const arr = seated(s).map(player => ({ player, total: t[player.id], place: 0 }))
-    .sort((a, b) => (high ? b.total - a.total : a.total - b.total));
-  let place = 0; let last: number | null = null;
-  arr.forEach((x, i) => { if (x.total !== last) { place = i + 1; last = x.total; } x.place = place; });
+  const ph = hasPhases(s);
+  const arr = seated(s).map(player => ({ player, total: t[player.id], place: 0, ph: ph ? phasesDone(s, player.id) : 0 }))
+    .sort((a, b) => (b.ph - a.ph) || (high ? b.total - a.total : a.total - b.total));
+  let place = 0; let last: string | null = null;
+  arr.forEach((x, i) => { const k = x.ph + '|' + x.total; if (k !== last) { place = i + 1; last = k; } x.place = place; });
   return arr;
 }
 
@@ -96,6 +127,13 @@ export interface EndState { done: boolean; text: string }
 export function endState(s: GameState): EndState | null {
   const end = s.game.rules.end;
   const rounds = liveRounds(s);
+  if (isCats(s)) return rounds.length && rounds.every(r => roundFull(s, r.id)) ? { done: true, text: 'Alle Felder ausgefüllt' } : null;
+  if (hasPhases(s)) {
+    const fin = seated(s).filter(p => phasesDone(s, p.id) >= 10);
+    if (!fin.length) return null;
+    const last = rounds[rounds.length - 1], full = !!last && roundFull(s, last.id);
+    return { done: full, text: `${fin.map(p => p.name).join(', ')} hat Phase 10 geschafft` + (full ? '' : '. Runde noch zu Ende eintragen') };
+  }
   if (end.type === 'rounds') {
     const done = rounds.length >= end.value && rounds.slice(0, end.value).every(r => roundFull(s, r.id));
     return done ? { done: true, text: `${end.value} Runden gespielt` } : null;
@@ -112,6 +150,7 @@ export function endState(s: GameState): EndState | null {
 }
 
 export function canAddRound(s: GameState): boolean {
+  if (isCats(s)) return false;
   const end = s.game.rules.end;
   if (end.type === 'rounds' && liveRounds(s).length >= end.value) return false;
   const e = endState(s);
@@ -137,6 +176,10 @@ export function nextStep(s: GameState): NextStep {
   if (e && e.done) return { kind: 'result' };
   const rounds = liveRounds(s);
   const players = seated(s);
+  if (isCats(s)) {
+    const pi = catTurn(s), open = rounds.find(r => scoreOf(s, r.id, players[pi].id) === null);
+    return open ? { kind: 'round', ref: open.id, roundNo: 0, playerIndex: pi } : { kind: 'result' };
+  }
   const i = rounds.findIndex(r => !roundFull(s, r.id));
   if (i >= 0 && isBids(s)) {
     const r = rounds[i], field = bidPhase(s, r.id);
@@ -178,8 +221,9 @@ export function createGame(rules: Template, players: Player[], clock: Clock): Ga
   };
   if (rules.scoring === 'bids') game.rules.end = { type: 'rounds', value: wizardRounds(players.length) };
   const end = game.rules.end;
-  const n = end.type === 'rounds' ? end.value : 1;
-  const rounds: Round[] = Array.from({ length: n }, (_, index) => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: game.id, index }));
+  const cats = rules.scoring === 'categories' ? rules.params?.categories ?? [] : null;
+  const n = cats ? cats.length : end.type === 'rounds' ? end.value : 1;
+  const rounds: Round[] = Array.from({ length: n }, (_, index) => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: game.id, index, ...(cats ? { cat: { ...cats[index] } } : {}) }));
   return { game, players: players.map(p => ({ ...p })), rounds, entries: [] };
 }
 
@@ -208,12 +252,45 @@ export function setScore(s: GameState, ref: RoundRef, playerId: string, value: n
   const existing = state.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
   let entries: Entry[];
   if (existing) {
+    const phase = (existing.values as { phase?: boolean }).phase;
     entries = state.entries.map(e => e !== existing ? e
-      : value === null ? { ...e, updatedAt: t, deletedAt: t } : { ...e, updatedAt: t, values: { score: value } });
+      : value === null ? (phase ? { ...e, updatedAt: t, values: { phase: true } } : { ...e, updatedAt: t, deletedAt: t })
+        : { ...e, updatedAt: t, values: { ...(phase ? { phase: true } : {}), score: value } });
   } else if (value !== null) {
     entries = [...state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId, values: { score: value } }];
   } else entries = state.entries;
   return { state: { ...state, game: touch(state, clock), entries }, roundId };
+}
+
+/** Phase 10: Haken „Phase geschafft“ setzen oder entfernen. Bei 'new' entsteht die Runde. */
+export function setPhase(s: GameState, ref: RoundRef, playerId: string, on: boolean, clock: Clock): { state: GameState; roundId: string } {
+  let state = s; let roundId = ref;
+  if (ref === 'new') { const a = addRound(state, clock); state = a.state; roundId = a.roundId; }
+  const t = clock.now();
+  const existing = state.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
+  const score = existing && typeof (existing.values as { score?: number }).score === 'number' ? (existing.values as { score: number }).score : undefined;
+  const values = { ...(on ? { phase: true } : {}), ...(score !== undefined ? { score } : {}) };
+  const entries: Entry[] = existing
+    ? state.entries.map(e => (e !== existing ? e : Object.keys(values).length ? { ...e, updatedAt: t, values } : { ...e, updatedAt: t, deletedAt: t }))
+    : on ? [...state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId, values }] : state.entries;
+  return { state: { ...state, game: touch(state, clock), entries }, roundId };
+}
+
+/** Kniffel: Kategorie hinzufügen (neue Zeile) */
+export function addCategory(s: GameState, cat: Category, clock: Clock): GameState {
+  const t = clock.now();
+  const index = s.rounds.reduce((m, r) => Math.max(m, r.index + 1), 0);
+  return { ...s, game: touch(s, clock), rounds: [...s.rounds, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, index, cat }] };
+}
+
+/** Kniffel: Kategorie entfernen (Zeile und ihre Werte werden als gelöscht markiert) */
+export function removeCategory(s: GameState, roundId: string, clock: Clock): GameState {
+  const t = clock.now();
+  return {
+    ...s, game: touch(s, clock),
+    rounds: s.rounds.map(r => (r.id === roundId ? { ...r, updatedAt: t, deletedAt: t } : r)),
+    entries: s.entries.map(e => (e.roundId === roundId && alive(e) ? { ...e, updatedAt: t, deletedAt: t } : e))
+  };
 }
 
 /** Wizard: Ansage oder Stiche setzen (null löscht den Wert). Begrenzt auf 0 bis Kartenzahl der Runde. */

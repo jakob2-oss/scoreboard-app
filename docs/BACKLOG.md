@@ -20,12 +20,15 @@ Reihenfolge = Priorität. Erledigtes abhaken und nach STATUS.md übernehmen.
 - [x] **Navigation:** Untere Leiste mit drei Bereichen: Spielen, Verlauf, Spieler. Daumenfreundlich, ruhig.
 
 ## C. Spiele
-- [ ] **Phase 10:** Haken „Phase geschafft“ je Runde, Phasenanzeige, Rang erst nach Phase dann Punkten.
-- [ ] **Kniffel:** Kategorien-Zettel mit Bonus 35 ab 63. **Kategorien hinzufügen/entfernen** über einen Knopf
+- [x] **Phase 10:** Haken „Phase geschafft“ je Runde, Phasenanzeige, Rang erst nach Phase dann Punkten.
+- [x] **Kniffel:** Kategorien-Zettel mit Bonus 35 ab 63. **Kategorien hinzufügen/entfernen** über einen Knopf
       in der Partie (z. B. für Doppel-Kniffel oder zusätzliche große Kategorien), frei konfigurierbar.
-- [ ] **Schafkopf:** Spielart (Sauspiel, Wenz, Solo), Tarif, Schneider/Schwarz, Laufende; Abrechnung als Nullsumme.
-- [ ] **Doppelkopf:** Partner wechseln je Runde (Re/Kontra), Spielwert inkl. Ansagen, Soli, Nullsumme.
-- [ ] **Binokel:** Reizen (Gebot), Melden, Stiche; nicht erfülltes Gebot zählt doppelt negativ; Ziel z. B. 1000.
+- [x] **Schafkopf:** Spielart (Sauspiel, Wenz, Solo), Tarif, Schneider/Schwarz, Laufende; Abrechnung als Nullsumme.
+- [x] **Doppelkopf:** Partner wechseln je Runde (Re/Kontra), Spielwert inkl. Ansagen, Soli, Nullsumme.
+- [x] **Binokel:** Reizen (Gebot), Melden, Stiche; nicht erfülltes Gebot zählt doppelt negativ; Ziel z. B. 1000.
+
+Umgesetzt (12.11.): Schafkopf und Doppelkopf als Nullsumme mit Plus-/Minus-Tasten und Hinweis, wenn eine Runde nicht 0 ergibt;
+Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Partner und Spielarten werden nicht eigens erfasst.
 
 ## D. Eigene Spiele und Benennung
 - [ ] **„Nur das Ergebnis“ umbenennen** (Vorschlag: „Endwertung“), Gruppe bleibt getrennt.
