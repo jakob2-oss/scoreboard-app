@@ -9,8 +9,10 @@ export const FREE_TINT = '#e7e4f7';
 
 /** Freies Spiel: Gewinner, Ende und Zählschritte festlegen */
 export function Setup() {
-  const { setup } = useApp();
+  const { setup, editKey, templates } = useApp();
   const a = act();
+  const own = editKey ? templates.find(t => t.key === editKey) : undefined;
+  const [confirm, setConfirm] = useState(false);
   const endKind = setup.end.type;
   const endValue = setup.end.type === 'target' || setup.end.type === 'rounds' ? setup.end.value : 0;
   const setEnd = (type: End['type'], value?: number) => {
@@ -23,18 +25,21 @@ export function Setup() {
     if (!has && setup.steps.length >= MAX_STEPS) return;
     a.updateSetup({ steps: has ? setup.steps.filter(x => x !== n) : [...setup.steps, n].sort((x, y) => x - y) });
   };
-  const [own, setOwn] = useState('');
+  const [ownStep, setOwnStep] = useState('');
   const addOwn = (e: React.FormEvent) => {
     e.preventDefault();
-    const n = parseInt(own, 10);
+    const n = parseInt(ownStep, 10);
     if (n > 0 && !setup.steps.includes(n) && setup.steps.length < MAX_STEPS) a.updateSetup({ steps: [...setup.steps, n].sort((x, y) => x - y) });
-    setOwn('');
+    setOwnStep('');
   };
   const valid = endKind === 'none' || endValue > 0;
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
   return (
-    <GamePage id="s-setup" scene={FREE_SCENE} icon={FREE_ICON} tint={FREE_TINT} title="Freies Spiel" onBack={() => a.goHome()}
-      dock={<button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>}>
+    <GamePage id="s-setup" scene={FREE_SCENE} icon={FREE_ICON} tint={FREE_TINT} title={own ? own.name : 'Freies Spiel'} onBack={() => a.goHome()}
+      dock={<>
+        {own && <button className="secondary" id="setup-save" disabled={!valid} onClick={() => a.saveSetupHome()}>Speichern</button>}
+        <button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>
+      </>}>
         <div className="setup-body">
           <div className="field">
             <label htmlFor="setup-name">Name</label>
@@ -69,17 +74,22 @@ export function Setup() {
             </div>
             <form className="add-row own-step" onSubmit={addOwn}>
               <input id="own-step" inputMode="numeric" pattern="[0-9]*" placeholder="Eigener Wert" aria-label="Eigener Zählschritt"
-                value={own} onChange={e => setOwn(e.target.value.replace(/\D/g, '').slice(0, 4))} />
-              <button type="submit" disabled={!own || setup.steps.length >= MAX_STEPS}>Hinzufügen</button>
+                value={ownStep} onChange={e => setOwnStep(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+              <button type="submit" disabled={!ownStep || setup.steps.length >= MAX_STEPS}>Hinzufügen</button>
             </form>
             <div className="quick step-preview" aria-hidden="true">
               {preview.map(n => <span key={n}>{n > 0 ? '+' + n : '−' + -n}</span>)}
             </div>
           </div>
-          <label className="switch-row">
+          {!own && <label className="switch-row">
             <input type="checkbox" checked={setup.save} onChange={e => a.updateSetup({ save: e.target.checked })} />
             <span className="t"><b>Als Vorlage speichern</b></span>
-          </label>
+          </label>}
+          {own && <div className="menu-list tpl-del">
+            {!confirm
+              ? <button className="warn" id="tpl-delete" onClick={() => setConfirm(true)}>Spiel löschen</button>
+              : <div className="confirm-row"><button className="no" onClick={() => setConfirm(false)}>Abbrechen</button><button className="yes" id="tpl-delete-yes" onClick={() => a.deleteTemplate(own.key)}>Wirklich löschen</button></div>}
+          </div>}
         </div>
     </GamePage>
   );

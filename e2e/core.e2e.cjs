@@ -130,7 +130,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.scrim', { position: { x: 30, y: 40 } });
   await p.click('#s-game .text-btn');
   check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
-  await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('Serie: anfangs keine gewählt', (await p.getAttribute('.ser-chips .fchip >> nth=0', 'aria-pressed')) === 'true');
+  await p.click('#series-new'); await p.fill('#series-name', 'Südamerika 2026'); await p.click('.ser-add .primary'); await p.waitForTimeout(200);
+  check('Serie angelegt und gewählt', (await text('.ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
+  await shot('29-result-series');
+  await p.click('.bsheet .pad-actions .primary'); await p.waitForTimeout(300);
   check('Meldung nach dem Speichern', (await text('.toast')) === 'Partie gespeichert');
   // Verlauf und Profil
   await p.click('#tab-history');
@@ -139,10 +143,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Detail: Ben vorn', (await text('.bsheet .prow >> nth=0')).includes('Ben'));
   await shot('30-history');
   await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
-  check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
+  check('Profil von Ben: Leistung 3,0× (ein Sieg zu dritt)', (await text('.pf-hero h1')) === 'Ben' && (await text('#perf-tile b')) === '3,0×', await text('#perf-tile b'));
   await p.click('.vs-p >> nth=0');
-  check('Direktvergleich zeigt gemeinsame Partie', (await text('.vs-sum')) === '1 gemeinsame Partie');
-  await shot('31-profile');
+  check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
+  check('Direktvergleich: Leistung und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung' && await p.isVisible('.rematch'));
+  await shot('31-profile'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('31-profile-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('[aria-label="Zurück"]');
   check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
   await shot('32-people');
@@ -156,9 +161,13 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Gespeicherte Vorlage erneut spielen
   check('„Testspiel“ unter Meine Spiele', (await text('#my-games')).includes('Testspiel'));
   await p.click('#my-games .row >> text=Testspiel');
+  check('eigenes Spiel öffnet seine Seite', (await p.inputValue('#setup-name')) === 'Testspiel' && await p.isVisible('#tpl-delete'));
+  await p.click('#setup-next');
   check('letzte Spieler vorausgewählt', (await raw('#start-btn')) === 'Los mit 3 Spielern');
   await p.click('[aria-label="Zurück"]');
-  check('Zurück führt zur Startseite (Vorlage schon gespeichert)', await p.isVisible('#s-home'));
+  check('Zurück führt zur Seite des Spiels', await p.isVisible('#s-setup'));
+  await p.click('#s-setup [aria-label="Zurück"]');
+  check('dann zur Startseite', await p.isVisible('#s-home'));
 
   // Zweites freies Spiel: feste Rundenzahl, eigene Zählschritte, ohne Vorlage
   await p.click('#new-free');
@@ -240,8 +249,23 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Kniffel: Zug von Anna', (await raw('#round-go')).includes('Anna'));
   await p.click('#round-go'); await p.waitForTimeout(500);
   await shot('31-kniffel-page');
-  await p.click('.pp-panel .quick >> text="3"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
-  check('Kniffel: nach Annas Zug ist Ben dran', (await page()) === 1 || (await raw('#round-go')).includes('Ben'));
+  check('Kniffel: Einser bietet 1 bis 5 statt Zahlenfeld', (await p.locator('.cp-grid button').count()) === 5 && !(await p.isVisible('.pp-keys')));
+  await p.click('.cp-grid >> text="3"'); await p.waitForTimeout(500);
+  check('Kniffel: nach Annas Zug ist Ben dran', (await page()) === 1);
+  await p.click('.pp-cat >> text=Dreierpasch'); await p.waitForTimeout(200);
+  check('Kniffel: Dreierpasch bietet 5 bis 30', (await p.locator('.cp-grid button').count()) === 26);
+  await shot('31b-kniffel-pasch');
+  await p.click('#cat-strike'); await p.waitForTimeout(500);
+  await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
+  check('Kniffel: gestrichenes Feld markiert', (await p.locator('td.struck').count()) === 1);
+  await p.click('td[aria-label="Clara, Kniffel"]'); await p.waitForTimeout(400);
+  check('Kniffel: Feld im Überblick öffnet Auswahl', (await p.locator('.cp-grid button').count()) === 1);
+  await p.click('.cp-grid button'); await p.waitForTimeout(500);
+  check('Kniffel: danach zurück im Überblick', (await page()) === -1 && (await text('td[aria-label="Clara, Kniffel"]')) === '50');
+  await p.click('td[aria-label="Clara, Chance"]'); await p.waitForTimeout(400);
+  check('Kniffel: Chance mit Zahlenfeld', await p.isVisible('.pp-keys'));
+  await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(300);
+  await shot('31c-kniffel-ov');
   await p.goto(URL); await p.waitForTimeout(600);
   await p.click('.resume'); await p.waitForTimeout(300);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('#open-cats');
@@ -263,9 +287,72 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('35-phase10-page');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
+  // Binokel: erst Meldungen, dann Stiche
+  await p.click('[data-game="binokel"]'); await p.click('#quick-start');
+  check('Binokel: Knopf „Meldungen Runde 1“', (await raw('#round-go')).startsWith('Meldungen Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(400);
+  check('Binokel: Feld Meldung aktiv', (await p.getAttribute('section[aria-label="Anna"] .wz-f[data-field="meld"]', 'aria-pressed')) === 'true');
+  await p.click('.pp-panel .quick >> text="+40"'); await shot('44-binokel-meld');
+  await p.click('.pp-keys .go'); await p.waitForTimeout(300);
+  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-keys .go'); await p.waitForTimeout(300);
+  await p.click('.pp-keys .go'); await p.waitForTimeout(400);
+  check('Binokel: weiter mit „Stiche Runde 1“', (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(400);
+  for (const k of ['+50', '+20', '+10']) { await p.click(`.pp-panel .quick >> text="${k}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(300); }
+  check('Binokel: Runde 90, 40, 10', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '190\n40+5040\n20+2010\n0+10'.replace(/\s/g, ''), await text('tbody tr:nth-child(1)'));
+  await shot('45-binokel-ov');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
-  await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
+  // Serien: Statistikseite
+  await p.click('#tab-history'); await p.click('#hist-series'); await p.waitForTimeout(200);
+  check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
+  await shot('40-series-list');
+  await p.click('.series-row'); await p.waitForTimeout(200);
+  const nSer = Number((await text('.ser-hero small')).split(' ')[0]);
+  check('Serie: Partien von späteren Abschlüssen vorbelegt', nSer >= 2, await text('.ser-hero small'));
+  check('Serie: Tabelle mit drei Spielern', (await p.locator('.ser-table .prow').count()) === 3);
+  check('Serie: Leistung ist Standard', (await p.getAttribute('#sort-perf', 'aria-pressed')) === 'true' && (await text('.ser-table .prow .pts >> nth=0')).endsWith('×'));
+  await shot('41-series');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  await p.click('#sort-rate'); await p.waitForTimeout(100);
+  check('Serie: Quote in Prozent', (await text('.ser-table .prow .pts >> nth=0')).endsWith('%'));
+  await p.click('#sort-points');
+  const before = await text('.ser-table .prow .pts >> nth=0');
+  await p.click('[aria-label="Platz 1 mehr"]'); await p.click('[aria-label="Platz 1 mehr"]'); await p.waitForTimeout(100);
+  check('Serie: Platzpunkte anpassbar', (await text('#pt-1')) === '5' && (await text('.ser-table .prow .pts >> nth=0')) !== before);
+  check('Serie: Vorschlag wieder herstellbar', await p.isVisible('.pt-reset'));
+  await p.evaluate(() => document.querySelector('#s-series .scroll').scrollTo(0, 9999)); await shot('42-series-points');
+  await p.click('.pt-reset');
+  await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
+  check('zurück in der Serienliste', await p.isVisible('.series-row'));
+  await p.click('#hist-games'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
+  await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
+  check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');
+  await p.mouse.click(30, 40);
+  // Direktvergleich mit mehreren Partien, Revanche
+  await p.click('#tab-people'); await p.click('.person-row >> text=Anna'); await p.click('.vs-p >> text=Ben'); await p.waitForTimeout(200);
+  await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('46-duel');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('46-duel-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  check('Duell: Leistung als erste Zeile', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung');
+  check('Duell: mehrere Spiele als eigene Zeilen', (await p.locator('.duel-row').count()) >= 4, String(await p.locator('.duel-row').count()));
+  await p.click('#duel-rate'); await p.waitForTimeout(100);
+  check('Duell: Quote in Prozent', (await raw('.duel-row .eyebrow >> nth=1')) === 'Siegquote' && (await text('.duel-row >> nth=1')).includes('%'));
+  await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('47-duel-rate');
+  await p.click('.rematch >> nth=0'); await p.waitForTimeout(200);
+  check('Revanche öffnet die Spielerauswahl mit denselben Spielern', await p.isVisible('#start-btn') && (await raw('#start-btn')).includes('3'));
+  await p.click('#tab-home').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
+
+  // Eigenes Spiel bearbeiten und löschen
+  await p.click('#my-games .row >> nth=1'); await shot('43-own-game');
+  await p.fill('#setup-name', 'Umbenannt'); await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('eigenes Spiel umbenannt', (await text('#my-games')).includes('Umbenannt') && (await text('.toast')) === 'Gespeichert');
+  await p.click('#my-games .row >> text=Umbenannt'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+  check('eigenes Spiel gelöscht', (await p.locator('#my-games .row').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+
+  await p.click('#my-games .row >> nth=0'); await p.click('#setup-next'); await p.click('#start-btn');
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

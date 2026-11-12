@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt, PR #6 offen)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
@@ -65,7 +65,20 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
   - `scoring: 'categories'` (Kniffel): je Kategorie eine Zeile, Summe oben und Bonus, Zug-Reihenfolge, Kategorien im Menü verwalten
   - `params.phases` (Phase 10): Haken je Runde, Rang nach Phasen, dann Punkten
   - `params.zeroSum` (Schafkopf, Doppelkopf): Hinweis bei Rundensumme ungleich 0
+- **Serien** (PR #5): Tabelle `events` (DB v4), Partie per `eventId` zugeordnet
+  - Beim Beenden Serie wählen oder neu anlegen (letzte vorbelegt), im Verlauf änderbar
+  - Verlauf mit Umschalter Partien und Serien, Statistikseite `src/ui/Series.tsx`
+  - Wertung in `stats.ts`: `seriesTable` (Punkte, Schnitt, Quote), `seriesGames`, Platzpunkte anpassbar
+- **Eigene Spiele bearbeiten/löschen, Binokel zweiteilig, Ausgleich** (PR #5)
+  - `params.split` (zwei Felder je Runde, Summe) nutzt dieselbe Mechanik wie Wizard (`fieldsOf`, `bidPhase`, `setField`)
+  - Schnelltaste `op: 'rest'` für Nullsummen-Spiele
+  - `updateFreeTemplate`, `deleteTemplate` (weich), `goneKeys`
+- **Duell im Profil** (PR #5): `duel()` in `stats.ts`, `DuelView` in `Profile.tsx`, Revanche über `rematch()`;
+  Kniffel speichert beim Beenden `extra.kniffel` und `extra.bonus`
+- **Kniffel-Auswahl** (PR #6): `catChoices()` in `engine.ts`, `CatPicker` in `Game.tsx`, `Category.range`
+- Hinweis: Serien, eigene Spiele bearbeiten, Binokel zweiteilig und Duell kamen nach dem Merge von PR #5 und gehen mit PR #6 live.
+- **Leistung** (PR #6): `performance()` in `stats.ts`, Anzeige mit `fmtPerf` („1,6×“)
 
 ## Tests
-- Unit-Tests: 65 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 96 Prüfungen
+- Unit-Tests: 77 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen

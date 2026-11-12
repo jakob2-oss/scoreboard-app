@@ -91,8 +91,8 @@ Das ist ein Zwischenspeicher für schnelle Statistiken und lässt sich jederzeit
 Einträgen neu berechnen.
 
 ### Anlass (`events`)
-z. B. „Südamerika 2026“: `name`, optional `from` / `to`. Partien verweisen per `eventId`
-darauf. Damit gibt es später „Bilanz im Urlaub“ auf Knopfdruck.
+In der App „Serie“. z. B. „Südamerika 2026“: `name`, optional `from` / `to`, `points` (Platzpunkte,
+Vorschlag 3, 2, 1). Partien verweisen per `eventId` darauf. Damit gibt es später „Bilanz im Urlaub“ auf Knopfdruck.
 
 ### Später (Phase 4/5, nur vorgemerkt)
 - `users`: Account (Supabase Auth)

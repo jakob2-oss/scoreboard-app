@@ -4,11 +4,15 @@ import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
 import { Crown } from './icons';
 import { TabBar } from './TabBar';
-import { dateLong, dateShort, iconFor, monthOf, playerOf } from './lookup';
+import { useState } from 'react';
+import { dateLong, dateShort, iconFor, monthOf, playerOf, recentEvents, spanOf } from './lookup';
+import { SeriesPicker } from './SeriesPicker';
+import { DEFAULT_POINTS, seriesTable } from '../game/stats';
+import { Chevron } from './icons';
 
 /** Verlauf: alle abgeschlossenen Partien, nach Monat gruppiert */
 export function History() {
-  const { history, players, detail } = useApp();
+  const { history, players, detail, histTab } = useApp();
   const groups: { month: string; items: typeof history }[] = [];
   for (const h of history) {
     const m = monthOf(h.finishedAt);
@@ -21,8 +25,13 @@ export function History() {
       <div className="scroll">
         <div className="gutter page-body">
           <h1 className="page-title">Verlauf</h1>
-          {!history.length && <div className="card empty"><p>Noch keine Partien</p></div>}
-          {groups.map(gr => (
+          <div className="seg hist-seg">
+            <button id="hist-games" aria-pressed={histTab === 'games'} onClick={() => act().setHistTab('games')}>Partien</button>
+            <button id="hist-series" aria-pressed={histTab === 'series'} onClick={() => act().setHistTab('series')}>Serien</button>
+          </div>
+          {histTab === 'series' && <SeriesList />}
+          {histTab === 'games' && !history.length && <div className="card empty"><p>Noch keine Partien</p></div>}
+          {histTab === 'games' && groups.map(gr => (
             <div className="group" key={gr.month}>
               <div className="eyebrow">{gr.month}</div>
               <div className="list">
@@ -50,6 +59,9 @@ export function History() {
             <div className="sheet-body">
               <div className="eyebrow">{dateLong(open.finishedAt)}{open.occasion ? `, ${open.occasion}` : ''}</div>
               <h3>{open.name}</h3>
+              <div className="field"><label>Serie</label>
+                <SeriesPicker value={open.eventId ?? null} onChange={id => act().setGameEvent(open.id, id)} />
+              </div>
               <div className="podium">
                 {open.results.map(r => {
                   const p = playerOf(players, r.playerId);
@@ -66,5 +78,44 @@ export function History() {
         </>
       )}
     </section>
+  );
+}
+
+/** Liste der Serien mit Zeitraum und Spitzenreiter */
+function SeriesList() {
+  const { events, history, players } = useApp();
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState('');
+  const add = (e: React.FormEvent) => {
+    e.preventDefault();
+    const ev = act().createEvent(name);
+    if (ev) act().openSeries(ev.id);
+  };
+  return (
+    <>
+      {!events.length && <div className="card empty"><p>Noch keine Serien</p></div>}
+      {events.length > 0 && (
+        <div className="list">
+          {recentEvents(events, history).map(e => {
+            const games = history.filter(h => h.eventId === e.id);
+            const top = seriesTable(games, e.points ?? DEFAULT_POINTS)[0];
+            return (
+              <button key={e.id} className="row series-row" onClick={() => act().openSeries(e.id)}>
+                <span className="ser-count"><b>{games.length}</b></span>
+                <span className="t"><b>{e.name}</b><small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small></span>
+                {top && <Avatar p={playerOf(players, top.playerId)} />}
+                <Chevron />
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {!adding
+        ? <button className="secondary ser-new" id="series-create" onClick={() => setAdding(true)}>Neue Serie</button>
+        : <form className="ser-add" onSubmit={add}>
+          <input id="series-name" value={name} autoFocus maxLength={32} autoComplete="off" placeholder="Name der Serie" onChange={e => setName(e.target.value)} />
+          <button className="primary" type="submit" disabled={!name.trim()}>Anlegen</button>
+        </form>}
+    </>
   );
 }

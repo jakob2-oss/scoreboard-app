@@ -32,6 +32,17 @@ export function makeFreeTemplate(cfg: FreeConfig, clock: Clock): Template {
   };
 }
 
+/** Freies Spiel bearbeiten: Einstellungen übernehmen, Schlüssel bleibt (Statistik bleibt zusammen), Version steigt bei Änderung */
+export function updateFreeTemplate(t: Template, cfg: FreeConfig, clock: Clock): Template {
+  const steps = [...new Set(cfg.steps)].filter(n => n > 0).sort((a, b) => a - b).slice(0, MAX_STEPS);
+  const next: Template = { ...t, name: cfg.name.trim() || t.name, win: cfg.win, end: cfg.end, params: { ...t.params, steps: steps.length ? steps : [...DEFAULT_STEPS] } };
+  const same = JSON.stringify([next.name, next.win, next.end, next.params]) === JSON.stringify([t.name, t.win, t.end, t.params]);
+  return same ? t : { ...next, version: t.version + 1, updatedAt: clock.now() };
+}
+
+/** Einstellungen eines eigenen Spiels zum Bearbeiten */
+export const configOf = (t: Template): FreeConfig => ({ name: t.name, win: t.win, end: t.end, steps: [...stepsOf(t)], save: true });
+
 export function stepsOf(t: Template): number[] {
   const s = t.params?.steps;
   return Array.isArray(s) && s.length ? s : DEFAULT_STEPS;

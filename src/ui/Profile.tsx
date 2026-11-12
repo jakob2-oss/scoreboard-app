@@ -1,17 +1,20 @@
 import { act, useApp } from '../store';
-import { bidHits, byGame, filterGames, headToHead, occasions, resultOf, summary, type TimeFilter } from '../game/stats';
+import { useState } from 'react';
+import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
+import { gameDef } from '../game/games';
+import type { Player } from '../model/types';
 import { fmt, onColor } from '../lib/color';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
 import { Crown, IconBack } from './icons';
-import { dateShort, iconFor, playerOf } from './lookup';
+import { dateShort, fmtPerf, iconFor, playerOf } from './lookup';
 
 const css = (v: Record<string, string>) => v as React.CSSProperties;
 const same = (a: TimeFilter, b: TimeFilter) => JSON.stringify(a) === JSON.stringify(b);
 
 /** Spielerprofil: Siege, Bilanz, Stärken je Spiel, Direktvergleich, letzte Partien */
 export function Profile() {
-  const { profile, players, history } = useApp();
+  const { profile, players, history, events, templates } = useApp();
   if (!profile) return null;
   const me = playerOf(players, profile.id), a = act();
   const mine = filterGames(history, profile.id, 'all', null);
@@ -40,16 +43,16 @@ export function Profile() {
               {chip('Immer', same(profile.time, 'all'), () => a.setProfile({ time: 'all' }))}
               {chip('30 Tage', same(profile.time, '30'), () => a.setProfile({ time: '30' }))}
               {chip('Dieses Jahr', same(profile.time, 'year'), () => a.setProfile({ time: 'year' }))}
-              {occasions(mine).map(o => chip(o, same(profile.time, { occasion: o }), () => a.setProfile({ time: { occasion: o } })))}
+              {eventIds(mine).map(id => events.find(e => e.id === id)).filter(e => !!e).map(e => chip(e!.name, same(profile.time, { event: e!.id }), () => a.setProfile({ time: { event: e!.id } })))}
             </div>
             <div className="fchips">
               {chip('Alle Spiele', profile.key === null, () => a.setProfile({ key: null }))}
               {keys.map(([k, n]) => chip(n, profile.key === k, () => a.setProfile({ key: k }), k))}
             </div>
             <div className="tiles">
-              <div className="tile accent" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
+              <div className="tile accent" id="perf-tile" style={css({ '--c': me.color, '--on': onColor(me.color) })}><small>Leistung</small><b>{fmtPerf(performance(list, profile.id).score)}</b><span>der Erwartung</span></div>
+              <div className="tile"><small>Siege</small><b>{s.wins}</b><span>von {s.played}</span></div>
               <div className="tile"><small>Siegquote</small><b>{s.rate}%</b><span>&nbsp;</span></div>
-              <div className="tile"><small>Partien</small><b>{s.played}</b><span>&nbsp;</span></div>
             </div>
             <div className="wl">
               <div className="wl-bar"><i style={{ flex: s.wins || 0.0001, background: me.color }} /><i style={{ flex: s.losses || 0.0001 }} /></div>
@@ -58,13 +61,13 @@ export function Profile() {
             {profile.key === null && byGame(list, profile.id).length > 0 && (
               <div className="group"><div className="eyebrow">Stärken</div>
                 <div className="list">
-                  {byGame(list, profile.id).map(x => {
-                    const ic = iconFor(x.key), rate = Math.round(x.wins / x.played * 100);
+                  {byGame(list, profile.id).sort((x, y) => performance(list.filter(g => g.key === y.key), profile.id).score - performance(list.filter(g => g.key === x.key), profile.id).score).map(x => {
+                    const ic = iconFor(x.key), pf = performance(list.filter(g => g.key === x.key), profile.id).score;
                     return (
                       <button key={x.key} className="row" onClick={() => a.setProfile({ key: x.key })}>
                         <GameIcon icon={ic.icon} tint={ic.tint} />
                         <span className="t"><b>{x.name}</b><small>{x.wins} von {x.played} gewonnen</small></span>
-                        <span className="mini-bar"><i style={{ width: rate + '%', background: me.color }} /></span><span className="mini-pct">{rate}%</span>
+                        <span className="mini-bar"><i style={{ width: Math.min(pf / 2, 1) * 100 + '%', background: me.color }} /></span><span className="mini-pct">{fmtPerf(pf)}</span>
                       </button>
                     );
                   })}
@@ -90,7 +93,8 @@ export function Profile() {
                       </button>
                     ))}
                   </div>
-                  {vs && (vs.shared
+                  {profile.vs.length === 1 && <DuelView list={list} me={me as Player} other={playerOf(players, profile.vs[0]) as Player} low={!!profile.key && (gameDef(profile.key)?.template ?? templates.find(t => t.key === profile.key))?.win === 'low'} />}
+                  {profile.vs.length > 1 && vs && (vs.shared
                     ? <>
                       <p className="vs-sum">{vs.shared} gemeinsame {vs.shared === 1 ? 'Partie' : 'Partien'}</p>
                       <div className="vs-bars">
@@ -124,5 +128,71 @@ export function Profile() {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Direktvergleich zweier Spieler: gespiegelte Balken in den Spielerfarben */
+function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; other: Player; low: boolean }) {
+  const d = duel(list, me.id, other.id, low);
+  const [rate, setRate] = useState(false);
+  if (!d.shared) return <p className="vs-sum">Keine gemeinsamen Partien</p>;
+  const pct = (x: number, n: number) => (n ? Math.round(x / n * 100) : 0);
+  const cnt = (a: number, b: number, n: number) => (rate ? [pct(a, n), pct(b, n)] : [a, b]) as [number, number];
+  const unit = (n: number) => dec(n) + (rate ? ' %' : '');
+  const dec = (n: number) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  const row = (label: string, a: number, b: number, better: 'high' | 'low' = 'high', show: (n: number) => string = dec, small = false) => {
+    const wa = better === 'high' ? a : b, wb = better === 'high' ? b : a;
+    const lead = a === b ? 0 : (better === 'high' ? a > b : a < b) ? 1 : 2;
+    return (
+      <div className={'duel-row' + (small ? ' small' : '')} key={label}>
+        <div className="eyebrow">{label}</div>
+        <div className="duel-line">
+          <b className={lead === 2 ? 'dim' : ''}>{show(a)}</b>
+          <span className="duel-bar">
+            <i style={{ flex: Math.max(wa, 0) || (wa === wb ? 1 : 0.0001), background: me.color }} />
+            <i style={{ flex: Math.max(wb, 0) || (wa === wb ? 1 : 0.0001), background: other.color }} />
+          </span>
+          <b className={lead === 1 ? 'dim' : ''}>{show(b)}</b>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="duel">
+      <div className="duel-head">
+        <div><Avatar p={me} big /><span>{me.name}</span></div>
+        <small>{d.shared} gemeinsame {d.shared === 1 ? 'Partie' : 'Partien'}</small>
+        <div><Avatar p={other} big /><span>{other.name}</span></div>
+      </div>
+      <div className="seg duel-seg">
+        <button id="duel-count" aria-pressed={!rate} onClick={() => setRate(false)}>Anzahl</button>
+        <button id="duel-rate" aria-pressed={rate} onClick={() => setRate(true)}>Quote</button>
+      </div>
+      {row('Leistung', d.a.perf, d.b.perf, 'high', fmtPerf)}
+      {row(rate ? 'Siegquote' : 'Siege', ...cnt(d.a.wins, d.b.wins, d.shared), 'high', unit)}
+      {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', ...cnt(d.a.ahead, d.b.ahead, d.shared), 'high', unit)}
+      {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
+      {d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
+      {d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
+      {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
+      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name + (rate ? '' : `, ${x.n} ${x.n === 1 ? 'Partie' : 'Partien'}`), ...cnt(x.a, x.b, x.n), 'high', unit, true))}</>}
+      <div className="eyebrow duel-last">Gemeinsame Partien</div>
+      <div className="duel-games">
+        {d.games.slice(0, 5).map(g => {
+          const ra = resultOf(g, me.id)!, rb = resultOf(g, other.id)!, ic = iconFor(g.key);
+          return (
+            <div key={g.id} className="duel-game">
+              <GameIcon icon={ic.icon} tint={ic.tint} />
+              <span className="t">
+                <small>{g.name}, {dateShort(g.finishedAt)}</small>
+                <span className={ra.place < rb.place ? 'w' : ''}>{me.name} {fmt(ra.total)}{ra.place < rb.place && <Crown />}</span>
+                <span className={rb.place < ra.place ? 'w' : ''}>{other.name} {fmt(rb.total)}{rb.place < ra.place && <Crown />}</span>
+              </span>
+              <button className="rematch" onClick={() => act().rematch(g.id)} aria-label={`Revanche ${g.name}`}>Revanche</button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

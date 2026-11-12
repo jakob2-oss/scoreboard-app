@@ -1,5 +1,6 @@
 import { act, useApp } from '../store';
-import { summary, filterGames } from '../game/stats';
+import { summary, filterGames, performance } from '../game/stats';
+import { fmtPerf } from './lookup';
 import { Avatar } from './Avatar';
 import { Chevron } from './icons';
 import { TabBar } from './TabBar';
@@ -21,6 +22,7 @@ export function People() {
                 <button key={p.id} className="row person-row" onClick={() => act().openProfile(p.id)}>
                   <Avatar p={p} big />
                   <span className="t"><b>{p.name}</b><small>{s.played ? `${s.played} ${s.played === 1 ? 'Partie' : 'Partien'}, ${s.wins} ${s.wins === 1 ? 'Sieg' : 'Siege'}` : 'Noch keine Partie'}</small></span>
+                  {s.played > 0 && <span className="perf-badge">{fmtPerf(performance(history, p.id).score)}</span>}
                   <Chevron />
                 </button>
               ))}

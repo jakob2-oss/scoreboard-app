@@ -122,3 +122,78 @@ body { margin: 0; }
 .cat-add { display: grid; grid-template-columns: 1fr 90px; gap: 8px; }
 .cat-add input { height: 46px; border-radius: 12px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; }
 .cat-add .seg, .cat-add .primary { grid-column: 1 / -1; }
+
+/* ---------- Serien ---------- */
+.hist-seg { margin-top: 2px; }
+.ser-pick { display: flex; flex-direction: column; gap: 8px; }
+.ser-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ser-chips .fchip { background: var(--fill); }
+.ser-chips .fchip[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.ser-chips .fchip.add { background: transparent; box-shadow: inset 0 0 0 1.5px var(--sep); }
+.ser-add { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.ser-add input, .ser-rename { min-height: 46px; border-radius: 14px; background: var(--fill); border: 0; padding: 0 14px; font: inherit; font-size: 16px; color: inherit; width: 100%; }
+.ser-add .primary { min-height: 46px; padding: 0 18px; }
+.ser-new { width: 100%; min-height: 48px; }
+.ser-count { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--fill); }
+.ser-count b { font-family: var(--f-num); font-size: 18px; font-weight: 600; }
+.ser-hero h1 { font-size: 30px; font-weight: 600; letter-spacing: .02em; }
+.ser-hero small { color: var(--muted); font-size: 14px; }
+.ser-table .prow { width: 100%; text-align: left; }
+.ser-table .nm small { display: block; font-family: var(--f-body, inherit); font-size: 12.5px; font-weight: 500; opacity: .7; }
+.ser-table .crown { width: 16px; height: 13px; }
+.ser-points { display: flex; flex-direction: column; padding: 6px 16px; }
+.pt-row { display: flex; align-items: center; gap: 10px; min-height: 48px; }
+.pt-row + .pt-row { border-top: 1px solid var(--sep); }
+.pt-place { flex: 1; font-family: var(--f-display); font-weight: 500; font-size: 16px; }
+.pt-btn { width: 36px; height: 36px; border-radius: 12px; background: var(--fill); font-size: 20px; line-height: 1; }
+.pt-btn:disabled { opacity: .35; }
+.pt-val { min-width: 32px; text-align: center; font-family: var(--f-num); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pt-reset { align-self: flex-start; margin: 4px 0 8px; }
+
+/* ---------- Direktvergleich (Duell) ---------- */
+.duel { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.duel-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.duel-head > div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: var(--f-display); font-weight: 500; font-size: 17px; min-width: 0; }
+.duel-head > div span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel-head small { color: var(--muted); font-size: 12.5px; text-align: center; max-width: 92px; }
+.duel-row { display: flex; flex-direction: column; gap: 6px; }
+.duel-row .eyebrow { text-align: center; margin: 0; }
+.duel-line { display: grid; grid-template-columns: 54px 1fr 54px; align-items: center; gap: 10px; }
+.duel-line b { font-family: var(--f-num); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.duel-line b:last-child { text-align: right; }
+.duel-line b.dim { color: var(--muted); font-weight: 500; }
+.duel-bar { display: flex; gap: 4px; height: 14px; }
+.duel-bar i { border-radius: 999px; min-width: 10px; }
+.duel-last { margin-top: 6px; }
+.duel-games { display: flex; flex-direction: column; gap: 8px; }
+.duel-game { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 18px; background: var(--fill); }
+.duel-game .t { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 15px; }
+.duel-game .t small { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.duel-game .t span { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.duel-game .t span.w { font-weight: 600; }
+.duel-game .crown { width: 14px; height: 12px; }
+.rematch { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface); font-family: var(--f-display); font-weight: 500; font-size: 14px; }
+.duel-line { grid-template-columns: 68px 1fr 68px; }
+.duel-line b { white-space: nowrap; }
+.duel-row.small { gap: 2px; }
+.duel-row.small .eyebrow { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
+.duel-row.small .duel-line b { font-size: 17px; }
+.duel-row.small .duel-bar { height: 10px; }
+.duel-seg { margin-top: -2px; }
+
+/* ---------- Kniffel: Auswahl statt Zahlenfeld ---------- */
+.cat-pick { display: flex; flex-direction: column; gap: 10px; }
+.cp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.cp-grid.many { grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.cp-grid button { min-height: 56px; border-radius: 18px; background: var(--surface); box-shadow: var(--soft); font-family: var(--f-num); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cp-grid.many button { min-height: 46px; border-radius: 14px; font-size: 19px; }
+.cp-grid button[aria-pressed="true"] { background: var(--c, var(--fg)); color: var(--on, var(--bg)); }
+.cp-row { display: grid; grid-template-columns: 56px 1fr 1.4fr; gap: 8px; }
+.cp-row button { min-height: 52px; border-radius: 18px; background: var(--fill); font-family: var(--f-display); font-weight: 500; font-size: 16px; display: grid; place-items: center; }
+.cp-row button:disabled { opacity: .4; }
+.cp-strike[aria-pressed="true"] { background: var(--fill-2); text-decoration: line-through; }
+td.struck, .pp-cat .v.struck { color: var(--muted); opacity: .6; }
+.pp-cat .v.struck { font-size: 13px; font-weight: 500; text-decoration: line-through; }
+.cp-row svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.perf-badge { font-family: var(--f-num); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
+.mini-pct { width: 44px; }

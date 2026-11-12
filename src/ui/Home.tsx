@@ -79,7 +79,7 @@ export function Home() {
                 <div className="eyebrow">Meine Spiele</div>
                 <div className="list" id="my-games">
                   {templates.map((t, k) => (
-                    <button key={t.key} className="row tpl" onClick={() => act().pickTemplate(t)}>
+                    <button key={t.key} className="row tpl" onClick={() => act().editTemplate(t)}>
                       <span className="tdot" style={{ ['--c' as string]: PLAYER_COLORS[k % PLAYER_COLORS.length] }} />
                       <span className="t"><b>{t.name}</b><small>{describeTemplate(t)}</small></span>
                       <Chevron />

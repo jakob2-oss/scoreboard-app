@@ -38,11 +38,33 @@ Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Pa
 - [ ] **Spezialregeln** im freien Spiel / eigenen Spiel: Notizfelder rechts neben dem Punktwert (ohne Verrechnung).
 
 ## E. Spieleabende und Serien (Wunsch vom 12.11.)
-- [ ] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
+- [x] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
       Nicht an einen Tag gebunden: Partien lassen sich jederzeit einer Serie zuordnen, auch nachträglich.
-- [ ] **Partien zuordnen:** beim Start oder Beenden die Serie wählen (ersetzt das Freitextfeld „Anlass oder Ort“),
+- [x] **Partien zuordnen:** beim Start oder Beenden die Serie wählen (ersetzt das Freitextfeld „Anlass oder Ort“),
       im Verlauf nachträglich ändern. Eine Serie kann verschiedene Spiele enthalten.
-- [ ] **Übersicht je Serie:** Gesamtwertung über alle Partien (Siege, Platzpunkte), Partien der Serie,
+- [x] **Übersicht je Serie:** Gesamtwertung über alle Partien (Siege, Platzpunkte), Partien der Serie,
       Bilanz je Spiel. Eigener Bereich in der Navigation oder unter „Verlauf“.
 - [ ] **Gemeinschaftlich:** Eine Freundesgruppe nutzt dieselbe Serie. Lokal zunächst auf einem Gerät;
       teilen zwischen Handys erst mit Sync (Phase 4). Datenmodell: Tabelle `events` mit `groupId`.
+
+Umgesetzt (12.11.): Platzpunkte mit Vorschlag 3, 2, 1, je Serie anpassbar. Wertung umschaltbar: Punkte (Summe),
+Schnitt (Punkte pro Partie, gleicht fehlende Abende aus), Quote (Anteil geschlagener Gegner, gleicht große und kleine Runden aus).
+Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
+
+## F. Feedback vom 12.11. (abends)
+- [x] **Eigene Spiele bearbeiten und löschen.** Antippen öffnet die Seite des Spiels mit Speichern, Spieler wählen, Löschen.
+      Robust: Partien frieren ihre Regeln ein, Änderungen gelten nur für neue Partien; Schlüssel bleibt, Version steigt;
+      Löschen markiert nur, Verlauf und Statistik bleiben; gelöschte Spiele entstehen beim Beenden nicht neu.
+- [x] **Binokel zweiteilig:** erst alle Meldungen, dann alle Stiche; Rundenwert ist die Summe. Leere Meldung zählt 0.
+- [x] **Spiele durchgesehen:** Schafkopf und Doppelkopf mit Taste „Ausgleich“ (ergänzt die Runde zu 0).
+      Wizard, Kniffel, Phase 10 waren schon spielspezifisch; Rommé, Skyjo, Scrabble haben passende Faktoren (×2, ×3).
+- [ ] Ideen für später: Uno „Sieger bekommt die Karten der anderen“ automatisch, Skyjo „Beender verdoppelt“ automatisch,
+      Doppelkopf Re/Kontra als Partei je Runde.
+- [x] **Direktvergleich als Duell** (Vorbild Screenshot 12.11.): zwei Spieler gegenüber, gespiegelte Balken in Spielerfarben:
+      Siege, besser platziert, Durchschnittsplatz, bei einem Spiel auch Durchschnitt und Bestwert, Kniffel gewürfelt und Bonus, Wizard-Ansagen,
+      Siege je Spiel, gemeinsame Partien mit Revanche. Umschalter Anzahl und Quote (Prozent der gemeinsamen Partien). Ab drei Spielern bleibt die Mehrfach-Ansicht.
+- [x] **Kniffel ohne Zahlenfeld:** je Feld nur die passenden Werte (Einser 1 bis 5, Pasch 5 bis 30, feste Werte),
+      dazu Streichen; gestrichene Felder grau mit Strich. Chance und eigene Kategorien ohne Vorgabe behalten das Zahlenfeld.
+      Feld im Überblick antippen öffnet die Auswahl und führt danach zurück.
+- [x] **Leistung als Hauptkennzahl:** Siege im Verhältnis zur Erwartung (je Partie 1 ÷ Spieleranzahl, geteilter Sieg anteilig).
+      1,0× = wie erwartet. Erste Kachel im Profil, Stärken je Spiel, Spielerliste, Standard-Wertung der Serien, erste Zeile im Duell.
