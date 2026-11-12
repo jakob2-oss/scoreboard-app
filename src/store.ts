@@ -53,12 +53,14 @@ export interface AppState {
   goneKeys: string[];
   /** Kniffel: Feld wurde aus dem Überblick geöffnet, danach dorthin zurück */
   fromOverview: boolean;
+  /** Neue Partie soll starten, obwohl eine mit Punkten läuft */
+  confirmStart: boolean;
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, goneKeys: [], fromOverview: false
+  events: [], histTab: 'games', series: null, editKey: null, goneKeys: [], fromOverview: false, confirmStart: false
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -156,6 +158,16 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
       }
     },
+    /** Sicherung als Text (JSON) */
+    async exportData(): Promise<string> { return JSON.stringify(await repo.exportAll()); },
+    /** Sicherung einlesen und neu laden */
+    async importData(text: string) {
+      try {
+        const n = await repo.importAll(JSON.parse(text));
+        await actions.init();
+        toast(n ? `${n} Einträge übernommen` : 'Nichts Neues in der Sicherung');
+      } catch { toast('Diese Datei ist keine Sicherung'); }
+    },
     goHome() { set({ screen: 'home', pad: false, sheet: null, edit: null, editKey: null }); },
 
     // ---------- Freies Spiel einrichten
@@ -229,10 +241,15 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ players: [...state.players, p], selected: [...state.selected, p.id] });
       repo.savePlayer(p).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
-    start() {
+    /** Neue Partie starten. Läuft noch eine mit Punkten, wird erst gefragt: speichern oder verwerfen. */
+    start(old?: 'save' | 'discard') {
       const t = state.template; if (!t) return;
       const chosen = state.selected.map(id => state.players.find(p => p.id === id)).filter((p): p is Player => !!p);
       if (chosen.length < t.players.min || chosen.length > t.players.max) return;
+      const running = state.game;
+      if (running && anyScore(running) && !old) { set({ confirmStart: true }); return; }
+      set({ confirmStart: false });
+      if (running) { if (old === 'save') actions.finishGame(); else actions.discardGame(true); }
       writeLast(state.selected);
       // Vorlage merken bzw. als zuletzt gespielt markieren
       const known = state.templates.some(x => x.key === t.key);
@@ -440,12 +457,23 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     openProfile(id: string) { set({ screen: 'profile', profile: { id, time: 'all', key: null, vs: [] } }); },
     setProfile(patch: Partial<ProfileView>) { if (state.profile) set({ profile: { ...state.profile, ...patch } }); },
-    discardGame() {
+    discardGame(quiet = false) {
       const g = state.game; if (!g) return;
       const t = clock.now();
       persist({ ...g, game: { ...g.game, status: 'abandoned', updatedAt: t, deletedAt: t } });
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
-      toast('Partie verworfen');
+      if (!quiet || anyScore(g)) toast('Partie verworfen');
+    },
+    cancelStart() { set({ confirmStart: false }); },
+    /** Spieler umbenennen (Name bleibt eindeutig) */
+    renamePlayer(id: string, raw: string) {
+      const name = raw.trim().slice(0, 18), p = state.players.find(x => x.id === id);
+      if (!p || !name || name === p.name) return;
+      if (state.players.some(x => x.id !== id && x.name.toLowerCase() === name.toLowerCase())) { toast(`${name} gibt es schon`); return; }
+      const np = { ...p, name, updatedAt: clock.now() };
+      const g = state.game && { ...state.game, players: state.game.players.map(x => (x.id === id ? { ...x, name } : x)) };
+      set({ players: state.players.map(x => (x.id === id ? np : x)), game: g });
+      repo.savePlayer(np).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     }
   };
 

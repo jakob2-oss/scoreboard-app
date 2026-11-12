@@ -197,3 +197,5 @@ td.struck, .pp-cat .v.struck { color: var(--muted); opacity: .6; }
 .cp-row svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .perf-badge { font-family: var(--f-num); font-weight: 600; font-size: 16px; font-variant-numeric: tabular-nums; }
 .mini-pct { width: 44px; }
+.pf-name { font: inherit; color: inherit; background: none; border: 0; padding: 0; width: 100%; border-radius: 8px; }
+.pf-name:focus { background: var(--fill); outline: none; padding: 0 6px; }

@@ -19,6 +19,7 @@ function memRepo() {
   const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
   const repo: Repo = {
     saveResults: async r => { results.push(...r); }, loadHistory: async () => [],
+    exportAll: async () => ({ app: 'punktezettel', version: 1, exportedAt: '', tables: {} }), importAll: async () => 0,
     loadEvents: async () => [], loadDeletedTemplateKeys: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined,
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
     loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
@@ -177,6 +178,36 @@ describe('Eigene Spiele bearbeiten und löschen', () => {
     a.finishGame();
     expect(st.get().templates).toHaveLength(0);
     expect(st.get().history[0].name).toBe('Garten');
+  });
+});
+
+describe('Laufende Partie beim Neustart', () => {
+  it('fragt nach, speichert auf Wunsch und startet dann neu', async () => {
+    const { st, a } = await setup('free', ['A', 'B']);
+    a.roundGo(); a.add(10); a.next(); a.add(5); a.next();
+    const first = st.get().game!.game.id;
+    a.goHome(); a.pickTemplate(TPL.t500); a.start();
+    expect(st.get().confirmStart).toBe(true);
+    expect(st.get().game!.game.id).toBe(first);
+    a.start('save');
+    expect(st.get().history[0].id).toBe(first);
+    expect(st.get().game!.game.id).not.toBe(first);
+    expect(st.get().screen).toBe('game');
+  });
+  it('startet ohne Nachfrage, wenn die laufende Partie noch leer ist', async () => {
+    const { st, a, mem } = await setup('free', ['A']);
+    a.goHome(); a.pickTemplate(TPL.t500); a.start();
+    expect(st.get().confirmStart).toBe(false);
+    expect(st.get().game!.game.rules.key).toBe('t500');
+    expect(mem.last()!.game.rules.key).toBe('t500');
+  });
+  it('benennt Spieler um, auch in der laufenden Partie', async () => {
+    const { st, a } = await setup('free', ['Anna', 'Ben']);
+    a.renamePlayer('id1', 'Anne');
+    expect(st.get().players[0].name).toBe('Anne');
+    expect(seated(st.get().game!)[0].name).toBe('Anne');
+    a.renamePlayer('id2', 'anne');
+    expect(st.get().players[1].name).toBe('Ben');
   });
 });
 

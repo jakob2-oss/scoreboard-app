@@ -1,6 +1,6 @@
 import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
-import { currentRoundIndex, seated } from '../game/engine';
+import { currentRoundIndex, seated, isCats, isResultOnly } from '../game/engine';
 import { PLAYER_COLORS } from '../lib/color';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -39,7 +39,7 @@ export function Home() {
                 <button className="resume" onClick={() => act().resume()}>
                   <span className="t">
                     <b>{game.game.rules.name}</b>
-                    <small>Runde {currentRoundIndex(game) + 1} mit {names(seated(game).map(p => p.name))}</small>
+                    <small>{isCats(game) || isResultOnly(game) ? 'Mit' : `Runde ${currentRoundIndex(game) + 1} mit`} {names(seated(game).map(p => p.name))}</small>
                   </span>
                   <span className="go-pill">Weiter</span>
                 </button>

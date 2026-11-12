@@ -13,7 +13,11 @@ import { Toast } from './ui/Toast';
 
 export default function App() {
   const s = useApp();
-  useEffect(() => { act().init(); }, []);
+  useEffect(() => {
+    act().init();
+    // Daten dauerhaft behalten (Safari löscht sonst nach längerer Nichtnutzung)
+    navigator.storage?.persist?.().catch(() => undefined);
+  }, []);
   if (!s.ready) return <div className="screen" />;
   return (
     <>
@@ -26,6 +30,22 @@ export default function App() {
       {s.screen === 'gamepage' && <GameInfo />}
       {s.screen === 'players' && <PlayerSelect />}
       {s.screen === 'game' && s.game && <GameScreen />}
+      {s.confirmStart && s.game && (
+        <>
+          <div className="scrim" onClick={() => act().cancelStart()} />
+          <div className="bsheet" role="dialog" aria-label="Laufende Partie">
+            <div className="grab" />
+            <div className="sheet-body">
+              <h3>{s.game.game.rules.name} läuft noch</h3>
+              <div className="menu-list">
+                <button id="start-save" onClick={() => act().start('save')}>Speichern und neu starten</button>
+                <button id="start-discard" className="warn" onClick={() => act().start('discard')}>Verwerfen und neu starten</button>
+                <button onClick={() => act().cancelStart()}>Abbrechen</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       <Toast />
     </>
   );

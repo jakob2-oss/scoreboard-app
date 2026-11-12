@@ -29,7 +29,14 @@ export class PzDb extends Dexie {
   }
 }
 
+/** Sicherung aller Daten als Datei */
+export interface Backup { app: 'punktezettel'; version: 1; exportedAt: string; tables: Record<string, Record<string, unknown>[]> }
+const TABLES = ['players', 'games', 'rounds', 'entries', 'templates', 'results', 'events'] as const;
+
 export interface Repo {
+  exportAll(): Promise<Backup>;
+  /** Sicherung einlesen: zusammenführen, bei gleicher ID gewinnt der neuere Stand. Liefert die Zahl übernommener Einträge. */
+  importAll(b: Backup): Promise<number>;
   loadPlayers(): Promise<Player[]>;
   savePlayer(p: Player): Promise<void>;
   loadRunningGame(): Promise<GameState | null>;
@@ -49,6 +56,27 @@ export interface Repo {
 
 export function createRepo(db: PzDb): Repo {
   return {
+    async exportAll() {
+      const tables: Backup['tables'] = {};
+      for (const t of TABLES) tables[t] = (await db.table(t).toArray()) as Record<string, unknown>[];
+      return { app: 'punktezettel', version: 1, exportedAt: new Date().toISOString(), tables };
+    },
+    async importAll(b) {
+      if (!b || b.app !== 'punktezettel' || !b.tables) throw new Error('Keine Sicherung');
+      let n = 0;
+      await db.transaction('rw', TABLES.map(t => db.table(t)), async () => {
+        for (const t of TABLES) {
+          const rows = Array.isArray(b.tables[t]) ? b.tables[t] : [];
+          const pk = t === 'templates' ? 'key' : 'id';
+          for (const row of rows) {
+            const id = row[pk]; if (typeof id !== 'string') continue;
+            const old = await db.table(t).get(id) as Record<string, unknown> | undefined;
+            if (!old || String(row.updatedAt ?? '') > String(old.updatedAt ?? '')) { await db.table(t).put(row); n++; }
+          }
+        }
+      });
+      return n;
+    },
     async loadPlayers() {
       return (await db.players.toArray()).filter(p => !p.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     },

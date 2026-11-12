@@ -9,7 +9,7 @@ Reihenfolge = Priorität. Erledigtes abhaken und nach STATUS.md übernehmen.
 - [x] **Spielerfarben pastellig**, passend zum Layout. Vorhandene Spieler automatisch umstellen.
 - [x] **Regeln als Stichpunkte, aber elegant:** Schlüsselbegriff als kleine Marke, kurzer Zusatz daneben.
       Keine Mini-Sätze im Fließtext.
-- [ ] **Hintergründe der Szenen** runder und verspielter, stärker an Two Dots orientiert (Muster, weiche Formen).
+- [x] **Hintergründe der Szenen** runder und verspielter, stärker an Two Dots orientiert (Muster, weiche Formen).
 
 ## B. Nächster Entwicklungsschritt: lokal vollständig nutzbar
 - [x] **Partien speichern** beim Beenden (Platzierung und Endpunktzahl je Spieler, Spiel, Datum, optional Anlass).
@@ -66,5 +66,14 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] **Kniffel ohne Zahlenfeld:** je Feld nur die passenden Werte (Einser 1 bis 5, Pasch 5 bis 30, feste Werte),
       dazu Streichen; gestrichene Felder grau mit Strich. Chance und eigene Kategorien ohne Vorgabe behalten das Zahlenfeld.
       Feld im Überblick antippen öffnet die Auswahl und führt danach zurück.
-- [x] **Leistung als Hauptkennzahl:** Siege im Verhältnis zur Erwartung (je Partie 1 ÷ Spieleranzahl, geteilter Sieg anteilig).
+- [x] **Leistung als Hauptkennzahl:** Platzierung im Verhältnis zum Durchschnitt (geschlagene Gegner ÷ (Spieler − 1) ÷ 2, Gleichstand halb).
       1,0× = wie erwartet. Erste Kachel im Profil, Stärken je Spiel, Spielerliste, Standard-Wertung der Serien, erste Zeile im Duell.
+
+## G. Prüfung 12.11. (Fehler, Statistik, lokaler Gebrauch)
+- [x] **Fehler:** Neue Partie während einer laufenden ließ die alte unsichtbar zurück. Jetzt Nachfrage: speichern, verwerfen oder abbrechen.
+- [x] **Spieler umbenennen** im Profil (Name antippen).
+- [x] **Statistik entschlackt:** Profil-Kacheln Leistung, Siege, Ø Platz (Siegquote und Sieg-Niederlagen-Balken entfallen);
+      Duell ohne „Besser platziert“, drei letzte Partien; Serie ohne „Quote“ (Leistung deckt das ab); keine Punktvergleiche bei Platz-Spielen.
+- [x] **Hintergründe:** runde Hügel, weiche Kreise, Punkteraster, Konfetti; alle Illustrationen in Pastell.
+- [x] **Lokaler Gebrauch:** Sicherung speichern und einlesen (Spieler, Bereich Daten), dauerhafter Speicher angefragt.
+- [ ] Offen: mehrere laufende Partien gleichzeitig, Partie im Verlauf löschen, Spieler löschen.

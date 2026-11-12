@@ -78,7 +78,9 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt
 - **Kniffel-Auswahl** (PR #6): `catChoices()` in `engine.ts`, `CatPicker` in `Game.tsx`, `Category.range`
 - Hinweis: Serien, eigene Spiele bearbeiten, Binokel zweiteilig und Duell kamen nach dem Merge von PR #5 und gehen mit PR #6 live.
 - **Leistung** (PR #6): `performance()` in `stats.ts`, Anzeige mit `fmtPerf` („1,6×“)
+- **Prüfung lokaler Gebrauch** (PR #6): Sicherung (`exportAll`, `importAll` in `db.ts`, Bereich „Daten“ unter Spieler),
+  `navigator.storage.persist()`, Nachfrage bei laufender Partie, Spieler umbenennen, neue Szenen-Hintergründe (`sky()` in `art.ts`)
 
 ## Tests
-- Unit-Tests: 77 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 82 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen

@@ -28,3 +28,7 @@ und Quote geschlagener Gegner für unterschiedlich große Runden. Das freie Feld
 ## 12.11.2026: Leistung als maßgebliche Kennzahl
 Rohe Siegquote bevorzugt kleine Runden. Leistung = Siege ÷ erwartete Siege, Erwartung je Partie 1 ÷ Spieleranzahl,
 geteilte Siege anteilig. Angezeigt als Faktor („2,0×“). Standard in Profil, Serie und Duell.
+
+## 12.11.2026: Leistung bewertet jeden Platz
+Statt nur Siegen zählt jede Platzierung: geschlagene Gegner (Gleichstand halb) geteilt durch die erwarteten (Spieler − 1) ÷ 2.
+1,0× = Durchschnitt, 2,0× = immer gewonnen. Größere Runden wiegen mehr, weil mehr Gegner im Spiel sind.

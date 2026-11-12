@@ -21,19 +21,19 @@ export function filterGames(list: HistGame[], pid: string, time: TimeFilter, key
 }
 
 /**
- * Leistung: tatsächliche Siege im Verhältnis zu den erwarteten.
- * Erwartung je Partie: 1 ÷ Spieleranzahl. Geteilter Sieg zählt anteilig.
- * 1 = wie erwartet, 2 = doppelt so oft gewonnen wie erwartet.
+ * Leistung: Platzierung im Verhältnis zum Durchschnitt.
+ * Je Partie zählen die geschlagenen Gegner (Gleichstand halb), erwartet ist die Hälfte der Gegner: (Spieler − 1) ÷ 2.
+ * Größere Runden wiegen mehr. 1 = Durchschnitt, 2 = immer gewonnen, 0 = immer Letzter.
  */
 export function performance(list: HistGame[], pid: string) {
-  let wins = 0, expected = 0, played = 0;
+  let beaten = 0, expected = 0, played = 0;
   for (const g of list) {
-    const r = resultOf(g, pid); if (!r) continue;
+    const r = resultOf(g, pid); if (!r || g.results.length < 2) continue;
     played++;
-    expected += 1 / g.results.length;
-    if (r.place === 1) wins += 1 / g.results.filter(x => x.place === 1).length;
+    expected += (g.results.length - 1) / 2;
+    beaten += g.results.filter(o => o.place > r.place).length + g.results.filter(o => o !== r && o.place === r.place).length / 2;
   }
-  return { played, wins, expected, score: expected ? Math.round(wins / expected * 100) / 100 : 0 };
+  return { played, beaten, expected, score: expected ? Math.round(beaten / expected * 100) / 100 : 0 };
 }
 
 export function summary(list: HistGame[], pid: string) {

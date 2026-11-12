@@ -69,4 +69,16 @@ describe('Lokale Datenbank', () => {
     await repo.saveGame(finish(s, c));
     expect(await repo.loadRunningGame()).toBeNull();
   });
+
+  it('sichert alles und führt eine Sicherung zusammen (neuerer Stand gewinnt)', async () => {
+    const a = freshRepo(), b = freshRepo();
+    await a.savePlayer({ id: 'p1', name: 'Anna', color: '#000', createdAt: '2026-01-01', updatedAt: '2026-01-02' });
+    await a.saveTemplate({ ...TPL.free, key: 'k1', createdAt: '2026-01-01', updatedAt: '2026-01-01' });
+    await b.savePlayer({ id: 'p1', name: 'Anna alt', color: '#000', createdAt: '2026-01-01', updatedAt: '2026-01-01' });
+    const backup = JSON.parse(JSON.stringify(await a.exportAll()));
+    expect(await b.importAll(backup)).toBe(2);
+    expect((await b.loadPlayers())[0].name).toBe('Anna');
+    expect(await b.importAll(backup)).toBe(0);
+    await expect(b.importAll({ app: 'x' } as never)).rejects.toThrow();
+  });
 });
