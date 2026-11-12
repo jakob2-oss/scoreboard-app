@@ -59,7 +59,7 @@ export function Series() {
             <div className="group"><div className="eyebrow">Spiele</div>
               <div className="list">
                 {seriesGames(games).map(x => {
-                  const ic = iconFor(x.key);
+                  const ic = iconFor(x.key, x.name);
                   return (
                     <div key={x.key} className="row">
                       <GameIcon icon={ic.icon} tint={ic.tint} />
@@ -73,7 +73,7 @@ export function Series() {
             <div className="group"><div className="eyebrow">Partien</div>
               <div className="list">
                 {games.map(h => {
-                  const ic = iconFor(h.key);
+                  const ic = iconFor(h.key, h.name);
                   return (
                     <div key={h.id} className="row">
                       <GameIcon icon={ic.icon} tint={ic.tint} />

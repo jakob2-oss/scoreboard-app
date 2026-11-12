@@ -58,6 +58,10 @@ export interface TemplateParams {
   quick?: QuickKey[];
   /** Zweiteilige Runde: erst alle das erste Feld, dann alle das zweite; Rundenwert ist die Summe */
   split?: SplitField[];
+  /** Notizfelder neben den Punkten (z. B. „Längste Straße“), zählen nicht zur Summe */
+  notes?: string[];
+  /** Aussehen eigener Spiele: Farbe und Muster der Szene */
+  look?: { color: string; pattern: string };
   /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
   resultOnly?: boolean;
   /** Kategorien-Zettel (Kniffel); jede Kategorie ist eine Zeile */

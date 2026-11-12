@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, fieldsOf, fieldLabel, isSplit, catChoices, type GameState, type RoundRef
+  currentRoundIndex, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -117,6 +117,7 @@ export function GameScreen() {
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
+      {s.sheet === 'notes' && <NotesSheet g={g} />}
     </section>
   );
 }
@@ -169,7 +170,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                   );
                 }
                 const struck = !!r.cat && v === 0;
-                return <td key={p.id} className={cls + (struck ? ' struck' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}`}>{v === null ? '' : struck ? '–' : fmt(v)}</td>;
+                const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
+                return <td key={p.id} className={cls + (struck ? ' struck' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}`}>
+                  {v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -225,7 +228,8 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
 function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edit: Edit | null }) {
   const t = totals(g), rk = ranking(g), x = rk.find(y => y.player.id === p.id)!, started = anyScore(g);
   const ref: RoundRef = edit ? edit.ref : defaultRef(g, p.id);
-  const value = edit ? numOf(edit.buf) : ref === 'new' ? null : scoreOf(g, ref, p.id);
+  const noteOn = isNoteField(edit?.field);
+  const value = edit && !noteOn ? numOf(edit.buf) : ref === 'new' ? null : scoreOf(g, ref, p.id);
   const end = g.game.rules.end;
   let place = started ? `${x.place}. Platz` : 'Noch keine Punkte';
   if (started && end.type === 'target' && g.game.rules.win === 'high') place += t[p.id] >= end.value ? ', Ziel erreicht' : `, noch ${end.value - t[p.id]} bis ${end.value}`;
@@ -243,6 +247,20 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
           {value === null ? (edit?.buf === '-' ? '−' : isCats(g) ? '–' : '0') : isCats(g) && value === 0 ? '–' : fmt(value)}
         </span>
       </div>}
+      {notesOf(g).length > 0 && !isBids(g) && !isSplit(g) && (
+        <div className="pp-notes">
+          {notesOf(g).map(n => {
+            const k = noteKey(n), on = edit?.field === k;
+            const v = on ? numOf(edit!.buf) : ref === 'new' ? null : fieldOf(g, ref, p.id, k);
+            return (
+              <button key={n} className="pp-note" data-note={n} aria-pressed={on}
+                onClick={() => (edit ? act().selectField(on ? '' : k) : act().goPage(i, ref, k))}>
+                <small>{n}</small><b className={v === null ? 'ph' : ''}>{v === null ? '–' : fmt(v)}</b>
+              </button>
+            );
+          })}
+        </div>
+      )}
       {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
       {zeroSumHint(g, ref)}
       {isCats(g) && <CatList g={g} p={p} current={ref} onPick={pick} />}
@@ -291,8 +309,8 @@ function Keypad({ g, edit, canUndo }: { g: GameState; edit: Edit; canUndo: boole
         {d(4)}{d(5)}{d(6)}<button className="key fn" onClick={a.clear} style={{ fontFamily: 'var(--f-body)', fontSize: 15 }}>Leeren</button>
         {d(7)}{d(8)}{d(9)}
         <button className="key go" onClick={a.next}>
-          {nextP2 ? 'Weiter' : 'Fertig'}
-          <span className="go-to">{nextP2 && <i style={css({ '--c': nextP2.color })} />}<span>{nextP2 ? nextP2.name : 'Überblick'}</span></span>
+          {isNoteField(edit.field) ? 'Fertig' : nextP2 ? 'Weiter' : 'Fertig'}
+          <span className="go-to">{!isNoteField(edit.field) && nextP2 && <i style={css({ '--c': nextP2.color })} />}<span>{isNoteField(edit.field) ? 'Punkte' : nextP2 ? nextP2.name : 'Überblick'}</span></span>
         </button>
         {bids
           ? <button className="key fn" id="field-toggle" onClick={() => a.selectField(edit.field === 'bid' ? 'tricks' : 'bid')} style={{ fontFamily: 'var(--f-body)', fontSize: 14 }}>{edit.field === 'bid' ? 'Stiche' : 'Ansage'}</button>
@@ -465,6 +483,33 @@ function CatSheet({ g }: { g: GameState }) {
             <input id="cat-fixed" value={fixed} onChange={e => setFixed(e.target.value.replace(/\D/g, '').slice(0, 3))} placeholder="Punkte" inputMode="numeric" aria-label="Feste Punkte" />
             <div className="seg"><button type="button" aria-pressed={section === 'up'} onClick={() => setSection('up')}>Oben</button><button type="button" aria-pressed={section === 'low'} onClick={() => setSection('low')}>Unten</button></div>
             <button className="primary" type="submit" disabled={!label.trim()}>Hinzufügen</button>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Notizfelder der laufenden Partie: anlegen und entfernen (zählen nicht zur Summe) */
+function NotesSheet({ g }: { g: GameState }) {
+  const [label, setLabel] = useState('');
+  const notes = notesOf(g);
+  const add = (e: React.FormEvent) => { e.preventDefault(); if (label.trim()) act().setGameNotes([...notes, label]); setLabel(''); };
+  return (
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet" role="dialog" aria-label="Notizfelder">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Notizfelder</h3>
+          {notes.length > 0 && <div className="menu-list cat-edit">
+            {notes.map(n => (
+              <div key={n} className="cat-row"><span>{n}</span><small /><button aria-label={`${n} entfernen`} onClick={() => act().setGameNotes(notes.filter(x => x !== n))}>✕</button></div>
+            ))}
+          </div>}
+          <form className="ser-add" onSubmit={add}>
+            <input id="game-note" value={label} onChange={e => setLabel(e.target.value)} placeholder="Neues Feld" maxLength={18} autoComplete="off" />
+            <button className="primary" type="submit" disabled={!label.trim() || notes.length >= 4}>Hinzufügen</button>
           </form>
         </div>
       </div>

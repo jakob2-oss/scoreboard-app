@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, liveRounds, ranking, seated, totals } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -155,7 +155,7 @@ describe('Spieler', () => {
 describe('Eigene Spiele bearbeiten und löschen', () => {
   it('ändert die Vorlage, behält den Schlüssel und lässt laufende Partien unberührt', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
-    await a.init(); a.openSetup(); a.updateSetup({ name: 'Wohnzimmer' }); a.setupNext();
+    await a.init(); a.openSetup(true); a.updateSetup({ name: 'Wohnzimmer' }); a.setupNext();
     await a.addPlayer('A'); a.start();
     const key = st.get().templates[0].key;
     a.goHome(); a.editTemplate(st.get().templates[0]);
@@ -168,7 +168,7 @@ describe('Eigene Spiele bearbeiten und löschen', () => {
   });
   it('löscht weich und legt die Vorlage beim Beenden nicht neu an', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
-    await a.init(); a.openSetup(); a.updateSetup({ name: 'Garten' }); a.setupNext();
+    await a.init(); a.openSetup(true); a.updateSetup({ name: 'Garten' }); a.setupNext();
     await a.addPlayer('A'); a.start();
     a.roundGo(); a.add(5); a.next();
     const key = st.get().templates[0].key;
@@ -178,6 +178,25 @@ describe('Eigene Spiele bearbeiten und löschen', () => {
     a.finishGame();
     expect(st.get().templates).toHaveLength(0);
     expect(st.get().history[0].name).toBe('Garten');
+  });
+});
+
+describe('Notizfelder', () => {
+  it('zählen nicht zur Summe, bleiben beim Ändern der Punkte erhalten und landen im Ergebnis', async () => {
+    const { st, a, mem } = await setup('free', ['A', 'B']);
+    a.setGameNotes(['Straße', ' ', 'Straße']);
+    expect(st.get().game!.game.rules.params?.notes).toEqual(['Straße']);
+    a.roundGo(); a.add(10);
+    a.selectField('n:Straße'); a.digit(2); a.next();
+    expect(st.get().edit?.field).toBeUndefined();
+    a.digit(5);
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(totals(g).id1).toBe(5);
+    expect(fieldOf(g, r.id, 'id1', 'n:Straße')).toBe(2);
+    a.next(); a.add(3); a.next();
+    a.finishGame();
+    expect(mem.results.find(x => x.playerId === 'id1')!.extra).toMatchObject({ 'n:Straße': 2 });
+    expect(r).toBeTruthy();
   });
 });
 
@@ -256,19 +275,26 @@ describe('Freies Spiel', () => {
     expect(mem.templates[0].lastUsedAt).toBeTruthy();
     expect(mem.templates[0].key).toBe(st.get().game!.game.rules.key);
   });
-  it('speichert die Vorlage spätestens beim Beenden automatisch', async () => {
+  it('Freies Spiel bleibt eine Einmal-Partie: keine Vorlage, aber im Verlauf', async () => {
     const { st, a, mem } = await fresh();
-    a.openSetup(); a.updateSetup({ save: false }); a.setupNext();
+    a.openSetup(); a.setupNext();
     await a.addPlayer('A'); a.start();
-    expect(mem.templates).toHaveLength(0);
+    a.roundGo(); a.add(5); a.next();
     a.finishGame();
-    expect(mem.templates).toHaveLength(1);
-    expect(mem.templates[0].name).toMatch(/^Freies Spiel vom /);
-    expect(st.get().toast?.text).toBe('Partie und Vorlage gespeichert');
+    expect(mem.templates).toHaveLength(0);
+    expect(st.get().history).toHaveLength(1);
+    expect(st.get().toast?.text).toBe('Partie gespeichert');
+  });
+  it('Eigene Vorlage erstellen speichert sofort, mit Notizfeldern', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(true); a.updateSetup({ name: 'Carcassonne', notes: ['Wiesen'] }); a.setupNext();
+    await a.addPlayer('A'); a.start();
+    expect(mem.templates[0]).toMatchObject({ name: 'Carcassonne', params: { notes: ['Wiesen'] } });
+    expect(st.get().game!.game.rules.params?.notes).toEqual(['Wiesen']);
   });
   it('spielt eine gespeicherte Vorlage erneut mit demselben Schlüssel', async () => {
     const { st, a, mem } = await fresh();
-    a.openSetup(); a.updateSetup({ name: 'X' }); a.setupNext(); await a.addPlayer('A'); a.start();
+    a.openSetup(true); a.updateSetup({ name: 'X' }); a.setupNext(); await a.addPlayer('A'); a.start();
     const key = st.get().game!.game.rules.key;
     a.finishGame();
     expect(st.get().toast?.text).toBe('Partie gespeichert');

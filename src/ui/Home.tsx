@@ -1,13 +1,12 @@
 import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
 import { currentRoundIndex, seated, isCats, isResultOnly } from '../game/engine';
-import { PLAYER_COLORS } from '../lib/color';
 import { heroSvg } from '../components/heroSvg';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
 import { TabBar } from './TabBar';
 import { GameIcon } from './GamePage';
-import { FREE_ICON, GAME_ART } from './art';
+import { FREE_ICON, GAME_ART, customArt } from './art';
 import { GAMES } from '../game/games';
 import { FREE_TINT } from './Setup';
 
@@ -63,7 +62,7 @@ export function Home() {
               </div>
             </div>
             <div className="group">
-              <div className="eyebrow">Nur das Ergebnis</div>
+              <div className="eyebrow">Endwertung</div>
               <div className="list">
                 {GAMES.filter(d => d.group === 'result').map(d => (
                   <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
@@ -74,20 +73,25 @@ export function Home() {
                 ))}
               </div>
             </div>
-            {templates.length > 0 && (
-              <div className="group">
-                <div className="eyebrow">Meine Spiele</div>
-                <div className="list" id="my-games">
-                  {templates.map((t, k) => (
-                    <button key={t.key} className="row tpl" onClick={() => act().editTemplate(t)}>
-                      <span className="tdot" style={{ ['--c' as string]: PLAYER_COLORS[k % PLAYER_COLORS.length] }} />
+            <div className="group">
+              <div className="eyebrow">Meine Spiele</div>
+              <div className="list" id="my-games">
+                {templates.map(t => {
+                  const ic = customArt(t.key, t.name, t.params?.look);
+                  return (
+                    <button key={t.key} className="row tpl" data-own={t.key} onClick={() => act().editTemplate(t)}>
+                      <GameIcon icon={ic.icon} tint={ic.tint} />
                       <span className="t"><b>{t.name}</b><small>{describeTemplate(t)}</small></span>
                       <Chevron />
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
+                <button className="row tpl new-own" id="new-own" onClick={() => act().openSetup(true)}>
+                  <span className="plus-ic" aria-hidden="true">+</span>
+                  <span className="t"><b>Eigene Vorlage erstellen</b></span>
+                </button>
               </div>
-            )}
+            </div>
             <p className="version">Version {__APP_VERSION__}</p>
           </div>
         </div>

@@ -292,10 +292,12 @@ export function setScore(s: GameState, ref: RoundRef, playerId: string, value: n
   const existing = state.entries.find(e => alive(e) && e.roundId === roundId && e.playerId === playerId);
   let entries: Entry[];
   if (existing) {
-    const phase = (existing.values as { phase?: boolean }).phase;
+    // Haken (Phase 10) und Notizwerte bleiben erhalten
+    const { score: _old, ...keep } = existing.values as Record<string, unknown>;
+    const rest = Object.fromEntries(Object.entries(keep).filter(([, v]) => v !== null && v !== undefined && v !== false));
     entries = state.entries.map(e => e !== existing ? e
-      : value === null ? (phase ? { ...e, updatedAt: t, values: { phase: true } } : { ...e, updatedAt: t, deletedAt: t })
-        : { ...e, updatedAt: t, values: { ...(phase ? { phase: true } : {}), score: value } });
+      : value === null ? (Object.keys(rest).length ? { ...e, updatedAt: t, values: rest as Entry['values'] } : { ...e, updatedAt: t, deletedAt: t })
+        : { ...e, updatedAt: t, values: { ...rest, score: value } as Entry['values'] });
   } else if (value !== null) {
     entries = [...state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: state.game.id, roundId, playerId, values: { score: value } }];
   } else entries = state.entries;
@@ -331,6 +333,16 @@ export function removeCategory(s: GameState, roundId: string, clock: Clock): Gam
     rounds: s.rounds.map(r => (r.id === roundId ? { ...r, updatedAt: t, deletedAt: t } : r)),
     entries: s.entries.map(e => (e.roundId === roundId && alive(e) ? { ...e, updatedAt: t, deletedAt: t } : e))
   };
+}
+
+/** Notizfelder der Partie (zählen nicht zur Summe) */
+export const notesOf = (s: GameState): string[] => s.game.rules.params?.notes ?? [];
+export const noteKey = (label: string) => 'n:' + label;
+export const isNoteField = (f?: string) => !!f && f.startsWith('n:');
+/** Notizfelder der laufenden Partie ändern (Werte bleiben gespeichert, auch wenn ein Feld entfernt wird) */
+export function setNotes(s: GameState, notes: string[], clock: Clock): GameState {
+  const rules = { ...s.game.rules, params: { ...s.game.rules.params, notes: [...new Set(notes.map(n => n.trim()).filter(Boolean))] } };
+  return { ...s, game: { ...touch(s, clock), rules } };
 }
 
 /** Wizard: Ansage oder Stiche setzen (null löscht den Wert). Begrenzt auf 0 bis Kartenzahl der Runde. */
