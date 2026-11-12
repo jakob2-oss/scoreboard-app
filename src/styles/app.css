@@ -215,3 +215,22 @@ td.struck, .pp-cat .v.struck { color: var(--muted); opacity: .6; }
 @keyframes sc-drift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(14px); } }
 @keyframes sc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @media (prefers-reduced-motion: reduce) { .scene * { animation: none !important; } }
+
+/* ---------- Eigene Spiele ---------- */
+.plus-ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--fill); font-family: var(--f-display); font-size: 24px; font-weight: 500; color: var(--muted); flex: none; }
+.new-own .t b { font-weight: 500; }
+.own-actions { margin-top: 14px; }
+.look-colors { display: flex; gap: 10px; flex-wrap: wrap; }
+.look-c { width: 38px; height: 38px; border-radius: 50%; border: 0; display: grid; place-items: center; }
+.look-c[aria-pressed="true"]::after { content: ''; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.note-chips { margin-bottom: 8px; }
+.chip.on { background: var(--fg); color: var(--bg); }
+
+/* ---------- Notizfelder ---------- */
+.pp-notes { display: flex; gap: 8px; flex-wrap: wrap; }
+.pp-note { flex: 1 1 0; min-width: 96px; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 16px; background: var(--fill); }
+.pp-note small { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-note b { font-family: var(--f-num); font-size: 20px; font-weight: 600; }
+.pp-note b.ph { color: var(--muted); opacity: .6; }
+.pp-note[aria-pressed="true"] { background: var(--surface); box-shadow: var(--soft); }
+td small.nt { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }

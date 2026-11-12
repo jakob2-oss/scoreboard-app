@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -35,7 +35,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | null;
   toast: { text: string; n: number } | null;
   history: HistGame[];
   profile: ProfileView | null;
@@ -49,6 +49,8 @@ export interface AppState {
   series: { id: string; sort: SeriesSort } | null;
   /** Eigenes Spiel, das gerade bearbeitet wird */
   editKey: string | null;
+  /** Einrichtung als eigene Vorlage (statt Freies Spiel) */
+  setupTemplate: boolean;
   /** Gelöschte eigene Spiele */
   goneKeys: string[];
   /** Kniffel: Feld wurde aus dem Überblick geöffnet, danach dorthin zurück */
@@ -60,7 +62,7 @@ export interface AppState {
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, goneKeys: [], fromOverview: false, confirmStart: false
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, goneKeys: [], fromOverview: false, confirmStart: false
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -96,10 +98,14 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const numOf = (buf: string): number | null => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
   const valueAt = (g: GameState, ref: RoundRef, playerId: string) => (ref === 'new' ? null : scoreOf(g, ref, playerId));
   const makeEdit = (g: GameState, ref: RoundRef, playerId: string, field?: BidField): Edit => {
+    if (isNoteField(field)) {
+      const v = ref === 'new' ? null : fieldOf(g, ref, playerId, field!);
+      return { ref, playerId, field, buf: v === null ? '' : String(v), fresh: v !== null, dirty: false };
+    }
     const fs = fieldsOf(g);
     if (fs && ref === 'new') return { ref, playerId, field: fs[0].key, buf: '', fresh: false, dirty: false };
     if (fs && ref !== 'new') {
-      const f = field ?? (fieldOf(g, ref, playerId, fs[0].key) === null ? fs[0].key : fs[1].key);
+      const f = field || (fieldOf(g, ref, playerId, fs[0].key) === null ? fs[0].key : fs[1].key);
       const v = fieldOf(g, ref, playerId, f);
       return { ref, playerId, field: f, buf: v === null ? '' : String(v), fresh: v !== null, dirty: false };
     }
@@ -171,9 +177,20 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     goHome() { set({ screen: 'home', pad: false, sheet: null, edit: null, editKey: null }); },
 
     // ---------- Freies Spiel einrichten
-    openSetup() { set({ setup: defaultFreeConfig(), screen: 'setup', editKey: null }); },
+    /** Freies Spiel (Einmal-Partie) oder eigene Vorlage erstellen */
+    openSetup(asTemplate = false) { set({ setup: { ...defaultFreeConfig(), save: asTemplate }, screen: 'setup', editKey: null, setupTemplate: asTemplate }); },
     /** Eigenes Spiel öffnen: Einstellungen ansehen, ändern, löschen oder spielen */
-    editTemplate(t: Template) { set({ setup: configOf(t), screen: 'setup', editKey: t.key }); },
+    editTemplate(t: Template) {
+      const known = new Set(state.players.map(p => p.id));
+      set({ setup: configOf(t), screen: 'setup', editKey: t.key, setupTemplate: true, template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)) });
+    },
+    /** Neue eigene Vorlage speichern, ohne gleich zu spielen; danach ihre Seite */
+    saveNewTemplate() {
+      const t = makeFreeTemplate(state.setup, clock);
+      saveTemplate(t);
+      actions.editTemplate(t);
+      toast('Gespeichert');
+    },
     /** Änderungen am eigenen Spiel speichern; laufende und beendete Partien behalten ihre Regeln */
     saveSetup(): Template | null {
       const old = state.templates.find(t => t.key === state.editKey); if (!old) return null;
@@ -181,7 +198,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (t !== old) saveTemplate(t);
       return t;
     },
-    saveSetupHome() { const t = actions.saveSetup(); set({ screen: 'home', editKey: null }); if (t) toast('Gespeichert'); },
+    saveSetupHome() { const t = actions.saveSetup(); if (t) { actions.editTemplate(t); toast('Gespeichert'); } },
     /** Eigenes Spiel löschen: nur als gelöscht markiert, Verlauf und Statistik bleiben */
     deleteTemplate(key: string) {
       const old = state.templates.find(t => t.key === key); if (!old) return;
@@ -277,6 +294,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game, e = state.edit; if (!g || !e) return;
       set({ edit: makeEdit(g, e.ref, e.playerId, field) });
     },
+    /** Notizfelder der laufenden Partie festlegen */
+    setGameNotes(labels: string[]) {
+      const g = state.game; if (!g) return;
+      const ng = setNotes(g, labels, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
     /** Phase 10: Haken „Phase geschafft“ umschalten */
     togglePhase() {
       const g = state.game, e = state.edit; if (!g || !e) return;
@@ -311,6 +334,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const e0 = state.edit, g0 = state.game;
       if (g0 && e0 && isSplit(g0) && e0.field === fieldsOf(g0)![0].key && numOf(e0.buf) === null) writeBuf({ ...e0, buf: '0', fresh: true });
       const g = state.game, e = state.edit; if (!g || !e) return;
+      // Notizfeld: zurück zum Punktefeld desselben Spielers
+      if (isNoteField(e.field)) { set({ edit: makeEdit(g, e.ref, e.playerId) }); return; }
       const players = seated(g), i = players.findIndex(p => p.id === e.playerId);
       if (e.field && e.ref !== 'new') {
         const order = inputOrder(g, e.ref), pos = order.indexOf(i);
@@ -377,7 +402,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats') { set({ sheet, pad: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes') { set({ sheet, pad: false }); },
     closeSheet() { set({ sheet: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;
@@ -400,9 +425,14 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             const k = liveRounds(f).filter(r => r.cat?.fixed === 50 && scoreOf(f, r.id, x.player.id) === 50).length;
             extra = { kniffel: k, bonus: upperSum(f, x.player.id).bonus > 0 ? 1 : 0 };
           }
+          const notes = notesOf(f);
+          if (notes.length) {
+            extra = { ...extra };
+            for (const n of notes) extra[noteKey(n)] = liveRounds(f).reduce((a, r) => a + (fieldOf(f, r.id, x.player.id, noteKey(n)) ?? 0), 0);
+          }
           if (isBids(f)) {
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
-            extra = { rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
+            extra = { ...extra, rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
           }
           return { id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: x.player.id, total: x.total, place: x.place, ...(extra ? { extra } : {}) };
         });
@@ -412,9 +442,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         set({ history: [h, ...state.history] });
         try { localStorage.setItem('pz:lastEvent', ev?.id ?? ''); } catch { /* egal */ }
       }
-      const rules = g.game.rules;
-      const auto = rules.custom && !state.templates.some(t => t.key === rules.key) && !state.goneKeys.includes(rules.key);
-      if (auto) saveTemplate({ ...rules, lastUsedAt: clock.now(), updatedAt: clock.now() });
+            // Freies Spiel ohne Vorlage bleibt eine Einmal-Partie (nur im Verlauf)
+      const auto = false;
       set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },

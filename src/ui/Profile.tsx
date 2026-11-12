@@ -23,7 +23,7 @@ export function Profile() {
   const keys = [...new Map(mine.map(g => [g.key, g.name])).entries()];
   const others = players.filter(p => p.id !== profile.id && mine.some(g => resultOf(g, p.id)));
   const chip = (label: string, pressed: boolean, on: () => void, icon?: string) => (
-    <button className="fchip" aria-pressed={pressed} onClick={on}>{icon && <span className="gi xs" style={css({ '--tc': iconFor(icon).tint })} dangerouslySetInnerHTML={{ __html: iconFor(icon).icon }} />}{label}</button>
+    <button className="fchip" aria-pressed={pressed} onClick={on}>{icon && <span className="gi xs" style={css({ '--tc': iconFor(icon, label).tint })} dangerouslySetInnerHTML={{ __html: iconFor(icon, label).icon }} />}{label}</button>
   );
   const vs = profile.vs.length ? headToHead(list, [profile.id, ...profile.vs]) : null;
   const maxAhead = vs ? Math.max(1, ...Object.values(vs.ahead)) : 1;
@@ -58,7 +58,7 @@ export function Profile() {
               <div className="group"><div className="eyebrow">Stärken</div>
                 <div className="list">
                   {byGame(list, profile.id).sort((x, y) => performance(list.filter(g => g.key === y.key), profile.id).score - performance(list.filter(g => g.key === x.key), profile.id).score).map(x => {
-                    const ic = iconFor(x.key), pf = performance(list.filter(g => g.key === x.key), profile.id).score;
+                    const ic = iconFor(x.key, x.name), pf = performance(list.filter(g => g.key === x.key), profile.id).score;
                     return (
                       <button key={x.key} className="row" onClick={() => a.setProfile({ key: x.key })}>
                         <GameIcon icon={ic.icon} tint={ic.tint} />
@@ -107,7 +107,7 @@ export function Profile() {
             <div className="group"><div className="eyebrow">Letzte Partien</div>
               <div className="list">
                 {list.slice(0, 8).map(g => {
-                  const r = resultOf(g, profile.id)!, ic = iconFor(g.key);
+                  const r = resultOf(g, profile.id)!, ic = iconFor(g.key, g.name);
                   return (
                     <div key={g.id} className="row">
                       <GameIcon icon={ic.icon} tint={ic.tint} />
@@ -176,7 +176,7 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
       <div className="eyebrow duel-last">Gemeinsame Partien</div>
       <div className="duel-games">
         {d.games.slice(0, 3).map(g => {
-          const ra = resultOf(g, me.id)!, rb = resultOf(g, other.id)!, ic = iconFor(g.key);
+          const ra = resultOf(g, me.id)!, rb = resultOf(g, other.id)!, ic = iconFor(g.key, g.name);
           return (
             <div key={g.id} className="duel-game">
               <GameIcon icon={ic.icon} tint={ic.tint} />

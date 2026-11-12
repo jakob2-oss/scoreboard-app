@@ -31,11 +31,11 @@ Umgesetzt (12.11.): Schafkopf und Doppelkopf als Nullsumme mit Plus-/Minus-Taste
 Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Partner und Spielarten werden nicht eigens erfasst.
 
 ## D. Eigene Spiele und Benennung
-- [ ] **„Nur das Ergebnis“ umbenennen** (Vorschlag: „Endwertung“), Gruppe bleibt getrennt.
-- [ ] **Endwertung mit eigenen Kategorien:** zusätzliche Felder anlegen, um weitere Dinge zu notieren.
-- [ ] **Eigene Spiele bekommen Szene und Icon** (Muster im Stil der anderen Spiele) und eine klassische Spielseite.
-- [ ] **Eigenes Label** für „Eigene Vorlage erstellen“, getrennt vom „Freien Spiel“.
-- [ ] **Spezialregeln** im freien Spiel / eigenen Spiel: Notizfelder rechts neben dem Punktwert (ohne Verrechnung).
+- [x] **„Nur das Ergebnis“ umbenennen** (Vorschlag: „Endwertung“), Gruppe bleibt getrennt.
+- [x] **Endwertung mit eigenen Kategorien:** zusätzliche Felder anlegen, um weitere Dinge zu notieren.
+- [x] **Eigene Spiele bekommen Szene und Icon** (Muster im Stil der anderen Spiele) und eine klassische Spielseite.
+- [x] **Eigenes Label** für „Eigene Vorlage erstellen“, getrennt vom „Freien Spiel“.
+- [x] **Spezialregeln** im freien Spiel / eigenen Spiel: Notizfelder rechts neben dem Punktwert (ohne Verrechnung).
 
 ## E. Spieleabende und Serien (Wunsch vom 12.11.)
 - [x] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
@@ -83,3 +83,8 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
       dezente Bewegung (Konfetti schwebt, Sonne pulsiert, Figuren wippen; aus bei „Bewegung reduzieren“).
       Icons als Einzelsymbol, Szene erzählt die Situation (Kniffel: Würfel und Becher, Schafkopf: Eichel und Bierdeckel,
       Binokel: Schelle und Ober-Unter-Paar, Uno: Farbrad und Karten, Siedler: Schaf und Waben).
+
+Teil D umgesetzt (12.11.): Gruppe „Endwertung“; Notizfelder (zählen nicht zur Summe) in eigenen Spielen, im freien Spiel und
+über das Menü jeder Rundenpartie, Siedler mit „Längste Straße“ und „Rittermacht“; eigene Spiele mit Icon (Anfangsbuchstabe),
+Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen; „Eigene Vorlage erstellen“ getrennt vom
+„Freien Spiel“, das jetzt eine Einmal-Partie ist (Vorlage nur per Schalter).

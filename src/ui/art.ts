@@ -275,3 +275,33 @@ for (const k of Object.keys(GAME_ART)) {
 }
 export const FREE_ICON = FREE_ICON_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
 export const FREE_SCENE = FREE_SCENE_RAW.replace(/#[0-9a-f]{6}/gi, m => pastel(m));
+
+// ---------------------------------------------------------------- Eigene Spiele: Icon mit Anfangsbuchstabe, Szene mit eigenem Muster
+export const LOOK_COLORS = DOTS;
+export const LOOK_PATTERNS: Pattern[] = ['dots', 'checker', 'waves', 'stripes', 'lozenge', 'hex', 'rays', 'blocks'];
+const mix = (hex: string, w: number) => {
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v + (255 - v) * w));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+};
+const darker = (hex: string, f: number) => {
+  const n = parseInt(hex.slice(1), 16), c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.round(v * f));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+};
+const hash = (s: string) => [...s].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+/** Aussehen eines eigenen Spiels: gewählt oder aus dem Schlüssel abgeleitet */
+export function lookOf(key: string, look?: { color: string; pattern: string }) {
+  const h = hash(key);
+  return { color: look?.color ?? DOTS[h % DOTS.length], pattern: (look?.pattern ?? LOOK_PATTERNS[(h >> 3) % LOOK_PATTERNS.length]) as Pattern };
+}
+const initial = (name: string) => (name.trim()[0] || '?').toUpperCase().replace(/[<>&"]/g, '?');
+export function customArt(key: string, name: string, look?: { color: string; pattern: string }) {
+  const { color, pattern } = lookOf(key, look), ink = darker(color, .62), L = initial(name);
+  const icon = ICON(`<g transform="rotate(-8 32 32)"><rect x="13" y="12" width="38" height="42" rx="10" fill="${darker(color, .88)}"/><rect x="13" y="10" width="38" height="40" rx="10" fill="#fffaf2"/>
+    <text x="32" y="40" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="24" fill="${ink}">${L}</text></g><circle cx="52" cy="14" r="4" fill="${color}"/>`);
+  const sheet = `<g transform="translate(195 136) rotate(-6)"><rect x="-62" y="-72" width="124" height="150" rx="16" fill="${darker(color, .9)}"/>
+    <rect x="-62" y="-76" width="124" height="150" rx="16" fill="#fffaf2"/><path d="M-62-60a16 16 0 0 1 16-16h92a16 16 0 0 1 16 16v14h-124z" fill="${color}"/>
+    <text x="0" y="-52" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="18" fill="#fffaf2">${L}</text>
+    ${[0, 1, 2, 3].map(r => `<rect x="-42" y="${-28 + r * 22}" width="${[60, 72, 48, 66][r]}" height="7" rx="3.5" fill="${mix(color, .55)}"/><circle cx="${36}" cy="${-24 + r * 22}" r="5" fill="${DOTS[(hash(key) + r) % DOTS.length]}"/>`).join('')}</g>`;
+  const scene = sky(mix(color, .72), mix(color, .82), mix(color, .5), '#f5d58c', pattern) + sheet + '</g></svg>';
+  return { icon: icon.replace(/#[0-9a-f]{6}/gi, m => pastel(m)), scene, tint: mix(color, .7) };
+}

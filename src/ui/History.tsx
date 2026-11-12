@@ -36,7 +36,7 @@ export function History() {
               <div className="eyebrow">{gr.month}</div>
               <div className="list">
                 {gr.items.map(h => {
-                  const ic = iconFor(h.key), winners = h.results.filter(r => r.place === 1);
+                  const ic = iconFor(h.key, h.name), winners = h.results.filter(r => r.place === 1);
                   return (
                     <button key={h.id} className="row hist-row" onClick={() => act().openDetail(h.id)}>
                       <GameIcon icon={ic.icon} tint={ic.tint} />

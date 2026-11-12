@@ -32,3 +32,8 @@ geteilte Siege anteilig. Angezeigt als Faktor („2,0×“). Standard in Profil,
 ## 12.11.2026: Leistung bewertet jeden Platz
 Statt nur Siegen zählt jede Platzierung: geschlagene Gegner (Gleichstand halb) geteilt durch die erwarteten (Spieler − 1) ÷ 2.
 1,0× = Durchschnitt, 2,0× = immer gewonnen. Größere Runden wiegen mehr, weil mehr Gegner im Spiel sind.
+
+## 12.11.2026: Freies Spiel ist eine Einmal-Partie
+„Eigene Vorlage erstellen“ legt ein eigenes Spiel an. Das „Freie Spiel“ wird nicht mehr automatisch als Vorlage gespeichert
+(nur per Schalter), damit „Meine Spiele“ nicht mit „Freies Spiel vom …“ volläuft. Die Partie landet trotzdem im Verlauf.
+Notizfelder zählen nie zur Summe; ihre Summen je Spieler stehen beim Beenden in `Result.extra` (`n:<Feld>`).

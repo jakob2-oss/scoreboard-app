@@ -23,11 +23,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('vierzehn Einträge (13 Spiele und Freies Spiel), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 14 && !(await p.isVisible('#my-games')));
+  check('15 Einträge (13 Spiele, Freies Spiel, Eigene Vorlage erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 15 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
   await shot('01-home');
 
-  // Freies Spiel einrichten
-  await p.click('#new-free');
+  // Eigene Vorlage erstellen
+  await p.click('#new-own');
   check('Einstellungen offen', await p.isVisible('#s-setup'));
   await p.fill('#setup-name', 'Testspiel');
   await shot('01b-setup');
@@ -161,8 +162,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Gespeicherte Vorlage erneut spielen
   check('„Testspiel“ unter Meine Spiele', (await text('#my-games')).includes('Testspiel'));
   await p.click('#my-games .row >> text=Testspiel');
-  check('eigenes Spiel öffnet seine Seite', (await p.inputValue('#setup-name')) === 'Testspiel' && await p.isVisible('#tpl-delete'));
-  await p.click('#setup-next');
+  check('eigenes Spiel öffnet seine Seite mit Regeln', (await raw('#s-setup .tpl-title h1')).includes('Testspiel') && await p.isVisible('#s-setup .rule-points') && await p.isVisible('#tpl-edit'));
+  await shot('42b-own-page');
+  await p.click('#s-setup .dock .secondary');
   check('letzte Spieler vorausgewählt', (await raw('#start-btn')) === 'Los mit 3 Spielern');
   await p.click('[aria-label="Zurück"]');
   check('Zurück führt zur Seite des Spiels', await p.isVisible('#s-setup'));
@@ -175,7 +177,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const n of ['1', '5']) await p.click(`.step-chips .chip >> text="${n}"`);   // abwählen
   for (const n of ['2', '20', '50']) await p.click(`.step-chips .chip >> text="${n}"`);
   check('höchstens drei Zählschritte', (await p.locator('.step-chips .chip[aria-pressed="true"]').count()) === 3);
-  await p.click('.switch-row');
+  await p.click('.switch-row');   // diesmal als Vorlage speichern
   await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
   check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');
@@ -183,9 +185,17 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('eigene Schnelltasten', (await text('.pp-panel .quick')) === '−20 −10 −2 +2 +10 +20');
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+2"');
   check('Schnelltasten rechnen', (await text('section[aria-label="Anna"] .pp-entry .val')) === '22');
+  // Notizfeld während der Partie anlegen und füllen, zählt nicht zur Summe
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#open-notes'); await p.fill('#game-note', 'Bonus'); await p.press('#game-note', 'Enter'); await p.waitForTimeout(200);
+  await p.mouse.click(30, 40); await p.waitForTimeout(200);
+  await p.click('section[aria-label="Anna"] .pp-note[data-note="Bonus"]'); await p.click('.pp-keys .key >> text="3"'); await p.waitForTimeout(200);
+  check('Notizfeld gefüllt, Summe bleibt', (await text('section[aria-label="Anna"] .pp-note b')) === '3' && (await text('section[aria-label="Anna"] .score-pill b')) === '22');
+  await shot('17b-notes');
+  await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  check('nach Notiz zurück zum Punktefeld', (await p.getAttribute('section[aria-label="Anna"] .pp-note', 'aria-pressed')) === 'false');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
-  check('Vorlage beim Beenden automatisch gespeichert', (await text('.toast')) === 'Partie und Vorlage gespeichert');
-  check('zwei eigene Spiele', (await p.locator('#my-games .row').count()) === 2);
+  check('Partie gespeichert', (await text('.toast')) === 'Partie gespeichert');
+  check('zwei eigene Spiele', (await p.locator('#my-games .row[data-own]').count()) === 2);
   // Eigener Zählschritt
   await p.click('#new-free');
   await p.click('.step-chips .chip >> text="10"');
@@ -208,7 +218,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Rommé: (20 + 5) × 2 = 50', (await text('section[aria-label="Ben"] .pp-entry .val')) === '50');
   await shot('09-romme-play');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
-  check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row').count()) === 2);
+  check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row[data-own]').count()) === 2);
   await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
 
   // Wizard: Ansagen, zurück zum Überblick, Stiche
@@ -346,11 +356,13 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tab-home').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Eigenes Spiel bearbeiten und löschen
-  await p.click('#my-games .row >> nth=1'); await shot('43-own-game');
-  await p.fill('#setup-name', 'Umbenannt'); await p.click('#setup-save'); await p.waitForTimeout(200);
-  check('eigenes Spiel umbenannt', (await text('#my-games')).includes('Umbenannt') && (await text('.toast')) === 'Gespeichert');
-  await p.click('#my-games .row >> text=Umbenannt'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
-  check('eigenes Spiel gelöscht', (await p.locator('#my-games .row').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+  await p.click('#my-games .row[data-own] >> nth=1'); await p.click('#tpl-edit'); await shot('43-own-game');
+  await p.fill('#setup-name', 'Umbenannt'); await p.click('.look-c >> nth=3'); await p.click('#s-setup .chip >> text=Wellen');
+  await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('eigenes Spiel umbenannt, zurück auf seiner Seite', (await text('.toast')) === 'Gespeichert' && await p.isVisible('#tpl-edit'));
+  await shot('43b-own-game-saved');
+  await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+  check('eigenes Spiel gelöscht', (await p.locator('#my-games .row[data-own]').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
 
   // Partie im Verlauf löschen
   await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('#tab-history');
@@ -375,7 +387,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
   await p.click('#tab-home');
 
-  await p.click('#my-games .row >> nth=0'); await p.click('#setup-next'); await p.click('#start-btn');
+  await p.click('#my-games .row[data-own] >> nth=0'); await p.click('#quick-start');
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

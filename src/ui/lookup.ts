@@ -1,11 +1,18 @@
 import type { Player } from '../model/types';
 import { GAMES } from '../game/games';
-import { FREE_ICON, GAME_ART } from './art';
+import { GAME_ART, customArt } from './art';
 
-/** Icon und Farbton eines Spiels; eigene Spiele bekommen das Icon des freien Spiels */
-export function iconFor(key: string): { icon: string; tint: string } {
+/** Gewähltes Aussehen eigener Spiele (aus den Vorlagen, von der App gesetzt) */
+let looks: Record<string, { color: string; pattern: string } | undefined> = {};
+export function registerLooks(tpls: { key: string; params?: { look?: { color: string; pattern: string } } }[]) {
+  looks = Object.fromEntries(tpls.map(t => [t.key, t.params?.look]));
+}
+/** Icon und Farbton eines Spiels; eigene Spiele bekommen ihr eigenes Icon */
+export function iconFor(key: string, name = ''): { icon: string; tint: string } {
   const def = GAMES.find(g => g.template.key === key);
-  return def && GAME_ART[key] ? { icon: GAME_ART[key].icon, tint: def.tint } : { icon: FREE_ICON, tint: '#e7e4f7' };
+  if (def && GAME_ART[key]) return { icon: GAME_ART[key].icon, tint: def.tint };
+  const c = customArt(key, name, looks[key]);
+  return { icon: c.icon, tint: c.tint };
 }
 
 export const playerOf = (players: Player[], id: string): Pick<Player, 'name' | 'color'> =>
