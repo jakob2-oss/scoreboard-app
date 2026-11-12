@@ -130,7 +130,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.scrim', { position: { x: 30, y: 40 } });
   await p.click('#s-game .text-btn');
   check('„Beenden“ oben öffnet das Ergebnis', (await raw('.bsheet .primary')) === 'Speichern');
-  await p.click('.bsheet .primary'); await p.waitForTimeout(300);
+  check('Serie: anfangs keine gewählt', (await p.getAttribute('.ser-chips .fchip >> nth=0', 'aria-pressed')) === 'true');
+  await p.click('#series-new'); await p.fill('#series-name', 'Südamerika 2026'); await p.click('.ser-add .primary'); await p.waitForTimeout(200);
+  check('Serie angelegt und gewählt', (await text('.ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
+  await shot('29-result-series');
+  await p.click('.bsheet .pad-actions .primary'); await p.waitForTimeout(300);
   check('Meldung nach dem Speichern', (await text('.toast')) === 'Partie gespeichert');
   // Verlauf und Profil
   await p.click('#tab-history');
@@ -264,6 +268,33 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
+
+  // Serien: Statistikseite
+  await p.click('#tab-history'); await p.click('#hist-series'); await p.waitForTimeout(200);
+  check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
+  await shot('40-series-list');
+  await p.click('.series-row'); await p.waitForTimeout(200);
+  const nSer = Number((await text('.ser-hero small')).split(' ')[0]);
+  check('Serie: Partien von späteren Abschlüssen vorbelegt', nSer >= 2, await text('.ser-hero small'));
+  check('Serie: Tabelle mit drei Spielern', (await p.locator('.ser-table .prow').count()) === 3);
+  await shot('41-series');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  await p.click('#sort-rate'); await p.waitForTimeout(100);
+  check('Serie: Quote in Prozent', (await text('.ser-table .prow .pts >> nth=0')).endsWith('%'));
+  await p.click('#sort-points');
+  const before = await text('.ser-table .prow .pts >> nth=0');
+  await p.click('[aria-label="Platz 1 mehr"]'); await p.click('[aria-label="Platz 1 mehr"]'); await p.waitForTimeout(100);
+  check('Serie: Platzpunkte anpassbar', (await text('#pt-1')) === '5' && (await text('.ser-table .prow .pts >> nth=0')) !== before);
+  check('Serie: Vorschlag wieder herstellbar', await p.isVisible('.pt-reset'));
+  await p.evaluate(() => document.querySelector('#s-series .scroll').scrollTo(0, 9999)); await shot('42-series-points');
+  await p.click('.pt-reset');
+  await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
+  check('zurück in der Serienliste', await p.isVisible('.series-row'));
+  await p.click('#hist-games'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
+  await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
+  check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');
+  await p.mouse.click(30, 40); await p.click('#tab-home');
 
   await p.click('#my-games .row >> nth=0'); await p.click('#start-btn');
 

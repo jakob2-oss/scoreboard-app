@@ -38,11 +38,15 @@ Doppelkopf ×3 für Soli; Binokel mit Taste ×−2 für ein verfehltes Gebot. Pa
 - [ ] **Spezialregeln** im freien Spiel / eigenen Spiel: Notizfelder rechts neben dem Punktwert (ohne Verrechnung).
 
 ## E. Spieleabende und Serien (Wunsch vom 12.11.)
-- [ ] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
+- [x] **Serie anlegen und benennen**, z. B. „Kniffel-Liga“, „Spieleabend bei Ben“, „Südamerika 2026“.
       Nicht an einen Tag gebunden: Partien lassen sich jederzeit einer Serie zuordnen, auch nachträglich.
-- [ ] **Partien zuordnen:** beim Start oder Beenden die Serie wählen (ersetzt das Freitextfeld „Anlass oder Ort“),
+- [x] **Partien zuordnen:** beim Start oder Beenden die Serie wählen (ersetzt das Freitextfeld „Anlass oder Ort“),
       im Verlauf nachträglich ändern. Eine Serie kann verschiedene Spiele enthalten.
-- [ ] **Übersicht je Serie:** Gesamtwertung über alle Partien (Siege, Platzpunkte), Partien der Serie,
+- [x] **Übersicht je Serie:** Gesamtwertung über alle Partien (Siege, Platzpunkte), Partien der Serie,
       Bilanz je Spiel. Eigener Bereich in der Navigation oder unter „Verlauf“.
 - [ ] **Gemeinschaftlich:** Eine Freundesgruppe nutzt dieselbe Serie. Lokal zunächst auf einem Gerät;
       teilen zwischen Handys erst mit Sync (Phase 4). Datenmodell: Tabelle `events` mit `groupId`.
+
+Umgesetzt (12.11.): Platzpunkte mit Vorschlag 3, 2, 1, je Serie anpassbar. Wertung umschaltbar: Punkte (Summe),
+Schnitt (Punkte pro Partie, gleicht fehlende Abende aus), Quote (Anteil geschlagener Gegner, gleicht große und kleine Runden aus).
+Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.

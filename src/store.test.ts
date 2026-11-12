@@ -19,6 +19,7 @@ function memRepo() {
   const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
   const repo: Repo = {
     saveResults: async r => { results.push(...r); }, loadHistory: async () => [],
+    loadEvents: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined,
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
     loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
@@ -343,14 +344,20 @@ describe('Weitere Spiele', () => {
 });
 
 describe('Verlauf und Statistik', () => {
-  it('speichert beim Beenden Platz und Endpunktzahl je Spieler samt Anlass', async () => {
+  it('speichert beim Beenden Platz und Endpunktzahl je Spieler samt Serie', async () => {
     const { st, a, mem } = await setup('free', ['A', 'B']);
     a.roundGo(); a.add(10); a.next(); a.add(5); a.next();
-    a.finishGame('Urlaub');
+    const ev = a.createEvent('Urlaub')!;
+    a.finishGame(ev.id);
     expect(mem.results.map(r => [r.playerId, r.place, r.total])).toEqual([['id1', 1, 10], ['id2', 2, 5]]);
     expect(st.get().history).toHaveLength(1);
     expect(st.get().history[0]).toMatchObject({ occasion: 'Urlaub', results: [{ playerId: 'id1', place: 1 }, { playerId: 'id2', place: 2 }] });
-    expect(mem.last()!.game.place).toBe('Urlaub');
+    expect(mem.last()!.game.eventId).toBe(ev.id);
+    a.updateEvent(ev.id, { name: 'Südamerika 2026', points: [5, 3, 1] });
+    expect(st.get().history[0].occasion).toBe('Südamerika 2026');
+    expect(st.get().events[0].points).toEqual([5, 3, 1]);
+    a.setGameEvent(st.get().history[0].id, null);
+    expect(st.get().history[0]).toMatchObject({ eventId: null, occasion: null });
   });
   it('speichert keine Ergebnisse für eine Partie ohne Punkte', async () => {
     const { st, a, mem } = await setup('free', ['A']);

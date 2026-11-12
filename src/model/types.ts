@@ -111,4 +111,9 @@ export interface Result extends Base {
   extra?: Record<string, number | boolean>;
 }
 
-export interface GameEvent extends Base { name: string; from?: ISODate | null; to?: ISODate | null }
+/** Serie oder Spieleabend, z. B. „Südamerika 2026“. Partien verweisen per eventId darauf. */
+export interface GameEvent extends Base {
+  name: string; from?: ISODate | null; to?: ISODate | null;
+  /** Platzpunkte je Platz (Index 0 = Platz 1); fehlt: Vorschlag 3, 2, 1 */
+  points?: number[];
+}

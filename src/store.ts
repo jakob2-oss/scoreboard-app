@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
-import type { Category, Player, Result, Template } from './model/types';
-import type { HistGame, TimeFilter } from './game/stats';
+import type { Category, GameEvent, Player, Result, Template } from './model/types';
+import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { defaultFreeConfig, makeFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { PLAYER_COLORS, pastel } from './lib/color';
@@ -10,7 +10,7 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'history' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game';
+export type Screen = 'home' | 'history' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series';
 
 /** Filter und Vergleich auf der Profilseite */
 export interface ProfileView { id: string; time: TimeFilter; key: string | null; vs: string[] }
@@ -40,11 +40,18 @@ export interface AppState {
   profile: ProfileView | null;
   /** Geöffnete Partie im Verlauf */
   detail: string | null;
+  /** Serien und Spieleabende */
+  events: GameEvent[];
+  /** Verlauf: Partien oder Serien */
+  histTab: 'games' | 'series';
+  /** Geöffnete Serie und ihre Sortierung */
+  series: { id: string; sort: SeriesSort } | null;
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
-  page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null
+  page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
+  events: [], histTab: 'games', series: null
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -107,12 +114,28 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const actions = {
     async init() {
       try {
-        const [loaded, game, templates, history] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates(), repo.loadHistory()]);
+        const [loaded, game, templates, hist0, ev0] = await Promise.all([repo.loadPlayers(), repo.loadRunningGame(), repo.loadTemplates(), repo.loadHistory(), repo.loadEvents()]);
+        // Frühere Freitext-Anlässe einmalig zu Serien machen
+        const events = [...ev0]; let history = hist0;
+        const loose = [...new Set(hist0.filter(h => h.occasion && !h.eventId).map(h => h.occasion!))];
+        if (loose.length) {
+          const t = clock.now();
+          for (const name of loose) {
+            const e = events.find(x => x.name === name) ?? { id: clock.uid(), name, createdAt: t, updatedAt: t };
+            if (!events.includes(e)) { events.push(e); await repo.saveEvent(e); }
+          }
+          history = hist0.map(h => {
+            if (!h.occasion || h.eventId) return h;
+            const e = events.find(x => x.name === h.occasion)!;
+            repo.setGameEvent(h.id, e.id, t).catch(() => undefined);
+            return { ...h, eventId: e.id };
+          });
+        }
         // Ältere, kräftige Spielerfarben einmalig auf Pastell umstellen
         const players = loaded.map(p => (pastel(p.color) === p.color ? p : { ...p, color: pastel(p.color), updatedAt: clock.now() }));
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
         const g = game && { ...game, players: game.players.map(p => ({ ...p, color: pastel(p.color) })) };
-        set({ ready: true, players, game: g, templates, history });
+        set({ ready: true, players, game: g, templates, history, events });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -300,10 +323,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Beenden und speichern. Eine noch nicht gespeicherte Vorlage wird automatisch gesichert. */
     /** Beenden und speichern: Platz und Endpunktzahl je Spieler landen im Verlauf. */
-    finishGame(occasion = '') {
+    finishGame(eventId: string | null = null) {
       const g = state.game; if (!g) return;
       const f0 = finish(g, clock);
-      const f = occasion.trim() ? { ...f0, game: { ...f0.game, place: occasion.trim() } } : f0;
+      const ev = eventId ? state.events.find(e => e.id === eventId) : undefined;
+      const f = ev ? { ...f0, game: { ...f0.game, eventId: ev.id } } : f0;
       persist(f);
       const t = clock.now(), rk = ranking(f);
       if (anyScore(f)) {
@@ -316,10 +340,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
           return { id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: x.player.id, total: x.total, place: x.place, ...(extra ? { extra } : {}) };
         });
         repo.saveResults(results).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
-        const h: HistGame = { id: f.game.id, key: f.game.rules.key, name: f.game.rules.name, finishedAt: t, occasion: f.game.place ?? null,
+        const h: HistGame = { id: f.game.id, key: f.game.rules.key, name: f.game.rules.name, finishedAt: t, occasion: ev?.name ?? null, eventId: ev?.id ?? null,
           results: results.map(r => ({ playerId: r.playerId, total: r.total, place: r.place, extra: r.extra })) };
         set({ history: [h, ...state.history] });
-        if (occasion.trim()) { try { localStorage.setItem('pz:lastOccasion', occasion.trim()); } catch { /* egal */ } }
+        try { localStorage.setItem('pz:lastEvent', ev?.id ?? ''); } catch { /* egal */ }
       }
       const rules = g.game.rules;
       const auto = rules.custom && !state.templates.some(t => t.key === rules.key);
@@ -328,7 +352,34 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
     // ---------- Verlauf und Spieler
-    openTab(screen: 'home' | 'history' | 'people') { set({ screen, detail: null, profile: null }); },
+    openTab(screen: 'home' | 'history' | 'people') { set({ screen, detail: null, profile: null, series: null }); },
+    setHistTab(histTab: 'games' | 'series') { set({ histTab, detail: null }); },
+    // ---------- Serien
+    /** Neue Serie anlegen; gibt sie zurück (leerer Name: nichts) */
+    createEvent(name: string): GameEvent | null {
+      const n = name.trim(); if (!n) return null;
+      const t = clock.now();
+      const e: GameEvent = { id: clock.uid(), name: n, createdAt: t, updatedAt: t };
+      set({ events: [...state.events, e] });
+      repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      return e;
+    },
+    updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points'>>) {
+      const old = state.events.find(e => e.id === id); if (!old) return;
+      if (patch.name !== undefined && !patch.name.trim()) return;
+      const e = { ...old, ...patch, updatedAt: clock.now() };
+      set({ events: state.events.map(x => (x.id === id ? e : x)), history: patch.name ? state.history.map(h => (h.eventId === id ? { ...h, occasion: e.name } : h)) : state.history });
+      repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+    },
+    /** Partie im Verlauf einer Serie zuordnen oder lösen */
+    setGameEvent(gameId: string, eventId: string | null) {
+      const ev = eventId ? state.events.find(e => e.id === eventId) : undefined;
+      set({ history: state.history.map(h => (h.id === gameId ? { ...h, eventId: ev?.id ?? null, occasion: ev?.name ?? null } : h)) });
+      repo.setGameEvent(gameId, ev?.id ?? null, clock.now()).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+    },
+    openSeries(id: string) { set({ screen: 'series', series: { id, sort: 'points' }, detail: null }); },
+    setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
+    closeSeries() { set({ screen: 'history', histTab: 'series', series: null }); },
     openDetail(id: string | null) { set({ detail: id }); },
     openProfile(id: string) { set({ screen: 'profile', profile: { id, time: 'all', key: null, vs: [] } }); },
     setProfile(patch: Partial<ProfileView>) { if (state.profile) set({ profile: { ...state.profile, ...patch } }); },

@@ -65,7 +65,11 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
   - `scoring: 'categories'` (Kniffel): je Kategorie eine Zeile, Summe oben und Bonus, Zug-Reihenfolge, Kategorien im Menü verwalten
   - `params.phases` (Phase 10): Haken je Runde, Rang nach Phasen, dann Punkten
   - `params.zeroSum` (Schafkopf, Doppelkopf): Hinweis bei Rundensumme ungleich 0
+- **Serien** (PR #5): Tabelle `events` (DB v4), Partie per `eventId` zugeordnet
+  - Beim Beenden Serie wählen oder neu anlegen (letzte vorbelegt), im Verlauf änderbar
+  - Verlauf mit Umschalter Partien und Serien, Statistikseite `src/ui/Series.tsx`
+  - Wertung in `stats.ts`: `seriesTable` (Punkte, Schnitt, Quote), `seriesGames`, Platzpunkte anpassbar
 
 ## Tests
-- Unit-Tests: 65 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 96 Prüfungen
+- Unit-Tests: 69 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 108 Prüfungen

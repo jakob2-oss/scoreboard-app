@@ -1,5 +1,5 @@
 import { act, useApp } from '../store';
-import { bidHits, byGame, filterGames, headToHead, occasions, resultOf, summary, type TimeFilter } from '../game/stats';
+import { bidHits, byGame, filterGames, headToHead, eventIds, resultOf, summary, type TimeFilter } from '../game/stats';
 import { fmt, onColor } from '../lib/color';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
@@ -11,7 +11,7 @@ const same = (a: TimeFilter, b: TimeFilter) => JSON.stringify(a) === JSON.string
 
 /** Spielerprofil: Siege, Bilanz, Stärken je Spiel, Direktvergleich, letzte Partien */
 export function Profile() {
-  const { profile, players, history } = useApp();
+  const { profile, players, history, events } = useApp();
   if (!profile) return null;
   const me = playerOf(players, profile.id), a = act();
   const mine = filterGames(history, profile.id, 'all', null);
@@ -40,7 +40,7 @@ export function Profile() {
               {chip('Immer', same(profile.time, 'all'), () => a.setProfile({ time: 'all' }))}
               {chip('30 Tage', same(profile.time, '30'), () => a.setProfile({ time: '30' }))}
               {chip('Dieses Jahr', same(profile.time, 'year'), () => a.setProfile({ time: 'year' }))}
-              {occasions(mine).map(o => chip(o, same(profile.time, { occasion: o }), () => a.setProfile({ time: { occasion: o } })))}
+              {eventIds(mine).map(id => events.find(e => e.id === id)).filter(e => !!e).map(e => chip(e!.name, same(profile.time, { event: e!.id }), () => a.setProfile({ time: { event: e!.id } })))}
             </div>
             <div className="fchips">
               {chip('Alle Spiele', profile.key === null, () => a.setProfile({ key: null }))}

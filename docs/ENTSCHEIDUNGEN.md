@@ -22,3 +22,5 @@ Kurzes Protokoll, damit Begründungen nicht verloren gehen. Neueste oben.
 ## 12.11.2026: Spieleabende als Serien
 Spieleabende und Spieleserien werden ein Objekt „Serie“ (Tabelle `events`, im Datenmodell schon vorgesehen).
 Partien verweisen per `eventId` darauf, auch nachträglich. Teilen mit einer Gruppe kommt mit dem Sync (Phase 4).
+Wertung: Platzpunkte (anpassbar) als Summe; dazu Schnitt pro Partie für Spieler, die nicht immer dabei sind,
+und Quote geschlagener Gegner für unterschiedlich große Runden. Das freie Feld „Anlass oder Ort“ entfällt.

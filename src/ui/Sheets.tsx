@@ -1,5 +1,6 @@
 import { forwardRef, useState } from 'react';
-import { act, type Edit } from '../store';
+import { act, useApp, type Edit } from '../store';
+import { SeriesPicker } from './SeriesPicker';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
 import { fmt } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -89,8 +90,10 @@ export function MenuSheet({ g }: { g: GameState }) {
 // ---------------------------------------------------------------- Ergebnis
 
 export function ResultSheet({ g }: { g: GameState }) {
-  const lastOccasion = (() => { try { return localStorage.getItem('pz:lastOccasion') || ''; } catch { return ''; } })();
-  const [occasion, setOccasion] = useState('');
+  const { events } = useApp();
+  const [eventId, setEventId] = useState<string | null>(() => {
+    try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
+  });
   const rk = ranking(g), started = anyScore(g);
   return (
     <Sheet label="Ergebnis">
@@ -103,12 +106,10 @@ export function ResultSheet({ g }: { g: GameState }) {
           </div>
         ))}
       </div>
-      <div className="field"><label htmlFor="occasion">Anlass oder Ort</label>
-        <input id="occasion" value={occasion} maxLength={32} autoComplete="off" placeholder={lastOccasion || 'Optional'} onChange={e => setOccasion(e.target.value)} />
-      </div>
+      <div className="field"><label>Serie</label><SeriesPicker value={eventId} onChange={setEventId} /></div>
       <div className="pad-actions">
         <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
-        <button className="primary" onClick={() => act().finishGame(occasion)}>Speichern</button>
+        <button className="primary" onClick={() => act().finishGame(eventId)}>Speichern</button>
       </div>
     </Sheet>
   );
