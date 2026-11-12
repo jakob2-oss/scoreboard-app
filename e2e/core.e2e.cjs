@@ -329,6 +329,17 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('45-binokel-ov');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
+  // Teams aus einzelnen Spielern
+  await p.click('[data-game="uno"]'); await p.click('#s-gamepage .dock .secondary');
+  await p.fill('#add-name', 'Dora'); await p.press('#add-name', 'Enter');
+  await p.click('#team-mode'); await p.waitForTimeout(100);
+  check('Teams: zwei Teams vorgeschlagen', (await raw('#start-btn')) === 'Los mit 2 Teams' && (await p.locator('.team-chip').count()) === 4);
+  await shot('36a-teams');
+  await p.click('#start-btn'); await p.waitForTimeout(300);
+  check('Teams: Zettel mit Teamspalten', (await raw('.grid thead')).includes('&'));
+  await shot('36b-team-game');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite

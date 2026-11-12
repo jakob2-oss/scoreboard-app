@@ -253,6 +253,23 @@ export function roundNumber(s: GameState, ref: RoundRef): number {
 
 // ---------------------------------------------------------------- Ändern (rein, liefert neuen Zustand)
 
+/** Teampartie: jedes Team spielt wie ein Spieler; Mitglieder bekommen beim Beenden Platz und Punkte des Teams */
+export function createTeamGame(rules: Template, teams: { members: Player[] }[], clock: Clock): GameState {
+  const t = clock.now();
+  const list = teams.filter(x => x.members.length).map(x => ({
+    id: 'team-' + clock.uid(), name: teamName(x.members.map(m => m.name)), color: x.members[0].color, members: x.members.map(m => m.id)
+  }));
+  const pseudo: Player[] = list.map(x => ({ id: x.id, name: x.name, color: x.color, createdAt: t, updatedAt: t }));
+  const s = createGame(rules, pseudo, clock);
+  return { ...s, game: { ...s.game, teams: list } };
+}
+export const teamName = (names: string[]) => (names.length < 2 ? names.join('') : names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1]);
+export const isTeamGame = (s: GameState) => !!s.game.teams?.length;
+/** Mitglieder eines Sitzplatzes: bei Teams die Spieler des Teams, sonst der Spieler selbst */
+export const membersOf = (s: GameState, seatId: string): string[] => s.game.teams?.find(x => x.id === seatId)?.members ?? [seatId];
+/** Spielt dieser Spieler (direkt oder im Team) in der Partie mit? */
+export const playsIn = (s: GameState, playerId: string) => s.game.seats.some(x => membersOf(s, x.playerId).includes(playerId));
+
 export function createGame(rules: Template, players: Player[], clock: Clock): GameState {
   const t = clock.now();
   const game: Game = {

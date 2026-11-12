@@ -202,6 +202,36 @@ describe('Notizfelder', () => {
   });
 });
 
+describe('Teams', () => {
+  it('bildet Teams aus einzelnen Spielern; Mitglieder bekommen Platz und Punkte ihres Teams', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free);
+    for (const n of ['Anna', 'Ben', 'Clara', 'Dora']) await a.addPlayer(n);
+    a.setTeamMode(true);
+    expect(st.get().teamOf).toEqual({ id1: 0, id2: 1, id3: 0, id4: 1 });
+    a.start();
+    const g = st.get().game!;
+    expect(seated(g).map(p => p.name)).toEqual(['Anna & Clara', 'Ben & Dora']);
+    a.roundGo(); a.add(30); a.next(); a.add(10); a.next();
+    a.deletePlayer('id3');
+    expect(st.get().toast?.text).toBe('Clara spielt gerade mit');
+    a.finishGame();
+    const r = Object.fromEntries(mem.results.map(x => [x.playerId, [x.place, x.total]]));
+    expect(r).toEqual({ id1: [1, 30], id3: [1, 30], id2: [2, 10], id4: [2, 10] });
+    expect(st.get().history[0].results).toHaveLength(4);
+  });
+  it('braucht mindestens zwei Teams; Spieler wechseln per Antippen', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.pickTemplate(TPL.free);
+    for (const n of ['A', 'B']) await a.addPlayer(n);
+    a.setTeamMode(true); a.cycleTeam('id2');
+    a.start();
+    expect(st.get().game).toBeNull();
+    a.cycleTeam('id2'); a.addTeam(); a.start();
+    expect(seated(st.get().game!).map(p => p.name)).toEqual(['A', 'B']);
+  });
+});
+
 describe('Spieler löschen', () => {
   it('nicht während er mitspielt; danach weg aus Auswahl und Liste, Name bleibt im Verlauf', async () => {
     const { st, a, mem } = await setup('free', ['Anna', 'Ben']);

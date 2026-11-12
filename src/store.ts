@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -61,12 +61,16 @@ export interface AppState {
   formerPlayers: Player[];
   /** Weitere laufende Partien (geparkt), zuletzt geänderte zuerst */
   parked: GameState[];
+  /** Teams bilden: an, Team je gewähltem Spieler (Index) und Anzahl Teams */
+  teamMode: boolean;
+  teamOf: Record<string, number>;
+  teamCount: number;
 }
 
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], formerPlayers: []
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -76,6 +80,9 @@ export const browserPrefs: Prefs = {
   getLast: () => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '[]'); } catch { return []; } },
   setLast: ids => { try { localStorage.setItem(LAST_KEY, JSON.stringify(ids)); } catch { /* privater Modus */ } }
 };
+
+/** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
+export const canTeam = (t: Template) => t.scoring === 'rounds' && !t.params?.phases;
 
 export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs = browserPrefs) {
   const readLast = prefs.getLast, writeLast = prefs.setLast;
@@ -135,6 +142,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     const next: Edit = { ...edit, dirty: true, ref: r.roundId ?? edit.ref };
     set({ game: r.state, undo, edit: next });
     persist(r.state);
+  };
+
+  const smallestTeam = (sel: string[]) => {
+    const n = Array.from({ length: state.teamCount }, (_, k) => sel.filter(id => state.teamOf[id] === k).length);
+    return n.indexOf(Math.min(...n));
   };
 
   const actions = {
@@ -242,7 +254,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     // ---------- Spielseite eines festen Spiels (Rommé, Skyjo, …)
     openGame(t: Template) {
       const known = new Set(state.players.map(p => p.id));
-      set({ template: structuredClone(t), pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'gamepage' });
+      set({ teamMode: false, teamOf: {}, template: structuredClone(t), pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'gamepage' });
     },
     setTemplateEnd(end: Template['end']) { if (state.template) set({ template: { ...state.template, end } }); },
     toPlayers() { set({ screen: 'players' }); },
@@ -252,6 +264,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const known = new Set(state.players.map(p => p.id));
       set({ template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'players' });
     },
+    /** Teams bilden: an oder aus; Vorschlag über Kreuz (1. und 3. gegen 2. und 4.) */
+    setTeamMode(on: boolean) {
+      set({ teamMode: on, teamCount: 2, teamOf: on ? Object.fromEntries(state.selected.map((id, i) => [id, i % 2])) : {} });
+    },
+    /** Spieler ins nächste Team schieben */
+    cycleTeam(id: string) { set({ teamOf: { ...state.teamOf, [id]: ((state.teamOf[id] ?? 0) + 1) % state.teamCount } }); },
+    addTeam() { if (state.teamCount < Math.max(2, state.selected.length)) set({ teamCount: state.teamCount + 1 }); },
     /** Reihenfolge am Tisch ändern (Drag-and-drop) */
     moveSelected(from: number, to: number) {
       const sel = [...state.selected];
@@ -261,7 +280,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     toggleSelect(id: string) {
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
-      set({ selected: sel });
+      set({ selected: sel, teamOf: state.teamMode && !state.teamOf[id] && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
     },
     async addPlayer(rawName: string) {
       const name = rawName.trim().slice(0, 18);
@@ -288,7 +307,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       // Vorlage merken bzw. als zuletzt gespielt markieren
       const known = state.templates.some(x => x.key === t.key);
       if (known || state.pendingSave) saveTemplate({ ...t, lastUsedAt: clock.now(), updatedAt: clock.now() });
-      const g = createGame(t, chosen, clock);
+      const teams = state.teamMode && canTeam(t)
+        ? Array.from({ length: state.teamCount }, (_, k) => ({ members: chosen.filter(p => (state.teamOf[p.id] ?? 0) === k) })).filter(x => x.members.length)
+        : null;
+      if (teams && teams.length < 2) return;
+      const g = teams ? createTeamGame(t, teams, clock) : createGame(t, chosen, clock);
       set({ game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
       persist(g);
     },
@@ -444,7 +467,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       persist(f);
       const t = clock.now(), rk = ranking(f);
       if (anyScore(f)) {
-        const results: Result[] = rk.map(x => {
+        // Teampartie: jedes Mitglied bekommt Platz, Punkte und Kennzahlen seines Teams
+        const results: Result[] = rk.flatMap(x => {
           let extra: Result['extra'];
           if (isCats(f)) {
             const k = liveRounds(f).filter(r => r.cat?.fixed === 50 && scoreOf(f, r.id, x.player.id) === 50).length;
@@ -459,7 +483,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
             extra = { ...extra, rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
           }
-          return { id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: x.player.id, total: x.total, place: x.place, ...(extra ? { extra } : {}) };
+          return membersOf(f, x.player.id).map(pid => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: pid, total: x.total, place: x.place, ...(extra ? { extra: { ...extra, ...(isTeamGame(f) ? { team: 1 } : {}) } } : isTeamGame(f) ? { extra: { team: 1 } } : {}) }));
         });
         repo.saveResults(results).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
         const h: HistGame = { id: f.game.id, key: f.game.rules.key, name: f.game.rules.name, finishedAt: t, occasion: ev?.name ?? null, eventId: ev?.id ?? null,
@@ -530,7 +554,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Spieler löschen: verschwindet aus Auswahl und Liste, der Name bleibt im Verlauf */
     deletePlayer(id: string) {
       const p = state.players.find(x => x.id === id); if (!p) return;
-      if ([state.game, ...state.parked].some(x => x && seated(x).some(y => y.id === id))) { toast(`${p.name} spielt gerade mit`); return; }
+      if ([state.game, ...state.parked].some(x => x && playsIn(x, id))) { toast(`${p.name} spielt gerade mit`); return; }
       const t = clock.now(), gone = { ...p, updatedAt: t, deletedAt: t };
       const selected = state.selected.filter(x => x !== id);
       writeLast(readLast().filter(x => x !== id));
