@@ -98,3 +98,4 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 - Feste Spielseiten bleiben unverändert. Anpassungen daran werden als eigenes Spiel gespeichert (umgesetzt 12.11.).
 - [x] **Spielsuche** auf der Startseite (feste, Endwertungen, eigene Spiele; ohne Groß-/Kleinschreibung und Akzente).
 - [x] **Festes Spiel als eigenes Spiel anpassen:** Kopie mit Regeln, Schnelltasten und Bild des Originals, sofort in Bearbeitung.
+- [x] **Siegerseite (12.11.):** ganze Seite mit Szene des Spiels, Sieger mit Krone, Treppchen, bis zu drei Kennzahlen je Spiel (`src/game/highlights.ts`), Serie zuordnen und speichern.

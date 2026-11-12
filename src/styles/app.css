@@ -246,3 +246,30 @@ td small.nt { display: block; font-size: 10.5px; font-weight: 600; color: var(--
 .game-search:focus { outline: none; background: var(--fill-2); }
 /* Eingabefelder: kein farbiger Ring beim Antippen, stattdessen etwas dunklerer Grund */
 input:focus-visible, textarea:focus-visible { outline: none; background: var(--fill-2); }
+
+/* ---------- Siegerseite ---------- */
+.bsheet.victory { top: 0; max-height: none; border-radius: 0; padding-left: 0; padding-right: 0; animation: v-in .35s cubic-bezier(.2, .9, .3, 1.1); }
+.victory .sheet-body { padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+@keyframes v-in { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.v-hero { position: relative; height: 250px; margin-bottom: 30px; }
+.v-scene { position: absolute; inset: 0; overflow: hidden; border-radius: 0 0 32px 32px; }
+.v-scene .scene { width: 100%; height: 100%; display: block; }
+.v-winner { position: absolute; left: 0; right: 0; bottom: -28px; display: flex; justify-content: center; gap: 10px; }
+.v-av { position: relative; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-family: var(--f-display); font-size: 34px; font-weight: 600; box-shadow: 0 0 0 6px var(--bg); }
+.v-av .crown { position: absolute; top: -22px; left: 50%; width: 34px; height: 28px; transform: translateX(-50%) rotate(-8deg); }
+.v-meta { text-align: center; margin-top: 4px; }
+.v-title { text-align: center; font-size: 30px !important; margin: -4px 0 4px; }
+.v-podium { display: flex; justify-content: center; align-items: flex-end; gap: 8px; margin-top: 6px; }
+.v-step { flex: 1; max-width: 116px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.v-nm { font-family: var(--f-display); font-weight: 500; font-size: 15px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v-pts { font-family: var(--f-num); font-weight: 600; font-size: 17px; font-variant-numeric: tabular-nums; }
+.v-block { width: 100%; border-radius: 16px 16px 6px 6px; display: grid; place-items: start center; padding-top: 8px; font-family: var(--f-num); font-weight: 700; font-size: 26px; margin-top: 4px; }
+.v-step.p1 .v-block { height: 96px; }
+.v-step.p2 .v-block { height: 70px; }
+.v-step.p3 .v-block { height: 52px; }
+.victory .podium:empty { display: none; }
+.v-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.v-stat { background: var(--surface); border-radius: 18px; box-shadow: var(--soft); padding: 10px 10px 12px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.v-stat small { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.v-stat b { font-family: var(--f-num); font-size: 24px; font-weight: 600; line-height: 1.15; }
+.v-stat span { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
