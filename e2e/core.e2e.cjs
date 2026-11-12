@@ -390,7 +390,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tk-all'); await p.waitForTimeout(300);
   check('Chic: wer zuletzt Deckel hat, verliert', (await raw('.dock .primary')) === 'Ergebnis');
   await p.click('.dock .primary'); await p.waitForTimeout(400);
-  check('Chic: Siegerseite nennt den Verlierer', (await raw('.v-title')).endsWith('verliert'));
+  check('Chic: Siegerseite nennt den Verlierer, trauriger Otter mit Deckeln', (await raw('.v-title')).endsWith('verliert') && (await raw('.v-scene')).includes('ALLE DECKEL'));
+  await shot('37i-chic-verlierer');
   await p.click('.victory .pad-actions .secondary');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   await p.click('.row[data-own] >> text=Chic'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);

@@ -3,7 +3,7 @@ import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
 import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
-import { trophyRoom } from './trophy';
+import { loserRoom, trophyRoom } from './trophy';
 import { names } from './Home';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -102,7 +102,8 @@ export function ResultSheet({ g }: { g: GameState }) {
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
   const winners = rk.filter(x => x.place === 1);
   const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
-  const scene = trophyRoom(icon, isTokens(g) && tokenState(g).loser ? 'ENTSCHIEDEN' : undefined);
+  // Deckel-Spiele (Schocken, Chic): es zählt, wer verliert, also der traurige Otter mit dem Deckelstapel
+  const scene = isTokens(g) && tokenState(g).loser ? loserRoom(icon, 'deckel') : trophyRoom(icon);
   const stats = started ? highlights(g) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
