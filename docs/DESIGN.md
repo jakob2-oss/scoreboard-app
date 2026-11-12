@@ -77,3 +77,8 @@ Spielszenen folgen demselben Aufbau. Alle Illustrationen sind eigene Zeichnungen
 
 Kurz, freundlich, in ganzen Sätzen. Regeln als kurzer Fließtext mit hervorgehobenen
 Kernpunkten und einem Rechenbeispiel statt Stichpunktlisten.
+
+## Szenen und Icons (Stand 12.11.)
+- Icon = ein einzelnes, klares Symbol des Spiels. Szene = die Situation dazu. Beide ergänzen sich, nie dasselbe Motiv zweimal.
+- Szenen-Hintergrund über `sky(…, muster)` in `src/ui/art.ts`, je Spiel ein eigenes Muster.
+- Bewegung nur dezent (Klassen `an-*` in `app.css`), bei „Bewegung reduzieren“ ausgeschaltet.

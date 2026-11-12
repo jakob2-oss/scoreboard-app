@@ -444,6 +444,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ history: state.history.map(h => (h.id === gameId ? { ...h, eventId: ev?.id ?? null, occasion: ev?.name ?? null } : h)) });
       repo.setGameEvent(gameId, ev?.id ?? null, clock.now()).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
+    /** Partie aus dem Verlauf löschen; Statistik rechnet ohne sie */
+    deleteHistoryGame(id: string) {
+      const h = state.history.find(x => x.id === id); if (!h) return;
+      set({ history: state.history.filter(x => x.id !== id), detail: null });
+      repo.deleteGame(id, clock.now()).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      toast(`${h.name} gelöscht`);
+    },
     openSeries(id: string) { set({ screen: 'series', series: { id, sort: 'perf' }, detail: null }); },
     setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
     closeSeries() { set({ screen: 'history', histTab: 'series', series: null }); },

@@ -81,4 +81,13 @@ describe('Lokale Datenbank', () => {
     expect(await b.importAll(backup)).toBe(0);
     await expect(b.importAll({ app: 'x' } as never)).rejects.toThrow();
   });
+
+  it('löscht eine abgeschlossene Partie aus dem Verlauf', async () => {
+    const repo = freshRepo(), t = '2026-01-01T00:00:00Z';
+    await repo.saveGame({ game: { id: 'g1', createdAt: t, updatedAt: t, rules: TPL.free, status: 'finished', finishedAt: t, seats: [] } as never, players: [], rounds: [], entries: [] });
+    await repo.saveResults([{ id: 'r1', createdAt: t, updatedAt: t, gameId: 'g1', playerId: 'p1', total: 5, place: 1 }]);
+    expect(await repo.loadHistory()).toHaveLength(1);
+    await repo.deleteGame('g1', '2026-01-02T00:00:00Z');
+    expect(await repo.loadHistory()).toHaveLength(0);
+  });
 });

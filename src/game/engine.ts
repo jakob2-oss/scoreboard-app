@@ -159,7 +159,7 @@ export function endState(s: GameState): EndState | null {
     const fin = seated(s).filter(p => phasesDone(s, p.id) >= 10);
     if (!fin.length) return null;
     const last = rounds[rounds.length - 1], full = !!last && roundFull(s, last.id);
-    return { done: full, text: `${fin.map(p => p.name).join(', ')} hat Phase 10 geschafft` + (full ? '' : '. Runde noch zu Ende eintragen') };
+    return { done: full, text: `${fin.map(p => p.name).join(', ')} ${fin.length > 1 ? 'haben' : 'hat'} Phase 10 geschafft` + (full ? '' : '. Runde noch zu Ende eintragen') };
   }
   if (end.type === 'rounds') {
     const done = rounds.length >= end.value && rounds.slice(0, end.value).every(r => roundFull(s, r.id));

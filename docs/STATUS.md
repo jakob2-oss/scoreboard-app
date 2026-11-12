@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt, PR #6 offen)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5, #6, #7 gemergt)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
@@ -80,7 +80,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 gemergt
 - **Leistung** (PR #6): `performance()` in `stats.ts`, Anzeige mit `fmtPerf` („1,6×“)
 - **Prüfung lokaler Gebrauch** (PR #6): Sicherung (`exportAll`, `importAll` in `db.ts`, Bereich „Daten“ unter Spieler),
   `navigator.storage.persist()`, Nachfrage bei laufender Partie, Spieler umbenennen, neue Szenen-Hintergründe (`sky()` in `art.ts`)
+- **Durchlauf aller 14 Spiele** (starten, eintragen, neu laden, beenden) ohne Fehler; Partie im Verlauf löschen (`deleteGame`)
 
 ## Tests
-- Unit-Tests: 82 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 127 Prüfungen
+- Unit-Tests: 83 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 133 Prüfungen

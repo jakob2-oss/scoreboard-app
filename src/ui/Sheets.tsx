@@ -1,6 +1,7 @@
 import { forwardRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
+import { names } from './Home';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
 import { fmt } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -98,7 +99,7 @@ export function ResultSheet({ g }: { g: GameState }) {
   return (
     <Sheet label="Ergebnis">
       <div className="eyebrow">{new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-      <h3>{started ? rk.filter(x => x.place === 1).map(x => x.player.name).join(' & ') + ' gewinnt' : 'Noch keine Punkte'}</h3>
+      <h3>{started ? (() => { const w = rk.filter(x => x.place === 1).map(x => x.player.name); return names(w) + (w.length > 1 ? ' gewinnen' : ' gewinnt'); })() : 'Noch keine Punkte'}</h3>
       <div className="podium">
         {rk.map(x => (
           <div key={x.player.id} className={'prow' + (x.place === 1 && started ? ' win' : '')}>

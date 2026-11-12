@@ -199,3 +199,19 @@ td.struck, .pp-cat .v.struck { color: var(--muted); opacity: .6; }
 .mini-pct { width: 44px; }
 .pf-name { font: inherit; color: inherit; background: none; border: 0; padding: 0; width: 100%; border-radius: 8px; }
 .pf-name:focus { background: var(--fill); outline: none; padding: 0 6px; }
+.hist-del { margin-top: 14px; }
+
+/* ---------- Bewegte Szenen (dezent) ---------- */
+.scene .an-float { animation: sc-float 6s ease-in-out infinite; }
+.scene .an-tw { animation: sc-tw 3.2s ease-in-out infinite; }
+.scene .an-pulse { animation: sc-pulse 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.scene .an-spin { animation: sc-spin 90s linear infinite; }
+.scene .an-drift { animation: sc-drift 14s ease-in-out infinite; }
+.scene .an-bob { animation: sc-bob 7s ease-in-out infinite; }
+@keyframes sc-float { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(3px, -8px) rotate(14deg); } }
+@keyframes sc-tw { 0%, 100% { opacity: .85; } 50% { opacity: .25; } }
+@keyframes sc-pulse { 0%, 100% { transform: scale(1); opacity: .35; } 50% { transform: scale(1.18); opacity: .18; } }
+@keyframes sc-spin { to { transform: rotate(360deg); } }
+@keyframes sc-drift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(14px); } }
+@keyframes sc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .scene * { animation: none !important; } }
