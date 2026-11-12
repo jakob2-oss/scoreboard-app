@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, type HistGame } from './stats';
+import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -70,5 +70,24 @@ describe('Serien', () => {
   it('fasst die Spiele einer Serie zusammen', () => {
     expect(seriesGames(list)[0]).toMatchObject({ key: 'uno', played: 2, top: 1 });
     expect(seriesGames(list)[0].leaders.sort()).toEqual(['a', 'b']);
+  });
+});
+
+describe('Direktvergleich', () => {
+  it('zählt, wer vorn lag, und rechnet Punkte nur bei gleichem Spiel', () => {
+    const l = [
+      g('1', 'kniffel', 2, [['a', 1, 250], ['b', 2, 200], ['c', 3, 100]]),
+      g('2', 'kniffel', 1, [['b', 1, 300], ['a', 2, 220]]),
+      g('3', 'kniffel', 0, [['a', 1, 280], ['c', 2, 90]])
+    ];
+    l[0].results[0].extra = { kniffel: 1, bonus: 1 }; l[0].results[1].extra = { kniffel: 0, bonus: 0 };
+    const d = duel(l, 'a', 'b');
+    expect(d.shared).toBe(2);
+    expect([d.a.ahead, d.b.ahead]).toEqual([1, 1]);
+    expect([d.a.avgPts, d.b.best]).toEqual([235, 300]);
+    expect(d.extras.find(x => x.label === 'Kniffel gewürfelt')).toMatchObject({ a: 1, b: 0 });
+    const mixed = duel([...l, g('4', 'uno', 0, [['a', 1, 1], ['b', 2, 2]])], 'a', 'b');
+    expect(mixed.a.avgPts).toBeNull();
+    expect(mixed.perGame.map(x => [x.key, x.a, x.b])).toEqual([['kniffel', 1, 1], ['uno', 1, 0]]);
   });
 });

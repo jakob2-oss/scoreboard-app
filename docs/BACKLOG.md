@@ -60,3 +60,6 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
       Wizard, Kniffel, Phase 10 waren schon spielspezifisch; Rommé, Skyjo, Scrabble haben passende Faktoren (×2, ×3).
 - [ ] Ideen für später: Uno „Sieger bekommt die Karten der anderen“ automatisch, Skyjo „Beender verdoppelt“ automatisch,
       Doppelkopf Re/Kontra als Partei je Runde.
+- [x] **Direktvergleich als Duell** (Vorbild Screenshot 12.11.): zwei Spieler gegenüber, gespiegelte Balken in Spielerfarben:
+      Vorn, Durchschnittsplatz, bei einem Spiel auch Durchschnitt und Bestwert, Kniffel gewürfelt und Bonus, Wizard-Ansagen,
+      Vorn je Spiel, gemeinsame Partien mit Revanche. Ab drei Spielern bleibt die Mehrfach-Ansicht.

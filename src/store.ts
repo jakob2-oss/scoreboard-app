@@ -3,9 +3,10 @@ import type { Category, GameEvent, Player, Result, Template } from './model/type
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
+import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -373,6 +374,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (anyScore(f)) {
         const results: Result[] = rk.map(x => {
           let extra: Result['extra'];
+          if (isCats(f)) {
+            const k = liveRounds(f).filter(r => r.cat?.fixed === 50 && scoreOf(f, r.id, x.player.id) === 50).length;
+            extra = { kniffel: k, bonus: upperSum(f, x.player.id).bonus > 0 ? 1 : 0 };
+          }
           if (isBids(f)) {
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
             extra = { rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
@@ -421,6 +426,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
     closeSeries() { set({ screen: 'history', histTab: 'series', series: null }); },
     openDetail(id: string | null) { set({ detail: id }); },
+    /** Revanche: dasselbe Spiel mit denselben Spielern */
+    rematch(gameId: string) {
+      const h = state.history.find(x => x.id === gameId); if (!h) return;
+      const t = gameDef(h.key)?.template ?? state.templates.find(x => x.key === h.key); if (!t) return;
+      const ids = h.results.map(r => r.playerId).filter(id => state.players.some(p => p.id === id));
+      set({ template: structuredClone(t), pendingSave: false, editKey: null, selected: ids, screen: 'players', profile: null });
+    },
     openProfile(id: string) { set({ screen: 'profile', profile: { id, time: 'all', key: null, vs: [] } }); },
     setProfile(patch: Partial<ProfileView>) { if (state.profile) set({ profile: { ...state.profile, ...patch } }); },
     discardGame() {

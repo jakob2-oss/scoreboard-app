@@ -1,5 +1,7 @@
 import { act, useApp } from '../store';
-import { bidHits, byGame, filterGames, headToHead, eventIds, resultOf, summary, type TimeFilter } from '../game/stats';
+import { bidHits, byGame, duel, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
+import { gameDef } from '../game/games';
+import type { Player } from '../model/types';
 import { fmt, onColor } from '../lib/color';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
@@ -11,7 +13,7 @@ const same = (a: TimeFilter, b: TimeFilter) => JSON.stringify(a) === JSON.string
 
 /** Spielerprofil: Siege, Bilanz, Stärken je Spiel, Direktvergleich, letzte Partien */
 export function Profile() {
-  const { profile, players, history, events } = useApp();
+  const { profile, players, history, events, templates } = useApp();
   if (!profile) return null;
   const me = playerOf(players, profile.id), a = act();
   const mine = filterGames(history, profile.id, 'all', null);
@@ -90,7 +92,8 @@ export function Profile() {
                       </button>
                     ))}
                   </div>
-                  {vs && (vs.shared
+                  {profile.vs.length === 1 && <DuelView list={list} me={me as Player} other={playerOf(players, profile.vs[0]) as Player} low={!!profile.key && (gameDef(profile.key)?.template ?? templates.find(t => t.key === profile.key))?.win === 'low'} />}
+                  {profile.vs.length > 1 && vs && (vs.shared
                     ? <>
                       <p className="vs-sum">{vs.shared} gemeinsame {vs.shared === 1 ? 'Partie' : 'Partien'}</p>
                       <div className="vs-bars">
@@ -124,5 +127,61 @@ export function Profile() {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Direktvergleich zweier Spieler: gespiegelte Balken in den Spielerfarben */
+function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; other: Player; low: boolean }) {
+  const d = duel(list, me.id, other.id, low);
+  if (!d.shared) return <p className="vs-sum">Keine gemeinsamen Partien</p>;
+  const dec = (n: number) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+  const row = (label: string, a: number, b: number, better: 'high' | 'low' = 'high', show: (n: number) => string = dec, small = false) => {
+    const wa = better === 'high' ? a : b, wb = better === 'high' ? b : a;
+    const lead = a === b ? 0 : (better === 'high' ? a > b : a < b) ? 1 : 2;
+    return (
+      <div className={'duel-row' + (small ? ' small' : '')} key={label}>
+        <div className="eyebrow">{label}</div>
+        <div className="duel-line">
+          <b className={lead === 2 ? 'dim' : ''}>{show(a)}</b>
+          <span className="duel-bar">
+            <i style={{ flex: Math.max(wa, 0) || (wa === wb ? 1 : 0.0001), background: me.color }} />
+            <i style={{ flex: Math.max(wb, 0) || (wa === wb ? 1 : 0.0001), background: other.color }} />
+          </span>
+          <b className={lead === 1 ? 'dim' : ''}>{show(b)}</b>
+        </div>
+      </div>
+    );
+  };
+  return (
+    <div className="duel">
+      <div className="duel-head">
+        <div><Avatar p={me} big /><span>{me.name}</span></div>
+        <small>{d.shared} gemeinsame {d.shared === 1 ? 'Partie' : 'Partien'}</small>
+        <div><Avatar p={other} big /><span>{other.name}</span></div>
+      </div>
+      {row('Vorn', d.a.ahead, d.b.ahead)}
+      {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
+      {d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
+      {d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
+      {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
+      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Vorn je Spiel</div>{d.perGame.map(x => row(x.name, x.a, x.b, 'high', dec, true))}</>}
+      <div className="eyebrow duel-last">Gemeinsame Partien</div>
+      <div className="duel-games">
+        {d.games.slice(0, 5).map(g => {
+          const ra = resultOf(g, me.id)!, rb = resultOf(g, other.id)!, ic = iconFor(g.key);
+          return (
+            <div key={g.id} className="duel-game">
+              <GameIcon icon={ic.icon} tint={ic.tint} />
+              <span className="t">
+                <small>{g.name}, {dateShort(g.finishedAt)}</small>
+                <span className={ra.place < rb.place ? 'w' : ''}>{me.name} {fmt(ra.total)}{ra.place < rb.place && <Crown />}</span>
+                <span className={rb.place < ra.place ? 'w' : ''}>{other.name} {fmt(rb.total)}{rb.place < ra.place && <Crown />}</span>
+              </span>
+              <button className="rematch" onClick={() => act().rematch(g.id)} aria-label={`Revanche ${g.name}`}>Revanche</button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -73,7 +73,9 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (PR #5 offen)
   - `params.split` (zwei Felder je Runde, Summe) nutzt dieselbe Mechanik wie Wizard (`fieldsOf`, `bidPhase`, `setField`)
   - Schnelltaste `op: 'rest'` für Nullsummen-Spiele
   - `updateFreeTemplate`, `deleteTemplate` (weich), `goneKeys`
+- **Duell im Profil** (PR #5): `duel()` in `stats.ts`, `DuelView` in `Profile.tsx`, Revanche über `rematch()`;
+  Kniffel speichert beim Beenden `extra.kniffel` und `extra.bonus`
 
 ## Tests
-- Unit-Tests: 73 (Logik, Statistik, Speicherung, Abläufe)
-- Klicktest `e2e/core.e2e.cjs`: 115 Prüfungen
+- Unit-Tests: 74 (Logik, Statistik, Speicherung, Abläufe)
+- Klicktest `e2e/core.e2e.cjs`: 118 Prüfungen

@@ -111,3 +111,49 @@ export function seriesGames(list: HistGame[]) {
     return { key: x.key, name: x.name, played: x.played, top, leaders: Object.keys(x.wins).filter(id => x.wins[id] === top) };
   }).sort((a, b) => b.played - a.played);
 }
+
+// ---------------------------------------------------------------- Direktvergleich zweier Spieler
+
+export interface DuelSide { ahead: number; avgPlace: number; avgPts: number | null; best: number | null }
+export interface Duel {
+  shared: number;
+  a: DuelSide; b: DuelSide;
+  /** Je Spiel: wie oft jeder vorn lag */
+  perGame: { key: string; name: string; a: number; b: number }[];
+  /** Spielspezifisch, z. B. Kniffel gewürfelt, Wizard-Ansagen getroffen */
+  extras: { label: string; a: number; b: number; unit?: string }[];
+  /** Gemeinsame Partien, neueste zuerst */
+  games: HistGame[];
+}
+
+/** Vergleich zweier Spieler über ihre gemeinsamen Partien. Punkte nur, wenn alles dasselbe Spiel ist. */
+export function duel(list: HistGame[], a: string, b: string, low = false): Duel {
+  const games = list.filter(g => resultOf(g, a) && resultOf(g, b));
+  const side = (id: string, other: string): DuelSide => {
+    const rs = games.map(g => resultOf(g, id)!);
+    const sameGame = new Set(games.map(g => g.key)).size === 1;
+    return {
+      ahead: games.filter(g => resultOf(g, id)!.place < resultOf(g, other)!.place).length,
+      avgPlace: rs.length ? Math.round(rs.reduce((x, r) => x + r.place, 0) / rs.length * 10) / 10 : 0,
+      avgPts: sameGame && rs.length ? Math.round(rs.reduce((x, r) => x + r.total, 0) / rs.length) : null,
+      best: sameGame && rs.length ? (low ? Math.min : Math.max)(...rs.map(r => r.total)) : null
+    };
+  };
+  const map = new Map<string, { key: string; name: string; a: number; b: number }>();
+  for (const g of games) {
+    const x = map.get(g.key) ?? { key: g.key, name: g.name, a: 0, b: 0 };
+    const pa = resultOf(g, a)!.place, pb = resultOf(g, b)!.place;
+    if (pa < pb) x.a++; else if (pb < pa) x.b++;
+    map.set(g.key, x);
+  }
+  const sumExtra = (id: string, k: string) => games.reduce((x, g) => x + Number(resultOf(g, id)!.extra?.[k] || 0), 0);
+  const has = (k: string) => games.some(g => g.results.some(r => r.extra && k in r.extra));
+  const extras: Duel['extras'] = [];
+  if (has('kniffel')) extras.push({ label: 'Kniffel gewürfelt', a: sumExtra(a, 'kniffel'), b: sumExtra(b, 'kniffel') });
+  if (has('bonus')) extras.push({ label: 'Bonus oben', a: sumExtra(a, 'bonus'), b: sumExtra(b, 'bonus') });
+  if (has('hits')) {
+    const rate = (id: string) => { const h = bidHits(games, id); return h.rate; };
+    extras.push({ label: 'Ansagen getroffen', a: rate(a), b: rate(b), unit: '%' });
+  }
+  return { shared: games.length, a: side(a, b), b: side(b, a), perGame: [...map.values()].sort((x, y) => y.a + y.b - x.a - x.b), extras, games };
+}

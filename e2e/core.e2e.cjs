@@ -145,7 +145,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
   check('Profil von Ben', (await text('.pf-hero h1')) === 'Ben' && (await text('.tile.accent b')) === '1');
   await p.click('.vs-p >> nth=0');
-  check('Direktvergleich zeigt gemeinsame Partie', (await text('.vs-sum')) === '1 gemeinsame Partie');
+  check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
+  check('Direktvergleich: Balken „Vorn“ und Revanche', (await p.locator('.duel-row').count()) >= 3 && await p.isVisible('.rematch'));
   await shot('31-profile');
   await p.click('[aria-label="Zurück"]');
   check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
@@ -314,7 +315,15 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
   await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
   check('Partie aus der Serie gelöst', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Keine');
-  await p.mouse.click(30, 40); await p.click('#tab-home');
+  await p.mouse.click(30, 40);
+  // Direktvergleich mit mehreren Partien, Revanche
+  await p.click('#tab-people'); await p.click('.person-row >> text=Anna'); await p.click('.vs-p >> text=Ben'); await p.waitForTimeout(200);
+  await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('46-duel');
+  await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('46-duel-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+  check('Duell: mehrere Spiele als eigene Zeilen', (await p.locator('.duel-row').count()) >= 4, String(await p.locator('.duel-row').count()));
+  await p.click('.rematch >> nth=0'); await p.waitForTimeout(200);
+  check('Revanche öffnet die Spielerauswahl mit denselben Spielern', await p.isVisible('#start-btn') && (await raw('#start-btn')).includes('3'));
+  await p.click('#tab-home').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Eigenes Spiel bearbeiten und löschen
   await p.click('#my-games .row >> nth=1'); await shot('43-own-game');
