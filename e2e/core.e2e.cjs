@@ -344,13 +344,13 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[data-game="arschloch"]'); await shot('36c-arschloch'); await p.click('#quick-start'); await p.waitForTimeout(300);
   check('Arschloch: Knopf „Runde 1 verteilen“', (await raw('#round-go')).startsWith('Runde 1 verteilen'));
   await p.click('#round-go'); await p.waitForTimeout(200);
-  const order = await p.locator('.rank-row .nm').allTextContents();
-  await p.click(`.rank-row >> text=${order[1]}`); await p.click(`.rank-row >> text=${order[0]}`);
+  const finish = await p.locator('.rank-row .nm').allTextContents();
+  await p.click(`.rank-row >> text=${finish[1]}`); await p.click(`.rank-row >> text=${finish[0]}`);
   await shot('36d-arschloch-sheet');
-  for (const nm of order.slice(2, -1)) await p.click(`.rank-row >> text=${nm}`);
+  for (const nm of finish.slice(2, -1)) await p.click(`.rank-row >> text=${nm}`);
   await p.waitForTimeout(300);
   check('Arschloch: Runde verteilt, Letzter automatisch', !(await p.isVisible('.rank-list')) && (await p.locator('td.cell.rank.r-a').count()) === 1 && (await p.locator('td.cell.rank.r-p').count()) === 1);
-  await p.click('#round-go'); for (const nm of order) { if (await p.isVisible('.rank-list')) await p.click(`.rank-row >> text=${nm}`); } await p.waitForTimeout(300);
+  await p.click('#round-go'); for (const nm of finish) { if (await p.isVisible('.rank-list')) await p.click(`.rank-row >> text=${nm}`); } await p.waitForTimeout(300);
   await shot('36e-arschloch-ov');
   await p.click('#s-game .text-btn'); await p.waitForTimeout(400);
   check('Arschloch: Siegerseite mit Rollen-Statistik', (await raw('.v-stats')).includes('Präsident'));
