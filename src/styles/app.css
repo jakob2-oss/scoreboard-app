@@ -179,3 +179,4 @@ body { margin: 0; }
 .duel-row.small .eyebrow { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
 .duel-row.small .duel-line b { font-size: 17px; }
 .duel-row.small .duel-bar { height: 10px; }
+.duel-seg { margin-top: -2px; }

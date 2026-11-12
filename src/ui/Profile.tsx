@@ -1,4 +1,5 @@
 import { act, useApp } from '../store';
+import { useState } from 'react';
 import { bidHits, byGame, duel, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
 import { gameDef } from '../game/games';
 import type { Player } from '../model/types';
@@ -133,7 +134,11 @@ export function Profile() {
 /** Direktvergleich zweier Spieler: gespiegelte Balken in den Spielerfarben */
 function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; other: Player; low: boolean }) {
   const d = duel(list, me.id, other.id, low);
+  const [rate, setRate] = useState(false);
   if (!d.shared) return <p className="vs-sum">Keine gemeinsamen Partien</p>;
+  const pct = (x: number, n: number) => (n ? Math.round(x / n * 100) : 0);
+  const cnt = (a: number, b: number, n: number) => (rate ? [pct(a, n), pct(b, n)] : [a, b]) as [number, number];
+  const unit = (n: number) => dec(n) + (rate ? ' %' : '');
   const dec = (n: number) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
   const row = (label: string, a: number, b: number, better: 'high' | 'low' = 'high', show: (n: number) => string = dec, small = false) => {
     const wa = better === 'high' ? a : b, wb = better === 'high' ? b : a;
@@ -159,13 +164,17 @@ function DuelView({ list, me, other, low }: { list: HistGame[]; me: Player; othe
         <small>{d.shared} gemeinsame {d.shared === 1 ? 'Partie' : 'Partien'}</small>
         <div><Avatar p={other} big /><span>{other.name}</span></div>
       </div>
-      {row('Siege', d.a.wins, d.b.wins)}
-      {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', d.a.ahead, d.b.ahead)}
+      <div className="seg duel-seg">
+        <button id="duel-count" aria-pressed={!rate} onClick={() => setRate(false)}>Anzahl</button>
+        <button id="duel-rate" aria-pressed={rate} onClick={() => setRate(true)}>Quote</button>
+      </div>
+      {row(rate ? 'Siegquote' : 'Siege', ...cnt(d.a.wins, d.b.wins, d.shared), 'high', unit)}
+      {(d.a.ahead !== d.a.wins || d.b.ahead !== d.b.wins) && row('Besser platziert', ...cnt(d.a.ahead, d.b.ahead, d.shared), 'high', unit)}
       {row('Durchschnittsplatz', d.a.avgPlace, d.b.avgPlace, 'low')}
       {d.a.avgPts !== null && d.b.avgPts !== null && row('Durchschnitt', d.a.avgPts, d.b.avgPts, low ? 'low' : 'high', fmt)}
       {d.a.best !== null && d.b.best !== null && row('Bestwert', d.a.best, d.b.best, low ? 'low' : 'high', fmt)}
       {d.extras.map(x => row(x.label, x.a, x.b, 'high', n => dec(n) + (x.unit ? ' ' + x.unit : '')))}
-      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name, x.a, x.b, 'high', dec, true))}</>}
+      {d.perGame.length > 1 && <><div className="eyebrow duel-last">Siege je Spiel</div>{d.perGame.map(x => row(x.name + (rate ? '' : `, ${x.n} ${x.n === 1 ? 'Partie' : 'Partien'}`), ...cnt(x.a, x.b, x.n), 'high', unit, true))}</>}
       <div className="eyebrow duel-last">Gemeinsame Partien</div>
       <div className="duel-games">
         {d.games.slice(0, 5).map(g => {

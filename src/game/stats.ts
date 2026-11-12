@@ -119,7 +119,7 @@ export interface Duel {
   shared: number;
   a: DuelSide; b: DuelSide;
   /** Je Spiel: Siege (Platz 1) jedes Spielers */
-  perGame: { key: string; name: string; a: number; b: number }[];
+  perGame: { key: string; name: string; n: number; a: number; b: number }[];
   /** Spielspezifisch, z. B. Kniffel gewürfelt, Wizard-Ansagen getroffen */
   extras: { label: string; a: number; b: number; unit?: string }[];
   /** Gemeinsame Partien, neueste zuerst */
@@ -140,9 +140,10 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
       best: sameGame && rs.length ? (low ? Math.min : Math.max)(...rs.map(r => r.total)) : null
     };
   };
-  const map = new Map<string, { key: string; name: string; a: number; b: number }>();
+  const map = new Map<string, { key: string; name: string; n: number; a: number; b: number }>();
   for (const g of games) {
-    const x = map.get(g.key) ?? { key: g.key, name: g.name, a: 0, b: 0 };
+    const x = map.get(g.key) ?? { key: g.key, name: g.name, n: 0, a: 0, b: 0 };
+    x.n++;
     const pa = resultOf(g, a)!.place, pb = resultOf(g, b)!.place;
     if (pa === 1) x.a++;
     if (pb === 1) x.b++;
@@ -157,5 +158,5 @@ export function duel(list: HistGame[], a: string, b: string, low = false): Duel 
     const rate = (id: string) => { const h = bidHits(games, id); return h.rate; };
     extras.push({ label: 'Ansagen getroffen', a: rate(a), b: rate(b), unit: '%' });
   }
-  return { shared: games.length, a: side(a, b), b: side(b, a), perGame: [...map.values()].sort((x, y) => y.a + y.b - x.a - x.b), extras, games };
+  return { shared: games.length, a: side(a, b), b: side(b, a), perGame: [...map.values()].sort((x, y) => y.n - x.n), extras, games };
 }

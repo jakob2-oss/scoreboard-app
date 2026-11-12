@@ -321,6 +321,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('46-duel');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('46-duel-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   check('Duell: mehrere Spiele als eigene Zeilen', (await p.locator('.duel-row').count()) >= 4, String(await p.locator('.duel-row').count()));
+  await p.click('#duel-rate'); await p.waitForTimeout(100);
+  check('Duell: Quote in Prozent', (await raw('.duel-row .eyebrow >> nth=0')) === 'Siegquote' && (await text('.duel-line b >> nth=0')).endsWith('%'));
+  await p.evaluate(() => document.querySelector('.duel').scrollIntoView()); await shot('47-duel-rate');
   await p.click('.rematch >> nth=0'); await p.waitForTimeout(200);
   check('Revanche öffnet die Spielerauswahl mit denselben Spielern', await p.isVisible('#start-btn') && (await raw('#start-btn')).includes('3'));
   await p.click('#tab-home').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');

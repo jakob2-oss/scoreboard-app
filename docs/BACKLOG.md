@@ -62,4 +62,4 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
       Doppelkopf Re/Kontra als Partei je Runde.
 - [x] **Direktvergleich als Duell** (Vorbild Screenshot 12.11.): zwei Spieler gegenüber, gespiegelte Balken in Spielerfarben:
       Siege, besser platziert, Durchschnittsplatz, bei einem Spiel auch Durchschnitt und Bestwert, Kniffel gewürfelt und Bonus, Wizard-Ansagen,
-      Siege je Spiel, gemeinsame Partien mit Revanche. Ab drei Spielern bleibt die Mehrfach-Ansicht.
+      Siege je Spiel, gemeinsame Partien mit Revanche. Umschalter Anzahl und Quote (Prozent der gemeinsamen Partien). Ab drei Spielern bleibt die Mehrfach-Ansicht.
