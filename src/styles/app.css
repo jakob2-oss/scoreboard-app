@@ -423,3 +423,17 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 @keyframes tb-neon { 0%, 100% { opacity: 1; } 91% { opacity: .55; } 92% { opacity: 1; } 94% { opacity: .7; } 95% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .tb-blob, .tb-neon, .tb-wave, .tb-coaster, .tb-blink, .tb-flicker, .tb-sway, .tb-glow, .tb-mid-art, .tb-dk, .tbl.fire .tb-av .av { animation: none !important; } }
 .seg.seg-2 { margin-top: 8px; }
+/* Verliererseite: Regen fällt, Wolke schwebt, Träne rinnt */
+.vr-drop { animation: vr-drop 1.8s ease-in infinite; }
+@keyframes vr-drop { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(70px); opacity: 0; } }
+.vr-cloud { animation: vr-cloud 6s ease-in-out infinite; }
+@keyframes vr-cloud { 50% { transform: translate(195px, 60px); } }
+.vo-tear { animation: vo-tear 3.2s ease-in infinite; }
+@keyframes vo-tear { 0%, 30% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .vr-drop, .vr-cloud, .vo-tear { animation: none !important; } }
+/* Ergebnisseite: „Oina no“ startet sofort die Revanche */
+.victory .again { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 54px; margin-top: 10px; border: 0; border-radius: var(--r);
+  background: #272748; color: #f3ead6; font-family: var(--f-display); font-weight: 600; font-size: 19px; letter-spacing: .02em; }
+.victory .again svg { width: 30px; height: 30px; }
+:root[data-theme="dark"] .victory .again { background: #3a3970; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .victory .again { background: #3a3970; } }

@@ -16,9 +16,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Punktezettel',
-        short_name: 'Punktezettel',
-        description: 'Digitaler Punktezettel für Spieleabende',
+        name: 'Oina no?',
+        short_name: 'Oina no?',
+        description: 'Punkte, Leben und Deckel zählen für Spieleabende',
         lang: 'de',
         start_url: base,
         scope: base,

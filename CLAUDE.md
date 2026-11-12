@@ -1,4 +1,4 @@
-# Punktezettel – Arbeitsanweisungen für Claude
+# Oina no? (früher Punktezettel) – Arbeitsanweisungen für Claude
 
 Diese Datei wird in jeder Sitzung automatisch geladen. Sie hält fest, was über einzelne
 Gespräche hinaus gelten muss. Details stehen in `docs/`.
@@ -23,7 +23,7 @@ Gespräche hinaus gelten muss. Details stehen in `docs/`.
 ## Design
 Festgeschrieben in `docs/DESIGN.md`: Hell „Papier & Indigo“, Dunkel „Mitternacht“, Schrift Jost,
 flache geometrische Illustrationen im Stil von Two Dots, Punkte als Motiv, keine Konturen.
-Spielseiten folgen `docs/SPIELSEITEN.md`. App-Icon: Würfel-Figur (`public/icon.svg`).
+Spielseiten folgen `docs/SPIELSEITEN.md`. App-Icon: Würfel mit einem Auge auf Mitternachtsblau mit weicher Form (`public/icon.svg`).
 
 ## Technik
 - React + TypeScript + Vite, PWA. Daten lokal in IndexedDB (Dexie), Modell in `docs/DATENMODELL.md`.

@@ -12,7 +12,11 @@ const CONF = ['#f3a98f', '#86cbb8', '#f2cf86', '#eda7bf', '#97c4e3', '#bba8e6'];
 const nest = (icon: string, x: number, y: number, s: number) =>
   icon.replace('<svg ', `<svg x="${x}" y="${y}" width="${s}" height="${s}" `);
 
-function otter() {
+// Traurige Augen: halb geschlossen, Lid hängt nach außen, Braue steigt zur Mitte
+const SAD_EYE = `<ellipse cx="-17.5" cy="-6" rx="6" ry="5" fill="#271d18"/><path d="M-25-7.5C-23-14-12-14-10-9.5L-11-6C-15-10-21-10-25-7.5z" fill="#8f6447"/><circle cx="-15.5" cy="-6" r="1.4" fill="#fff" opacity=".7"/><rect x="-27" y="-18" width="15" height="3.2" rx="1.6" fill="#5e3f2d" transform="rotate(-16 -19 -16)"/>`;
+
+/** Otter: fröhlich mit Krone und Pokal, oder traurig mit eigenem Gegenstand in den Pfoten (prop, Ursprung bei den Pfoten) */
+function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
   // Ursprung: Mitte zwischen den Füßen; Kopf bei y = -142. Licht kommt von links oben (Lampe).
   const mirror = (part: string) => `${part}<g transform="scale(-1 1)">${part}</g>`;
   const eye = `<path d="M-25-7C-22-15-13-15-10-7C-12.5-10.5-22.5-10.5-25-7z" fill="${C.eye}"/>`;
@@ -35,25 +39,25 @@ function otter() {
       <path d="M-31 4C-31-7-18-11 0-11S31-7 31 4C31 22 16 31 0 31S-31 22-31 4z" fill="${C.muzzle}"/>
       ${mirror(`<circle cx="-16" cy="8" r="12.5" fill="${C.muzzle}"/>`)}
       ${mirror(dots)}
-      ${mirror(eye)}
+      ${o.sad ? mirror(SAD_EYE) : mirror(eye)}
       ${mirror(`<ellipse cx="-27" cy="1" rx="5" ry="3" fill="#e9a58b" opacity=".35"/>`)}
       <path d="M-9-4C-9-10 9-10 9-4 9 1 4 4 0 4S-9 1-9-4z" fill="${C.nose}"/>
       <ellipse cx="-3" cy="-6" rx="3" ry="1.5" fill="#fff" opacity=".45"/>
       <rect x="-.8" y="3" width="1.6" height="6" rx=".8" fill="${C.nose}"/>
-      <path d="M-13 9C-9 23 9 23 13 9 7 12.5-7 12.5-13 9z" fill="#4a2f25"/>
-      <ellipse cx="0" cy="16.5" rx="5.5" ry="3" fill="#e98a86"/>
+      ${o.sad ? `<path d="M-9 19C-6 13 6 13 9 19 5 16.5-5 16.5-9 19z" fill="#4a2f25"/>${o.tear ? `<path d="M-19 4c2 4 4 7 4 9a4 4 0 0 1-8 0c0-2 2-5 4-9z" fill="#97c4e3" class="vo-tear"/>` : ''}`
+        : `<path d="M-13 9C-9 23 9 23 13 9 7 12.5-7 12.5-13 9z" fill="#4a2f25"/><ellipse cx="0" cy="16.5" rx="5.5" ry="3" fill="#e98a86"/>`}
       ${mirror(whisker.replace(/x="22"/g, 'x="-42"').replace(/rotate\((-?\d+) 22/g, (_m, a) => `rotate(${-Number(a)} -22`))}
-      <g transform="translate(0 -34) rotate(-6)">
+      ${o.sad ? '' : `<g transform="translate(0 -34) rotate(-6)">
         <path d="M-27 10l-5-26 15 12 17-22 17 22 15-12-5 26z" fill="${C.gold}"/>
         <path d="M0-26l17 22 15-12-3 14c-8 2-20-2-29-24z" fill="${C.goldDark}" opacity=".35"/>
         <rect x="-28" y="5" width="56" height="11" rx="4" fill="${C.goldDark}"/>
         <circle cx="-32" cy="-17" r="3.6" fill="${C.gold}"/><circle cx="0" cy="-27" r="4" fill="${C.gold}"/><circle cx="32" cy="-17" r="3.6" fill="${C.gold}"/>
         <circle cx="-14" cy="10.5" r="3" fill="#86cbb8"/><ellipse cx="0" cy="10.5" rx="4" ry="3.4" fill="#f3a98f"/><circle cx="14" cy="10.5" r="3" fill="#97c4e3"/>
         <rect x="-22" y="7" width="8" height="1.8" rx=".9" fill="#fff" opacity=".4"/>
-      </g>
+      </g>`}
     </g>
     ${mirror(`<path d="M-26-116C-42-112-48-100-40-90L-26-92C-30-98-28-106-20-110z" fill="${C.bodyDark}"/><path d="M-26-114C-38-110-43-101-37-94L-28-95C-31-100-29-106-22-109z" fill="${C.body}"/>`)}
-    <g transform="translate(0 -80)">
+    ${o.prop !== undefined ? `<g transform="translate(0 -80)">${o.prop}${mirror(`<ellipse cx="-22" cy="-16" rx="10" ry="9" fill="${C.bodyDark}"/>`)}${toes(-22, -16)}${toes(22, -16)}</g>` : `<g transform="translate(0 -80)">
       ${mirror(`<circle cx="-27" cy="-12" r="10" fill="${C.goldDark}"/><circle cx="-27" cy="-12" r="5.5" fill="${C.belly}"/>`)}
       <path d="M-23-30h46c0 28-10 40-23 40s-23-12-23-40z" fill="${C.gold}"/>
       <ellipse cy="-30" rx="23" ry="4.5" fill="#f7d98a"/>
@@ -64,12 +68,44 @@ function otter() {
       <rect x="-17" y="20" width="34" height="6" rx="2.5" fill="${C.gold}"/><rect x="-20" y="25" width="40" height="7" rx="3" fill="${C.goldDark}"/>
       ${mirror(`<ellipse cx="-22" cy="-16" rx="10" ry="9" fill="${C.bodyDark}"/>`)}
       ${toes(-22, -16)}${toes(22, -16)}
-    </g>
+    </g>`}
   </g>`;
 }
 
 /** Trophäenzimmer für die Siegerseite. icon: Icon des Spiels (wird gerahmt an die Wand gehängt) */
-export function trophyRoom(icon: string, ribbon = 'GEWONNEN'): string {
+export function trophyRoom(icon: string, ribbon = 'GEWONNEN'): string { return room(icon, ribbon, otter(), true, ''); }
+
+/** Verlierer-Varianten: der Otter ist traurig, das Zimmer gedämpft, kein Konfetti */
+export type LoserLook = 'regen' | 'rechnung' | 'deckel' | 'loeffel';
+export const LOSER_RIBBON: Record<LoserLook, string> = { regen: 'VERLOREN', rechnung: 'ZAHLT DIE RUNDE', deckel: 'ALLE DECKEL', loeffel: 'OINA NO?' };
+export function loserRoom(icon: string, look: LoserLook = 'deckel', ribbon = LOSER_RIBBON[look]): string {
+  const P = C;
+  let prop = '', extra = '';
+  if (look === 'regen') {
+    // Kleine Wolke über dem Kopf, Tropfen fallen langsam
+    extra = `<g transform="translate(195 64)" class="vr-cloud"><circle cx="-22" cy="4" r="16" fill="#b7bfd6"/><circle cx="0" cy="-6" r="21" fill="#c6cde1"/><circle cx="24" cy="3" r="15" fill="#b7bfd6"/><rect x="-36" y="2" width="74" height="17" rx="8.5" fill="#c6cde1"/>
+      ${[-24, -10, 6, 20].map((x, k) => `<g transform="translate(${x} 24)"><path class="vr-drop" style="animation-delay:${-k * .45}s" d="M0 0c2 4 3.5 6.5 3.5 8.5a3.5 3.5 0 0 1-7 0c0-2 1.5-4.5 3.5-8.5z" fill="#97c4e3"/></g>`).join('')}</g>`;
+    prop = '';
+  } else if (look === 'rechnung') {
+    // Lange Rechnung bis auf den Boden
+    prop = `<path d="M-15-22h30v96l-5-4-5 4-5-4-5 4-5-4-5 4z" fill="${P.paper}"/>
+      ${[-12, -4, 4, 12, 20, 28, 36, 44].map((y, k) => `<rect x="-10" y="${y}" width="${k % 3 ? 14 : 20}" height="2.4" rx="1.2" fill="#d9cdb8"/><rect x="${k % 2 ? 5 : 6}" y="${y}" width="5" height="2.4" rx="1.2" fill="#d9cdb8"/>`).join('')}
+      <rect x="-10" y="54" width="20" height="2" fill="${P.ink}" opacity=".5"/><rect x="-10" y="59" width="9" height="3" rx="1.5" fill="${P.ink}"/><rect x="2" y="59" width="8" height="3" rx="1.5" fill="#d9634a"/>`;
+  } else if (look === 'deckel') {
+    // Ganzer Stapel Bierdeckel, der oberste rutscht weg
+    const cols = ['#f3ead6', '#e6d9bf'];
+    prop = Array.from({ length: 10 }, (_, k) => `<rect x="${-23 + ((k * 5) % 7) - 3}" y="${34 - k * 5.4}" width="46" height="6" rx="3" fill="${cols[k % 2]}"/><rect x="${-23 + ((k * 5) % 7) - 3}" y="${34 - k * 5.4}" width="46" height="2" rx="1" fill="#b5452f" opacity=".7"/>`).join('')
+      + `<g transform="translate(30 -24) rotate(32)"><rect x="-23" y="-3" width="46" height="6" rx="3" fill="${cols[0]}"/><rect x="-23" y="-3" width="46" height="2" rx="1" fill="#b5452f" opacity=".7"/></g>`;
+    extra = `<g transform="translate(250 252) rotate(-8)"><ellipse rx="16" ry="4.5" fill="${P.paper}"/><ellipse rx="12" ry="3" fill="#b5452f" opacity=".75"/></g>`;
+  } else {
+    // Holzlöffel als Trostpreis, die Krone liegt am Boden
+    prop = `<g transform="translate(22 -12) rotate(38)"><rect x="-3" y="-34" width="6" height="44" rx="3" fill="#c99a62"/><ellipse cx="0" cy="-48" rx="11" ry="16" fill="#c99a62"/><ellipse cx="-2" cy="-50" rx="7" ry="11" fill="#b5844f"/></g>`;
+    extra = `<g transform="translate(340 250) rotate(24)"><path d="M-18 8l-4-18 11 8 11-14 11 14 11-8-4 18z" fill="${P.gold}"/><rect x="-18" y="6" width="36" height="7" rx="3" fill="${P.goldDark}"/></g>`;
+  }
+  return room(icon, ribbon, otter({ sad: true, tear: look !== 'loeffel', prop }), false, extra);
+}
+
+function room(icon: string, ribbon: string, figure: string, party: boolean, extra: string): string {
   const planks = Array.from({ length: 9 }, (_, k) => `<rect x="${k * 46 - 10}" y="0" width="46" height="262" fill="${k % 2 ? C.wallA : C.wallB}"/><rect x="${k * 46 - 10}" y="0" width="2" height="262" fill="${C.seam}" opacity=".45"/>`).join('');
   const confetti = Array.from({ length: 16 }, (_, k) => {
     const x = 18 + ((k * 53) % 360), c = CONF[k % CONF.length];
@@ -97,12 +133,12 @@ export function trophyRoom(icon: string, ribbon = 'GEWONNEN'): string {
     <g transform="translate(346 172) rotate(-12)"><rect x="-12" y="-12" width="24" height="24" rx="5" fill="${C.paper}"/>
       <circle cx="-5" cy="-5" r="2.4" fill="${C.ink}"/><circle cx="5" cy="5" r="2.4" fill="${C.ink}"/><circle cx="5" cy="-5" r="2.4" fill="${C.ink}"/><circle cx="-5" cy="5" r="2.4" fill="${C.ink}"/></g>
     <ellipse cx="195" cy="262" rx="70" ry="7" fill="#000" opacity=".16"/>
-    <g transform="translate(195 260)">${otter()}</g>
+    <g transform="translate(195 260)">${figure}</g>${extra}
     <g transform="translate(195 252)">
       <path d="M-112-4h22v26h-22l8-13z" fill="#d9cdb8"/><path d="M112-4h-22v26h22l-8-13z" fill="#d9cdb8"/>
       <rect x="-96" y="-10" width="192" height="28" rx="4" fill="${C.paper}"/>
       <text y="9" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="15" letter-spacing="3" fill="${C.ink}">${ribbon}</text>
     </g>
-    <g>${confetti}</g>
+    ${party ? `<g>${confetti}</g>` : '<rect x="-10" y="-10" width="410" height="320" fill="#2a2350" opacity=".18"/>'}
   </svg>`;
 }

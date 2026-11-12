@@ -81,3 +81,15 @@ Deckel-Spiele haben eine wählbare zweite Phase (`params.phase2`), sobald die Mi
 „Weitergeben“ (Schocken: Sieger gibt dem Verlierer) oder „Zurück in die Mitte“ (Chic: wer dann keine Deckel hat, ist raus;
 danach spielen Sieger ihre Deckel zurück in die Mitte, ohne Deckel ist man raus, wer zuletzt Deckel hat, verliert die Hälfte).
 Schock aus nimmt bei Chic in Phase 1 den Rest der Mitte; in Phase 2 gibt es „Alle“ zum Zurückspielen.
+
+## 12.11.2026: Verliererseite bei Deckel-Spielen
+Bei Schocken und Chic zählt, wer verliert. Die Ergebnisseite zeigt dann statt des feiernden Otters einen traurigen Otter
+mit einem Stapel Bierdeckel (der oberste rutscht weg), gedämpftes Zimmer ohne Konfetti, Band „ALLE DECKEL“.
+Weitere Varianten (Regenwolke, Rechnung, Holzlöffel) liegen in `loserRoom()` in `src/ui/trophy.ts`.
+
+## 12.11.2026: Neuer Name „Oina no?“, neues Icon, Revanche-Knopf
+Die App heißt „Oina no?“ (mit Fragezeichen) (schwäbisch für „noch eine Runde“). Icon: cremefarbener Würfel mit einem Auge in Koralle,
+leicht gekippt, auf Mitternachtsblau mit weicher Form (Entwurf W1 auf dem Hintergrund von W3). Schriftzug auf der
+Startseite „OINA / NO“ statt „PUNKTE / ZETTEL“. Interne Namen (Datenbank `punktezettel`, Sicherungsformat) bleiben,
+damit vorhandene Daten und Sicherungen weiter funktionieren.
+Auf der Ergebnisseite startet „Oina no“ nach dem Speichern sofort eine neue Partie mit denselben Regeln, Spielern und Plätzen.

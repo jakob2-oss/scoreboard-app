@@ -3,7 +3,7 @@ import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
 import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
-import { trophyRoom } from './trophy';
+import { loserRoom, trophyRoom } from './trophy';
 import { names } from './Home';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -102,7 +102,8 @@ export function ResultSheet({ g }: { g: GameState }) {
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
   const winners = rk.filter(x => x.place === 1);
   const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
-  const scene = trophyRoom(icon, isTokens(g) && tokenState(g).loser ? 'ENTSCHIEDEN' : undefined);
+  // Deckel-Spiele (Schocken, Chic): es zählt, wer verliert, also der traurige Otter mit dem Deckelstapel
+  const scene = isTokens(g) && tokenState(g).loser ? loserRoom(icon, 'deckel') : trophyRoom(icon);
   const stats = started ? highlights(g) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
@@ -147,6 +148,9 @@ export function ResultSheet({ g }: { g: GameState }) {
             <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
             <button className="primary" onClick={() => act().finishGame(eventId)}>Speichern</button>
           </div>
+          {started && <button className="again" id="oina-no" onClick={() => act().oinaNo(eventId)}>
+            <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)"><rect x="25" y="28" width="50" height="50" rx="13" fill="#c9bda5"/><rect x="25" y="23" width="50" height="50" rx="13" fill="#f3ead6"/><circle cx="50" cy="48" r="8" fill="#ef7a5c"/></g></svg>
+            Oina no?</button>}
         </div>
       </div>
     </>
