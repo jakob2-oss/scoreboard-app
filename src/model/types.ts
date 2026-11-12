@@ -68,6 +68,8 @@ export interface TemplateParams {
   swim?: boolean;
   /** Tisch-Modus, Phasen: so viele verlorene Hälften verlieren die Partie (Standard 2) */
   halves?: number;
+  /** Tisch-Modus, zweite Phase bei leerer Mitte: Sieger gibt dem Verlierer (pass, Schocken) oder spielt zurück in die Mitte (return, Chic) */
+  phase2?: 'pass' | 'return';
   /** Eigene Schnelltasten (Erstellungsmodus), zusätzlich zu den Zählschritten */
   keys?: QuickKey[];
   /** Notizfelder neben den Punkten (z. B. „Längste Straße“), zählen nicht zur Summe */

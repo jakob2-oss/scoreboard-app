@@ -132,4 +132,5 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Statistik im Profil für Tisch-Spiele (wie oft geschwommen, Hälften verloren).
 - [x] Tisch von oben ohne Wand, Bartisch mit Bier, Wein, Oliven und Tapas; Namen zum jeweiligen Platz gedreht (Handy in der Mitte).
 - [x] Deckel liegen einzeln vor dem Spieler, Leben als Münzen.
+- [x] Chic im Erstellungsmodus: zweite Phase „Zurück in die Mitte“ (ohne Deckel raus, Letzter mit Deckeln verliert).
 - [x] Phasen im Erstellungsmodus: Schwimmen an oder aus, verloren nach einer, zwei oder drei Hälften; auch nachträglich bearbeitbar.

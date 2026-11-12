@@ -96,6 +96,12 @@ export interface TokenState {
   schock: Record<string, number>;
   /** Deckel insgesamt bekommen, über alle Hälften (weniger ist besser) */
   taken: Record<string, number>;
+  /** Zweite Phase: weitergeben (Schocken) oder zurück in die Mitte (Chic) */
+  mode: 'pass' | 'return';
+  /** Phase der laufenden Hälfte: 1 aus der Mitte, 2 sobald die Mitte einmal leer war */
+  phase: 1 | 2;
+  /** Chic: wer in dieser Hälfte keine Deckel mehr hat und damit raus ist */
+  out: Record<string, boolean>;
   /** Wer zwei Hälften verloren hat (Partie verloren) */
   loser: string | null;
 }
@@ -103,7 +109,10 @@ export function tokenState(s: GameState): TokenState {
   const total = s.game.rules.params?.tokens ?? 13, need = Math.max(1, s.game.rules.params?.halves ?? 2), players = seated(s);
   const hold: Record<string, number> = {}, halves: Record<string, number> = {}, schock: Record<string, number> = {}, taken: Record<string, number> = {};
   players.forEach(p => { hold[p.id] = 0; halves[p.id] = 0; schock[p.id] = 0; taken[p.id] = 0; });
-  let half = 1, maxTake = { n: 0, who: [] as string[] };
+  const mode = s.game.rules.params?.phase2 === 'return' ? 'return' : 'pass';
+  const out: Record<string, boolean> = {};
+  players.forEach(p => { out[p.id] = false; });
+  let half = 1, phase: 1 | 2 = 1, maxTake = { n: 0, who: [] as string[] };
   for (const r of tableRounds(s)) {
     let lost: string | null = null;
     for (const e of roundEntries(s, r.id)) {
@@ -118,11 +127,14 @@ export function tokenState(s: GameState): TokenState {
       if (v.schock) schock[e.playerId]++;
       if (v.halfLost) lost = e.playerId;
     }
-    if (lost) { halves[lost]++; half++; players.forEach(p => { hold[p.id] = 0; }); }
+    if (lost) { halves[lost]++; half++; phase = 1; players.forEach(p => { hold[p.id] = 0; out[p.id] = false; }); continue; }
+    // Mitte leer: zweite Phase. Bei Chic ist raus, wer dann (oder später) keine Deckel hat
+    if (phase === 1 && players.reduce((x, p) => x + hold[p.id], 0) === total) phase = 2;
+    if (phase === 2 && mode === 'return') players.forEach(p => { if (hold[p.id] === 0) out[p.id] = true; });
   }
   const middle = total - players.reduce((x, p) => x + hold[p.id], 0);
   const loser = players.find(p => halves[p.id] >= need)?.id ?? null;
-  return { total, need, half, middle, hold, halves, maxTake, schock, taken, loser };
+  return { total, need, mode, phase, out, half, middle, hold, halves, maxTake, schock, taken, loser };
 }
 /**
  * Schocken: Deckel an den Verlierer der Runde. Solange die Mitte nicht leer ist, kommen sie aus der Mitte,
@@ -130,7 +142,7 @@ export function tokenState(s: GameState): TokenState {
  */
 export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false): GameState {
   const st = tokenState(s);
-  if (st.loser) return s;
+  if (st.loser || (st.mode === 'return' && st.phase === 2)) return s;
   const giver = st.middle > 0 ? null : from;
   if (st.middle === 0 && (!giver || giver === to)) return s;
   const amount = Math.max(0, Math.min(n, giver ? st.hold[giver] : st.middle));
@@ -141,6 +153,23 @@ export function giveTokens(s: GameState, to: string, n: number, from: string | n
   const entries: Entry[] = [{ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: to,
     values: { take: amount, ...(schock ? { schock: true } : {}), ...(halfLost ? { halfLost: true } : {}) } as never }];
   if (giver) entries.push({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: giver, values: { give: amount } as never });
+  return { ...a.state, entries: [...a.state.entries, ...entries] };
+}
+
+/**
+ * Chic, zweite Phase: der Sieger der Runde spielt Deckel zurück in die Mitte. Wer keine mehr hat, ist raus;
+ * wer als Letzter noch Deckel hat, verliert die Hälfte.
+ */
+export function returnTokens(s: GameState, from: string, n: number, clock: Clock): GameState {
+  const st = tokenState(s);
+  if (st.loser || st.mode !== 'return' || st.phase !== 2 || st.out[from]) return s;
+  const amount = Math.max(0, Math.min(n, st.hold[from]));
+  if (!amount) return s;
+  const a = addRound(s, clock), t = clock.now();
+  const e = (playerId: string, values: TableValues): Entry => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId, values: values as never });
+  const holders = seated(s).filter(p => (p.id === from ? st.hold[p.id] - amount : st.hold[p.id]) > 0);
+  const entries = [e(from, { give: amount })];
+  if (holders.length === 1) entries.push(e(holders[0].id, { halfLost: true }));
   return { ...a.state, entries: [...a.state.entries, ...entries] };
 }
 
@@ -159,6 +188,8 @@ export function halfLabel(need: number, h: number): string {
 export function schockOut(s: GameState, to: string, clock: Clock): GameState {
   const st = tokenState(s);
   if (st.loser) return s;
+  // Chic: Schock aus nimmt nur den Rest der Mitte, in der zweiten Phase gibt es ihn nicht
+  if (st.mode === 'return') return st.phase === 1 ? giveTokens(s, to, st.middle, null, clock, true) : s;
   const a = addRound(s, clock), t = clock.now();
   const e = (playerId: string, values: TableValues): Entry => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId, values: values as never });
   const others = seated(s).filter(p => p.id !== to && st.hold[p.id] > 0);

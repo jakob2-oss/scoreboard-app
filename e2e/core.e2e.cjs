@@ -373,6 +373,29 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);
   check('Eigenes Tisch-Spiel wieder gelöscht', !(await raw('#s-home')).includes('Meiern'));
 
+  // Chic: eigenes Deckel-Spiel, zweite Phase zurück in die Mitte
+  await p.click('#new-own'); await p.fill('#setup-name', 'Chic'); await p.click('#kind-tokens'); await p.fill('#table-start', '6');
+  await p.click('#phase2-return'); await p.click('#phase-halves-1'); await p.click('#setup-save'); await p.waitForTimeout(300);
+  await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('.row[data-own] >> text=Chic'); await p.waitForTimeout(200);
+  check('Chic: Regeln mit zwei Phasen', (await raw('.rule-points')).includes('zurück in die Mitte'), await raw('.rule-points'));
+  if (await p.isVisible('#quick-start')) await p.click('#quick-start'); else { await p.click('#setup-next'); await p.click('#start-btn'); }
+  await p.waitForSelector('.tbl');
+  const chicSeat = i => p.locator('.tb-seat').nth(i);
+  check('Chic: erste Phase aus der Mitte', (await raw('.tb-phase text >> nth=0')) === 'Aus der Mitte');
+  await chicSeat(0).click(); await p.click('#tk-4'); await chicSeat(1).click(); await p.click('#tk-2'); await p.waitForTimeout(200);
+  const nChic = await p.locator('.tb-seat').count();
+  check('Chic: Mitte leer, ohne Deckel raus', (await raw('.tb-phase text >> nth=0')) === 'Zurückspielen' && (await p.locator('.tb-seat.out').count()) === nChic - 2);
+  await shot('37h-chic-phase2');
+  await chicSeat(1).click(); check('Chic: Sieger spielt zurück', (await raw('.bsheet h3')).endsWith('spielt zurück'));
+  await p.click('#tk-all'); await p.waitForTimeout(300);
+  check('Chic: wer zuletzt Deckel hat, verliert', (await raw('.dock .primary')) === 'Ergebnis');
+  await p.click('.dock .primary'); await p.waitForTimeout(400);
+  check('Chic: Siegerseite nennt den Verlierer', (await raw('.v-title')).endsWith('verliert'));
+  await p.click('.victory .pad-actions .secondary');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  await p.click('.row[data-own] >> text=Chic'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);
+  await p.goto(URL); await p.waitForSelector('.wordmark');
+
   // Tisch-Modus: Schwimmen (Leben) und Schocken (Deckel)
   await p.click('[data-game="schwimmen"]'); await shot('37a-schwimmen'); await p.click('#quick-start'); await p.waitForTimeout(300);
   const seat = i => p.locator('.tb-seat').nth(i);

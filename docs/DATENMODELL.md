@@ -53,6 +53,7 @@ Regeln als **Konfiguration aus Bausteinen**, nicht als eigener Code pro Spiel.
 | `custom` | `true` für selbst gebaute Vorlagen |
 | `params.steps` | Zählschritte für die Schnelltasten (freies Spiel), z. B. `[1, 5, 10]` |
 | `params.lives` / `params.tokens` | Tisch-Modus: Leben je Spieler (Schwimmen) bzw. Deckel in der Mitte (Schocken) |
+| `params.phase2` | Tisch-Modus, Deckel: zweite Phase `pass` (Schocken, Standard) oder `return` (Chic, zurück in die Mitte) |
 | `params.swim` / `params.halves` | Tisch-Modus, Phasen: Schwimmen nach dem letzten Leben (Standard an), verlorene Hälften bis zur Niederlage (Standard 2, dann Finale) |
 
 Eigene Vorlagen (freies Spiel) bekommen einen eigenen `key` und werden in der Tabelle

@@ -75,3 +75,9 @@ Phasen sind Teil der Vorlage: `params.swim` (Schwimmen nach dem letzten Leben) u
 Statt Terrakotta-Fliesen ein tiefes Mitternachtsblau mit großen, weichen Formen (Indigo, Petrol, Pflaume), die sehr langsam
 treiben, sich drehen und atmen; unter dem Tisch ein warmer Lichtschein. So hebt sich das Holz klar ab.
 Bei „Bewegung reduzieren“ steht alles still.
+
+## 12.11.2026: Zweite Phase bei Deckel-Spielen (Chic)
+Deckel-Spiele haben eine wählbare zweite Phase (`params.phase2`), sobald die Mitte leer ist:
+„Weitergeben“ (Schocken: Sieger gibt dem Verlierer) oder „Zurück in die Mitte“ (Chic: wer dann keine Deckel hat, ist raus;
+danach spielen Sieger ihre Deckel zurück in die Mitte, ohne Deckel ist man raus, wer zuletzt Deckel hat, verliert die Hälfte).
+Schock aus nimmt bei Chic in Phase 1 den Rest der Mitte; in Phase 2 gibt es „Alle“ zum Zurückspielen.

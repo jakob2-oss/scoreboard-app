@@ -29,4 +29,10 @@ describe('Eigene Spiele im Tisch-Modus', () => {
     expect(p.params?.tokens).toBeUndefined();
     expect(p.params?.halves).toBeUndefined();
   });
+  it('Chic: zweite Phase zurück in die Mitte', () => {
+    const t = makeFreeTemplate({ ...defaultFreeConfig(), name: 'Chic', kind: 'tokens', phase2: 'return', halves: 1 }, clock());
+    expect([t.params?.phase2, t.params?.halves]).toEqual(['return', 1]);
+    expect(configOf(t).phase2).toBe('return');
+    expect(describeTemplate(t)).toBe('13 Deckel, zurück in die Mitte, verloren nach einer Hälfte');
+  });
 });
