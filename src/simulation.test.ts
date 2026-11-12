@@ -131,7 +131,6 @@ async function series(tpl: Template, games: number, seed: number, opts: { teams?
     const before = mem.results.length;
     const g = playOut(st, r, opts.maxRounds ?? 8);
     a.finishGame();
-    if (process.env.SIMLOG) console.log(`${tpl.name.padEnd(14)} ${String(liveRounds(g).length).padStart(3)} Runden  ${ranking(g).map(x => `${x.place}. ${x.player.name} ${x.total}`).join('  ')}`);
     check(g, mem.results.slice(before));
     hist.push(st.get().history[0]);
     expect(st.get().game).toBeNull();
