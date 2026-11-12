@@ -1,203 +1,148 @@
 /**
- * Tisch-Modus: Raum mit Holzwand und runder Tisch von oben, flach und geometrisch (siehe docs/DESIGN.md).
- * Farben kommen aus CSS-Variablen (--tb-*), damit Hell und Dunkel zum Rest der App passen.
- * Die Zeichnung reicht über den viewBox hinaus, damit sie jede Bildschirmhöhe füllt.
+ * Tisch-Modus als Bar: dunkle Rückwand mit Spiegel und Flaschenregal, Neon, Messinglampen,
+ * Schachbrettboden und ein runder Spieltisch mit grünem Filz. Flach und geometrisch, Licht nur über
+ * halbdurchsichtige Flächen (siehe docs/DESIGN.md). Die Zeichnung reicht über den viewBox hinaus,
+ * damit sie jede Bildschirmhöhe füllt.
  */
 export const VIEW = { w: 390, h: 640 };
 /** Mittelpunkt und Radien des Tisches; Sitzplätze liegen auf einer größeren Ellipse */
 export const TABLE = { cx: 195, cy: 390, rx: 132, ry: 120 };
-export const SEATS = { rx: 152, ry: 172 };
+export const SEATS = { rx: 156, ry: 172 };
+/** Ellipse, auf der Leben bzw. Deckel vor jedem Spieler liegen */
+export const FRONT = { rx: 84, ry: 84 };
 const WALL = 214;
 
-const v = (n: string) => `var(--tb-${n})`;
-const dots = (cx: number, cy: number, r: number, n: number, dr: number, fill: string, off = 0) =>
-  Array.from({ length: n }, (_, k) => { const a = off + (k / n) * Math.PI * 2; return `<circle cx="${(cx + r * Math.cos(a)).toFixed(1)}" cy="${(cy + r * Math.sin(a) * .92).toFixed(1)}" r="${dr}" fill="${fill}"/>`; }).join('');
+export const C = {
+  wall: '#17282a', wall2: '#1d3134', panel: '#2a1d19', panel2: '#33241e', brass: '#c9a45c', brass2: '#9c7a3c',
+  mirror: '#22393b', shelf: '#3a2820', ink: '#121018', cream: '#efe4cf', light: '#ffd58a',
+  felt: '#1f4d42', felt2: '#245a4d', rim: '#3a2219', rim2: '#4a2c20',
+  tile1: '#1a1820', tile2: '#2a2631', neonA: '#ff8fb1', neonB: '#ffc874'
+};
 
-// ---------------------------------------------------------------- Wand
-function wall(): string {
-  const planks = Array.from({ length: 16 }, (_, k) => {
-    const x = -210 + k * 50, c = k % 3 === 0 ? v('w2') : k % 3 === 1 ? v('w1') : v('w3');
-    // Astlöcher als Punkte, Maserung als schmale Streifen
-    const knot = k % 4 === 1 ? `<ellipse cx="${x + 22}" cy="${40 + (k * 37) % 120}" rx="5" ry="7" fill="${v('wk')}"/><ellipse cx="${x + 22}" cy="${40 + (k * 37) % 120}" rx="2" ry="3" fill="${v('w2')}"/>` : '';
-    return `<rect x="${x}" y="-500" width="48" height="${WALL + 500}" fill="${c}"/><rect x="${x + 48}" y="-500" width="2" height="${WALL + 500}" fill="${v('wg')}"/>
-      <rect x="${x + 12}" y="${-40 + (k * 53) % 90}" width="3" height="${60 + (k * 17) % 50}" rx="1.5" fill="${v('wk')}" opacity=".35"/>${knot}`;
-  }).join('');
-  return `${planks}
-  <rect x="-210" y="${WALL - 20}" width="810" height="14" fill="${v('trim')}"/><rect x="-210" y="${WALL - 6}" width="810" height="6" fill="${v('wg')}"/>`;
-}
-
-/** Lichterkette mit Punkten quer über die Wand */
-function lights(): string {
-  const cols = ['#f3a98f', '#f2cf86', '#86cbb8', '#97c4e3', '#eda7bf', '#bba8e6'];
-  const pts = Array.from({ length: 13 }, (_, k) => { const x = -6 + k * 33.5, y = 22 + Math.sin(k / 12 * Math.PI) * 26 + (k % 2) * 3; return [x, y] as const; });
-  return `<path d="M-20 18Q195 92 410 18" stroke="${v('cord')}" stroke-width="2" fill="none"/>
-  ${pts.map(([x, y], k) => `<g class="tb-blink" style="animation-delay:${-k * .7}s"><circle cx="${x}" cy="${y + 7}" r="9" fill="${cols[k % 6]}" opacity=".28"/><circle cx="${x}" cy="${y + 7}" r="4.6" fill="${cols[k % 6]}"/></g><rect x="${x - 1.6}" y="${y}" width="3.2" height="4" rx="1" fill="${v('cord')}"/>`).join('')}`;
-}
-
-/** Bilderrahmen mit kleiner Landschaft: See, Berge, Sonne */
-function picture(x: number, y: number): string {
+// ---------------------------------------------------------------- Rückwand mit Bar
+function bottle(x: number, y: number, h: number, w: number, c: string, k: number): string {
+  const neck = w * .34, sh = h * .42;
   return `<g transform="translate(${x} ${y})">
-  <rect x="2" y="4" width="86" height="70" rx="6" fill="#000" opacity=".12"/>
-  <rect width="86" height="68" rx="6" fill="${v('frame')}"/><rect x="7" y="7" width="72" height="54" rx="3" fill="#fffaf2"/>
-  <rect x="11" y="11" width="64" height="46" rx="2" fill="#cfe6f3"/>
-  <circle cx="58" cy="24" r="7" fill="#f5d58c"/>
-  <path d="M11 44l15-18 11 12 9-9 15 15 14-10v23H11z" fill="#9cc7b6"/><path d="M26 26l5 6h-10z" fill="#fffaf2"/>
-  <rect x="11" y="45" width="64" height="12" fill="#97c4e3"/><rect x="18" y="49" width="16" height="2.4" rx="1.2" fill="#fffaf2" opacity=".8"/><rect x="44" y="52" width="20" height="2.4" rx="1.2" fill="#fffaf2" opacity=".8"/>
-  <path d="M40 46h12l-2 4h-8z" fill="#ef7a5c"/><path d="M45 34v12h-6z" fill="#fffaf2"/>
-  <circle cx="43" cy="-14" r="2.6" fill="${v('cord')}"/><path d="M43-14L12 1M43-14L74 1" stroke="${v('cord')}" stroke-width="1.6"/></g>`;
+    <path d="M${-w / 2} 0v${-h + sh}q0-${sh * .35} ${w / 2 - neck / 2}-${sh * .5}v-${sh * .5}h${neck}v${sh * .5}q${w / 2 - neck / 2} ${sh * .15} ${w / 2 - neck / 2} ${sh * .5}v${h - sh}z" fill="${c}"/>
+    <rect x="${-neck / 2}" y="${-h - 3}" width="${neck}" height="5" rx="1" fill="${k % 2 ? C.brass2 : C.ink}"/>
+    <rect x="${-w / 2 + 2}" y="${-h * .48}" width="${w - 4}" height="${h * .22}" fill="${C.cream}" opacity=".82"/>
+    <rect x="${-w / 2 + 2.5}" y="${-h + sh + 2}" width="2.2" height="${h - sh - 4}" rx="1.1" fill="#fff" opacity=".22"/></g>`;
+}
+const BOTTLES = ['#b5732e', '#3f6b48', '#6f2632', '#8fa8a2', '#c98a3c', '#2f4f6e', '#7a5a2e', '#a23e48'];
+
+function backBar(kind: 'lives' | 'tokens'): string {
+  const shelfRow = (y: number, seed: number) => {
+    let x = 34, out = '', k = seed;
+    while (x < 356) {
+      const w = 11 + (k * 7) % 8, h = 34 + (k * 13) % 22;
+      out += bottle(x + w / 2, y, h, w, BOTTLES[k % BOTTLES.length], k);
+      x += w + 6 + (k % 3) * 2; k++;
+      if (k % 5 === 0) x += 18;
+    }
+    return out;
+  };
+  const neon = kind === 'lives'
+    // Wellen
+    ? [0, 1, 2].map(k => `<path d="M-38 ${k * 11 - 11}q9.5-9 19 0t19 0 19 0 19 0" fill="none" stroke="${C.neonA}" stroke-width="3.4" stroke-linecap="round"/>`).join('')
+    // Würfel mit drei Augen
+    : `<rect x="-17" y="-17" width="34" height="34" rx="8" fill="none" stroke="${C.neonB}" stroke-width="3.4"/>${[[-8, -8], [0, 0], [8, 8]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="3" fill="${C.neonB}"/>`).join('')}`;
+  return `<rect x="-220" y="-520" width="830" height="${WALL + 520}" fill="${C.wall}"/>
+  ${Array.from({ length: 14 }, (_, k) => `<rect x="${-220 + k * 62}" y="-520" width="31" height="${WALL + 520}" fill="${C.wall2}" opacity=".55"/>`).join('')}
+  <rect x="14" y="20" width="362" height="170" rx="4" fill="${C.panel}"/>
+  <rect x="22" y="26" width="346" height="158" fill="${C.mirror}"/>
+  <path d="M60 26h70l-76 158h-32v-40zM180 26h26l-76 158h-26zM300 26h50l-76 158h-50z" fill="#fff" opacity=".035"/>
+  <g class="tb-neon" transform="translate(195 54)"><g filter="url(#tb-blur)" opacity=".9">${neon}</g>${neon}</g>
+  ${shelfRow(110, 1)}<rect x="22" y="110" width="346" height="7" fill="${C.shelf}"/><rect x="22" y="117" width="346" height="3" fill="#000" opacity=".25"/>
+  ${shelfRow(178, 4)}<rect x="22" y="178" width="346" height="7" fill="${C.shelf}"/>
+  <rect x="-220" y="${WALL - 30}" width="830" height="30" fill="${C.panel2}"/>
+  <rect x="-220" y="${WALL - 32}" width="830" height="4" fill="${C.brass}"/>
+  ${Array.from({ length: 16 }, (_, k) => `<rect x="${-200 + k * 52}" y="${WALL - 24}" width="40" height="18" rx="2" fill="${C.panel}"/>`).join('')}`;
 }
 
-/** Wanduhr mit Punkten als Ziffern */
-function clock(x: number, y: number): string {
-  return `<g transform="translate(${x} ${y})"><circle cx="2" cy="3" r="27" fill="#000" opacity=".12"/><circle r="27" fill="${v('frame')}"/><circle r="21" fill="#fffaf2"/>
-  ${dots(0, 0, 16, 12, 1.7, '#5b5a8f')}<circle r="2.6" fill="#ef7a5c"/>
-  <rect x="-1.4" y="-13" width="2.8" height="14" rx="1.4" fill="#5b5a8f" class="tb-hand"/><rect x="-1.2" y="-1" width="2.4" height="10" rx="1.2" fill="#5b5a8f" transform="rotate(118)"/></g>`;
+/** Zwei Messinglampen mit Lichtkegel */
+function lamps(): string {
+  const lamp = (x: number, y: number) => `<rect x="${x - 1}" y="-520" width="2" height="${520 + y - 20}" fill="${C.ink}"/>
+    <path d="M${x - 60} ${TABLE.cy + 30}L${x - 18} ${y}h36L${x + 60} ${TABLE.cy + 30}z" fill="${C.light}" opacity=".04"/>
+    <path d="M${x - 8} ${y - 22}h16l14 22h-44z" fill="${C.brass}"/><path d="M${x - 22} ${y}h44l-4 4h-36z" fill="${C.brass2}"/>
+    <ellipse cx="${x}" cy="${y + 4}" rx="16" ry="4" fill="#fff4cf"/><circle cx="${x}" cy="${y + 6}" r="22" fill="${C.light}" opacity=".12"/>`;
+  return lamp(96, 134) + lamp(294, 134);
 }
 
-/** Geweih auf Holzschild */
-function antlers(x: number, y: number): string {
-  const c = v('bone');
-  const side = (s: number) => `<path d="M${s * 8} 2C${s * 22}-6 ${s * 30}-22 ${s * 30}-42" stroke="${c}" stroke-width="6" stroke-linecap="round" fill="none"/>
-    <path d="M${s * 25}-14C${s * 34}-16 ${s * 42}-22 ${s * 46}-32" stroke="${c}" stroke-width="5" stroke-linecap="round" fill="none"/>
-    <path d="M${s * 29}-30C${s * 22}-38 ${s * 18}-46 ${s * 18}-54" stroke="${c}" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-    <path d="M${s * 30}-40C${s * 38}-46 ${s * 40}-54 ${s * 40}-62" stroke="${c}" stroke-width="4" stroke-linecap="round" fill="none"/>`;
-  return `<g transform="translate(${x} ${y})"><ellipse cx="2" cy="16" rx="20" ry="25" fill="#000" opacity=".12"/>${side(1)}${side(-1)}
-  <ellipse cy="13" rx="19" ry="24" fill="${v('frame')}"/><ellipse cy="13" rx="13" ry="17" fill="${v('w3')}"/><circle cy="13" r="4" fill="${v('frame')}"/></g>`;
-}
-
-/** Regal mit Gläsern, Flasche, Pflanze und Büchern */
-function shelf(x: number, y: number, extra: string): string {
-  return `<g transform="translate(${x} ${y})">
-  <rect x="-4" y="2" width="120" height="10" rx="3" fill="#000" opacity=".12"/>
-  <rect x="8" y="10" width="7" height="18" rx="2" fill="${v('trim')}"/><rect x="94" y="10" width="7" height="18" rx="2" fill="${v('trim')}"/>
-  <rect x="-6" y="0" width="122" height="10" rx="3" fill="${v('frame')}"/>
-  <g transform="translate(14 0)"><rect x="-9" y="-30" width="18" height="30" rx="5" fill="#d8ecf3" opacity=".9"/><rect x="-9" y="-30" width="18" height="6" rx="3" fill="#c99a62"/>
-    ${[0, 1, 2, 3, 4].map(k => `<rect x="${-6 + k * 2.6}" y="-20" width="1.8" height="18" rx=".9" fill="#d9a35a" transform="rotate(${k * 6 - 12} 0 -2)"/>`).join('')}</g>
-  <g transform="translate(36 0)"><rect x="-5" y="-44" width="10" height="12" rx="3" fill="#7fae8f"/><path d="M-9-34h18l2 34h-22z" fill="#86cbb8"/><rect x="-7" y="-22" width="14" height="10" rx="2" fill="#fffaf2"/><circle cy="-17" r="2.6" fill="#ef7a5c"/></g>
-  <g transform="translate(60 0)"><path d="M-10-14h20l-3 14h-14z" fill="#ef7a5c"/><rect x="-11" y="-17" width="22" height="5" rx="2" fill="#f3a98f"/>
-    <path d="M0-17C-2-30-12-34-16-30c4 6 10 10 16 13z" fill="#7fae8f"/><path d="M0-17C2-32 12-38 17-33c-4 7-10 12-17 16z" fill="#9cc77e"/><path d="M0-17c0-12 0-18 2-24 3 6 2 14-2 24z" fill="#86cbb8"/></g>
-  ${extra}
-  <g transform="translate(96 0)"><rect x="-12" y="-26" width="8" height="26" rx="2" fill="#97c4e3"/><rect x="-3" y="-30" width="9" height="30" rx="2" fill="#bba8e6"/><rect x="7" y="-22" width="7" height="22" rx="2" fill="#f2cf86" transform="rotate(10 10 0)"/></g></g>`;
-}
-
-/** Schlüsselbrett mit drei Haken */
-function keys(x: number, y: number): string {
-  const key = (kx: number, c: string, r: number) => `<g transform="translate(${kx} 9) rotate(${r})"><rect x="-1.4" y="0" width="2.8" height="18" rx="1.4" fill="${c}"/><circle cy="0" r="5" fill="${c}"/><circle cy="0" r="2" fill="${v('frame')}"/><rect x="0" y="12" width="5" height="2.4" fill="${c}"/><rect x="0" y="16" width="4" height="2" fill="${c}"/></g>`;
-  return `<g transform="translate(${x} ${y})"><rect x="0" y="2" width="56" height="9" rx="3" fill="#000" opacity=".12"/><rect width="56" height="8" rx="3" fill="${v('frame')}"/>
-  ${[12, 28, 44].map(k => `<circle cx="${k}" cy="6" r="2" fill="${v('cord')}"/>`).join('')}${key(12, '#f2cf86', 6)}${key(28, '#c9c6dc', -4)}<path d="M44 8l-6 16h12z" fill="#ef7a5c"/><circle cx="44" cy="26" r="3" fill="#f3a98f"/></g>`;
-}
-
-/** Hängelampe über dem Tisch: Schirm, Glühbirne, Lichtkegel als flache Kreise */
-function lamp(): string {
-  const { cx, cy } = TABLE;
-  return `<g class="tb-glow">${[1, .78, .56].map((s, k) => `<ellipse cx="${cx}" cy="${cy - 6}" rx="${210 * s}" ry="${180 * s}" fill="${v('glow')}" opacity="${.08 + k * .05}"/>`).join('')}</g>
-  <rect x="${cx - 1.5}" y="-500" width="3" height="${562}" fill="${v('cord')}"/>
-  <g class="tb-sway" style="transform-origin:${cx}px 0px">
-    <rect x="${cx - 7}" y="56" width="14" height="10" rx="3" fill="${v('cord')}"/>
-    <path d="M${cx - 34} 96a34 32 0 0 1 68 0z" fill="${v('shade')}"/><rect x="${cx - 36}" y="92" width="72" height="7" rx="3.5" fill="${v('shade2')}"/>
-    <circle cx="${cx}" cy="101" r="8" fill="#fff4cf"/>
-  </g>`;
-}
-
-// ---------------------------------------------------------------- Boden und Teppich
+// ---------------------------------------------------------------- Boden
 function floor(): string {
-  const boards = Array.from({ length: 22 }, (_, k) => `<rect x="-210" y="${WALL + k * 30}" width="810" height="28" fill="${k % 2 ? v('f1') : v('f2')}"/>
-    <rect x="${-200 + (k * 137) % 300}" y="${WALL + k * 30}" width="3" height="28" fill="${v('fg')}"/><rect x="${80 + (k * 211) % 360}" y="${WALL + k * 30}" width="3" height="28" fill="${v('fg')}"/>`).join('');
-  const { cx, cy } = TABLE;
-  return `${boards}
-  <ellipse cx="${cx}" cy="${cy + 18}" rx="208" ry="196" fill="${v('rug1')}"/>
-  <ellipse cx="${cx}" cy="${cy + 18}" rx="196" ry="184" fill="${v('rug2')}"/>
-  ${dots(cx, cy + 18, 186, 44, 3.4, v('rug3'))}
-  <ellipse cx="${cx}" cy="${cy + 18}" rx="176" ry="164" fill="${v('rug1')}"/>`;
+  const s = 30;
+  let tiles = `<rect x="-220" y="${WALL}" width="830" height="900" fill="${C.tile1}"/>`;
+  for (let r = 0; r < 30; r++) for (let c = 0; c < 28; c++) if ((r + c) % 2) tiles += `<rect x="${-220 + c * s}" y="${WALL + r * s}" width="${s}" height="${s}" fill="${C.tile2}"/>`;
+  return tiles + `<rect x="-220" y="${WALL}" width="830" height="14" fill="#000" opacity=".35"/>`;
 }
 
 // ---------------------------------------------------------------- Tisch und Dinge darauf
-const glass = (x: number, y: number, beer = true) => `<g transform="translate(${x} ${y})">${coaster(0, 0, 17, '#f3a98f')}
-  <circle cx="2" cy="3" r="12" fill="#000" opacity=".12"/><circle r="12" fill="${beer ? '#f2cf86' : '#d8ecf3'}"/><circle r="9" fill="${beer ? '#fff8e6' : '#eaf5f9'}"/>
-  ${beer ? '<circle cx="-3" cy="-2" r="3" fill="#fff"/><circle cx="3" cy="2" r="2" fill="#fff"/><circle cx="2" cy="-4" r="1.5" fill="#fff"/>' : '<rect x="-5" y="-1" width="10" height="2" rx="1" fill="#97c4e3"/>'}</g>`;
-const coaster = (x: number, y: number, r: number, c: string) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="#fffaf2"/><circle r="${r * .8}" fill="${c}"/><circle r="${r * .5}" fill="#fffaf2"/></g>`;
-const pretzels = (x: number, y: number) => {
-  const p = (px: number, py: number, r: number) => `<g transform="translate(${px} ${py}) rotate(${r})"><path d="M0 6C-10 6-12-6-5-6c4 0 5 5 5 8 0-3 1-8 5-8 7 0 5 12-5 12" stroke="#c4834b" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-    <circle cx="-4" cy="-2" r=".9" fill="#fff"/><circle cx="4" cy="0" r=".9" fill="#fff"/></g>`;
-  return `<g transform="translate(${x} ${y})"><circle cx="2" cy="4" r="25" fill="#000" opacity=".12"/><circle r="25" fill="#97c4e3"/><circle r="19" fill="#bcdcef"/>
-  ${p(-6, -5, 10)}${p(7, 3, -30)}${p(-4, 9, 60)}${p(8, -9, 120)}</g>`;
-};
-const nuts = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="2" cy="3" r="16" fill="#000" opacity=".12"/><circle r="16" fill="#eda7bf"/><circle r="12" fill="#f6cfdc"/>
-  ${[[-5, -3], [4, -5], [0, 3], [6, 4], [-5, 5]].map(([a, b], k) => `<ellipse cx="${a}" cy="${b}" rx="3.6" ry="2.6" fill="#d9a35a" transform="rotate(${k * 40} ${a} ${b})"/>`).join('')}</g>`;
-const candle = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle r="26" fill="#fff4cf" opacity=".22" class="tb-flicker"/><circle cx="2" cy="3" r="13" fill="#000" opacity=".12"/>
-  <circle r="13" fill="#bba8e6"/><circle r="9" fill="#fffaf2"/><circle r="4" fill="#f2cf86" class="tb-flicker"/><circle r="1.8" fill="#ef7a5c"/></g>`;
-const pad = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-17" y="-22" width="38" height="48" rx="4" fill="#000" opacity=".12"/>
-  <rect x="-19" y="-24" width="38" height="48" rx="4" fill="#fffaf2"/><rect x="-19" y="-24" width="38" height="9" rx="4" fill="#ef7a5c"/>
-  ${[0, 1, 2, 3].map(k => `<rect x="-13" y="${-9 + k * 7}" width="${k % 2 ? 18 : 26}" height="2.4" rx="1.2" fill="#dcd6e8"/>`).join('')}
-  <circle cx="-9" cy="-19.5" r="1.4" fill="#fff"/><circle cx="-4" cy="-19.5" r="1.4" fill="#fff"/><circle cx="1" cy="-19.5" r="1.4" fill="#fff"/>
-  <g transform="translate(14 8) rotate(-56)"><rect x="-20" y="-3" width="32" height="6" fill="#f2cf86"/><rect x="-24" y="-3" width="5" height="6" rx="2" fill="#eda7bf"/><path d="M12-3l7 3-7 3z" fill="#f6dcb0"/><path d="M17-1l2 1-2 1z" fill="#5b5a8f"/></g></g>`;
-const cardBack = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-15" y="-21" width="30" height="42" rx="4" fill="#fffaf2"/>
-  <rect x="-12" y="-18" width="24" height="36" rx="3" fill="#5fa8d3"/>${[-9, 0, 9].map(b => [-6, 0, 6].map(a => `<circle cx="${a}" cy="${b}" r="1.6" fill="#bcdcef"/>`).join('')).join('')}</g>`;
+const coaster = (x: number, y: number, r: number, c: string) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="${C.cream}"/><circle r="${r * .78}" fill="${c}"/><circle r="${r * .52}" fill="${C.cream}"/></g>`;
+const tumbler = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="14" fill="#000" opacity=".3"/>
+  <circle r="14" fill="#d6e6e2" opacity=".28"/><circle r="11" fill="#c98a3c" opacity=".85"/>
+  <rect x="-6" y="-7" width="8" height="8" rx="1.5" fill="#fff" opacity=".55" transform="rotate(14)"/><rect x="1" y="-1" width="7" height="7" rx="1.5" fill="#fff" opacity=".45" transform="rotate(-10)"/></g>`;
+const beer = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="18" fill="#000" opacity=".3"/>
+  ${coaster(0, 0, 19, '#b5452f')}<circle r="13" fill="#d99a3a"/><circle r="10.5" fill="#f3ead6"/>
+  <circle cx="-3" cy="-2" r="2.6" fill="#fff"/><circle cx="3" cy="2" r="1.8" fill="#fff"/></g>`;
+const candle = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle r="20" fill="${C.light}" opacity=".1" class="tb-flicker"/>
+  <circle cx="2" cy="3" r="11" fill="#000" opacity=".3"/><circle r="11" fill="#7a2632"/><circle r="8" fill="#a33a46"/><circle r="4" fill="#ffd58a" class="tb-flicker"/><circle r="1.6" fill="#fff4cf"/></g>`;
+const olives = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle cx="2" cy="3" r="15" fill="#000" opacity=".3"/><circle r="15" fill="${C.cream}"/><circle r="11" fill="#e3d6bd"/>
+  ${[[-4, -3], [4, -4], [0, 4], [6, 3], [-5, 5]].map(([a, b]) => `<ellipse cx="${a}" cy="${b}" rx="3.6" ry="2.8" fill="#6f7d3a"/><circle cx="${a + 1}" cy="${b}" r="1" fill="#b5452f"/>`).join('')}</g>`;
+const deck = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y}) rotate(${r})">${[3, 1.5, 0].map(o => `<rect x="${-14 + o}" y="${-20 - o}" width="28" height="40" rx="3" fill="${o ? '#e3d6bd' : '#6f2632'}"/>`).join('')}
+  <rect x="-10" y="-16" width="20" height="32" rx="2" fill="${C.brass}" opacity=".25"/><path d="M0-8l6 8-6 8-6-8z" fill="${C.brass}" opacity=".8"/></g>`;
 
-/** Offene Karte (Schwimmen): Wert und Farbe */
+/** Offene Karte (Schwimmen) */
 function faceCard(x: number, y: number, r: number, t: string, suit: 'herz' | 'karo' | 'pik' | 'kreuz'): string {
-  const red = suit === 'herz' || suit === 'karo', c = red ? '#e0705a' : '#4d4a7a';
+  const red = suit === 'herz' || suit === 'karo', c = red ? '#a8343d' : '#1c1a26';
   const sym: Record<string, string> = {
     herz: '<path d="M0 6C-11-1-10-10-4-10c2 0 3 1 4 3 1-2 2-3 4-3 6 0 7 9-4 16z"/>',
     karo: '<path d="M0-10l7 10-7 10-7-10z"/>',
     pik: '<path d="M0-10C-9-2-10 3-6 5c2 1 4 0 5-1l-2 6h6l-2-6c1 1 3 2 5 1 4-2 3-7-6-15z"/>',
     kreuz: '<circle cx="0" cy="-5" r="4.2"/><circle cx="-5" cy="2" r="4.2"/><circle cx="5" cy="2" r="4.2"/><path d="M-1.5 2h3l1.5 8h-6z"/>'
   };
-  return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-19" y="-26" width="40" height="56" rx="5" fill="#000" opacity=".14"/>
-  <rect x="-20" y="-28" width="40" height="56" rx="5" fill="#fffaf2"/>
+  return `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-18" y="-25" width="40" height="56" rx="4" fill="#000" opacity=".35"/>
+  <rect x="-20" y="-28" width="40" height="56" rx="4" fill="${C.cream}"/>
   <text x="-14" y="-12" font-family="Jost, sans-serif" font-weight="600" font-size="12" fill="${c}">${t}</text>
   <g transform="translate(2 6)" fill="${c}">${sym[suit]}</g></g>`;
 }
 
-/** Würfelbecher mit herausgefallenen Würfeln (Schocken) */
+/** Lederbecher mit Würfeln (Schocken) */
 function cupAndDice(x: number, y: number): string {
-  const die = (dx: number, dy: number, r: number, face: number) => {
-    const o = 4.2, P: Record<number, number[][]> = { 1: [[0, 0]], 2: [[-o, -o], [o, o]], 3: [[-o, -o], [0, 0], [o, o]], 6: [[-o, -o], [o, -o], [-o, 0], [o, 0], [-o, o], [o, o]] };
-    return `<g transform="translate(${dx} ${dy}) rotate(${r})"><rect x="-8" y="-6.5" width="17" height="17" rx="4" fill="#000" opacity=".14"/><rect x="-8.5" y="-8.5" width="17" height="17" rx="4" fill="#fffaf2"/>
-      ${P[face].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="1.7" fill="${face === 1 ? '#e0705a' : '#4d4a7a'}"/>`).join('')}</g>`;
-  };
-  // Becher liegt auf der Seite, Öffnung zu den Würfeln
-  return `<g transform="translate(${x} ${y})"><g transform="rotate(-24)"><rect x="-26" y="-14" width="52" height="30" rx="8" fill="#000" opacity=".14"/>
-    <path d="M-26-16h40l12 4v24l-12 4h-40z" fill="#8a5a3c"/><rect x="-30" y="-17" width="8" height="34" rx="3" fill="#a8714c"/>
-    <rect x="-14" y="-16" width="5" height="32" fill="#6f4630"/><rect x="2" y="-16" width="5" height="32" fill="#6f4630"/><ellipse cx="26" cy="0" rx="5" ry="12" fill="#5a3826"/></g>
-    ${die(42, 4, 18, 1)}${die(58, -12, -14, 1)}${die(54, 18, 40, 6)}</g>`;
+  const die = (dx: number, dy: number, r: number) => `<g transform="translate(${dx} ${dy}) rotate(${r})"><rect x="-7" y="-5.5" width="15" height="15" rx="3" fill="#000" opacity=".35"/>
+    <rect x="-7.5" y="-7.5" width="15" height="15" rx="3" fill="${C.cream}"/><circle r="2.2" fill="#a8343d"/></g>`;
+  return `<g transform="translate(${x} ${y})"><circle cx="3" cy="4" r="20" fill="#000" opacity=".3"/><circle r="20" fill="${C.brass2}"/><circle r="18" fill="#3a2219"/><circle r="13" fill="#20130e"/>
+    ${die(30, -10, 18)}${die(36, 10, -22)}${die(18, 24, 40)}</g>`;
 }
 
 /** Bierdeckelstapel in der Mitte (Schocken) */
 export function stack(n: number): string {
-  const { cx, cy } = TABLE, shown = Math.min(n, 13);
-  const layers = Array.from({ length: shown }, (_, k) => `<g transform="translate(${cx - 18 + (k % 3) * 1.2} ${cy - k * 2.6})"><circle r="26" fill="${k % 2 ? '#e9d9bf' : '#f1e4cc'}"/></g>`).join('');
+  const { cx, cy } = TABLE, shown = Math.min(n, 13), x0 = cx - 18;
+  const layers = Array.from({ length: shown }, (_, k) => `<circle cx="${x0 + (k % 3) * 1.2}" cy="${cy - k * 2.6}" r="25" fill="${k % 2 ? '#d9cbb0' : '#e6d9bf'}"/>`).join('');
   const top = cy - Math.max(0, shown - 1) * 2.6;
-  return `<ellipse cx="${cx - 16}" cy="${cy + 6}" rx="30" ry="26" fill="#000" opacity=".14"/>${n > 0 ? layers + `<g transform="translate(${cx - 18} ${top})"><circle r="26" fill="#fffaf2"/><circle r="21" fill="#f3a98f"/><circle r="14" fill="#fffaf2"/>
-    ${dots(0, 0, 17.5, 16, 1.2, '#fffaf2')}</g>` : `<circle cx="${cx - 18}" cy="${cy}" r="26" fill="#fffaf2" opacity=".22"/>`}`;
+  return `<ellipse cx="${x0 + 3}" cy="${cy + 6}" rx="28" ry="26" fill="#000" opacity=".35"/>${n > 0
+    ? layers + `<g transform="translate(${x0} ${top})"><circle r="25" fill="${C.cream}"/><circle r="20" fill="#b5452f"/><circle r="13.5" fill="${C.cream}"/></g>`
+    : `<circle cx="${x0}" cy="${cy}" r="25" fill="${C.cream}" opacity=".08"/>`}`;
 }
 
 function tableTop(): string {
   const { cx, cy, rx, ry } = TABLE;
-  const planks = Array.from({ length: 7 }, (_, k) => `<rect x="${cx - rx + k * (2 * rx / 7)}" y="${cy - ry}" width="${2 * rx / 7 - 2}" height="${2 * ry}" fill="${k % 2 ? v('t1') : v('t2')}"/>`).join('');
-  const grain = Array.from({ length: 9 }, (_, k) => `<rect x="${cx - rx + 14 + k * 30}" y="${cy - ry + 20 + (k * 41) % 120}" width="3" height="${40 + (k * 23) % 60}" rx="1.5" fill="${v('tg')}" opacity=".5"/>`).join('');
-  return `<ellipse cx="${cx + 4}" cy="${cy + 16}" rx="${rx + 6}" ry="${ry + 6}" fill="#000" opacity=".2"/>
-  <ellipse cx="${cx}" cy="${cy + 8}" rx="${rx}" ry="${ry}" fill="${v('te')}"/>
-  <clipPath id="tb-clip"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/></clipPath>
-  <g clip-path="url(#tb-clip)">${planks}${grain}</g>
-  <ellipse cx="${cx}" cy="${cy}" rx="${rx - 14}" ry="${ry - 13}" fill="${v('tg')}" opacity=".18"/>`;
+  return `<ellipse cx="${cx + 6}" cy="${cy + 20}" rx="${rx + 10}" ry="${ry + 10}" fill="#000" opacity=".45"/>
+  <ellipse cx="${cx}" cy="${cy + 8}" rx="${rx}" ry="${ry}" fill="${C.rim}"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${C.rim2}"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx - 9}" ry="${ry - 9}" fill="${C.brass2}"/>
+  <ellipse cx="${cx}" cy="${cy}" rx="${rx - 11}" ry="${ry - 11}" fill="${C.felt}"/>
+  <ellipse cx="${cx - 6}" cy="${cy - 8}" rx="${rx - 40}" ry="${ry - 38}" fill="${C.felt2}"/>
+  <ellipse cx="${cx - 12}" cy="${cy - 14}" rx="${rx - 76}" ry="${ry - 72}" fill="#2a6555" opacity=".7"/>`;
 }
 
-/** Ganze Szene. Die Mitte (Karten bzw. Deckelstapel) zeichnet der Aufrufer dazu. */
+/** Ganze Szene ohne Mitte und ohne Spielersachen (die zeichnet der Aufrufer dazu) */
 export function room(kind: 'lives' | 'tokens'): string {
   const { cx, cy } = TABLE;
-  const shelfExtra = kind === 'tokens'
-    ? `<g transform="translate(78 -2)"><path d="M-8-22h16l-2 22h-12z" fill="#8a5a3c"/><rect x="-9" y="-25" width="18" height="5" rx="2" fill="#a8714c"/></g>`
-    : `<g transform="translate(78 0)"><circle cy="-10" r="10" fill="#fffaf2"/>${[0, 1, 2, 3].map(k => `<path d="M0-10L${10 * Math.cos(k * 1.57 + .4)} ${-10 + 10 * Math.sin(k * 1.57 + .4)}A10 10 0 0 1 ${10 * Math.cos(k * 1.57 + 1.1)} ${-10 + 10 * Math.sin(k * 1.57 + 1.1)}z" fill="#ef7a5c"/>`).join('')}<circle cy="-10" r="5" fill="${v('w1')}"/></g>`;
-  const props = kind === 'lives'
-    ? cardBack(cx + 62, cy - 4, 14) + cardBack(cx + 64, cy - 7, 20) + cardBack(cx + 66, cy - 10, 26)
-    : cupAndDice(cx + 22, cy + 6);
-  return `${wall()}${lights()}${picture(14, 66)}${keys(30, 162)}<g transform="translate(136 128) scale(.86)">${antlers(0, 0)}</g>${clock(258, 92)}<g transform="translate(286 164) scale(.86)">${shelf(0, 0, shelfExtra)}</g>
-  ${floor()}${lamp()}${tableTop()}
-  ${glass(cx - 82, cy - 52)}${glass(cx + 88, cy + 50, kind === 'lives')}${glass(cx - 30, cy + 88, false)}
-  ${pretzels(cx + 70, cy - 66)}${nuts(cx - 92, cy + 30)}${candle(cx - 8, cy - 86)}${pad(cx + 30, cy + 80, 16)}
-  ${coaster(cx - 60, cy + 70, 13, '#f2cf86')}${coaster(cx + 104, cy - 16, 12, '#86cbb8')}
-  ${props}`;
+  const props = kind === 'lives' ? deck(cx + 42, cy - 30, 18) : cupAndDice(cx + 30, cy + 2);
+  return `<defs><filter id="tb-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter></defs>
+  ${backBar(kind)}${floor()}${tableTop()}
+  ${candle(cx - 44, cy - 34)}${tumbler(cx + 44, cy + 32)}${beer(cx - 40, cy + 34)}${olives(cx + 4, cy + 46)}${props}
+  ${lamps()}`;
 }
 
 /** Schwimmen: drei offene Karten in der Mitte, sie wechseln mit jeder Runde */
@@ -206,5 +151,5 @@ const VALUES = ['7', '8', '9', '10', 'B', 'D', 'K', 'A'];
 export function middleCards(round: number): string {
   const { cx, cy } = TABLE;
   const pick = (k: number) => { const n = (round * 7 + k * 11 + 3) % 32; return { t: VALUES[n % 8], s: SUITS[Math.floor(n / 8)] }; };
-  return [-1, 0, 1].map(k => { const c = pick(k + 1); return faceCard(cx - 26 + k * 30, cy + Math.abs(k) * 4, k * 12, c.t, c.s); }).join('');
+  return [-1, 0, 1].map(k => { const c = pick(k + 1); return faceCard(cx - 14 + k * 26, cy - 8 + Math.abs(k) * 4, k * 12, c.t, c.s); }).join('');
 }

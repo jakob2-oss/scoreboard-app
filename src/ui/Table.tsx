@@ -4,7 +4,7 @@ import { endState, isLives, lifeState, seated, tableRounds, tokenState, type Gam
 import type { Player } from '../model/types';
 import { Avatar } from './Avatar';
 import { IconUndo } from './icons';
-import { middleCards, room, SEATS, stack, TABLE, VIEW } from './table';
+import { FRONT, middleCards, room, SEATS, stack, TABLE, VIEW } from './table';
 
 /** Platz i von n auf der Sitz-Ellipse, unten beginnend im Uhrzeigersinn (in viewBox-Koordinaten) */
 function seatPos(i: number, n: number) {
@@ -12,11 +12,7 @@ function seatPos(i: number, n: number) {
   return { x: TABLE.cx + SEATS.rx * Math.cos(a), y: TABLE.cy + SEATS.ry * Math.sin(a) };
 }
 
-const BUOY = `<svg viewBox="-12 -12 24 24" aria-hidden="true"><circle r="11" fill="#fffaf2"/>${[0, 1, 2, 3].map(k => {
-  const a0 = k * Math.PI / 2 + .4, a1 = a0 + .75;
-  return `<path d="M0 0L${11 * Math.cos(a0)} ${11 * Math.sin(a0)}A11 11 0 0 1 ${11 * Math.cos(a1)} ${11 * Math.sin(a1)}z" fill="#ef7a5c"/>`;
-}).join('')}<circle r="5.5" fill="#97c4e3"/></svg>`;
-const DECKEL = '<svg viewBox="-10 -10 20 20" aria-hidden="true"><circle r="9.5" fill="#fffaf2"/><circle r="7.5" fill="#f3a98f"/><circle r="4.4" fill="#fffaf2"/></svg>';
+const DECKEL = '<svg viewBox="-10 -10 20 20" aria-hidden="true"><circle r="9.5" fill="#efe4cf"/><circle r="7.5" fill="#b5452f"/><circle r="4.4" fill="#efe4cf"/></svg>';
 
 /** Tisch-Modus: Spieler sitzen um den Tisch, Antippen verteilt Leben bzw. Deckel, Ziehen tauscht Plätze */
 export function TableView({ g }: { g: GameState }) {
@@ -70,6 +66,7 @@ export function TableView({ g }: { g: GameState }) {
         <svg className="tbl-art" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
           <g dangerouslySetInnerHTML={{ __html: scene }} />
           <g key={lives ? rounds : ts!.middle} className="tb-mid-art" dangerouslySetInnerHTML={{ __html: middle }} />
+          {players.map((p, i) => <Front key={p.id} i={i} n={n} lives={ls ? { max: ls.lives, left: ls.left[p.id], swim: ls.swimming[p.id] } : null} hold={ts?.hold[p.id] ?? 0} />)}
         </svg>
         {ts && ts.middle > 0 && <div className="tb-count" style={{ left: `${(TABLE.cx - 18) / VIEW.w * 100}%`, top: `${(TABLE.cy - Math.min(ts.middle, 13) * 2.6 + 2.6) / VIEW.h * 100}%` }}>{ts.middle}</div>}
         {players.map((p, i) => {
@@ -85,12 +82,11 @@ export function TableView({ g }: { g: GameState }) {
               aria-label={label} disabled={done && !dragging}
               onPointerDown={down(i)} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; setOff(null); }}
               onClick={() => tap(p)}>
-              <span className="tb-av"><Avatar p={p} />{swim && <span className="tb-buoy" dangerouslySetInnerHTML={{ __html: BUOY }} />}</span>
+              <span className="tb-av"><Avatar p={p} /></span>
               <span className="tb-plate">
                 <span className="tb-name">{p.name}</span>
                 {ls ? (
-                  out ? <span className="tb-state">raus</span>
-                    : <span className="tb-coins">{Array.from({ length: ls.lives }, (_, k) => <i key={k} className={k < ls.left[p.id] ? '' : 'gone'} />)}</span>
+                  <span className="tb-state">{out ? 'raus' : swim ? 'schwimmt' : `${ls.left[p.id]} Leben`}</span>
                 ) : (
                   <span className="tb-deck"><span className="tb-dk" key={hold} dangerouslySetInnerHTML={{ __html: DECKEL }} /><b>{hold}</b>
                     {halves > 0 && <span className="tb-halves">{Array.from({ length: halves }, (_, k) => <i key={k} />)}</span>}</span>
@@ -157,5 +153,36 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
         </div>
       </div>
     </>
+  );
+}
+
+/** Was vor einem Spieler auf dem Tisch liegt: Münzen als Leben (Schwimmen) bzw. sein Deckelstapel (Schocken) */
+function Front({ i, n, lives, hold }: { i: number; n: number; lives: { max: number; left: number; swim: boolean } | null; hold: number }) {
+  const a = Math.PI / 2 + (i / n) * Math.PI * 2;
+  const x = TABLE.cx + FRONT.rx * Math.cos(a), y = TABLE.cy + FRONT.ry * Math.sin(a);
+  const rot = (a * 180) / Math.PI + 90;
+  if (lives) {
+    const m = lives.max, gap = Math.min(22, 60 / Math.max(1, m - 1));
+    return (
+      <g transform={`translate(${x} ${y}) rotate(${rot})`}>
+        {Array.from({ length: m }, (_, k) => {
+          const cx = (k - (m - 1) / 2) * gap, on = k < lives.left;
+          return <g key={k} className={'tb-coin' + (on ? '' : ' gone')} transform={`translate(${cx} 0)`}>
+            <circle cx="1.5" cy="2.5" r="10" fill="#000" opacity=".35" />
+            <circle r="10" fill="#b8913f" /><circle r="7.8" fill="#e2c068" /><circle r="4" fill="#c9a24e" />
+            <rect x="-4.5" y="-5.5" width="3" height="1.6" rx=".8" fill="#fff4cf" opacity=".7" transform="rotate(-30)" />
+          </g>;
+        })}
+        {lives.swim && <g className="tb-wave">{[-1, 1].map(k => <path key={k} d={`M-20 ${k * 5}q5-5 10 0t10 0 10 0 10 0`} fill="none" stroke="#7fb8c9" strokeWidth="2.6" strokeLinecap="round" />)}</g>}
+      </g>
+    );
+  }
+  const shown = Math.min(hold, 8);
+  return (
+    <g transform={`translate(${x} ${y})`} key={hold} className="tb-pile">
+      {hold > 0 && <ellipse cx="2" cy="4" rx="13" ry="12" fill="#000" opacity=".35" />}
+      {Array.from({ length: shown }, (_, k) => <circle key={k} cx={(k % 2) * 1.2} cy={-k * 2.2} r="12" fill={k === shown - 1 ? '#efe4cf' : k % 2 ? '#d9cbb0' : '#e6d9bf'} />)}
+      {hold > 0 && <><circle cy={-(shown - 1) * 2.2} r="9.5" fill="#b5452f" /><circle cy={-(shown - 1) * 2.2} r="6.3" fill="#efe4cf" /></>}
+    </g>
   );
 }

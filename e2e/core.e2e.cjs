@@ -364,7 +364,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const seatNames = () => p.locator('.tb-seat .tb-name').allTextContents();
   check('Schwimmen: Spieler sitzen am Tisch', (await p.locator('.tb-seat').count()) >= 3 && await p.isVisible('.tbl-art'));
   for (let k = 0; k < 3; k++) await seat(0).click();
-  check('Schwimmen: nach drei Leben schwimmt man', (await seat(0).getAttribute('aria-label')).endsWith('schwimmt') && await p.isVisible('.tb-seat.swim .tb-buoy'));
+  check('Schwimmen: nach drei Leben schwimmt man', (await seat(0).getAttribute('aria-label')).endsWith('schwimmt') && await p.isVisible('.tb-seat.swim') && await p.isVisible('.tb-wave'));
   await seat(0).click();
   check('Schwimmen: danach raus', (await seat(0).getAttribute('aria-label')).endsWith('raus'));
   await p.click('.dock [aria-label="Rückgängig"]'); await p.waitForTimeout(150);
