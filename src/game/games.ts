@@ -119,7 +119,7 @@ GAMES.push(
   {
     template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
       params: { zeroSum: true, quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
-    points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider, Laufende', 'erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
+    points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider', 'und Laufende erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
   },
   {
