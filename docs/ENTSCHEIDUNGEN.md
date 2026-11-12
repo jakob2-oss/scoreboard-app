@@ -111,6 +111,8 @@ Solange sie läuft, ist sie beim Speichern vorgewählt und steht als Karte auf d
 Beendet zeigt sie eine Abschlussseite: Otter mit Pokal (Band „GESAMTSIEG“), wer die Serie gewinnt, Auszeichnungen
 (Meiste Siege, Längste Siegesserie, Allrounder, Pechvogel; `seriesAwards` in `stats.ts`). Fortsetzen ist möglich.
 
-## 12.11.2026: Startseite wieder mit dem Zettel-Bild
-Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten. Die Fläche dahinter atmet jetzt langsam
-wie die Hintergrundformen; die harte Kante unter der Statusleiste ist behoben.
+## 12.11.2026: Startseite: Name und Bild als ein Banner
+Jakob möchte das verspielte Bild mit Zettel, Stift, Würfel und Figur behalten, aber nicht so wuchtig getrennt vom Namen.
+Jetzt ein Banner: „OINA NO?“ links, das Bild rechts auf einer gemeinsamen Fläche (Farbe der früheren Bildfläche,
+mit einer langsam treibenden Form). Die Suche sitzt als Pille mit Lupe halb auf der Unterkante, der Hell/Dunkel-Schalter
+oben links in der Fläche. Darunter direkt die Spiele.

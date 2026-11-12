@@ -31,14 +31,19 @@ export function Home() {
     <section className="screen" id="s-home">
       <div className="scroll">
         <div className="gutter">
-          <div className="home-top">
-            <button className="icon-btn" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}>
-              {theme === 'dark' ? <IconSun /> : <IconMoon />}
-            </button>
-          </div>
-          <div className="brand">
-            <div style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: heroSvg }} />
-            <h1 className="wordmark" aria-label="Oina no?"><span className="w1">OINA</span><span className="w2">NO?</span></h1>
+          {/* Kopf: Name und Bild auf einer Fläche, die Suche sitzt an ihrer Unterkante */}
+          <div className="hero-banner">
+            <div className="hb-card">
+              <button className="icon-btn hb-theme" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}>
+                {theme === 'dark' ? <IconSun /> : <IconMoon />}
+              </button>
+              <h1 className="wordmark" aria-label="Oina no?"><span className="w1">OINA</span><span className="w2">NO?</span></h1>
+              <div className="hb-ill" dangerouslySetInnerHTML={{ __html: heroSvg }} />
+            </div>
+            <label className="hb-search">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
+              <input className="game-search" id="game-search" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Spiel suchen" aria-label="Spiel suchen" autoComplete="off" />
+            </label>
           </div>
           <div className="home-body">
             {live && <LiveSeries ev={live} />}
@@ -58,7 +63,6 @@ export function Home() {
                 </div>
               </div>
             )}
-            <input className="game-search" id="game-search" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Spiel suchen" aria-label="Spiel suchen" autoComplete="off" />
             {q.trim() ? (
               <div className="group">
                 <div className="list" id="search-results">
