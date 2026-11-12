@@ -36,7 +36,7 @@ export function Series() {
         <div className="gutter pf-body">
           <div className="ser-hero">
             <h1>{ev.name}</h1>
-            <small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'} mit ${rows.length} Spielern, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small>
+            <small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'} mit ${rows.length} ${rows.length === 1 ? 'Spieler' : 'Spielern'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small>
           </div>
           {rows.length > 0 && <>
             <div className="seg" role="group" aria-label="Wertung">

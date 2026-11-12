@@ -62,6 +62,7 @@ export function History() {
               <div className="field"><label>Serie</label>
                 <SeriesPicker value={open.eventId ?? null} onChange={id => act().setGameEvent(open.id, id)} />
               </div>
+              <DeleteGame id={open.id} />
               <div className="podium">
                 {open.results.map(r => {
                   const p = playerOf(players, r.playerId);
@@ -117,5 +118,16 @@ function SeriesList() {
           <button className="primary" type="submit" disabled={!name.trim()}>Anlegen</button>
         </form>}
     </>
+  );
+}
+
+function DeleteGame({ id }: { id: string }) {
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <div className="menu-list hist-del">
+      {!confirm
+        ? <button className="warn" id="hist-delete" onClick={() => setConfirm(true)}>Partie löschen</button>
+        : <div className="confirm-row"><button className="no" onClick={() => setConfirm(false)}>Abbrechen</button><button className="yes" id="hist-delete-yes" onClick={() => act().deleteHistoryGame(id)}>Wirklich löschen</button></div>}
+    </div>
   );
 }

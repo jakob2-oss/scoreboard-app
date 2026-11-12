@@ -76,4 +76,6 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
       Duell ohne „Besser platziert“, drei letzte Partien; Serie ohne „Quote“ (Leistung deckt das ab); keine Punktvergleiche bei Platz-Spielen.
 - [x] **Hintergründe:** runde Hügel, weiche Kreise, Punkteraster, Konfetti; alle Illustrationen in Pastell.
 - [x] **Lokaler Gebrauch:** Sicherung speichern und einlesen (Spieler, Bereich Daten), dauerhafter Speicher angefragt.
-- [ ] Offen: mehrere laufende Partien gleichzeitig, Partie im Verlauf löschen, Spieler löschen.
+- [x] **Partie im Verlauf löschen** (mit Rückfrage), Statistik rechnet ohne sie.
+- [x] Texte: „Ben und Clara gewinnen“ statt „Ben & Clara gewinnt“, „haben Phase 10 geschafft“, „mit 1 Spieler“.
+- [ ] Offen: mehrere laufende Partien gleichzeitig, Spieler löschen.

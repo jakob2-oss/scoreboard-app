@@ -352,6 +352,15 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#my-games .row >> text=Umbenannt'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
   check('eigenes Spiel gelöscht', (await p.locator('#my-games .row').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
 
+  // Partie im Verlauf löschen
+  await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('#tab-history');
+  const nHist = await p.locator('.hist-row').count();
+  await p.click('.hist-row >> nth=0'); await p.click('#hist-delete'); await p.click('#hist-delete-yes'); await p.waitForTimeout(300);
+  check('Partie aus dem Verlauf gelöscht', (await p.locator('.hist-row').count()) === nHist - 1);
+  await p.reload(); await p.waitForSelector('.wordmark'); await p.click('#tab-history');
+  check('bleibt nach Neuladen gelöscht', (await p.locator('.hist-row').count()) === nHist - 1);
+  await p.click('#tab-home');
+
   // Sicherung speichern und wieder einlesen
   await p.click('#tab-people');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#backup-save')]);

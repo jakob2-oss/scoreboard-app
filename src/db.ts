@@ -52,6 +52,8 @@ export interface Repo {
   saveEvent(e: GameEvent): Promise<void>;
   /** Abgeschlossene Partie einer Serie zuordnen (null löst sie) */
   setGameEvent(gameId: string, eventId: string | null, at: string): Promise<void>;
+  /** Abgeschlossene Partie löschen (als gelöscht markiert, samt Ergebnissen) */
+  deleteGame(gameId: string, at: string): Promise<void>;
 }
 
 export function createRepo(db: PzDb): Repo {
@@ -103,6 +105,12 @@ export function createRepo(db: PzDb): Repo {
     },
     async loadEvents() { return (await db.events.toArray()).filter(e => !e.deletedAt); },
     async saveEvent(e) { await db.events.put(e); },
+    async deleteGame(gameId, at) {
+      await db.transaction('rw', db.games, db.results, async () => {
+        await db.games.update(gameId, { deletedAt: at, updatedAt: at });
+        await db.results.where('gameId').equals(gameId).modify({ deletedAt: at, updatedAt: at });
+      });
+    },
     async setGameEvent(gameId, eventId, at) { await db.games.update(gameId, { eventId, updatedAt: at }); },
     async loadRunningGame() {
       const running = (await db.games.where('status').equals('running').toArray())

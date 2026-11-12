@@ -199,3 +199,4 @@ td.struck, .pp-cat .v.struck { color: var(--muted); opacity: .6; }
 .mini-pct { width: 44px; }
 .pf-name { font: inherit; color: inherit; background: none; border: 0; padding: 0; width: 100%; border-radius: 8px; }
 .pf-name:focus { background: var(--fill); outline: none; padding: 0 6px; }
+.hist-del { margin-top: 14px; }
