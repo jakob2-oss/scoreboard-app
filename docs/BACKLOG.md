@@ -80,7 +80,7 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] Texte: „Ben und Clara gewinnen“ statt „Ben & Clara gewinnt“, „haben Phase 10 geschafft“, „mit 1 Spieler“.
 - [x] **Spieler löschen** im Profil (nicht während er mitspielt); Name bleibt im Verlauf.
 - [x] **Feedback-Knopf** auf der Startseite: Text, dann Teilen-Menü des Geräts, Version und Gerät hängen an.
-- [ ] Offen: mehrere laufende Partien gleichzeitig.
+- [x] **Mehrere Partien gleichzeitig:** Neue Partie parkt die laufende, Startseite listet alle laufenden Partien; Beenden und Verwerfen betreffen nur die geöffnete.
 - [x] **Szenen lebendiger (12.11.):** eigenes Muster je Spiel (Rauten, Strahlen, Waben, Raster, Wellen, Streifen, Stufen, Blöcke),
       dezente Bewegung (Konfetti schwebt, Sonne pulsiert, Figuren wippen; aus bei „Bewegung reduzieren“).
       Icons als Einzelsymbol, Szene erzählt die Situation (Kniffel: Würfel und Becher, Schafkopf: Eichel und Bierdeckel,

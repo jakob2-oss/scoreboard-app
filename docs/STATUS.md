@@ -88,6 +88,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 
 - **Siegerseite** (PR #11): `ResultSheet` als ganze Seite, Kennzahlen aus `highlights()`
 
+- **Mehrere Partien** (PR #12): `parked` im Store, `loadRunningGames` in `db.ts`, `resume(id)`
+
 ## Tests
-- Unit-Tests: 95 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 96 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen

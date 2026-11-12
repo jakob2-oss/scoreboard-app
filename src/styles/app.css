@@ -291,3 +291,4 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 .scene .an-bob { animation-duration: 11s; }
 .scene .an-drift { animation-duration: 22s; }
 .backdrop.dim .bd-m { opacity: calc(var(--bd-op) * .45); }
+.resume-list { display: flex; flex-direction: column; gap: 8px; }

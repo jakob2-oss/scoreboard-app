@@ -98,4 +98,12 @@ describe('Lokale Datenbank', () => {
     expect((await repo.loadPlayers()).map(p => p.name)).toEqual(['Anna']);
     expect((await repo.loadDeletedPlayers()).map(p => p.name)).toEqual(['Ben']);
   });
+
+  it('lädt mehrere laufende Partien, zuletzt geänderte zuerst', async () => {
+    const repo = freshRepo();
+    const g = (id: string, t: string) => ({ game: { id, createdAt: t, updatedAt: t, rules: TPL.free, status: 'running', seats: [] } as never, players: [], rounds: [], entries: [] });
+    await repo.saveGame(g('a', '2026-01-01T00:00:00Z')); await repo.saveGame(g('b', '2026-01-03T00:00:00Z')); await repo.saveGame(g('c', '2026-01-02T00:00:00Z'));
+    expect((await repo.loadRunningGames()).map(x => x.game.id)).toEqual(['b', 'c', 'a']);
+    expect((await repo.loadRunningGame())!.game.id).toBe('b');
+  });
 });

@@ -42,6 +42,8 @@ export interface Repo {
   loadDeletedPlayers(): Promise<Player[]>;
   savePlayer(p: Player): Promise<void>;
   loadRunningGame(): Promise<GameState | null>;
+  /** Alle laufenden Partien, zuletzt geänderte zuerst */
+  loadRunningGames(): Promise<GameState[]>;
   loadTemplates(): Promise<Template[]>;
   saveResults(r: Result[]): Promise<void>;
   /** Abgeschlossene Partien mit Ergebnissen, neueste zuerst */
@@ -115,17 +117,19 @@ export function createRepo(db: PzDb): Repo {
       });
     },
     async setGameEvent(gameId, eventId, at) { await db.games.update(gameId, { eventId, updatedAt: at }); },
-    async loadRunningGame() {
+    async loadRunningGames() {
       const running = (await db.games.where('status').equals('running').toArray())
-        .filter(g => !g.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
-      if (!running) return null;
-      const [rounds, entries, players] = await Promise.all([
-        db.rounds.where('gameId').equals(running.id).toArray(),
-        db.entries.where('gameId').equals(running.id).toArray(),
-        db.players.bulkGet(running.seats.map(s => s.playerId))
-      ]);
-      return { game: running, rounds, entries, players: players.filter((p): p is Player => !!p) };
+        .filter(g => !g.deletedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+      return Promise.all(running.map(async game => {
+        const [rounds, entries, players] = await Promise.all([
+          db.rounds.where('gameId').equals(game.id).toArray(),
+          db.entries.where('gameId').equals(game.id).toArray(),
+          db.players.bulkGet(game.seats.map(s => s.playerId))
+        ]);
+        return { game, rounds, entries, players: players.filter((p): p is Player => !!p) };
+      }));
     },
+    async loadRunningGame() { return (await this.loadRunningGames())[0] ?? null; },
     /** Speichert den kompletten Stand einer Partie. Gelöschtes bleibt als Markierung erhalten. */
     async saveGame(s) {
       // Spieler werden separat gespeichert (savePlayer), damit eine Partie sie nie überschreibt.

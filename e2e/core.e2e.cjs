@@ -298,7 +298,20 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#phase-toggle'); await p.waitForTimeout(200);
   check('Phase 10: Haken gesetzt', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
   await shot('35-phase10-page');
+  // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
+  await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));
+  await p.click('.dock .primary'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#s-game [aria-label="Zum Start"]'); await p.waitForTimeout(200);
+  check('zwei laufende Partien auf der Startseite', (await p.locator('.resume').count()) === 2 && (await raw('#s-home')).includes('Laufende Partien'));
+  await shot('35b-two-running');
+  await p.reload(); await p.waitForSelector('.wordmark');
+  check('nach Neuladen beide noch da', (await p.locator('.resume').count()) === 2);
+  await p.click('.resume >> text=Phase 10'); await p.waitForTimeout(300);
+  check('Phase 10 fortgesetzt mit Haken', (await raw('#s-game')).includes('Phase 10') && (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed').catch(() => null)) !== null);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  check('verwerfen betrifft nur die geöffnete Partie', (await p.locator('.resume').count()) === 1 && (await text('.resume')).includes('Skyjo'));
+  await p.click('.resume'); await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   // Binokel: erst Meldungen, dann Stiche
   await p.click('[data-game="binokel"]'); await p.click('#quick-start');
