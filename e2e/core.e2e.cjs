@@ -368,7 +368,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Suche findet Rommé', (await p.locator('#search-results .row.tpl').count()) === 1 && (await text('#search-results')).includes('Rommé'));
   await p.fill('#game-search', 'xyz');
   check('Suche ohne Treffer', (await text('#search-results')).includes('Keine Treffer'));
-  await p.fill('#game-search', 'Testspiel');
+  await p.fill('#game-search', 'freies spiel vom');
   check('Suche findet eigene Spiele', (await p.locator('#search-results .row[data-own]').count()) === 1);
   await shot('45b-search');
   await p.fill('#game-search', '');
