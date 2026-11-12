@@ -101,5 +101,5 @@ Version steigt mit jedem größeren Paket (0.9.0: Tisch-Modus, Chic, Oina no?).
 
 ## 12.11.2026: Startseite mit Logo statt Bild
 Das alte Punktezettel-Bild (Nachtlandschaft mit eigenem Oval) ist ersetzt durch den Würfel aus dem App-Icon, darunter
-„OINA NO?“ in einer Zeile (Variante L1). Der Würfel rollt alle paar Sekunden leicht. Hintergrundformen berühren die
+„OINA NO?“; inzwischen als Logo-Block: Würfel links, so hoch wie die zwei Zeilen „OINA“ (Koralle wie das Würfelauge) und „NO?“ rechts. Der Würfel rollt alle paar Sekunden leicht. Hintergrundformen berühren die
 Oberkante nicht mehr, damit unter der Statusleiste keine harte Kante entsteht.
