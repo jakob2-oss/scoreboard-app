@@ -3,8 +3,9 @@ import { act, useApp } from '../store';
 import { MAX_STEPS, STEP_CHOICES, fallbackName, stepsOf } from '../game/templates';
 import type { End, Template } from '../model/types';
 import { GamePage } from './GamePage';
-import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, customArt, lookOf } from './art';
+import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, ownArt, lookOf } from './art';
 import { names } from './Home';
+import { gameDef } from '../game/games';
 
 export const FREE_TINT = '#e7e4f7';
 
@@ -14,6 +15,9 @@ const PATTERN_NAMES: Record<string, string> = {
 
 /** Regeln eines eigenen Spiels als Stichpunkte */
 function pointsOf(t: Template): [string, string][] {
+  // Kopie eines festen Spiels: dessen Regeln, dazu eigene Notizfelder
+  const base = t.params?.base ? gameDef(t.params.base) : undefined;
+  if (base?.points) return [...base.points, ...(t.params?.notes?.length ? [['Notizfelder', names(t.params.notes)] as [string, string]] : [])];
   if (t.params?.resultOnly) {
     const place = t.params.unit === 'Platz';
     const p: [string, string][] = [['Am Ende', place ? 'Platz je Spieler' : 'Punkte je Spieler'], ['Gewinner', place ? 'Platz 1' : t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl']];
@@ -38,7 +42,7 @@ export function Setup() {
   const { setup, editKey, templates, setupTemplate, selected, players } = useApp();
   const a = act();
   const own = editKey ? templates.find(t => t.key === editKey) : undefined;
-  const [editing, setEditing] = useState(false);
+  const editing = useApp().setupEditing, setEditing = (on: boolean) => act().setSetupEditing(on);
   const [confirm, setConfirm] = useState(false);
   const [ownStep, setOwnStep] = useState('');
   const [note, setNote] = useState('');
@@ -47,7 +51,7 @@ export function Setup() {
   const valid = endKind === 'none' || endValue > 0;
 
   // Aussehen: eigene Spiele und neue Vorlagen bekommen Szene und Icon aus Name, Farbe und Muster
-  const art = setupTemplate ? customArt(own?.key ?? 'neu', setup.name || own?.name || 'Eigenes Spiel', setup.look ?? own?.params?.look) : null;
+  const art = setupTemplate ? ownArt(own?.key ?? 'neu', setup.name || own?.name || 'Eigenes Spiel', { ...own?.params, look: setup.look ?? own?.params?.look }) : null;
   const scene = art ? art.scene : FREE_SCENE, icon = art ? art.icon : FREE_ICON, tint = art ? art.tint : FREE_TINT;
 
   // Ansicht eines eigenen Spiels

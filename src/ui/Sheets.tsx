@@ -1,9 +1,12 @@
 import { forwardRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
+import { GAME_ART, ownArt } from './art';
+import { highlights } from '../game/highlights';
+import { Crown } from './icons';
 import { names } from './Home';
 import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState } from '../game/engine';
-import { fmt } from '../lib/color';
+import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Avatar } from './Avatar';
@@ -96,23 +99,54 @@ export function ResultSheet({ g }: { g: GameState }) {
   const [eventId, setEventId] = useState<string | null>(() => {
     try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
   });
-  const rk = ranking(g), started = anyScore(g);
+  const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
+  const winners = rk.filter(x => x.place === 1);
+  const scene = GAME_ART[rules.key]?.scene ?? ownArt(rules.key, rules.name, rules.params).scene;
+  const stats = started ? highlights(g) : [];
+  // Treppchen: Zweiter, Erster, Dritter
+  const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
   return (
-    <Sheet label="Ergebnis">
-      <div className="eyebrow">{new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-      <h3>{started ? (() => { const w = rk.filter(x => x.place === 1).map(x => x.player.name); return names(w) + (w.length > 1 ? ' gewinnen' : ' gewinnt'); })() : 'Noch keine Punkte'}</h3>
-      <div className="podium">
-        {rk.map(x => (
-          <div key={x.player.id} className={'prow' + (x.place === 1 && started ? ' win' : '')}>
-            <span className="place">{x.place}</span><Avatar p={x.player} /><span className="nm">{x.player.name}</span><span className="pts">{fmt(x.total)}</span>
+    <>
+      <div className="scrim" onClick={() => act().closeSheet()} />
+      <div className="bsheet victory" role="dialog" aria-label="Ergebnis">
+        <div className="v-hero">
+          <div className="v-scene" dangerouslySetInnerHTML={{ __html: scene }} />
+          {started && <div className="v-winner">{winners.slice(0, 2).map(w => (
+            <span key={w.player.id} className="v-av" style={{ background: w.player.color, color: onColor(w.player.color) }}><Crown />{w.player.name[0]?.toUpperCase()}</span>
+          ))}</div>}
+        </div>
+        <div className="sheet-body">
+          <div className="eyebrow v-meta">{rules.name}, {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          <h3 className="v-title">{started ? names(winners.map(x => x.player.name)) + (winners.length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
+          {started && (
+            <div className="v-podium">
+              {podium.map(x => (
+                <div key={x.player.id} className={'v-step p' + Math.min(x.place, 3)}>
+                  <Avatar p={x.player} /><span className="v-nm">{x.player.name}</span><span className="v-pts">{fmt(x.total)}</span>
+                  <div className="v-block" style={{ background: x.player.color, color: onColor(x.player.color) }}>{x.place}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="podium">
+            {rk.slice(started ? 3 : 0).map(x => (
+              <div key={x.player.id} className="prow">
+                <span className="place">{x.place}</span><Avatar p={x.player} /><span className="nm">{x.player.name}</span><span className="pts">{fmt(x.total)}</span>
+              </div>
+            ))}
           </div>
-        ))}
+          {stats.length > 0 && (
+            <div className="v-stats">
+              {stats.map(h => <div key={h.label} className="v-stat"><small>{h.label}</small><b>{h.value}</b>{h.who && <span>{h.who}</span>}</div>)}
+            </div>
+          )}
+          <div className="field"><label>Serie</label><SeriesPicker value={eventId} onChange={setEventId} /></div>
+          <div className="pad-actions">
+            <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
+            <button className="primary" onClick={() => act().finishGame(eventId)}>Speichern</button>
+          </div>
+        </div>
       </div>
-      <div className="field"><label>Serie</label><SeriesPicker value={eventId} onChange={setEventId} /></div>
-      <div className="pad-actions">
-        <button className="secondary" onClick={() => act().closeSheet()}>Weiterspielen</button>
-        <button className="primary" onClick={() => act().finishGame(eventId)}>Speichern</button>
-      </div>
-    </Sheet>
+    </>
   );
 }

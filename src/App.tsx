@@ -11,6 +11,7 @@ import { Series } from './ui/Series';
 import { GameScreen } from './ui/Game';
 import { Toast } from './ui/Toast';
 import { registerFormer, registerLooks } from './ui/lookup';
+import { Backdrop } from './ui/Backdrop';
 
 export default function App() {
   const s = useApp();
@@ -21,8 +22,14 @@ export default function App() {
   }, []);
   registerLooks(s.templates); registerFormer(s.formerPlayers);
   if (!s.ready) return <div className="screen" />;
+  // Formen im Hintergrund passend zum Spiel (Kopien eigener Spiele nutzen das Original)
+  const own = s.editKey ? s.templates.find(t => t.key === s.editKey) : undefined;
+  const motif = s.screen === 'game' && s.game ? (s.game.game.rules.params?.base ?? s.game.game.rules.key)
+    : (s.screen === 'gamepage' || s.screen === 'players') && s.template ? (s.template.params?.base ?? s.template.key)
+      : s.screen === 'setup' && own ? (own.params?.base ?? null) : null;
   return (
     <>
+      <Backdrop motif={motif} dim={s.screen === 'game'} />
       {s.screen === 'home' && <Home />}
       {s.screen === 'history' && <History />}
       {s.screen === 'people' && <People />}

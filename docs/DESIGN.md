@@ -82,3 +82,8 @@ Kernpunkten und einem Rechenbeispiel statt Stichpunktlisten.
 - Icon = ein einzelnes, klares Symbol des Spiels. Szene = die Situation dazu. Beide ergänzen sich, nie dasselbe Motiv zweimal.
 - Szenen-Hintergrund über `sky(…, muster)` in `src/ui/art.ts`, je Spiel ein eigenes Muster.
 - Bewegung nur dezent (Klassen `an-*` in `app.css`), bei „Bewegung reduzieren“ ausgeschaltet.
+
+## App-Hintergrund (Stand 12.11.)
+- Grundton bleibt (Mitternachtsblau bzw. Papier). Darüber große, blasse Kreise und kleine Formen in Pastell (`src/ui/Backdrop.tsx`).
+- Formen passen zum Spiel (Würfel, Karten, Sterne, Waben, Stufen, Steine, Häuser), sonst Punkte und Ringe.
+- Bewegung sehr langsam (26–42 s), in der laufenden Partie noch blasser; bei „Bewegung reduzieren“ still.

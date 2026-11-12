@@ -8,7 +8,7 @@ import { toggleTheme, useTheme } from '../useTheme';
 import { Chevron, IconMoon, IconSun } from './icons';
 import { TabBar } from './TabBar';
 import { GameIcon } from './GamePage';
-import { FREE_ICON, GAME_ART, customArt } from './art';
+import { FREE_ICON, GAME_ART, ownArt } from './art';
 import { GAMES } from '../game/games';
 import { FREE_TINT } from './Setup';
 
@@ -19,6 +19,9 @@ export function names(list: string[]): string {
 
 export function Home() {
   const { game, templates } = useApp();
+  const [q, setQ] = useState('');
+  const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const hit = (name: string) => norm(name).includes(norm(q.trim()));
   const theme = useTheme();
   return (
     <section className="screen" id="s-home">
@@ -46,6 +49,22 @@ export function Home() {
                 </button>
               </div>
             )}
+            <input className="game-search" id="game-search" type="search" value={q} onChange={e => setQ(e.target.value)} placeholder="Spiel suchen" aria-label="Spiel suchen" autoComplete="off" />
+            {q.trim() ? (
+              <div className="group">
+                <div className="list" id="search-results">
+                  {GAMES.filter(d => hit(d.template.name)).map(d => (
+                    <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
+                      <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
+                      <span className="t"><b>{d.template.name}</b></span>
+                      <Chevron />
+                    </button>
+                  ))}
+                  {templates.filter(t => hit(t.name)).map(t => <OwnRow key={t.key} t={t} />)}
+                  {!GAMES.some(d => hit(d.template.name)) && !templates.some(t => hit(t.name)) && <div className="row"><span className="t"><small>Keine Treffer</small></span></div>}
+                </div>
+              </div>
+            ) : <>
             <div className="group">
               <div className="eyebrow">Neues Spiel</div>
               <div className="list">
@@ -90,6 +109,7 @@ export function Home() {
                 </button>
               </div>
             </div>
+            </>}
             <Feedback />
             <p className="version">Version {__APP_VERSION__}</p>
           </div>
@@ -138,7 +158,7 @@ function Feedback() {
 }
 
 function OwnRow({ t }: { t: Template }) {
-  const ic = customArt(t.key, t.name, t.params?.look);
+  const ic = ownArt(t.key, t.name, t.params);
   return (
     <button className="row tpl" data-own={t.key} onClick={() => act().editTemplate(t)}>
       <GameIcon icon={ic.icon} tint={ic.tint} />

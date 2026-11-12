@@ -62,6 +62,8 @@ export interface TemplateParams {
   notes?: string[];
   /** Aussehen eigener Spiele: Farbe und Muster der Szene */
   look?: { color: string; pattern: string };
+  /** Kopie eines festen Spiels: Schlüssel des Originals (für Bild und Regeltexte) */
+  base?: string;
   /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
   resultOnly?: boolean;
   /** Kategorien-Zettel (Kniffel); jede Kategorie ist eine Zeile */

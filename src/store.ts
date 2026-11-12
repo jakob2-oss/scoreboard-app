@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import type { Category, GameEvent, Player, Result, Template } from './model/types';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
-import { configOf, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
+import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
@@ -51,6 +51,8 @@ export interface AppState {
   editKey: string | null;
   /** Einrichtung als eigene Vorlage (statt Freies Spiel) */
   setupTemplate: boolean;
+  /** Eigenes Spiel wird gerade bearbeitet (statt angesehen) */
+  setupEditing: boolean;
   /** Gelöschte eigene Spiele */
   goneKeys: string[];
   /** Kniffel: Feld wurde aus dem Überblick geöffnet, danach dorthin zurück */
@@ -64,7 +66,7 @@ export interface AppState {
 const initial: AppState = {
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
-  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, goneKeys: [], fromOverview: false, confirmStart: false, formerPlayers: []
+  events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, confirmStart: false, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
@@ -185,7 +187,16 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Eigenes Spiel öffnen: Einstellungen ansehen, ändern, löschen oder spielen */
     editTemplate(t: Template) {
       const known = new Set(state.players.map(p => p.id));
-      set({ setup: configOf(t), screen: 'setup', editKey: t.key, setupTemplate: true, template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)) });
+      set({ setup: configOf(t), screen: 'setup', editKey: t.key, setupTemplate: true, setupEditing: false, template: t, pendingSave: false, selected: readLast().filter(id => known.has(id)) });
+    },
+    setSetupEditing(on: boolean) { set({ setupEditing: on }); },
+    /** Festes Spiel anpassen: als eigenes Spiel kopieren und gleich bearbeiten (das Original bleibt) */
+    customizeGame(t: Template) {
+      const c = copyAsOwn(t, clock);
+      saveTemplate(c);
+      actions.editTemplate(c);
+      set({ setupEditing: true });
+      toast('Als eigenes Spiel gespeichert');
     },
     /** Neue eigene Vorlage speichern, ohne gleich zu spielen; danach ihre Seite */
     saveNewTemplate() {

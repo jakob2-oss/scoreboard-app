@@ -92,4 +92,11 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 „Freien Spiel“, das jetzt eine Einmal-Partie ist (Vorlage nur per Schalter).
 
 ## H. Für das Ende vorgemerkt
-- [ ] **Bilder frei wählbar:** Szene und Icon eigener Spiele individuell gestalten (eigene Motive, evtl. Foto), nicht nur Farbe und Muster.
+- [ ] **Spielerprofile gestaltbar:** Profilbild und Farbe je Spieler frei wählbar.
+  - Offline-Version: bei allen Spielern.
+  - Später mit Accounts: nur das eigene Profil und Offline-Spieler (ohne Account).
+- Feste Spielseiten bleiben unverändert. Anpassungen daran werden als eigenes Spiel gespeichert (umgesetzt 12.11.).
+- [x] **Spielsuche** auf der Startseite (feste, Endwertungen, eigene Spiele; ohne Groß-/Kleinschreibung und Akzente).
+- [x] **Festes Spiel als eigenes Spiel anpassen:** Kopie mit Regeln, Schnelltasten und Bild des Originals, sofort in Bearbeitung.
+- [x] **Siegerseite (12.11.):** ganze Seite mit Szene des Spiels, Sieger mit Krone, Treppchen, bis zu drei Kennzahlen je Spiel (`src/game/highlights.ts`), Serie zuordnen und speichern.
+- [x] **App-Hintergrund mit Formen (12.11.):** blau bleibt, Formen passend zum Spiel, alles langsam in Bewegung; Szenen-Konfetti verlangsamt.

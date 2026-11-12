@@ -1,3 +1,4 @@
+import { GAMES } from '../game/games';
 import { pastel } from '../lib/color';
 // Illustrationen für Spielseiten (flach, geometrisch, eigene Zeichnungen). Siehe docs/DESIGN.md.
 const st = (x: number, y: number, r: number) =>
@@ -136,7 +137,7 @@ const sky = (bg: string, band: string, ground: string, sun: string, pattern: Pat
   <g opacity=".85">${PATTERNS[pattern](band)}</g>
   <circle class="an-drift" cx="-10" cy="250" r="150" fill="${band}"/><circle class="an-drift" style="animation-delay:-4s" cx="410" cy="-10" r="120" fill="${band}"/>
   <circle class="an-pulse" cx="318" cy="56" r="40" fill="#fff" opacity=".35"/><circle cx="318" cy="56" r="26" fill="${sun}"/>
-  ${conf.map(([x, y, el], k) => `<g transform="translate(${x} ${y})"><g class="an-float" style="animation-delay:${-k * .7}s;animation-duration:${5 + (k % 4)}s">${el}</g></g>`).join('')}
+  ${conf.map(([x, y, el], k) => `<g transform="translate(${x} ${y})"><g class="an-float" style="animation-delay:${-k * .7}s;animation-duration:${11 + (k % 4) * 2}s">${el}</g></g>`).join('')}
   <path d="M-10 196c60-34 120-34 170-8s120 20 240-22v84H-10z" fill="${band}"/>
   <path d="M-10 214c80-26 150-22 210-4s120 16 200-10v50H-10z" fill="${ground}"/>
   <ellipse cx="195" cy="214" rx="110" ry="8" fill="#000" opacity=".12"/><g class="an-bob">`;
@@ -304,4 +305,11 @@ export function customArt(key: string, name: string, look?: { color: string; pat
     ${[0, 1, 2, 3].map(r => `<rect x="-42" y="${-28 + r * 22}" width="${[60, 72, 48, 66][r]}" height="7" rx="3.5" fill="${mix(color, .55)}"/><circle cx="${36}" cy="${-24 + r * 22}" r="5" fill="${DOTS[(hash(key) + r) % DOTS.length]}"/>`).join('')}</g>`;
   const scene = sky(mix(color, .72), mix(color, .82), mix(color, .5), '#f5d58c', pattern) + sheet + '</g></svg>';
   return { icon: icon.replace(/#[0-9a-f]{6}/gi, m => pastel(m)), scene, tint: mix(color, .7) };
+}
+
+/** Bild eines eigenen Spiels: Kopien fester Spiele behalten das Originalbild, bis Farbe oder Muster gewählt werden */
+export function ownArt(key: string, name: string, params?: { look?: { color: string; pattern: string }; base?: string }) {
+  const base = params?.base, def = base ? GAMES.find(g => g.template.key === base) : undefined;
+  if (base && !params?.look && GAME_ART[base] && def) return { icon: GAME_ART[base].icon, scene: GAME_ART[base].scene, tint: def.tint };
+  return customArt(key, name, params?.look);
 }
