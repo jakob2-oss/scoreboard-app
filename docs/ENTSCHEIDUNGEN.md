@@ -87,8 +87,8 @@ Bei Schocken und Chic zählt, wer verliert. Die Ergebnisseite zeigt dann statt d
 mit einem Stapel Bierdeckel (der oberste rutscht weg), gedämpftes Zimmer ohne Konfetti, Band „ALLE DECKEL“.
 Weitere Varianten (Regenwolke, Rechnung, Holzlöffel) liegen in `loserRoom()` in `src/ui/trophy.ts`.
 
-## 12.11.2026: Neuer Name „Oina no“, neues Icon, Revanche-Knopf
-Die App heißt „Oina no“ (schwäbisch für „noch eine Runde“). Icon: cremefarbener Würfel mit einem Auge in Koralle,
+## 12.11.2026: Neuer Name „Oina no?“, neues Icon, Revanche-Knopf
+Die App heißt „Oina no?“ (mit Fragezeichen) (schwäbisch für „noch eine Runde“). Icon: cremefarbener Würfel mit einem Auge in Koralle,
 leicht gekippt, auf Mitternachtsblau mit weicher Form (Entwurf W1 auf dem Hintergrund von W3). Schriftzug auf der
 Startseite „OINA / NO“ statt „PUNKTE / ZETTEL“. Interne Namen (Datenbank `punktezettel`, Sicherungsformat) bleiben,
 damit vorhandene Daten und Sicherungen weiter funktionieren.

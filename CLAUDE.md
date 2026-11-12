@@ -1,4 +1,4 @@
-# Oina no (früher Punktezettel) – Arbeitsanweisungen für Claude
+# Oina no? (früher Punktezettel) – Arbeitsanweisungen für Claude
 
 Diese Datei wird in jeder Sitzung automatisch geladen. Sie hält fest, was über einzelne
 Gespräche hinaus gelten muss. Details stehen in `docs/`.

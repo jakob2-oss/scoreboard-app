@@ -16,8 +16,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Oina no',
-        short_name: 'Oina no',
+        name: 'Oina no?',
+        short_name: 'Oina no?',
         description: 'Punkte, Leben und Deckel zählen für Spieleabende',
         lang: 'de',
         start_url: base,

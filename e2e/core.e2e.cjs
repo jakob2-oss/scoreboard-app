@@ -563,7 +563,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game [aria-label="Zurück"]').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
   await p.click('#feedback'); await p.fill('#feedback-text', 'Testnachricht'); await shot('49-feedback'); await p.click('#feedback-send'); await p.waitForTimeout(300);
   check('Feedback: Text kopiert, wenn Teilen fehlt', (await text('.toast')) === 'Text kopiert');
-  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Oina no '));
+  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Oina no? '));
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);
