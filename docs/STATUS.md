@@ -95,6 +95,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 - **Arschloch** (PR #14): Wertung `rank` (`roleOf`, `rankIn`, `setOrder`), Verteilung `RankSheet`, Rollen-Statistik
 - Prüfung aller Spiele: Ergebnisse und offene Punkte in `docs/BACKLOG.md` (Abschnitt I)
 
+- **Verbesserungen aus der Prüfung** (PR #14): Uno „Wer hat gewonnen?“, Phase im Überblick, „noch X bis Grenze“, Binokel Abgehen/Verfehlt; Erstellungsmodus mit Wertung (Punkte, zwei Werte, Rang), Nullsumme, eigenen Tasten
+
 ## Tests
-- Unit-Tests: 102 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 123 (davon 17 Testspiel-Serien mit 101 Partien) (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen

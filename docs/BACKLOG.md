@@ -109,14 +109,16 @@ Gut abgestimmt: Wizard (Ansage/Stiche, Geber rotiert, Kartenzahl begrenzt), Knif
 Binokel (Meldung, dann Stiche), Arschloch (Rollen per Reihenfolge), Rommé, Skyjo, Scrabble, Siedler, Monopoly.
 
 Verbesserungswürdig:
-- [ ] **Uno:** nur der Rundensieger bekommt Punkte, alle anderen müssen heute eine 0 eintippen. Besser: „Wer hat gewonnen?“ antippen, dann nur dessen Punkte.
+- [x] **Uno:** nur der Rundensieger bekommt Punkte, alle anderen müssen heute eine 0 eintippen. Besser: „Wer hat gewonnen?“ antippen, dann nur dessen Punkte.
 - [ ] **Schafkopf, Doppelkopf:** Punkte je Spieler einzeln, nur „Ausgleich“ hilft. Besser: Spiel-Eingabe mit Parteien (wer mit wem, Spielart, Tarif, Schneider/Laufende bzw. Re/Kontra, Ansagen), Werte werden berechnet.
-- [ ] **Phase 10:** Phasenstand ist im Überblick nicht sichtbar (nur auf der Spielerseite). Besser: Phase je Spieler im Kopf oder in der Summenzeile.
-- [ ] **Rommé, Skyjo (wenig gewinnt, mit Grenze):** Summenzeile zeigt bei hohem Ziel „noch X“, bei Grenze nichts. Besser: „noch X bis 500“ als Warnung.
-- [ ] **Binokel:** „Abgehen“ (Spieler gibt vor dem Spiel auf: Gebot einfach negativ) fehlt als eigene Taste.
+- [x] **Phase 10:** Phasenstand ist im Überblick nicht sichtbar (nur auf der Spielerseite). Besser: Phase je Spieler im Kopf oder in der Summenzeile.
+- [x] **Rommé, Skyjo (wenig gewinnt, mit Grenze):** Summenzeile zeigt bei hohem Ziel „noch X“, bei Grenze nichts. Besser: „noch X bis 500“ als Warnung.
+- [x] **Binokel:** „Abgehen“ (Spieler gibt vor dem Spiel auf: Gebot einfach negativ) fehlt als eigene Taste.
 - [ ] **Anderes Spiel:** doppelt sich mit „Eigene Endwertung erstellen“; zusammenlegen oder als Schnellstart lassen.
 
 Erstellungsmodus, fehlende Bausteine:
-- [ ] Wertungsart wählbar: Punkte je Runde, zwei Werte je Runde (wie Binokel), Rang je Runde (wie Arschloch), nur Endergebnis.
-- [ ] Eigene Schnelltasten mit Namen und Wirkung (z. B. „Raus = 0“, „×2“), nicht nur Zählschritte.
-- [ ] Schalter „Nullsumme“ (mit Ausgleich-Taste) und „Haken je Runde“ (wie Phase 10).
+- [x] Wertungsart wählbar: Punkte je Runde, zwei Werte je Runde (wie Binokel), Rang je Runde (wie Arschloch), nur Endergebnis.
+- [x] Eigene Schnelltasten mit Namen und Wirkung (z. B. „Raus = 0“, „×2“), nicht nur Zählschritte.
+- [x] Schalter „Nullsumme“ (mit Ausgleich-Taste).
+- [ ] „Haken je Runde“ (wie Phase 10) für eigene Spiele.
+- [x] **Testspiele (12.11.):** `src/simulation.test.ts` spielt jedes Spiel sechsmal und Varianten (Teams, eigene Wertungen) vollständig durch und prüft Rechenregeln, Ranglisten, Speicherung und Statistik.

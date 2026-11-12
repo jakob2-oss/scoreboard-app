@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
-import { MAX_STEPS, STEP_CHOICES, fallbackName, stepsOf } from '../game/templates';
+import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, fallbackName, stepsOf } from '../game/templates';
 import type { End, Template } from '../model/types';
 import { GamePage } from './GamePage';
 import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, ownArt, lookOf } from './art';
@@ -30,6 +30,10 @@ function pointsOf(t: Template): [string, string][] {
     ['Spielende', end],
     ['Zählschritte', names(stepsOf(t).map(String))]
   ];
+  if (t.scoring === 'rank') p.splice(0, 1, ['Wertung', 'Rang je Runde, Präsident bis Arschloch']);
+  if (t.params?.split?.length === 2) p.push(['Je Runde', `${t.params.split[0].label} und ${t.params.split[1].label}`]);
+  if (t.params?.zeroSum) p.push(['Nullsumme', 'jede Runde ergibt 0']);
+  if (t.params?.keys?.length) p.push(['Tasten', names(t.params.keys.map(k => k.label))]);
   if (t.params?.notes?.length) p.push(['Notizfelder', names(t.params.notes)]);
   return p;
 }
@@ -46,6 +50,16 @@ export function Setup() {
   const [confirm, setConfirm] = useState(false);
   const [ownStep, setOwnStep] = useState('');
   const [note, setNote] = useState('');
+  const [keyName, setKeyName] = useState('');
+  const [keyOp, setKeyOp] = useState<'add' | 'set' | 'mul'>('add');
+  const [keyVal, setKeyVal] = useState('');
+  const addKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    const v = parseInt(keyVal, 10), label = keyName.trim();
+    if (!label || Number.isNaN(v) || setup.keys.some(k => k.label === label)) return;
+    a.updateSetup({ keys: [...setup.keys, { label, op: keyOp, v }] });
+    setKeyName(''); setKeyVal('');
+  };
   const endKind = setup.end.type;
   const endValue = setup.end.type === 'target' || setup.end.type === 'rounds' ? setup.end.value : 0;
   const valid = endKind === 'none' || endValue > 0;
@@ -103,6 +117,9 @@ export function Setup() {
   const keepLook = () => { if (setupTemplate && !own && !setup.look) a.updateSetup({ look: { color: look.color, pattern: look.pattern } }); };
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
   const result = setup.mode === 'result';
+  const rank = !result && setup.kind === 'rank';
+  // Wertung nur bei normalen Rundenspielen umstellbar (Kopien von Wizard, Kniffel, Phase 10 bleiben, wie sie sind)
+  const kindEditable = !own || ((own.scoring === 'rounds' || own.scoring === 'rank') && !own.params?.phases);
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || (result ? 'Eigene Endwertung' : 'Eigene Vorlage')) : 'Freies Spiel';
   return (
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
@@ -126,7 +143,21 @@ export function Setup() {
               </div>
             </div>
           )}
-          {!(result && setup.unit === 'Platz') && <div className="field">
+          {!result && kindEditable && (
+            <div className="field">
+              <label>Wertung</label>
+              <div className="seg">
+                <button id="kind-points" aria-pressed={setup.kind === 'points'} onClick={() => a.updateSetup({ kind: 'points' })}>Punkte</button>
+                <button id="kind-split" aria-pressed={setup.kind === 'split'} onClick={() => a.updateSetup({ kind: 'split' })}>Zwei Werte</button>
+                <button id="kind-rank" aria-pressed={setup.kind === 'rank'} onClick={() => a.updateSetup({ kind: 'rank' })}>Rang</button>
+              </div>
+              {setup.kind === 'split' && <div className="split-names">
+                <input id="split-a" value={setup.splitNames[0]} maxLength={14} placeholder="Erster Wert" aria-label="Name des ersten Werts" onChange={e => a.updateSetup({ splitNames: [e.target.value, setup.splitNames[1]] })} />
+                <input id="split-b" value={setup.splitNames[1]} maxLength={14} placeholder="Zweiter Wert" aria-label="Name des zweiten Werts" onChange={e => a.updateSetup({ splitNames: [setup.splitNames[0], e.target.value] })} />
+              </div>}
+            </div>
+          )}
+          {!(result && setup.unit === 'Platz') && !rank && <div className="field">
             <label>Wer gewinnt?</label>
             <div className="seg">
               <button aria-pressed={setup.win === 'high'} onClick={() => a.updateSetup({ win: 'high' })}>Höchste Punktzahl</button>
@@ -145,7 +176,7 @@ export function Setup() {
                 value={endValue || ''} onChange={e => setEnd(endKind, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} />
             )}
           </div>
-          <div className="field">
+          {!rank && <div className="field">
             <label>Zählschritte (bis zu {MAX_STEPS})</label>
             <div className="chips step-chips">
               {[...new Set([...STEP_CHOICES, ...setup.steps])].sort((x, y) => x - y).map(n => (
@@ -160,8 +191,26 @@ export function Setup() {
             <div className="quick step-preview" aria-hidden="true">
               {preview.map(n => <span key={n}>{n > 0 ? '+' + n : '−' + -n}</span>)}
             </div>
-          </div></>}
-          <div className="field">
+          </div>}
+          {setup.kind === 'points' && kindEditable && <label className="switch-row">
+            <input type="checkbox" id="zero-sum" checked={setup.zeroSum} onChange={e => a.updateSetup({ zeroSum: e.target.checked })} />
+            <span className="t"><b>Nullsumme</b></span>
+          </label>}
+          {!rank && <div className="field">
+            <label>Eigene Tasten</label>
+            {setup.keys.length > 0 && <div className="chips note-chips">
+              {setup.keys.map(k => <button key={k.label} className="chip on" aria-label={`${k.label} entfernen`} onClick={() => a.updateSetup({ keys: setup.keys.filter(x => x !== k) })}>{k.label} ✕</button>)}
+            </div>}
+            {setup.keys.length < MAX_KEYS && <form className="key-add" onSubmit={addKey}>
+              <input id="key-name" value={keyName} maxLength={10} autoComplete="off" placeholder="Name" aria-label="Name der Taste" onChange={e => setKeyName(e.target.value)} />
+              <div className="seg key-op">
+                {([['add', '+'], ['set', '='], ['mul', '×']] as const).map(([op, l]) => <button type="button" key={op} aria-pressed={keyOp === op} onClick={() => setKeyOp(op)}>{l}</button>)}
+              </div>
+              <input id="key-value" value={keyVal} inputMode="numeric" placeholder="Wert" aria-label="Wert der Taste" onChange={e => setKeyVal(e.target.value.replace(/[^0-9-]/g, '').slice(0, 5))} />
+              <button type="submit" disabled={!keyName.trim() || keyVal === '' || keyVal === '-'}>Hinzufügen</button>
+            </form>}
+          </div>}</>}
+          {!rank && <div className="field">
             <label>{result ? 'Zusatzfelder' : 'Notizfelder'}</label>
             {setup.notes.length > 0 && <div className="chips note-chips">
               {setup.notes.map(n => <button key={n} className="chip on" aria-label={`${n} entfernen`} onClick={() => a.updateSetup({ notes: setup.notes.filter(x => x !== n) })}>{n} ✕</button>)}
@@ -170,7 +219,7 @@ export function Setup() {
               <input id="note-name" value={note} maxLength={18} autoComplete="off" placeholder="Neues Feld" aria-label="Neues Notizfeld" onChange={e => setNote(e.target.value)} />
               <button type="submit" disabled={!note.trim() || setup.notes.length >= 4}>Hinzufügen</button>
             </form>
-          </div>
+          </div>}
           {setupTemplate && (
             <div className="field">
               <label>Aussehen</label>

@@ -58,6 +58,10 @@ export interface TemplateParams {
   quick?: QuickKey[];
   /** Zweiteilige Runde: erst alle das erste Feld, dann alle das zweite; Rundenwert ist die Summe */
   split?: SplitField[];
+  /** Nur der Rundensieger bekommt Punkte (Uno): erst Sieger wählen, alle anderen 0 */
+  winnerOnly?: boolean;
+  /** Eigene Schnelltasten (Erstellungsmodus), zusätzlich zu den Zählschritten */
+  keys?: QuickKey[];
   /** Notizfelder neben den Punkten (z. B. „Längste Straße“), zählen nicht zur Summe */
   notes?: string[];
   /** Aussehen eigener Spiele: Farbe und Muster der Szene */

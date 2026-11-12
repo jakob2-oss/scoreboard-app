@@ -35,7 +35,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | null;
   /** Rang-Spiele: Runde, die gerade verteilt wird */
   rankRef: RoundRef | null;
   toast: { text: string; n: number } | null;
@@ -361,6 +361,19 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       persist(r.state);
       if (order.length === players.length) { set({ sheet: null, rankRef: null }); toast(`Runde ${roundNumber(r.state, r.roundId)} verteilt`); }
     },
+    /** Nur der Sieger zählt (Uno): alle anderen bekommen 0, dann Punkte des Siegers eingeben */
+    pickWinner(playerId: string) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      let ng = g, id: RoundRef = ref;
+      for (const p of seated(g)) {
+        if (p.id === playerId) continue;
+        const r = setScore(ng, id, p.id, 0, clock); ng = r.state; id = r.roundId ?? id;
+      }
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null });
+      persist(ng);
+      actions.goPage(seated(ng).findIndex(p => p.id === playerId), id);
+      set({ fromOverview: true });
+    },
     rankReset() {
       const g = state.game, ref = state.rankRef; if (!g || !ref || ref === 'new') return;
       const r = setOrder(g, ref, [], clock);
@@ -399,6 +412,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const step = nextStep(g);
       if (step.kind === 'result') { set({ sheet: 'result' }); return; }
       if (isRanks(g)) { actions.openRanks(step.ref); return; }
+      if (g.game.rules.params?.winnerOnly) { set({ sheet: 'winner', rankRef: step.ref, pad: false, edit: null }); return; }
       actions.goPage(step.playerIndex, step.ref, step.field);
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
@@ -409,6 +423,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game, e = state.edit; if (!g || !e) return;
       // Notizfeld: zurück zum Punktefeld desselben Spielers
       if (isNoteField(e.field)) { set({ edit: makeEdit(g, e.ref, e.playerId) }); return; }
+      // Nur der Sieger zählt: nach seiner Eingabe zurück zum Überblick
+      if (state.fromOverview && !isCats(g)) {
+        const full = e.ref !== 'new' && roundFull(g, e.ref);
+        set({ page: -1, edit: null, fromOverview: false });
+        if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
+        return;
+      }
       const players = seated(g), i = players.findIndex(p => p.id === e.playerId);
       if (e.field && e.ref !== 'new') {
         const order = inputOrder(g, e.ref), pos = order.indexOf(i);
@@ -476,7 +497,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks') { set({ sheet, pad: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner') { set({ sheet, pad: false }); },
     closeSheet() { set({ sheet: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;

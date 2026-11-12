@@ -55,7 +55,7 @@ const place = (n: number) => Array.from({ length: n }, (_, k) => ({ label: `${k 
 GAMES.push(
   {
     template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'target', value: 500 }, players: { min: 2, max: 8 },
-      params: { quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+      params: { winnerOnly: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
     points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
     text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
@@ -132,8 +132,8 @@ GAMES.push(
     template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'target', value: 1000 }, players: { min: 3, max: 4 },
       params: { split: [
         { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
-        { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('×\u22122', -2)] }] } },
-    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
+        { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('Abgehen', -1), times('Verfehlt', -2)] }] } },
+    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Abgehen', 'vor dem Spiel aufgeben: Gebot einfach negativ'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
     acc: '#f09a4a', tint: '#fbe9d6', text: '', example: [['80', 'Meldung'], ['+170', 'Stiche'], ['250', 'Punkte']],
     endOptions: [{ label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Bei 1500', end: { type: 'target', value: 1500 } }, { label: 'Offen', end: { type: 'none' } }]
   }

@@ -324,3 +324,11 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .rank-card { display: flex; justify-content: space-between; align-items: center; }
 .rank-card small { color: var(--muted); font-size: 13px; font-weight: 600; }
 .role-badge { min-width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; font-family: var(--f-display); font-size: 22px; font-weight: 700; background: var(--fill); }
+.pn .ph-n { display: block; font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+
+/* ---------- Erstellungsmodus: Wertung, eigene Tasten ---------- */
+.split-names { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.key-add { display: grid; grid-template-columns: 1fr auto 72px; gap: 8px; }
+.key-add .key-op button { min-width: 38px; }
+.key-add button[type="submit"] { grid-column: 1 / -1; }
+.switch-row .t small { display: block; color: var(--muted); font-size: 13px; font-weight: 500; }
