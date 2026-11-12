@@ -35,6 +35,8 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 11.11.2026 (PR #4 offen)
   - Kompakte Szenen über Helfer in `src/ui/art.ts` (`sky`, `unoCard`, `tile`, `hex`, `house`, `podium`)
 
 ## Als Nächstes
+**Siehe `docs/BACKLOG.md`** (vollständiges Feedback vom 12.11.2026, nach Priorität geordnet).
+
 1. **Paket 2d: Kniffel** (`scoring: 'categories'`, Bonus 35 ab 63) und **Phase 10** (Haken je Runde,
    Rang erst nach Phase). Vorlagen im Prototyp (`DICE`, `phaseCard`).
 2. **Spezialregeln im freien Spiel** (von Jakob vorgemerkt): eigene Sektion in der Konfiguration.
