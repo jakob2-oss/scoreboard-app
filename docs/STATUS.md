@@ -42,6 +42,10 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 - Teil A Backlog erledigt: Überblick mit leerer Zeile für die nächste Runde, Pastell-Spielerfarben, kein Farbring,
   Regeln als Stichpunkte
 
+- **Tisch-Modus** (12.11.): `scoring: 'lives' | 'tokens'`, Logik in `engine.ts` (`lifeState`, `loseLife`, `fire`, `tokenState`,
+  `giveTokens`, `schockOut`, `moveSeat`), Oberfläche `src/ui/Table.tsx`, Zeichnung `src/ui/table.ts`.
+  Schwimmen und Schocken als feste Spiele, im Erstellungsmodus „Leben verlieren“ und „Deckel verteilen“.
+
 ## Als Nächstes
 **Siehe `docs/BACKLOG.md`** (vollständiges Feedback vom 12.11.2026, nach Priorität geordnet).
 

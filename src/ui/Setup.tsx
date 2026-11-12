@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
-import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, fallbackName, stepsOf } from '../game/templates';
+import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, stepsOf } from '../game/templates';
 import type { End, Template } from '../model/types';
 import { GamePage } from './GamePage';
 import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, ownArt, lookOf } from './art';
@@ -31,6 +31,8 @@ function pointsOf(t: Template): [string, string][] {
     ['Zählschritte', names(stepsOf(t).map(String))]
   ];
   if (t.scoring === 'rank') p.splice(0, 1, ['Wertung', 'Rang je Runde, Präsident bis Arschloch']);
+  if (t.scoring === 'lives') return [['Am Tisch', `${t.params?.lives ?? 3} Leben je Spieler, dann schwimmen`], ['Gewinner', 'wer als Letzter übrig bleibt']];
+  if (t.scoring === 'tokens') return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'wer alle Deckel hat, verliert sie'], ['Verlierer', 'wer zwei Hälften verliert']];
   if (t.params?.split?.length === 2) p.push(['Je Runde', `${t.params.split[0].label} und ${t.params.split[1].label}`]);
   if (t.params?.zeroSum) p.push(['Nullsumme', 'jede Runde ergibt 0']);
   if (t.params?.keys?.length) p.push(['Tasten', names(t.params.keys.map(k => k.label))]);
@@ -62,7 +64,7 @@ export function Setup() {
   };
   const endKind = setup.end.type;
   const endValue = setup.end.type === 'target' || setup.end.type === 'rounds' ? setup.end.value : 0;
-  const valid = endKind === 'none' || endValue > 0;
+  const valid = (setup.mode !== 'result' && isTableKind(setup.kind)) || endKind === 'none' || endValue > 0;
 
   // Aussehen: eigene Spiele und neue Vorlagen bekommen Szene und Icon aus Name, Farbe und Muster
   const art = setupTemplate ? ownArt(own?.key ?? 'neu', setup.name || own?.name || 'Eigenes Spiel', { ...own?.params, look: setup.look ?? own?.params?.look }) : null;
@@ -117,9 +119,11 @@ export function Setup() {
   const keepLook = () => { if (setupTemplate && !own && !setup.look) a.updateSetup({ look: { color: look.color, pattern: look.pattern } }); };
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
   const result = setup.mode === 'result';
-  const rank = !result && setup.kind === 'rank';
+  const tableKind = !result && isTableKind(setup.kind);
+  // Rang und Tisch-Modus: kein Gewinner-, Ende- oder Tastenfeld
+  const rank = !result && (setup.kind === 'rank' || tableKind);
   // Wertung nur bei normalen Rundenspielen umstellbar (Kopien von Wizard, Kniffel, Phase 10 bleiben, wie sie sind)
-  const kindEditable = !own || ((own.scoring === 'rounds' || own.scoring === 'rank') && !own.params?.phases);
+  const kindEditable = !own || (['rounds', 'rank', 'lives', 'tokens'].includes(own.scoring) && !own.params?.phases);
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || (result ? 'Eigene Endwertung' : 'Eigene Vorlage')) : 'Freies Spiel';
   return (
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
@@ -151,12 +155,22 @@ export function Setup() {
                 <button id="kind-split" aria-pressed={setup.kind === 'split'} onClick={() => a.updateSetup({ kind: 'split' })}>Zwei Werte</button>
                 <button id="kind-rank" aria-pressed={setup.kind === 'rank'} onClick={() => a.updateSetup({ kind: 'rank' })}>Rang</button>
               </div>
+              <div className="seg seg-2">
+                <button id="kind-lives" aria-pressed={setup.kind === 'lives'} onClick={() => a.updateSetup({ kind: 'lives', start: 0 })}>Leben verlieren</button>
+                <button id="kind-tokens" aria-pressed={setup.kind === 'tokens'} onClick={() => a.updateSetup({ kind: 'tokens', start: 0 })}>Deckel verteilen</button>
+              </div>
+
               {setup.kind === 'split' && <div className="split-names">
                 <input id="split-a" value={setup.splitNames[0]} maxLength={14} placeholder="Erster Wert" aria-label="Name des ersten Werts" onChange={e => a.updateSetup({ splitNames: [e.target.value, setup.splitNames[1]] })} />
                 <input id="split-b" value={setup.splitNames[1]} maxLength={14} placeholder="Zweiter Wert" aria-label="Name des zweiten Werts" onChange={e => a.updateSetup({ splitNames: [setup.splitNames[0], e.target.value] })} />
               </div>}
             </div>
           )}
+          {tableKind && <div className="field">
+            <label htmlFor="table-start">{setup.kind === 'lives' ? 'Leben je Spieler' : 'Deckel in der Mitte'}</label>
+            <input id="table-start" inputMode="numeric" pattern="[0-9]*" value={setup.start || TABLE_START[setup.kind as 'lives' | 'tokens']}
+              onChange={e => a.updateSetup({ start: Math.min(99, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0) })} />
+          </div>}
           {!(result && setup.unit === 'Platz') && !rank && <div className="field">
             <label>Wer gewinnt?</label>
             <div className="seg">
@@ -164,7 +178,7 @@ export function Setup() {
               <button aria-pressed={setup.win === 'low'} onClick={() => a.updateSetup({ win: 'low' })}>Niedrigste Punktzahl</button>
             </div>
           </div>}
-          {!result && <><div className="field">
+          {!result && !tableKind && <><div className="field">
             <label>Spielende</label>
             <div className="seg">
               <button aria-pressed={endKind === 'none'} onClick={() => setEnd('none')}>Offen</button>

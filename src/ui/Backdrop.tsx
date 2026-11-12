@@ -28,7 +28,8 @@ const SHAPES: Record<string, (c: string) => string> = {
 const MOTIFS: Record<string, string[]> = {
   kniffel: ['die', 'dot'], wizard: ['star', 'moon', 'dot'], romme: ['card', 'heart', 'spade'], uno: ['card', 'ring'],
   skyjo: ['card', 'dot'], schafkopf: ['card', 'heart', 'dot'], doppelkopf: ['card', 'heart'], binokel: ['card', 'spade', 'ring'],
-  siedler: ['hex', 'dot'], phase10: ['bars', 'dot'], scrabble: ['tile', 'dot'], monopoly: ['house', 'ring'], arschloch: ['crown', 'card', 'spade']
+  siedler: ['hex', 'dot'], phase10: ['bars', 'dot'], scrabble: ['tile', 'dot'], monopoly: ['house', 'ring'], arschloch: ['crown', 'card', 'spade'],
+  schwimmen: ['ring', 'card', 'dot'], schocken: ['die', 'ring', 'dot']
 };
 
 // Feste Plätze, damit sich nichts sprunghaft verschiebt: [x, y, Größe, Drehung]

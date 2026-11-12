@@ -1,7 +1,7 @@
 /** Die wichtigsten Kennzahlen einer Partie für die Siegerseite. Reine Funktionen, keine Oberfläche. */
 import {
   fieldOf, fieldsOf, hasPhases, isBids, isCats, isRanks, rankIn, isResultOnly, isSplit, liveRounds, noteKey, notesOf, phasesDone,
-  ranking, roundFull, scoreOf, seated, upperSum, type GameState
+  ranking, roundFull, scoreOf, seated, upperSum, isLives, isTokens, lifeState, tokenState, tableRounds, type GameState
 } from './engine';
 
 export interface Highlight {
@@ -18,6 +18,7 @@ const names = (l: string[]) => (l.length < 2 ? l.join('') : l.slice(0, -1).join(
 
 /** Bis zu drei Kennzahlen, passend zum Spiel */
 export function highlights(s: GameState): Highlight[] {
+  if (isLives(s) || isTokens(s)) return tableHighlights(s);
   const players = seated(s), rounds = liveRounds(s).filter(r => roundFull(s, r.id) || players.some(p => scoreOf(s, r.id, p.id) !== null));
   const rk = ranking(s), out: Highlight[] = [];
   if (!rk.length || !rounds.length) return out;
@@ -90,5 +91,29 @@ export function highlights(s: GameState): Highlight[] {
     const b = top(sums, (a, c) => a > c);
     if (b.v > 0) out.push({ label: n, value: fmt(b.v), who: b.who });
   }
+  return out.slice(0, 3);
+}
+
+/** Tisch-Modus: Geschichten vom Tisch statt Punkte */
+function tableHighlights(s: GameState): Highlight[] {
+  const players = seated(s), n = tableRounds(s).length, out: Highlight[] = [];
+  if (!n) return out;
+  const name = (id: string) => players.find(p => p.id === id)?.name ?? '';
+  if (isLives(s)) {
+    const ls = lifeState(s), w = ls.alive.length === 1 ? ls.alive[0] : null;
+    if (w) out.push({ label: 'Übrig mit', value: ls.left[w] > 0 ? `${ls.left[w]} Leben` : 'Schwimmen', who: name(w) });
+    const outs = players.filter(p => ls.out[p.id] !== null).sort((a, b) => ls.out[a.id]! - ls.out[b.id]!);
+    if (outs.length) out.push({ label: 'Zuerst raus', value: `nach ${ls.out[outs[0].id]! + 1} Runden`, who: outs[0].name });
+    const swum = players.filter(p => ls.left[p.id] <= 0).length;
+    out.push({ label: 'Geschwommen', value: `${swum} von ${players.length}` });
+  } else {
+    const ts = tokenState(s);
+    if (ts.maxTake.n > 0) out.push({ label: 'Meiste Deckel auf einmal', value: String(ts.maxTake.n), who: names(ts.maxTake.who.map(name)) });
+    const sch = players.filter(p => ts.schock[p.id] > 0);
+    if (sch.length) out.push({ label: 'Schock aus kassiert', value: `${sch.reduce((a, p) => a + ts.schock[p.id], 0)}×`, who: names(sch.map(p => p.name)) });
+    const lost = players.filter(p => ts.halves[p.id] > 0);
+    if (lost.length) out.push({ label: 'Hälften verloren', value: String(lost.reduce((a, p) => a + ts.halves[p.id], 0)), who: names(lost.map(p => p.name)) });
+  }
+  out.push({ label: 'Runden', value: String(n) });
   return out.slice(0, 3);
 }

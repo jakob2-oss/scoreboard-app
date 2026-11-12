@@ -53,3 +53,9 @@ Feste Spielseiten bleiben gleich; wer ein festes Spiel anpassen will, speichert 
 ## 12.11.2026: Mehrere laufende Partien
 Eine neue Partie parkt die laufende (leere werden verworfen); die Nachfrage „speichern oder verwerfen“ entfällt.
 Alle laufenden Partien stehen auf der Startseite, zuletzt geänderte zuerst.
+
+## 12.11.2026: Tisch-Modus für Leben und Deckel
+Spiele wie Schwimmen und Schocken werden nicht als Zettel, sondern am Tisch erfasst: ein Raum mit Holzwand, Lampe und Regal,
+darunter ein voller runder Tisch, die Spieler sitzen darum. Antippen verliert ein Leben bzw. öffnet die Deckel-Auswahl;
+Sitzplätze lassen sich durch Ziehen tauschen (zählt nicht als Spielzug, Rückgängig lässt sie in Ruhe).
+Annahmen: Schwimmen mit 3 Leben plus Schwimmen; Schocken mit 13 Deckeln, zwei Hälften, bei verschiedenen Verlierern Finale.

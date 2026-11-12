@@ -5,7 +5,7 @@ import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
 import { trophyRoom } from './trophy';
 import { names } from './Home';
-import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf } from '../game/engine';
+import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -102,10 +102,14 @@ export function ResultSheet({ g }: { g: GameState }) {
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
   const winners = rk.filter(x => x.place === 1);
   const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
-  const scene = trophyRoom(icon);
+  const scene = trophyRoom(icon, isTokens(g) && tokenState(g).loser ? 'ENTSCHIEDEN' : undefined);
   const stats = started ? highlights(g) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
+  // Tisch-Modus: Leben bzw. verlorene Hälften statt Punkte; bei Schocken zählt, wer verliert
+  const ts = isTokens(g) ? tokenState(g) : null;
+  const pts = (v: number, id: string) => (isLives(g) ? `${v} Leben` : ts ? (v ? `${v} ${v === 1 ? 'Hälfte' : 'Hälften'}` : `${ts.taken[id]} Deckel`) : fmt(v));
+  const loser = ts ? seated(g).find(p => p.id === ts.loser) : undefined;
   return (
     <>
       <div className="scrim" onClick={() => act().closeSheet()} />
@@ -115,12 +119,12 @@ export function ResultSheet({ g }: { g: GameState }) {
         </div>
         <div className="sheet-body">
           <div className="eyebrow v-meta">{rules.name}, {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
-          <h3 className="v-title">{started ? names(winners.map(x => x.player.name)) + (winners.length > 1 || membersOf(g, winners[0].player.id).length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
+          <h3 className="v-title">{loser ? `${loser.name} verliert` : started ? names(winners.map(x => x.player.name)) + (winners.length > 1 || membersOf(g, winners[0].player.id).length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
           {started && (
             <div className="v-podium">
               {podium.map(x => (
                 <div key={x.player.id} className={'v-step p' + Math.min(x.place, 3)}>
-                  <Avatar p={x.player} /><span className="v-nm">{x.player.name}</span><span className="v-pts">{fmt(x.total)}</span>
+                  <Avatar p={x.player} /><span className="v-nm">{x.player.name}</span><span className="v-pts">{pts(x.total, x.player.id)}</span>
                   <div className="v-block" style={{ background: x.player.color, color: onColor(x.player.color) }}>{x.place}</div>
                 </div>
               ))}
@@ -129,7 +133,7 @@ export function ResultSheet({ g }: { g: GameState }) {
           <div className="podium">
             {rk.slice(started ? 3 : 0).map(x => (
               <div key={x.player.id} className="prow">
-                <span className="place">{x.place}</span><Avatar p={x.player} /><span className="nm">{x.player.name}</span><span className="pts">{fmt(x.total)}</span>
+                <span className="place">{x.place}</span><Avatar p={x.player} /><span className="nm">{x.player.name}</span><span className="pts">{pts(x.total, x.player.id)}</span>
               </div>
             ))}
           </div>

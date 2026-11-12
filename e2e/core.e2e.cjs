@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('17 Einträge (14 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 17 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('19 Einträge (16 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
   await shot('01-home');
 
@@ -356,6 +356,48 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Arschloch: Siegerseite mit Rollen-Statistik', (await raw('.v-stats')).includes('Präsident'));
   await shot('36f-arschloch-victory');
   await p.click('.victory .pad-actions .secondary');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Tisch-Modus: Schwimmen (Leben) und Schocken (Deckel)
+  await p.click('[data-game="schwimmen"]'); await shot('37a-schwimmen'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  const seat = i => p.locator('.tb-seat').nth(i);
+  const seatNames = () => p.locator('.tb-seat .tb-name').allTextContents();
+  check('Schwimmen: Spieler sitzen am Tisch', (await p.locator('.tb-seat').count()) >= 3 && await p.isVisible('.tbl-art'));
+  for (let k = 0; k < 3; k++) await seat(0).click();
+  check('Schwimmen: nach drei Leben schwimmt man', (await seat(0).getAttribute('aria-label')).endsWith('schwimmt') && await p.isVisible('.tb-seat.swim .tb-buoy'));
+  await seat(0).click();
+  check('Schwimmen: danach raus', (await seat(0).getAttribute('aria-label')).endsWith('raus'));
+  await p.click('.dock [aria-label="Rückgängig"]'); await p.waitForTimeout(150);
+  check('Schwimmen: Rückgängig', (await seat(0).getAttribute('aria-label')).endsWith('schwimmt'));
+  // Platz tauschen durch Ziehen
+  const namesBefore = await seatNames();
+  const b1 = await seat(1).boundingBox(), b2 = await seat(2).boundingBox();
+  await p.mouse.move(b1.x + b1.width / 2, b1.y + 20); await p.mouse.down();
+  for (let k = 1; k <= 8; k++) await p.mouse.move(b1.x + b1.width / 2 + (b2.x - b1.x) * k / 8, b1.y + 20 + (b2.y - b1.y) * k / 8);
+  await p.mouse.up(); await p.waitForTimeout(250);
+  const after = await seatNames();
+  check('Schwimmen: Plätze per Ziehen getauscht', after[1] === namesBefore[2] && after[2] === namesBefore[1], after.join(','));
+  check('Schwimmen: Ziehen kostet kein Leben', (await seat(1).getAttribute('aria-label')).endsWith('3 Leben') && (await seat(2).getAttribute('aria-label')).endsWith('3 Leben'));
+  await p.click('#fire'); await seat(1).click(); await p.waitForTimeout(150);
+  check('Schwimmen: Feuer kostet alle anderen ein Leben', (await seat(1).getAttribute('aria-label')).endsWith('3 Leben') && (await seat(2).getAttribute('aria-label')).endsWith('2 Leben') && (await seat(0).getAttribute('aria-label')).endsWith('raus'), (await p.locator('.tb-seat').evaluateAll(l => l.map(x => x.getAttribute('aria-label')))).join(' / '));
+  await shot('37b-schwimmen-tisch');
+  for (let k = 0; k < 30 && !(await p.isVisible('.dock .primary')); k++) await p.locator('.tb-seat:not(.out)').nth(1).click();
+  check('Schwimmen: Spielende, wenn einer übrig ist', (await raw('.dock .primary')) === 'Ergebnis' && (await p.locator('.tb-seat:not(.out)').count()) === 1);
+  await p.click('.dock .primary'); await p.waitForTimeout(400);
+  check('Schwimmen: Siegerseite mit Tisch-Statistik', (await raw('.v-stats')).includes('Zuerst raus'));
+  await shot('37c-schwimmen-victory');
+  await p.click('.victory .pad-actions .secondary');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  await p.click('[data-game="schocken"]'); await shot('37d-schocken'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  await seat(0).click(); await p.waitForTimeout(150);
+  check('Schocken: Deckel aus der Mitte', (await raw('.bsheet h3')).startsWith('Deckel für') && (await raw('.bsheet .eyebrow')).includes('13'));
+  await shot('37e-schocken-sheet');
+  await p.click('#tk-3'); await p.waitForTimeout(150);
+  check('Schocken: Spieler hat 3, Mitte 10', (await seat(0).getAttribute('aria-label')).endsWith('3 Deckel') && (await raw('.tb-count')) === '10');
+  await seat(1).click(); await p.click('#tk-schock'); await p.waitForTimeout(200);
+  check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('#s-game .sub')) === '2. Hälfte');
+  await shot('37f-schocken-tisch');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }

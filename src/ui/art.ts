@@ -264,6 +264,27 @@ Object.assign(GAME_ART, {
   }
 });
 
+// Schwimmen: Rettungsring auf Wellen, offene Karten; Schocken: Würfelbecher und Bierdeckel
+const buoy = (x: number, y: number, r: number) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="#fffaf2"/>
+  ${[0, 1, 2, 3].map(k => `<path d="M0 0L${r * Math.cos(k * Math.PI / 2 + .45)} ${r * Math.sin(k * Math.PI / 2 + .45)}A${r} ${r} 0 0 1 ${r * Math.cos(k * Math.PI / 2 + 1.12)} ${r * Math.sin(k * Math.PI / 2 + 1.12)}z" fill="#ef7a5c"/>`).join('')}
+  <circle r="${r * .52}" fill="#97c4e3"/></g>`;
+const dcup = (x: number, y: number, s: number, rot = 0) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="M-22-30h44l-6 56h-32z" fill="#8a5a3c"/>
+  <rect x="-24" y="-34" width="48" height="10" rx="4" fill="#a8714c"/><rect x="-18" y="-14" width="36" height="6" rx="3" fill="#6f4630"/><rect x="-17" y="8" width="34" height="6" rx="3" fill="#6f4630"/></g>`;
+const deckel = (x: number, y: number, r: number, c = '#f3a98f') => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="#fffaf2"/><circle r="${r * .78}" fill="${c}"/><circle r="${r * .46}" fill="#fffaf2"/></g>`;
+Object.assign(GAME_ART, {
+  schwimmen: {
+    icon: ICON(buoy(32, 32, 22)),
+    scene: sky('#dcecf6', '#e8f2f9', '#bcdcef', '#f5d58c', 'waves') + buoy(118, 168, 40)
+      + card(214, 150, -12, '7', BAV.herz('#f3a98f'), '#d9634a', 48) + card(258, 146, 2, 'K', BAV.herz('#f3a98f'), '#d9634a', 48) + card(302, 154, 16, 'A', BAV.herz('#f3a98f'), '#d9634a', 48) + '</svg>'
+  },
+  schocken: {
+    icon: ICON(`${deckel(20, 44, 14)}${dcup(36, 30, .62, 10)}${die(50, 50, 14, -12, 1, '#fffaf2', '#d9634a', '#e8dccb')}`),
+    scene: sky('#fbe6dc', '#fdeee7', '#f2cdbd', '#f5d58c', 'checker')
+      + [0, 1, 2, 3, 4].map(k => deckel(96, 196 - k * 9, 38, k % 2 ? '#f2cf86' : '#f3a98f')).join('') + dcup(206, 150, 1.4, -8)
+      + die(266, 196, 30, -12, 1, '#fffaf2', '#d9634a', '#e8dccb') + die(304, 192, 30, 10, 1, '#fffaf2', '#d9634a', '#e8dccb') + die(286, 160, 30, 24, 1, '#fffaf2', '#d9634a', '#e8dccb') + '</svg>'
+  }
+});
+
 const icon: Record<string, string> = {
   uno: ICON(`<g transform="rotate(-20 32 32)">${[0, 1, 2, 3].map(k => `<path d="M32 32L${32 + 22 * Math.cos(k * Math.PI / 2)} ${32 + 22 * Math.sin(k * Math.PI / 2)}A22 22 0 0 1 ${32 + 22 * Math.cos((k + 1) * Math.PI / 2)} ${32 + 22 * Math.sin((k + 1) * Math.PI / 2)}z" fill="${['#f3a98f', '#86cbb8', '#f2cf86', '#97c4e3'][k]}"/>`).join('')}
     <ellipse cx="32" cy="32" rx="9" ry="14" transform="rotate(40 32 32)" fill="#fffaf2"/></g>`),

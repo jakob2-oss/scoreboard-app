@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { act, useApp } from '../store';
 import { describeTemplate } from '../game/templates';
 import type { Template } from '../model/types';
@@ -142,7 +143,7 @@ function Feedback() {
       <button className="row feedback-row" id="feedback" onClick={() => setOpen(true)}>
         <span className="t"><b>Feedback geben</b></span><Chevron />
       </button>
-      {open && (
+      {open && createPortal(
         <>
           <div className="scrim" onClick={() => setOpen(false)} />
           <div className="bsheet" role="dialog" aria-label="Feedback">
@@ -156,7 +157,7 @@ function Feedback() {
               </div>
             </div>
           </div>
-        </>
+        </>, document.body
       )}
     </>
   );

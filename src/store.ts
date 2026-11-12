@@ -6,7 +6,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, isTable, isLives, loseLife, fire, giveTokens, schockOut, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -35,7 +35,10 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | null;
+  /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
+  tokenTo: string | null;
+  fireMode: boolean;
   /** Rang-Spiele: Runde, die gerade verteilt wird */
   rankRef: RoundRef | null;
   toast: { text: string; n: number } | null;
@@ -70,6 +73,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
+  tokenTo: null, fireMode: false,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
@@ -379,6 +383,39 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const r = setOrder(g, ref, [], clock);
       set({ game: r.state, undo: [...state.undo.slice(-99), g] }); persist(r.state);
     },
+    // ---------- Tisch-Modus
+    /** Schwimmen: Antippen kostet ein Leben; im Feuer-Modus verlieren alle anderen eins */
+    tableTap(playerId: string) {
+      const g = state.game; if (!g || !isTable(g)) return;
+      if (!isLives(g)) { if (!tokenState(g).loser) set({ sheet: 'tokens', tokenTo: playerId, pad: false }); return; }
+      const fm = state.fireMode, ng = fm ? fire(g, playerId, clock) : loseLife(g, playerId, clock);
+      set({ fireMode: false });
+      if (ng === g) return;
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      const p = seated(ng).find(x => x.id === playerId)!, ls = lifeState(ng);
+      if (ls.alive.length < 2) return;
+      if (fm) toast(`Feuer von ${p.name}`);
+      else if (ls.swimming[playerId]) toast(`${p.name} schwimmt`);
+      else if (ls.out[playerId] !== null) toast(`${p.name} ist raus`);
+    },
+    setFireMode(on: boolean) { set({ fireMode: on }); },
+    /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
+    tableGive(n: number | 'schock', from: string | null = null) {
+      const g = state.game, to = state.tokenTo; if (!g || !to) return;
+      const before = tokenState(g);
+      const ng = n === 'schock' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock);
+      if (ng === g) return;
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
+      const after = tokenState(ng), p = seated(ng).find(x => x.id === to)!;
+      if (after.half > before.half && !after.loser) toast(after.half >= 3 && before.half === 2 ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`);
+    },
+    /** Sitzplatz am Tisch verschieben */
+    moveSeat(from: number, to: number) {
+      const g = state.game; if (!g) return;
+      const ng = moveSeat(g, from, to, clock);
+      if (ng === g) return;
+      set({ game: ng }); persist(ng);
+    },
     /** Notizfelder der laufenden Partie festlegen */
     setGameNotes(labels: string[]) {
       const g = state.game; if (!g) return;
@@ -488,7 +525,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     undo() {
       const g = state.game; if (!g || !state.undo.length) return;
       const prev = state.undo[state.undo.length - 1];
-      const restored = restore(g, prev, clock);
+      const restored0 = restore(g, prev, clock);
+      // Sitzplätze bleiben, wie sie gerade sind (Verschieben ist kein Spielzug)
+      const restored = { ...restored0, game: { ...restored0.game, seats: g.game.seats } };
       const e = state.edit;
       const ref = e && e.ref !== 'new' && !liveRounds(restored).some(r => r.id === e.ref) ? 'new' : e?.ref;
       set({ game: restored, undo: state.undo.slice(0, -1), edit: e && ref ? makeEdit(restored, ref, e.playerId, e.field) : null });
@@ -497,8 +536,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner') { set({ sheet, pad: false }); },
-    closeSheet() { set({ sheet: null }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner') { set({ sheet, pad: false, fireMode: false }); },
+    closeSheet() { set({ sheet: null, tokenTo: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;
       const ng = setWin(g, win, clock);
@@ -532,6 +571,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             let streak = 0, best = 0;
             for (const rk2 of ranks) { streak = rk2 === 1 ? streak + 1 : 0; best = Math.max(best, streak); }
             extra = { ...extra, praes: ranks.filter(v => v === 1).length, arsch: ranks.filter(v => v === n).length, praesStreak: best };
+          }
+          if (isTable(f)) {
+            // Schwimmen: geschwommen und Leben übrig; Schocken: verlorene Hälften und Schock aus
+            if (isLives(f)) { const ls = lifeState(f); extra = { ...extra, left: Math.max(0, ls.left[x.player.id]), swum: ls.left[x.player.id] <= 0 ? 1 : 0 }; }
+            else { const ts = tokenState(f); extra = { ...extra, halves: ts.halves[x.player.id], schock: ts.schock[x.player.id] }; }
           }
           if (isBids(f)) {
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
