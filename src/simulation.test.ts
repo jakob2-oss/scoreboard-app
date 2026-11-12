@@ -10,7 +10,8 @@ import type { Clock } from './lib/id';
 import type { Player, Result, Template } from './model/types';
 import {
   catChoices, endState, fieldOf, fieldsOf, hasPhases, inputOrder, isBids, isCats, isRanks, isResultOnly, isSplit, liveRounds,
-  ranking, rankIn, roundFull, roundNumber, scoreOf, seated, totals, type GameState
+  ranking, rankIn, roundFull, roundNumber, scoreOf, seated, totals, type GameState,
+  isTable, isLives, lifeState, tokenState
 } from './game/engine';
 import { GAMES } from './game/games';
 import { highlights } from './game/highlights';
@@ -44,6 +45,26 @@ function playOut(st: Store, r: () => number, maxRounds: number): GameState {
   for (let step = 0; step < 2000; step++) {
     const s = st.get(), g = s.game!;
     if (s.sheet === 'result') break;
+    // Tisch-Modus: bis zum Spielende, wie am Tisch per Antippen
+    if (isTable(g)) {
+      if (endState(g)?.done) break;
+      const players = seated(g);
+      if (isLives(g)) {
+        const alive = players.filter(p => lifeState(g).out[p.id] === null);
+        if (r() < .06) { a.setFireMode(true); a.tableTap(pickOf(alive).id); } else a.tableTap(pickOf(alive).id);
+        if (r() < .05) { a.moveSeat(0, players.length - 1); }
+        if (r() < .04 && s.undo.length) a.undo();
+        continue;
+      }
+      const ts = tokenState(g), to = pickOf(players);
+      a.tableTap(to.id);
+      const givers = players.filter(p => p.id !== to.id && ts.hold[p.id] > 0);
+      if (r() < .04) a.tableGive('schock');
+      else if (ts.middle > 0) a.tableGive(1 + Math.floor(r() * 4));
+      else if (givers.length) a.tableGive(1 + Math.floor(r() * 4), pickOf(givers).id);
+      else a.closeSheet();
+      continue;
+    }
     if (s.sheet === 'winner') { a.pickWinner(pickOf(seated(g)).id); continue; }
     if (s.sheet === 'ranks') {
       const ref = s.rankRef!, open = seated(g).filter(p => ref === 'new' || rankIn(g, ref, p.id) === null);
@@ -91,8 +112,14 @@ function playOut(st: Store, r: () => number, maxRounds: number): GameState {
 /** Prüfungen am Stand vor dem Beenden und an den gespeicherten Ergebnissen */
 function check(g: GameState, results: Result[]) {
   const t = totals(g), rk = ranking(g), players = seated(g);
+  // Tisch-Modus: Deckel bleiben vollständig, genau einer bleibt übrig bzw. verliert
+  if (isTable(g)) {
+    expect(endState(g)?.done).toBe(true);
+    if (isLives(g)) expect(lifeState(g).alive).toHaveLength(1);
+    else { const ts = tokenState(g); expect(ts.middle + players.reduce((x, p) => x + ts.hold[p.id], 0)).toBe(ts.total); expect(Object.values(ts.hold).every(v => v >= 0)).toBe(true); expect(rk[rk.length - 1].player.id).toBe(ts.loser); }
+  }
   // Summen = Summe der Rundenwerte (plus Kniffel-Bonus)
-  if (!isCats(g)) for (const p of players) expect(t[p.id]).toBe(liveRounds(g).reduce((x, r) => x + (scoreOf(g, r.id, p.id) ?? 0), 0));
+  if (!isCats(g) && !isTable(g)) for (const p of players) expect(t[p.id]).toBe(liveRounds(g).reduce((x, r) => x + (scoreOf(g, r.id, p.id) ?? 0), 0));
   // Rangliste passt zur Gewinnregel (bei Phase 10 zählen erst die Phasen)
   if (!hasPhases(g)) for (let i = 1; i < rk.length; i++) {
     if (g.game.rules.win === 'high') expect(rk[i - 1].total).toBeGreaterThanOrEqual(rk[i].total);
@@ -171,5 +198,12 @@ describe('Testspiele: Varianten', () => {
     await series({ ...base, key: 'eigen-zwei', name: 'Zwei', scoring: 'rounds', params: { split: [{ key: 'a', label: 'A', phase: 'A' }, { key: 'b', label: 'B', phase: 'B' }] } }, 4, 12);
     await series({ ...base, key: 'eigen-rang', name: 'Rang', scoring: 'rank', players: { min: 3, max: 8 } }, 4, 13);
     await series({ ...base, key: 'eigen-null', name: 'Null', scoring: 'rounds', params: { zeroSum: true } }, 4, 14);
+  });
+  it('Eigene Tisch-Spiele: 5 Leben, 7 Deckel', async () => {
+    const base = { version: 1, end: { type: 'none' }, players: { min: 2, max: 10 }, custom: true } as const;
+    const h1 = await series({ ...base, key: 'eigen-leben', name: 'Leben', scoring: 'lives', win: 'high', params: { lives: 5 } }, 4, 21);
+    expect(h1.every(h => h.results.some(r => r.extra?.left !== undefined))).toBe(true);
+    const h2 = await series({ ...base, key: 'eigen-deckel', name: 'Deckel', scoring: 'tokens', win: 'low', params: { tokens: 7 } }, 4, 22);
+    expect(h2.every(h => h.results.filter(r => r.place === Math.max(...h.results.map(x => x.place))).some(r => r.extra?.halves === 2))).toBe(true);
   });
 });

@@ -45,13 +45,14 @@ Regeln als **Konfiguration aus Bausteinen**, nicht als eigener Code pro Spiel.
 |---|---|
 | `key`, `version` | z. B. `wizard`, `1` (eingebaute Vorlagen stehen im Code) |
 | `name` | Anzeigename |
-| `scoring` | Baustein: `rounds` · `bids` · `categories` · `rank` · `result` |
+| `scoring` | Baustein: `rounds` · `bids` · `categories` · `rank` · `result` · `lives` · `tokens` |
 | `win` | `high` oder `low` |
 | `end` | `none` · `target` (Wert) · `rounds` (Anzahl oder Formel wie 60 ÷ Spieler) |
 | `players` | `{ min, max }` |
 | `params` | Baustein-Details, z. B. Kategorien und Bonus bei Kniffel, Punkteformel bei Wizard |
 | `custom` | `true` für selbst gebaute Vorlagen |
 | `params.steps` | Zählschritte für die Schnelltasten (freies Spiel), z. B. `[1, 5, 10]` |
+| `params.lives` / `params.tokens` | Tisch-Modus: Leben je Spieler (Schwimmen) bzw. Deckel in der Mitte (Schocken) |
 
 Eigene Vorlagen (freies Spiel) bekommen einen eigenen `key` und werden in der Tabelle
 `templates` gespeichert, spätestens beim Beenden der ersten Partie. Partien verweisen über
@@ -128,3 +129,13 @@ Vorschlag 3, 2, 1). Partien verweisen per `eventId` darauf. Damit gibt es späte
 - Spieler-Sonderfälle in laufender Partie (später einsteigen, aussteigen): als `seats` mit
   `joinedAtRound` / `leftAtRound` lösen, sobald nötig.
 - Teams, die pro Runde wechseln (Doppelkopf): wahrscheinlich `values.team` im Eintrag.
+
+### Tisch-Modus (`lives`, `tokens`)
+Jede Aktion am Tisch ist eine eigene Runde mit Einträgen, damit Rückgängig, Speichern und Sync wie gewohnt funktionieren.
+- Schwimmen: Eintrag `{ loss: 1 }` je Spieler, der ein Leben verliert (bei Feuer mehrere in einer Runde).
+  Ohne Leben schwimmt man, beim nächsten Verlust ist man raus. Summe = Leben übrig.
+- Schocken: Verlierer `{ take: n }`, bei leerer Mitte der Geber `{ give: n }`; `schock: true` bei Schock aus,
+  `halfLost: true`, wenn damit alle Deckel bei einem Spieler liegen (Hälfte verloren, alles zurück in die Mitte).
+  Summe = verlorene Hälften, Gleichstand nach Deckeln insgesamt. Wer zwei Hälften verliert, verliert die Partie.
+- Zustand wird immer aus den Einträgen berechnet (`lifeState`, `tokenState` in `engine.ts`), nichts doppelt gespeichert.
+- Beim Beenden: Schwimmen `extra.left`, `extra.swum`; Schocken `extra.halves`, `extra.schock`.

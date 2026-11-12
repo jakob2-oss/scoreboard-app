@@ -69,7 +69,7 @@ function otter() {
 }
 
 /** Trophäenzimmer für die Siegerseite. icon: Icon des Spiels (wird gerahmt an die Wand gehängt) */
-export function trophyRoom(icon: string): string {
+export function trophyRoom(icon: string, ribbon = 'GEWONNEN'): string {
   const planks = Array.from({ length: 9 }, (_, k) => `<rect x="${k * 46 - 10}" y="0" width="46" height="262" fill="${k % 2 ? C.wallA : C.wallB}"/><rect x="${k * 46 - 10}" y="0" width="2" height="262" fill="${C.seam}" opacity=".45"/>`).join('');
   const confetti = Array.from({ length: 16 }, (_, k) => {
     const x = 18 + ((k * 53) % 360), c = CONF[k % CONF.length];
@@ -101,7 +101,7 @@ export function trophyRoom(icon: string): string {
     <g transform="translate(195 252)">
       <path d="M-112-4h22v26h-22l8-13z" fill="#d9cdb8"/><path d="M112-4h-22v26h22l-8-13z" fill="#d9cdb8"/>
       <rect x="-96" y="-10" width="192" height="28" rx="4" fill="${C.paper}"/>
-      <text y="9" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="15" letter-spacing="3" fill="${C.ink}">GEWONNEN</text>
+      <text y="9" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="15" letter-spacing="3" fill="${C.ink}">${ribbon}</text>
     </g>
     <g>${confetti}</g>
   </svg>`;

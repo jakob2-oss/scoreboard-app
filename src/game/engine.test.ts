@@ -5,7 +5,8 @@ import { TPL } from '../test/fixtures';
 import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
-  addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn
+  addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState
 } from './engine';
 import { gameDef } from './games';
 
@@ -222,5 +223,69 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
     for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
     expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
     expect(gameDef('binokel')!.template.end).toEqual({ type: 'target', value: 1000 });
+  });
+});
+
+describe('Tisch-Modus', () => {
+  it('Schwimmen: drei Leben, dann schwimmen, dann raus; der Letzte gewinnt', () => {
+    const c = testClock();
+    let s = createGame(gameDef('schwimmen')!.template, players('A', 'B', 'C'), c);
+    expect(liveRounds(s)).toHaveLength(0);
+    expect(anyScore(s)).toBe(false);
+    for (let k = 0; k < 3; k++) s = loseLife(s, 'p0', c);
+    expect(lifeState(s).swimming.p0).toBe(true);
+    expect(lifeState(s).left.p0).toBe(0);
+    s = loseLife(s, 'p0', c);
+    expect(lifeState(s).out.p0).toBe(3);
+    // Wer raus ist, verliert nichts mehr
+    expect(loseLife(s, 'p0', c)).toBe(s);
+    s = fire(s, 'p2', c);
+    expect(lifeState(s).left).toEqual({ p0: -1, p1: 2, p2: 3 });
+    for (let k = 0; k < 3; k++) s = loseLife(s, 'p1', c);
+    expect(endState(s)).toEqual({ done: true, text: 'C bleibt übrig' });
+    expect(loseLife(s, 'p2', c)).toBe(s);
+    const rk = ranking(s);
+    expect(rk.map(x => [x.player.name, x.place])).toEqual([['C', 1], ['B', 2], ['A', 3]]);
+    expect(totals(s)).toEqual({ p0: 0, p1: 0, p2: 3 });
+  });
+
+  it('Schocken: aus der Mitte, dann vom Sieger, Hälften und Finale', () => {
+    const c = testClock();
+    let s = createGame(gameDef('schocken')!.template, players('A', 'B', 'C'), c);
+    s = giveTokens(s, 'p0', 4, null, c);
+    s = giveTokens(s, 'p1', 9, null, c);
+    let t = tokenState(s);
+    expect(t.middle).toBe(0);
+    expect(t.hold).toEqual({ p0: 4, p1: 9, p2: 0 });
+    // Mitte leer: ohne Geber passiert nichts, der Sieger gibt ab (höchstens, was er hat)
+    expect(giveTokens(s, 'p0', 2, null, c)).toBe(s);
+    s = giveTokens(s, 'p0', 20, 'p1', c);
+    t = tokenState(s);
+    expect(t.hold).toEqual({ p0: 0, p1: 0, p2: 0 });
+    expect(t.half).toBe(2);
+    expect(t.halves.p0).toBe(1);
+    // Neue Hälfte: alles wieder in der Mitte
+    s = giveTokens(s, 'p2', 3, null, c);
+    expect(tokenState(s).middle).toBe(10);
+    s = schockOut(s, 'p1', c);
+    t = tokenState(s);
+    expect(t.halves).toEqual({ p0: 1, p1: 1, p2: 0 });
+    expect(t.half).toBe(3);
+    expect(t.schock.p1).toBe(1);
+    expect(endState(s)).toBeNull();
+    // Finale
+    s = schockOut(s, 'p0', c);
+    expect(tokenState(s).loser).toBe('p0');
+    expect(endState(s)).toEqual({ done: true, text: 'A verliert die Partie' });
+    expect(ranking(s)[2].player.name).toBe('A');
+    expect(tokenState(s).maxTake).toEqual({ n: 13, who: ['p1', 'p0'] });
+  });
+
+  it('Schocken: Gleichstand bei den Hälften entscheidet die Zahl der Deckel', () => {
+    const c = testClock();
+    let s = createGame(gameDef('schocken')!.template, players('A', 'B', 'C'), c);
+    s = giveTokens(s, 'p0', 2, null, c);
+    s = giveTokens(s, 'p1', 5, null, c);
+    expect(ranking(s).map(x => x.player.name)).toEqual(['C', 'A', 'B']);
   });
 });

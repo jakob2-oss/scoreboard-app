@@ -18,7 +18,7 @@ export interface Player extends Base {
   mergedIntoId?: string | null;
 }
 
-export type Scoring = 'rounds' | 'bids' | 'categories' | 'rank' | 'result';
+export type Scoring = 'rounds' | 'bids' | 'categories' | 'rank' | 'result' | 'lives' | 'tokens';
 export type Win = 'high' | 'low';
 export type End =
   | { type: 'none' }
@@ -60,6 +60,10 @@ export interface TemplateParams {
   split?: SplitField[];
   /** Nur der Rundensieger bekommt Punkte (Uno): erst Sieger wählen, alle anderen 0 */
   winnerOnly?: boolean;
+  /** Tisch-Modus: Leben je Spieler (Schwimmen) */
+  lives?: number;
+  /** Tisch-Modus: Deckel in der Mitte (Schocken) */
+  tokens?: number;
   /** Eigene Schnelltasten (Erstellungsmodus), zusätzlich zu den Zählschritten */
   keys?: QuickKey[];
   /** Notizfelder neben den Punkten (z. B. „Längste Straße“), zählen nicht zur Summe */

@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -10,6 +10,7 @@ import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
 import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
+import { TableDock, TableView, TokenSheet } from './Table';
 
 const css = (vars: Record<string, string>) => vars as React.CSSProperties;
 const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
@@ -27,6 +28,8 @@ export function quickKeys(g: GameState): QuickKey[] {
 
 function subtitle(g: GameState): string {
   const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
+  if (isLives(g)) return `Runde ${tableRounds(g).length + 1}`;
+  if (isTable(g)) { const h = tokenState(g).half; return h >= 3 ? 'Finale' : `${h}. Hälfte`; }
   if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
   if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}, ${bidPhase(g, liveRounds(g)[n - 1].id) === 'bid' ? 'Ansagen' : 'Stiche'}`;
@@ -82,7 +85,7 @@ export function GameScreen() {
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>
 
-      <div className="sheet-wrap pp-mode">
+      {isTable(g) ? <TableView g={g} /> : <div className="sheet-wrap pp-mode">
         <div className="pp-tabs gutter" role="tablist">
           <button className="pp-tab" role="tab" aria-label="Überblick" aria-current={s.page === -1} onClick={() => act().goPage(-1)}><IconGrid /></button>
           {players.map((p, i) => (
@@ -98,9 +101,9 @@ export function GameScreen() {
             </section>
           ))}
         </div>
-      </div>
+      </div>}
 
-      {end && !s.pad && (
+      {end && !s.pad && !isTable(g) && (
         <div className="banner gutter">
           <div className="grow"><b>{end.done ? 'Spielende erreicht' : 'Fast geschafft'}</b><br /><span>{end.text}</span></div>
           {end.done && <button onClick={() => act().openSheet('result')}>Ergebnis</button>}
@@ -109,7 +112,8 @@ export function GameScreen() {
 
       {!s.pad && (
         <div className="dock gutter">
-          {s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
+          {isTable(g) ? <TableDock g={g} canUndo={s.undo.length > 0} />
+            : s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
             : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
               ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />
               : <Keypad g={g} edit={s.edit} canUndo={s.undo.length > 0} />)}
@@ -123,6 +127,7 @@ export function GameScreen() {
       {s.sheet === 'notes' && <NotesSheet g={g} />}
       {s.sheet === 'ranks' && s.rankRef && <RankSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
     </section>
   );
 }

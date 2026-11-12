@@ -147,4 +147,18 @@ GAMES.push({
   endOptions: [{ label: 'Offen', end: { type: 'none' } }, { label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: '20 Runden', end: { type: 'rounds', value: 20 } }]
 });
 
+// Tisch-Modus: Leben verlieren und Deckel verteilen, eingetragen direkt am Tisch
+GAMES.push({
+  template: { key: 'schwimmen', version: 1, name: 'Schwimmen', scoring: 'lives', win: 'high', end: { type: 'none' }, players: { min: 2, max: 9 }, params: { lives: 3 } },
+  points: [['Ziel', '31 in einer Farbe, drei Gleiche zählen 30½'], ['Verlierer', 'das schwächste Blatt kostet ein Leben'], ['Ohne Leben', 'man schwimmt und spielt weiter'],
+    ['Feuer', 'drei Asse, alle anderen verlieren ein Leben'], ['Sieger', 'wer als Letzter übrig bleibt']],
+  acc: '#5fa8d3', tint: '#e2eff8', text: '', example: [['3', 'Leben'], ['+1', 'Schwimmen'], ['1', 'bleibt übrig']]
+});
+GAMES.push({
+  template: { key: 'schocken', version: 1, name: 'Schocken', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13 } },
+  points: [['Mitte', '13 Deckel'], ['Verlierer', 'bekommt so viele Deckel, wie der Wurf des Siegers wert ist'], ['Leere Mitte', 'der Sieger gibt eigene Deckel ab'],
+    ['Schock aus', 'alle Deckel auf einmal'], ['Hälfte', 'wer alle Deckel hat, verliert sie'], ['Partie', 'zwei Hälften verloren, sonst entscheidet das Finale']],
+  acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
+});
+
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

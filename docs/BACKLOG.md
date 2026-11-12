@@ -122,3 +122,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Schalter „Nullsumme“ (mit Ausgleich-Taste).
 - [ ] „Haken je Runde“ (wie Phase 10) für eigene Spiele.
 - [x] **Testspiele (12.11.):** `src/simulation.test.ts` spielt jedes Spiel sechsmal und Varianten (Teams, eigene Wertungen) vollständig durch und prüft Rechenregeln, Ranglisten, Speicherung und Statistik.
+
+## J. Tisch-Modus (12.11.)
+- [x] Schwimmen (3 Leben plus Schwimmen, Feuer) und Schocken (13 Deckel, zwei Hälften, Finale, Schock aus) am Tisch:
+  Spieler sitzen um einen runden Tisch in einem Raum mit Holzwand, Antippen verteilt Leben bzw. Deckel, Ziehen tauscht Plätze.
+- [x] Erstellungsmodus: Wertung „Leben verlieren“ oder „Deckel verteilen“ mit eigener Zahl.
+- [ ] Annahmen prüfen lassen: Schwimmen mit 3 Leben plus Schwimmen; Schocken mit Finale nur, wenn zwei verschiedene Spieler je eine Hälfte verloren haben.
+- [ ] Idee: Schocken-Wurf antippen (Schock 2 bis 6, General, Straße) statt Zahl, falls gewünscht.
+- [ ] Statistik im Profil für Tisch-Spiele (wie oft geschwommen, Hälften verloren).
