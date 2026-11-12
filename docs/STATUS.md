@@ -92,6 +92,9 @@ Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gem
 
 - **Teams** (PR #13): `createTeamGame`, `membersOf`, `playsIn` in `engine.ts`; Ergebnisse je Mitglied in `finishGame`
 
+- **Arschloch** (PR #14): Wertung `rank` (`roleOf`, `rankIn`, `setOrder`), Verteilung `RankSheet`, Rollen-Statistik
+- Prüfung aller Spiele: Ergebnisse und offene Punkte in `docs/BACKLOG.md` (Abschnitt I)
+
 ## Tests
-- Unit-Tests: 100 (Logik, Statistik, Speicherung, Abläufe)
+- Unit-Tests: 102 (Logik, Statistik, Speicherung, Abläufe)
 - Klicktest `e2e/core.e2e.cjs`: 136 Prüfungen
