@@ -13,7 +13,7 @@ export const FRONT = { rx: 64, ry: 168 };
 const PROPS = { rx: 64, ry: 146 };
 
 export const C = {
-  tile1: '#4a2e25', tile2: '#55352a', grout: '#2f1d17',
+  bg: '#1d1b36',
   wood1: '#7a4e33', wood2: '#71472e', grain: '#8a5d40', rim: '#4a2c1f', rim2: '#5a3624',
   cream: '#f3ead6', brass: '#c9a45c', ink: '#1c1611', light: '#ffd58a'
 };
@@ -39,13 +39,31 @@ export const facing = (t: number) => (Math.atan2(Math.sin(t) / SEATS.ry, Math.co
 const shadow = (r: number, ry = r) => `<ellipse cx="3" cy="5" rx="${r}" ry="${ry}" fill="#000" opacity=".3"/>`;
 
 // ---------------------------------------------------------------- Boden und Tisch
-function floor(): string {
-  const s = 46;
-  let t = `<rect x="-240" y="-240" width="870" height="1120" fill="${C.grout}"/>`;
-  for (let r = 0; r < 25; r++) for (let c = 0; c < 19; c++) {
-    t += `<rect x="${-240 + c * s + 2}" y="${-240 + r * s + 2}" width="${s - 4}" height="${s - 4}" rx="3" fill="${(r + c) % 2 ? C.tile1 : C.tile2}"/>`;
+/** Weiche, unregelmäßige Form: Punkte auf einem Kreis mit wechselndem Radius, geglättet (Catmull-Rom) */
+function blob(r: number, seed: number, k = 7): string {
+  const pts = Array.from({ length: k }, (_, i) => {
+    const a = (i / k) * Math.PI * 2, j = 1 + .22 * Math.sin(seed * 12.9898 + i * 78.233) ;
+    return [Math.cos(a) * r * j, Math.sin(a) * r * j];
+  });
+  const p = (i: number) => pts[(i + k) % k];
+  let d = `M${p(0)[0].toFixed(1)} ${p(0)[1].toFixed(1)}`;
+  for (let i = 0; i < k; i++) {
+    const [x0, y0] = p(i - 1), [x1, y1] = p(i), [x2, y2] = p(i + 1), [x3, y3] = p(i + 2);
+    d += `C${(x1 + (x2 - x0) / 6).toFixed(1)} ${(y1 + (y2 - y0) / 6).toFixed(1)} ${(x2 - (x3 - x1) / 6).toFixed(1)} ${(y2 - (y3 - y1) / 6).toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`;
   }
-  return t;
+  return d + 'Z';
+}
+
+/** Hintergrund: tiefes Blau mit großen, weichen Formen, die langsam treiben und sich drehen (Klassen tb-b* in app.css) */
+function floor(): string {
+  const shapes: [number, number, number, string, number][] = [
+    // x, y, Radius, Farbe, Deckkraft
+    [-40, 40, 190, '#2b2a55', 1], [430, 140, 170, '#21424a', .9], [-30, 560, 200, '#3a2a4f', .9], [420, 640, 180, '#2b2a55', 1],
+    [200, -60, 150, '#21424a', .7], [210, 700, 160, '#4a2f3c', .55], [60, 300, 90, '#33305e', .8], [340, 400, 100, '#2a3c5a', .8]
+  ];
+  return `<rect x="-240" y="-240" width="870" height="1120" fill="${C.bg}"/>
+  ${shapes.map(([x, y, r, c, o], i) => `<g transform="translate(${x} ${y})"><path class="tb-blob" style="--d:${46 + i * 7}s;--dl:${-i * 6}s" d="${blob(r, i + 1)}" fill="${c}" opacity="${o}"/></g>`).join('')}
+  <g transform="translate(${TABLE.cx} ${TABLE.cy})"><path class="tb-blob tb-warm" style="--d:60s" d="${blob(250, 9, 9)}" fill="${C.light}" opacity=".07"/></g>`;
 }
 
 function tableTop(): string {

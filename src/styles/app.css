@@ -337,14 +337,14 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .key-add button[type="submit"]:disabled { opacity: .45; }
 
 /* ---------- Tisch-Modus (Schwimmen, Schocken): Bar mit rundem Spieltisch, Farben fest in src/ui/table.ts ---------- */
-.tbl { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; display: grid; place-items: center; background: #2f1d17; }
+.tbl { flex: 1; min-height: 0; position: relative; overflow: hidden; container-type: size; display: grid; place-items: center; background: #1d1b36; }
 .tb-phase text { font-family: var(--f-display); font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; fill: #e2c068; }
-#s-game:has(.tbl) .top { background: #241611; color: #efe4cf; }
+#s-game:has(.tbl) .top { background: #1d1b36; color: #efe4cf; }
 #s-game:has(.tbl) .top .sub { color: #a9b8b2; }
 #s-game:has(.tbl) .top .icon-btn { background: rgba(255, 255, 255, .08); color: #efe4cf; }
-#s-game:has(.tbl) .dock { background: #241611; }
+#s-game:has(.tbl) .dock { background: #1d1b36; }
 #s-game:has(.tbl) .top .text-btn { color: #c9a45c; }
-#s-game:has(.tbl) .dock .secondary, #s-game:has(.tbl) .tb-half { background: #3a2a22; color: #efe4cf; box-shadow: none; }
+#s-game:has(.tbl) .dock .secondary, #s-game:has(.tbl) .tb-half { background: #2e2c55; color: #efe4cf; box-shadow: none; }
 #s-game:has(.tbl) .dock .primary, #s-game:has(.tbl) .tb-half.cur { background: #c9a45c; color: #17151d; box-shadow: none; }
 #s-game:has(.tbl) .tb-half:not(.cur) { color: #8f8a9c; }
 #s-game:has(.tbl) .tb-ask { color: #efe4cf; }
@@ -407,6 +407,11 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 @keyframes tb-sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
 .tb-glow { animation: tb-glowp 7s ease-in-out infinite; }
 @keyframes tb-glowp { 50% { opacity: .82; } }
+/* Hintergrund am Tisch: weiche Formen treiben, drehen und atmen sehr langsam */
+.tb-blob { transform-box: fill-box; transform-origin: center; animation: tb-drift var(--d, 50s) ease-in-out var(--dl, 0s) infinite alternate; }
+@keyframes tb-drift { 0% { transform: translate(0, 0) rotate(0deg) scale(1); } 50% { transform: translate(14px, -18px) rotate(40deg) scale(1.06); } 100% { transform: translate(-12px, 10px) rotate(80deg) scale(.96); } }
+.tb-warm { animation-name: tb-breathe; }
+@keyframes tb-breathe { 0% { transform: rotate(0deg) scale(1); opacity: .06; } 100% { transform: rotate(30deg) scale(1.05); opacity: .1; } }
 /* Münzen fallen weg, Deckel kommen dazu, Neon flackert selten */
 .tb-coin { transition: opacity .4s ease, transform .4s ease; transform-box: fill-box; transform-origin: center; }
 .tb-coin.gone { opacity: 0; transform: scale(.3) translateY(-20px); }
@@ -416,5 +421,5 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 @keyframes tb-swim { 50% { transform: translateX(3px); } }
 .tb-neon { animation: tb-neon 9s steps(1) infinite; }
 @keyframes tb-neon { 0%, 100% { opacity: 1; } 91% { opacity: .55; } 92% { opacity: 1; } 94% { opacity: .7; } 95% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .tb-neon, .tb-wave, .tb-coaster, .tb-blink, .tb-flicker, .tb-sway, .tb-glow, .tb-mid-art, .tb-dk, .tbl.fire .tb-av .av { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .tb-blob, .tb-neon, .tb-wave, .tb-coaster, .tb-blink, .tb-flicker, .tb-sway, .tb-glow, .tb-mid-art, .tb-dk, .tbl.fire .tb-av .av { animation: none !important; } }
 .seg.seg-2 { margin-top: 8px; }
