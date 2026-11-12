@@ -92,4 +92,8 @@ Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen
 „Freien Spiel“, das jetzt eine Einmal-Partie ist (Vorlage nur per Schalter).
 
 ## H. Für das Ende vorgemerkt
-- [ ] **Bilder frei wählbar:** Szene und Icon eigener Spiele individuell gestalten (eigene Motive, evtl. Foto), nicht nur Farbe und Muster.
+- [ ] **Gestaltung frei wählbar (12.11.):** Bild (Szene, Icon) und Farbe anpassbar für **jede** Spielseite und jedes Spielerprofil,
+      nicht nur für eigene Spiele; eigene Motive, evtl. Foto.
+  - Offline-Version: bei allen Spielen und Spielern.
+  - Später mit Accounts: nur bei eigenen Spielen, beim eigenen Profil und bei Offline-Spielern (ohne Account);
+    Profile anderer Accounts gestaltet deren Besitzer.
