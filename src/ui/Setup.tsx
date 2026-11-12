@@ -14,6 +14,12 @@ const PATTERN_NAMES: Record<string, string> = {
 
 /** Regeln eines eigenen Spiels als Stichpunkte */
 function pointsOf(t: Template): [string, string][] {
+  if (t.params?.resultOnly) {
+    const place = t.params.unit === 'Platz';
+    const p: [string, string][] = [['Am Ende', place ? 'Platz je Spieler' : 'Punkte je Spieler'], ['Gewinner', place ? 'Platz 1' : t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl']];
+    if (t.params.notes?.length) p.push(['Zusatzfelder', names(t.params.notes)]);
+    return p;
+  }
   const end = t.end.type === 'target' ? `bei ${t.end.value} Punkten` : t.end.type === 'rounds' ? `nach ${t.end.value} Runden` : 'offen';
   const p: [string, string][] = [
     ['Gewinner', t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl'],
@@ -89,14 +95,17 @@ export function Setup() {
     setNote('');
   };
   const look = lookOf(own?.key ?? 'neu', setup.look ?? own?.params?.look);
+  // Neue Vorlage: das Aussehen der Vorschau mitspeichern, damit es nach dem Speichern gleich bleibt
+  const keepLook = () => { if (setupTemplate && !own && !setup.look) a.updateSetup({ look: { color: look.color, pattern: look.pattern } }); };
   const preview = [...setup.steps].sort((x, y) => y - x).map(n => -n).concat([...setup.steps].sort((x, y) => x - y));
-  const title = own ? own.name : setupTemplate ? (setup.name.trim() || 'Eigene Vorlage') : 'Freies Spiel';
+  const result = setup.mode === 'result';
+  const title = own ? own.name : setupTemplate ? (setup.name.trim() || (result ? 'Eigene Endwertung' : 'Eigene Vorlage')) : 'Freies Spiel';
   return (
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
       dock={<>
         {own && <button className="secondary" id="setup-save" disabled={!valid} onClick={() => { a.saveSetupHome(); setEditing(false); }}>Speichern</button>}
-        {!own && setupTemplate && <button className="secondary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => a.saveNewTemplate()}>Speichern</button>}
-        <button className="primary" id="setup-next" disabled={!valid || (setupTemplate && !own && !setup.name.trim())} onClick={() => a.setupNext()}>Spieler wählen</button>
+        {!own && setupTemplate && <button className="secondary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}
+        <button className="primary" id="setup-next" disabled={!valid || (setupTemplate && !own && !setup.name.trim())} onClick={() => { keepLook(); a.setupNext(); }}>Spieler wählen</button>
       </>}>
         <div className="setup-body">
           <div className="field">
@@ -104,14 +113,23 @@ export function Setup() {
             <input id="setup-name" value={setup.name} maxLength={28} autoComplete="off" placeholder={setupTemplate ? 'Name des Spiels' : fallbackName()}
               onChange={e => a.updateSetup({ name: e.target.value })} />
           </div>
-          <div className="field">
+          {result && (
+            <div className="field">
+              <label>Gewertet wird</label>
+              <div className="seg">
+                <button id="unit-points" aria-pressed={setup.unit === 'Punkte'} onClick={() => a.updateSetup({ unit: 'Punkte' })}>Punkte</button>
+                <button id="unit-place" aria-pressed={setup.unit === 'Platz'} onClick={() => a.updateSetup({ unit: 'Platz' })}>Platz</button>
+              </div>
+            </div>
+          )}
+          {!(result && setup.unit === 'Platz') && <div className="field">
             <label>Wer gewinnt?</label>
             <div className="seg">
               <button aria-pressed={setup.win === 'high'} onClick={() => a.updateSetup({ win: 'high' })}>Höchste Punktzahl</button>
               <button aria-pressed={setup.win === 'low'} onClick={() => a.updateSetup({ win: 'low' })}>Niedrigste Punktzahl</button>
             </div>
-          </div>
-          <div className="field">
+          </div>}
+          {!result && <><div className="field">
             <label>Spielende</label>
             <div className="seg">
               <button aria-pressed={endKind === 'none'} onClick={() => setEnd('none')}>Offen</button>
@@ -138,9 +156,9 @@ export function Setup() {
             <div className="quick step-preview" aria-hidden="true">
               {preview.map(n => <span key={n}>{n > 0 ? '+' + n : '−' + -n}</span>)}
             </div>
-          </div>
+          </div></>}
           <div className="field">
-            <label>Notizfelder</label>
+            <label>{result ? 'Zusatzfelder' : 'Notizfelder'}</label>
             {setup.notes.length > 0 && <div className="chips note-chips">
               {setup.notes.map(n => <button key={n} className="chip on" aria-label={`${n} entfernen`} onClick={() => a.updateSetup({ notes: setup.notes.filter(x => x !== n) })}>{n} ✕</button>)}
             </div>}

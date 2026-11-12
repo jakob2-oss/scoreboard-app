@@ -8,7 +8,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
 (async () => {
   const b = await chromium.launch();
-  const c = await b.newContext({ ...devices['iPhone 13'] });
+  const c = await b.newContext({ ...devices['iPhone 13'] }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await c.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('15 Einträge (13 Spiele, Freies Spiel, Eigene Vorlage erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 15 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('16 Einträge (13 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 16 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Gruppe heißt Endwertung', (await raw('#s-home')).includes('Endwertung'));
   await shot('01-home');
 
@@ -363,6 +363,18 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('43b-own-game-saved');
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
   check('eigenes Spiel gelöscht', (await p.locator('#my-games .row[data-own]').count()) === 1 && !(await text('#my-games')).includes('Umbenannt'));
+  // Eigene Endwertung erstellen
+  await p.click('#new-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
+  check('Endwertung: ohne Spielende und Zählschritte, Gewinner nicht wählbar', !(await p.isVisible('#setup-end')) && !(await p.isVisible('.step-chips')) && !(await raw('#s-setup')).includes('Wer gewinnt'));
+  await p.fill('#note-name', 'Reihen'); await p.press('#note-name', 'Enter'); await shot('44b-own-result-edit');
+  await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('Endwertung gespeichert mit Regeln', (await text('#s-setup .rule-points')).includes('Platz je Spieler') && (await text('#s-setup .rule-points')).includes('Reihen'));
+  await shot('44c-own-result');
+  await p.click('#s-setup [aria-label="Zurück"]');
+  check('Endwertung steht in der Gruppe Endwertung', (await p.locator('#my-games .row[data-own]').count()) === 1 && (await raw('#s-home')).includes('Azul'));
+  await p.click('.row[data-own] >> text=Azul'); await p.click('#quick-start');
+  check('Partie zeigt Endstand', (await raw('.top .sub')) === 'Endstand');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   // Partie im Verlauf löschen
   await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('#tab-history');
@@ -385,9 +397,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.person-row >> text=Clara'); await p.fill('#pf-name', 'Clara M'); await p.press('#pf-name', 'Enter'); await p.waitForTimeout(200);
   await p.click('[aria-label="Zurück"]');
   check('Spieler umbenannt', (await text('#s-people')).includes('Clara M'));
+  // Spieler löschen: weg aus der Liste, Name bleibt im Verlauf
+  await p.click('.person-row >> text=Clara M'); await p.click('#player-delete'); await p.click('#player-delete-yes'); await p.waitForTimeout(300);
+  check('Spieler gelöscht', (await p.locator('.person-row').count()) === 2 && !(await text('#s-people')).includes('Clara M'));
+  await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
+  check('Name bleibt im Verlauf', (await text('.bsheet .podium')).includes('Clara M'));
+  await p.mouse.click(30, 40); await p.click('#tab-people');
   await p.click('#tab-home');
 
   await p.click('#my-games .row[data-own] >> nth=0'); await p.click('#quick-start');
+
+  // Feedback
+  await p.click('#s-game [aria-label="Zurück"]').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
+  await p.click('#feedback'); await p.fill('#feedback-text', 'Testnachricht'); await shot('49-feedback'); await p.click('#feedback-send'); await p.waitForTimeout(300);
+  check('Feedback: Text kopiert, wenn Teilen fehlt', (await text('.toast')) === 'Text kopiert');
+  check('Feedback enthält Version', (await p.evaluate(() => navigator.clipboard.readText())).includes('Punktezettel '));
 
   // Offline
   await c.setOffline(true); await p.reload(); await p.waitForTimeout(800);

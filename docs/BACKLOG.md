@@ -78,7 +78,9 @@ Frühere Freitext-Anlässe werden beim Start einmalig zu Serien.
 - [x] **Lokaler Gebrauch:** Sicherung speichern und einlesen (Spieler, Bereich Daten), dauerhafter Speicher angefragt.
 - [x] **Partie im Verlauf löschen** (mit Rückfrage), Statistik rechnet ohne sie.
 - [x] Texte: „Ben und Clara gewinnen“ statt „Ben & Clara gewinnt“, „haben Phase 10 geschafft“, „mit 1 Spieler“.
-- [ ] Offen: mehrere laufende Partien gleichzeitig, Spieler löschen.
+- [x] **Spieler löschen** im Profil (nicht während er mitspielt); Name bleibt im Verlauf.
+- [x] **Feedback-Knopf** auf der Startseite: Text, dann Teilen-Menü des Geräts, Version und Gerät hängen an.
+- [ ] Offen: mehrere laufende Partien gleichzeitig.
 - [x] **Szenen lebendiger (12.11.):** eigenes Muster je Spiel (Rauten, Strahlen, Waben, Raster, Wellen, Streifen, Stufen, Blöcke),
       dezente Bewegung (Konfetti schwebt, Sonne pulsiert, Figuren wippen; aus bei „Bewegung reduzieren“).
       Icons als Einzelsymbol, Szene erzählt die Situation (Kniffel: Würfel und Becher, Schafkopf: Eichel und Bierdeckel,
@@ -88,3 +90,6 @@ Teil D umgesetzt (12.11.): Gruppe „Endwertung“; Notizfelder (zählen nicht z
 über das Menü jeder Rundenpartie, Siedler mit „Längste Straße“ und „Rittermacht“; eigene Spiele mit Icon (Anfangsbuchstabe),
 Szene, Farbe und Muster wählbar, Spielseite mit Regeln, Bearbeiten und Löschen; „Eigene Vorlage erstellen“ getrennt vom
 „Freien Spiel“, das jetzt eine Einmal-Partie ist (Vorlage nur per Schalter).
+
+## H. Für das Ende vorgemerkt
+- [ ] **Bilder frei wählbar:** Szene und Icon eigener Spiele individuell gestalten (eigene Motive, evtl. Foto), nicht nur Farbe und Muster.

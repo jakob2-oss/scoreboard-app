@@ -15,6 +15,7 @@ const same = (a: TimeFilter, b: TimeFilter) => JSON.stringify(a) === JSON.string
 /** Spielerprofil: Siege, Bilanz, Stärken je Spiel, Direktvergleich, letzte Partien */
 export function Profile() {
   const { profile, players, history, events, templates } = useApp();
+  const [del, setDel] = useState(false);
   if (!profile) return null;
   const me = playerOf(players, profile.id), a = act();
   const mine = filterGames(history, profile.id, 'all', null);
@@ -121,6 +122,13 @@ export function Profile() {
               </div>
             </div>
           </>}
+          {players.some(p => p.id === profile.id) && (
+            <div className="menu-list pf-del">
+              {!del
+                ? <button className="warn" id="player-delete" onClick={() => setDel(true)}>Spieler löschen</button>
+                : <div className="confirm-row"><button className="no" onClick={() => setDel(false)}>Abbrechen</button><button className="yes" id="player-delete-yes" onClick={() => a.deletePlayer(profile.id)}>Wirklich löschen</button></div>}
+            </div>
+          )}
         </div>
       </div>
     </section>

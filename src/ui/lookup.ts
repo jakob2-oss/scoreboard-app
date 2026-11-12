@@ -15,8 +15,11 @@ export function iconFor(key: string, name = ''): { icon: string; tint: string } 
   return { icon: c.icon, tint: c.tint };
 }
 
+/** Gelöschte Spieler, damit ihr Name im Verlauf bleibt (von der App gesetzt) */
+let former: Player[] = [];
+export const registerFormer = (list: Player[]) => { former = list; };
 export const playerOf = (players: Player[], id: string): Pick<Player, 'name' | 'color'> =>
-  players.find(p => p.id === id) ?? { name: 'Unbekannt', color: '#c9c6dc' };
+  players.find(p => p.id === id) ?? former.find(p => p.id === id) ?? { name: 'Unbekannt', color: '#c9c6dc' };
 
 export const dateLong = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
 export const dateShort = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });

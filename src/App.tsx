@@ -10,7 +10,7 @@ import { Profile } from './ui/Profile';
 import { Series } from './ui/Series';
 import { GameScreen } from './ui/Game';
 import { Toast } from './ui/Toast';
-import { registerLooks } from './ui/lookup';
+import { registerFormer, registerLooks } from './ui/lookup';
 
 export default function App() {
   const s = useApp();
@@ -19,7 +19,7 @@ export default function App() {
     // Daten dauerhaft behalten (Safari löscht sonst nach längerer Nichtnutzung)
     navigator.storage?.persist?.().catch(() => undefined);
   }, []);
-  registerLooks(s.templates);
+  registerLooks(s.templates); registerFormer(s.formerPlayers);
   if (!s.ready) return <div className="screen" />;
   return (
     <>

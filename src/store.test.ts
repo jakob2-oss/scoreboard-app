@@ -22,7 +22,8 @@ function memRepo() {
     exportAll: async () => ({ app: 'punktezettel', version: 1, exportedAt: '', tables: {} }), importAll: async () => 0,
     loadEvents: async () => [], loadDeletedTemplateKeys: async () => [], saveEvent: async () => undefined, setGameEvent: async () => undefined, deleteGame: async () => undefined,
     loadTemplates: async () => templates, saveTemplate: async t => { const i = templates.findIndex(x => x.key === t.key); if (i >= 0) templates[i] = t; else templates.push(t); },
-    loadPlayers: async () => players, savePlayer: async p => { players.push(p); },
+    loadPlayers: async () => players.filter(p => !p.deletedAt), savePlayer: async p => { const i = players.findIndex(x => x.id === p.id); if (i >= 0) players[i] = p; else players.push(p); },
+    loadDeletedPlayers: async () => players.filter(p => !!p.deletedAt),
     loadRunningGame: async () => (saved && saved.game.status === 'running' ? saved : null),
     saveGame: async s => { saved = s; saves++; }
   };
@@ -200,6 +201,24 @@ describe('Notizfelder', () => {
   });
 });
 
+describe('Spieler löschen', () => {
+  it('nicht während er mitspielt; danach weg aus Auswahl und Liste, Name bleibt im Verlauf', async () => {
+    const { st, a, mem } = await setup('free', ['Anna', 'Ben']);
+    a.roundGo(); a.add(5); a.next(); a.add(3); a.next();
+    a.deletePlayer('id2');
+    expect(st.get().players).toHaveLength(2);
+    expect(st.get().toast?.text).toBe('Ben spielt gerade mit');
+    a.finishGame();
+    a.deletePlayer('id2');
+    expect(st.get().players.map(p => p.name)).toEqual(['Anna']);
+    expect(st.get().formerPlayers.map(p => p.name)).toEqual(['Ben']);
+    expect(st.get().history[0].results.map(r => r.playerId)).toContain('id2');
+    expect(mem.repo).toBeTruthy();
+    a.pickTemplate(TPL.free);
+    expect(st.get().selected).toEqual(['id1']);
+  });
+});
+
 describe('Laufende Partie beim Neustart', () => {
   it('fragt nach, speichert auf Wunsch und startet dann neu', async () => {
     const { st, a } = await setup('free', ['A', 'B']);
@@ -284,6 +303,21 @@ describe('Freies Spiel', () => {
     expect(mem.templates).toHaveLength(0);
     expect(st.get().history).toHaveLength(1);
     expect(st.get().toast?.text).toBe('Partie gespeichert');
+  });
+  it('Eigene Endwertung: nur das Ergebnis, nach Platz gewertet', async () => {
+    const { st, a, mem } = await fresh();
+    a.openSetup(true, 'result'); a.updateSetup({ name: 'Azul', unit: 'Platz', notes: ['Reihen'] }); a.setupNext();
+    await a.addPlayer('A'); await a.addPlayer('B'); a.start();
+    const r = st.get().game!.game.rules;
+    expect(r).toMatchObject({ win: 'low', end: { type: 'rounds', value: 1 }, params: { resultOnly: true, unit: 'Platz', notes: ['Reihen'] } });
+    expect(r.params?.quick?.[0]).toMatchObject({ label: '1.', op: 'set', v: 1 });
+    a.roundGo(); a.setValue(2); a.next(); a.setValue(1); a.next();
+    expect(ranking(st.get().game!)[0].player.name).toBe('B');
+    a.goHome(); a.editTemplate(mem.templates[0]);
+    expect(st.get().setup).toMatchObject({ mode: 'result', unit: 'Platz' });
+    a.updateSetup({ unit: 'Punkte', win: 'high' }); a.saveSetupHome();
+    expect(st.get().templates[0]).toMatchObject({ win: 'high', params: { resultOnly: true, unit: 'Punkte' } });
+    expect(st.get().templates[0].params?.quick).toBeUndefined();
   });
   it('Eigene Vorlage erstellen speichert sofort, mit Notizfeldern', async () => {
     const { st, a, mem } = await fresh();
