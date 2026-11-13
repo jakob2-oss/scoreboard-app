@@ -165,3 +165,5 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).
 - Kein Untertitel bei Wizard im Block (Runde, Karten und Geber stehen im Block). Bei allen Spielen mit Geber steht
   „… gibt“ nicht mehr im Untertitel, nur noch als Schild über der Spalte.
+- Geber als kleine Karte am Avatar (keine eigene Zeile mehr). Block bei allen Spielen flacher: Kacheln 38 px
+  (mit Zusatzzeile 44 px), kompakter Kopf und Summen.

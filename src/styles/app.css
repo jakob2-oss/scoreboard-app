@@ -512,7 +512,24 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .award b em { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted); }
 .award-who { font-size: 14px; font-weight: 600; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Geber: kleines Schild unter dem Namen in der Spalte */
-.pn .dealer-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: var(--i-coral); border-radius: 999px; padding: 1px 7px; margin-top: 3px; }
+/* Geber: kleine Karte am Avatar, ohne eigene Zeile */
+.grid thead th .pn { position: relative; }
+.pn .dealer-tag { position: absolute; left: calc(50% + 7px); top: 0; width: 11px; height: 15px; border-radius: 3px; background: var(--i-coral);
+  box-shadow: inset 0 0 0 1.5px #fffaf2, 0 2px 4px rgba(0, 0, 0, .25); transform: rotate(14deg); }
+
+/* Block flacher: niedrigere Kacheln, kompakter Kopf und Summen (alle Spiele) */
+table.grid { border-spacing: 5px; }
+.grid thead th { padding: 4px 2px 2px; }
+.grid thead th .pn { gap: 3px; font-size: 12.5px; }
+.grid thead th .pn .av { width: 28px; height: 28px; font-size: 13px; }
+.grid td.cell { height: 38px; border-radius: 12px; font-size: 19px; line-height: 1.05; }
+.grid td.cell:has(small) { height: 44px; }
+.grid td.cell small { font-size: 10.5px; line-height: 1.1; }
+.grid td.cell.empty::after { width: 6px; height: 6px; }
+.grid tfoot .tt { border-radius: 14px; padding: 5px 4px 6px; }
+.grid tfoot .tot { font-size: 22px; line-height: 1.05; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 10px; }
+td.cell.wzc .bidn { font-size: 19px; }
 /* Neuer Rekord auf der Siegerseite: dieselben Karten, mit warmem Akzent */
 .v-records { margin: 4px 0 12px; }
 .v-records .ser-awards { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
