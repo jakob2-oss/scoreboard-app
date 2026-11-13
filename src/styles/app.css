@@ -306,7 +306,10 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 /* ---------- Teams ---------- */
 .team-chip { flex: none; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #2e2b4f; }
 .team-opts { display: flex; flex-direction: column; gap: 6px; }
-.team-opts .text-btn { align-self: flex-start; }
+.team-count { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: var(--r); padding: 8px 10px; box-shadow: var(--soft); }
+.team-count b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.team-count .step { width: 40px; height: 40px; border-radius: 50%; background: var(--fill); font-size: 22px; font-weight: 500; color: var(--text); display: grid; place-items: center; }
+.team-count .step:disabled { opacity: .35; }
 
 /* ---------- Arschloch: Rollen ---------- */
 td.cell.rank { font-family: var(--f-display); font-size: 18px; font-weight: 700; }
@@ -451,7 +454,7 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 @keyframes hb-b { to { transform: translate(-16px, 12px) rotate(-14deg) scale(.94); } }
 @keyframes hb-c { to { transform: translate(40px, 14px) scale(1.2); } }
 .hb-card .wordmark { position: absolute; left: 22px; top: 58px; margin: 0; padding: 0; align-items: flex-start; font-size: 38px; }
-.hb-theme { position: absolute; left: 12px; top: 10px; width: 38px; height: 38px; background: transparent; box-shadow: none; color: var(--muted); }
+.hb-theme { position: absolute; z-index: 2; right: 10px; top: 8px; width: 38px; height: 38px; border-radius: 50%; background: var(--surface); box-shadow: var(--soft); color: var(--muted); }
 .hb-ill { position: absolute; right: -22px; top: 4px; width: 236px; }
 .hb-ill .hero-ill { width: 100%; height: auto; display: block; }
 .hb-ill .hero-blob { display: none; }
@@ -526,9 +529,11 @@ table.grid { border-spacing: 5px; }
 .grid td.cell:has(small) { height: 44px; }
 .grid td.cell small { font-size: 10.5px; line-height: 1.1; }
 .grid td.cell.empty::after { width: 6px; height: 6px; }
-.grid tfoot .tt { border-radius: 14px; padding: 5px 4px 6px; }
-.grid tfoot .tot { font-size: 22px; line-height: 1.05; }
-.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 10px; }
+/* Summen im selben Maß wie die Kacheln darüber */
+.grid tfoot th { font-size: 16px; }
+.grid tfoot .tt { border-radius: 12px; padding: 4px 4px 5px; min-height: 44px; justify-content: center; }
+.grid tfoot .tot { font-size: 19px; line-height: 1.05; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 9.5px; margin-top: 1px; }
 td.cell.wzc .bidn { font-size: 19px; }
 /* Neuer Rekord auf der Siegerseite: dieselben Karten, mit warmem Akzent */
 .v-records { margin: 4px 0 12px; }
@@ -580,3 +585,6 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .wz-sum { display: flex; justify-content: space-between; align-items: center; background: var(--fill); border-radius: 16px; padding: 12px 14px; margin: 6px 0 4px; font-weight: 600; }
 .wz-sum .ok { color: #6fbf73; } .wz-sum .warn { color: #e0a940; }
 .dock .mode-btn { padding: 0 14px; font-size: 15px; }
+/* Spielende: Limit als kurze Zeile „Bei 500 Punkten“ */
+.end-limit { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-weight: 500; color: var(--muted); }
+.end-limit input { width: 96px; flex: none; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }

@@ -143,12 +143,12 @@ Erstellungsmodus, fehlende Bausteine:
 ## L. Großes Feedback vom 13.11. (gegliedert, Reihenfolge = Umsetzung)
 
 ### L1 Allgemein
-- [ ] Startseite: Hell/Dunkel-Schalter nach rechts oben.
-- [ ] Teams: mehr als zwei Teams einstellbar; Teams bei jedem Spiel möglich (auch Kniffel).
-- [ ] Block: Summen und Platzierungen unten auf dieselbe Skala wie die Kacheln.
-- [ ] Spielende: bei allen Spielen „Offen“ als Standard, dazu immer ein freies Limit (Runden oder Punkte) eingebbar.
-- [ ] Untertitel (Runde …) bei allen Spielen entfernen; steht in den Ansichten selbst.
-- [ ] Standard ist überall die eigens gestaltete Eingabe im Block; Einzelerfassung ist die Alternative.
+- [x] Startseite: Hell/Dunkel-Schalter nach rechts oben.
+- [x] Teams: mehr als zwei Teams einstellbar; Teams bei jedem Spiel möglich (auch Kniffel).
+- [x] Block: Summen und Platzierungen unten auf dieselbe Skala wie die Kacheln.
+- [x] Spielende: bei allen Spielen „Offen“ als Standard, dazu immer ein freies Limit (Runden oder Punkte) eingebbar.
+- [x] Untertitel (Runde …) bei allen Spielen entfernen; steht in den Ansichten selbst.
+- [ ] Standard ist überall die eigens gestaltete Eingabe im Block; Einzelerfassung ist die Alternative. (je Spiel in L3 bis L10)
 
 ### L2 Wizard
 - [x] Sehr gut wie es ist. Standard: im Block eintragen, Einzelerfassung als Alternative.

@@ -181,7 +181,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.switch-row >> text=Als Vorlage speichern');   // diesmal als Vorlage speichern
   await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
-  check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');
+  check('kein Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
   await p.click('.dock .primary'); await p.waitForTimeout(500);
   check('eigene Schnelltasten', (await text('.pp-panel .quick')) === '−20 −10 −2 +2 +10 +20');
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+2"');
@@ -209,10 +209,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[data-game="romme"]');
   check('Rommé-Spielseite', await p.isVisible('#s-gamepage .rule-card'));
   await shot('08-romme');
-  await p.click('.seg >> text=Bei 1000');
+  check('Spielende standardmäßig offen', (await p.getAttribute('#end-none', 'aria-pressed')) === 'true');
+  await p.click('#end-target'); await p.fill('#end-value', '1000');
   check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
   await p.click('#quick-start');
-  check('Untertitel mit Ziel 1000, Geber als Schild', (await raw('.top .sub')) === 'Runde 1, Ziel 1000' && await p.isVisible('.dealer-tag'));
+  check('kein Untertitel, Geber als Schild', (await p.locator('#s-game .top .sub').count()) === 0 && await p.isVisible('.dealer-tag'));
   await p.click('.dock .primary'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
@@ -255,7 +256,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   for (const k of ['uno', 'scrabble', 'siedler']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
   await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
   check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
-  check('Monopoly: Untertitel „Endstand“', (await raw('.top .sub')) === 'Endstand');
+  check('Monopoly: kein Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
   await p.click('#round-go'); await p.waitForTimeout(500);
   check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
   await shot('21-monopoly-page');
@@ -346,6 +347,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.fill('#add-name', 'Dora'); await p.press('#add-name', 'Enter');
   await p.click('#team-mode'); await p.waitForTimeout(100);
   check('Teams: zwei Teams vorgeschlagen', (await raw('#start-btn')) === 'Los mit 2 Teams' && (await p.locator('.team-chip').count()) === 4);
+  await p.click('#add-team'); await p.waitForTimeout(100);
+  check('Teams: drittes Team, reihum verteilt', (await raw('#team-n')) === '3 Teams' && (await raw('#start-btn')) === 'Los mit 3 Teams');
+  await p.click('#team-less'); await p.waitForTimeout(100);
+  check('Teams: zurück auf zwei', (await raw('#start-btn')) === 'Los mit 2 Teams' && await p.isDisabled('#team-less'));
   await shot('36a-teams');
   await p.click('#start-btn'); await p.waitForTimeout(300);
   check('Teams: Zettel mit Teamspalten', (await raw('.grid thead')).includes('&'));
@@ -372,7 +377,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Skat: Geber, Alleinspieler, eingepasst, verloren zählt doppelt; Rekorde und neuer Rekord
   await p.click('[data-game="skat"]'); await shot('36g-skat'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && !(await raw('#s-game .sub')).includes('gibt'));
+  check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && (await p.locator('#s-game .top .sub').count()) === 0);
   const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
   await p.click('#round-go'); await p.waitForTimeout(150);
   check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));
@@ -482,7 +487,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Oina no: speichern und gleich noch eine Partie mit denselben Plätzen
   const swimSeats = await seatNames();
   await p.click('#oina-no'); await p.waitForTimeout(400);
-  check('Oina no: neue Partie mit denselben Plätzen', await p.isVisible('.tbl') && (await seatNames()).join() === swimSeats.join() && (await raw('#s-game .sub')) === 'Runde 1' && (await p.locator('.tb-seat.out').count()) === 0);
+  check('Oina no: neue Partie mit denselben Plätzen', await p.isVisible('.tbl') && (await seatNames()).join() === swimSeats.join() && (await raw('.tb-phase >> nth=0')) === 'Runde 1' && (await p.locator('.tb-seat.out').count()) === 0);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   // Die gespeicherte Schwimmen-Partie wieder aus dem Verlauf nehmen, damit Serien- und Duell-Prüfungen gleich bleiben
   await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.click('#hist-delete'); await p.click('#hist-delete-yes'); await p.waitForTimeout(300);
@@ -495,7 +500,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tk-3'); await p.waitForTimeout(150);
   check('Schocken: Spieler hat 3, Mitte 10', (await seat(0).getAttribute('aria-label')).endsWith('3 Deckel') && (await raw('.tb-count')) === '10');
   await seat(1).click(); await p.click('#tk-schock'); await p.waitForTimeout(200);
-  check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('#s-game .sub')) === '2. Hälfte');
+  check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('.tb-phase >> nth=0')) === '2. Hälfte');
   await shot('37f-schocken-tisch');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
@@ -591,7 +596,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-setup [aria-label="Zurück"]');
   check('Eigene Endwertung steht bei den eigenen Spielen', (await raw('#my-games')).includes('Azul'));
   await p.click('.row[data-own] >> text=Azul'); await p.click('#quick-start');
-  check('Partie zeigt Endstand', (await raw('.top .sub')) === 'Endstand');
+  check('Partie ohne Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   // Partie im Verlauf löschen

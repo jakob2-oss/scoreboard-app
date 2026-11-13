@@ -78,7 +78,11 @@ export function PlayerSelect() {
                 <input type="checkbox" id="team-mode" checked={teamMode} onChange={e => act().setTeamMode(e.target.checked)} />
                 <span className="t"><b>In Teams spielen</b></span>
               </label>
-              {teamsOn && teamCount < n && <button className="text-btn" id="add-team" onClick={() => act().addTeam()}>Team hinzufügen</button>}
+              {teamsOn && n > 2 && <div className="team-count">
+                <button className="step" id="team-less" disabled={teamCount <= 2} onClick={() => act().removeTeam()} aria-label="Ein Team weniger">−</button>
+                <b id="team-n">{teamCount} Teams</b>
+                <button className="step" id="add-team" disabled={teamCount >= n} onClick={() => act().addTeam()} aria-label="Ein Team mehr">+</button>
+              </div>}
             </div>
           )}
           {players.length > 0 && (

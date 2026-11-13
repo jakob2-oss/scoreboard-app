@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
-  anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, dealerOf, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
+  currentRoundIndex, bidTurn, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -28,19 +28,6 @@ export function quickKeys(g: GameState): QuickKey[] {
   if (p?.zeroSum && !keys.some(k => k.op === 'rest')) keys = [...keys, { label: 'Ausgleich', op: 'rest', v: 0 }];
   if (p?.keys?.length) keys = [...keys, ...p.keys];
   return keys;
-}
-
-function subtitle(g: GameState): string {
-  const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
-  if (isLives(g)) return `Runde ${tableRounds(g).length + 1}`;
-  if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
-  if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
-  if (isResultOnly(g)) return 'Endstand';
-  // Wizard im Block: Runde, Karten und Geber stehen im Block selbst; der Geber sonst als Schild über seiner Spalte
-  if (isBids(g) && entryMode(g.game.rules.key) === 'block') return '';
-  if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
-  if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
-  return `Runde ${n}`;
 }
 
 export function GameScreen() {
@@ -89,7 +76,7 @@ export function GameScreen() {
     <section className={'screen' + (s.pad ? ' pad-open' : '') + (wizBlock ? ' wz' : '') + (wizBlock && s.bidBar ? ' bidding' : '')} id="s-game" ref={screenRef} style={accentStyle(g.game.rules.key)}>
       <div className="top gutter">
         <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zum Start"><IconBack /></button>
-        <div className="grow"><h2>{g.game.rules.name}</h2>{subtitle(g) && <div className="sub">{subtitle(g)}</div>}</div>
+        <div className="grow"><h2>{g.game.rules.name}</h2></div>
         <button className="text-btn" onClick={() => act().openSheet('result')}>Beenden</button>
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>

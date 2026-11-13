@@ -29,7 +29,7 @@ export const GAMES: GameDef[] = [
   },
   {
     template: {
-      key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'target', value: 500 }, players: { min: 2, max: 6 },
+      key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
       params: { quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
     },
     points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'an der Grenze, wenigste Punkte gewinnen']],
@@ -40,7 +40,7 @@ export const GAMES: GameDef[] = [
   },
   {
     template: {
-      key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'target', value: 100 }, players: { min: 2, max: 8 },
+      key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 8 },
       params: { quick: [{ label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '×2', op: 'mul', v: 2 }] }
     },
     points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
@@ -56,7 +56,7 @@ const place = (n: number) => Array.from({ length: n }, (_, k) => ({ label: `${k 
 
 GAMES.push(
   {
-    template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'target', value: 500 }, players: { min: 2, max: 8 },
+    template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 8 },
       params: { winnerOnly: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
     points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
@@ -131,7 +131,7 @@ GAMES.push(
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },
   {
-    template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'target', value: 1000 }, players: { min: 3, max: 4 },
+    template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
       params: { split: [
         { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
         { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('Abgehen', -1), times('Verfehlt', -2)] }] } },
@@ -165,7 +165,7 @@ GAMES.push({
 
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
 GAMES.push({
-  template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 36 }, players: { min: 3, max: 4 },
+  template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
     params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true,
       quick: [{ label: 'Null 23', op: 'set', v: 23 }, { label: 'Null Hand 35', op: 'set', v: 35 }, { label: 'Null ouvert 46', op: 'set', v: 46 }, times('Verloren', -2)] } },
   points: [['Reizen', 'wer am höchsten reizt, spielt allein'], ['Spielwert', 'Grundwert mal Spitzen und Stufen'], ['Grundwerte', 'Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24'],

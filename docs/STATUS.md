@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gemergt)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; Paket 1 Allgemein fertig)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

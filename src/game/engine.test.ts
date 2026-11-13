@@ -222,7 +222,7 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
   it('alle neuen Spiele sind definiert', () => {
     for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
     expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
-    expect(gameDef('binokel')!.template.end).toEqual({ type: 'target', value: 1000 });
+    expect(gameDef('binokel')!.template.end).toEqual({ type: 'none' });
   });
 });
 

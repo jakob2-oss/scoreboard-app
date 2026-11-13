@@ -99,7 +99,8 @@ export const browserPrefs: Prefs = {
 };
 
 /** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
-export const canTeam = (t: Template) => t.scoring === 'rounds' && !t.params?.phases;
+/** Teams gehen bei jedem Spiel: ein Team sitzt am Tisch wie ein Spieler */
+export const canTeam = (_t: Template) => true;
 
 export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs = browserPrefs) {
   const readLast = prefs.getLast, writeLast = prefs.setLast;
@@ -289,7 +290,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Spieler ins nächste Team schieben */
     cycleTeam(id: string) { set({ teamOf: { ...state.teamOf, [id]: ((state.teamOf[id] ?? 0) + 1) % state.teamCount } }); },
-    addTeam() { if (state.teamCount < Math.max(2, state.selected.length)) set({ teamCount: state.teamCount + 1 }); },
+    /** Team dazu oder weg; die Spieler werden reihum neu verteilt */
+    setTeamCount(k: number) {
+      const count = Math.max(2, Math.min(k, Math.max(2, state.selected.length)));
+      set({ teamCount: count, teamOf: Object.fromEntries(state.selected.map((id, i) => [id, i % count])) });
+    },
+    addTeam() { actions.setTeamCount(state.teamCount + 1); },
+    removeTeam() { actions.setTeamCount(state.teamCount - 1); },
     /** Reihenfolge am Tisch ändern (Drag-and-drop) */
     moveSelected(from: number, to: number) {
       const sel = [...state.selected];
@@ -299,7 +306,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     toggleSelect(id: string) {
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
-      set({ selected: sel, teamOf: state.teamMode && !state.teamOf[id] && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
+      set({ selected: sel, teamOf: state.teamMode && state.teamOf[id] === undefined && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
     },
     async addPlayer(rawName: string) {
       const name = rawName.trim().slice(0, 18);

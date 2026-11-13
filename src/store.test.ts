@@ -294,6 +294,19 @@ describe('Teams', () => {
     a.cycleTeam('id2'); a.addTeam(); a.start();
     expect(seated(st.get().game!).map(p => p.name)).toEqual(['A', 'B']);
   });
+  it('mehr als zwei Teams und bei jedem Spiel, auch Kniffel', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'kniffel')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D', 'E', 'F']) await a.addPlayer(n);
+    a.setTeamMode(true); a.addTeam();
+    expect(st.get().teamCount).toBe(3);
+    expect(Object.values(st.get().teamOf)).toEqual([0, 1, 2, 0, 1, 2]);
+    a.removeTeam(); a.removeTeam();
+    expect(st.get().teamCount).toBe(2);
+    a.addTeam(); a.start();
+    expect(seated(st.get().game!).map(p => p.name)).toEqual(['A & D', 'B & E', 'C & F']);
+    expect(st.get().game!.game.rules.scoring).toBe('categories');
+  });
 });
 
 describe('Spieler löschen', () => {
@@ -494,7 +507,7 @@ describe('Feste Spiele', () => {
     expect(st.get().page).toBe(-1);
     a.finishGame();
     expect(mem.templates).toHaveLength(0);
-    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'target', value: 500 });
+    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'none' });
   });
   it('startet direkt mit den letzten Spielern', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
@@ -558,9 +571,9 @@ describe('Wizard', () => {
 });
 
 describe('Weitere Spiele', () => {
-  async function play(key: string, names = ['A', 'B', 'C']) {
+  async function play(key: string, names = ['A', 'B', 'C'], end?: Template['end']) {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
-    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); a.toPlayers();
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); if (end) a.setTemplateEnd(end); a.toPlayers();
     for (const n of names) await a.addPlayer(n);
     a.start();
     return { st, a };
@@ -605,7 +618,7 @@ describe('Weitere Spiele', () => {
     expect(ranking(st.get().game!)[0].player.name).toBe('A');
   });
   it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
-    const u = await play('uno', ['A', 'B']);
+    const u = await play('uno', ['A', 'B'], { type: 'target', value: 500 });
     u.a.roundGo();
     expect(u.st.get().sheet).toBe('winner');
     u.a.pickWinner('id1');

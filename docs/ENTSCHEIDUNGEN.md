@@ -169,3 +169,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   (mit Zusatzzeile 44 px), kompakter Kopf und Summen.
 - Manuelle Eingabe jederzeit mit einem Tipp: „Manuell“ in der unteren Leiste, in der Ansage-Leiste und im Stiche-Blatt;
   zurück mit „Im Block“. Es geht direkt dort weiter, wo man gerade ist.
+
+## 13.11.2026: Allgemeines aus dem großen Feedback (Paket 1)
+- Kein Untertitel mehr in der Partie, bei keinem Spiel. Runde, Hälfte und Zug stehen in den Ansichten selbst.
+- Spielende: „Offen“ ist bei allen festen Spielen Standard (auch Rommé, Skyjo, Uno, Binokel, Skat). Auf der
+  Spielseite „Offen / Runden / Punkte“, das Limit frei eintragbar („Bei 500 Punkten“). Vorschlagswerte aus den
+  bekannten Varianten des Spiels. Arschloch nur Runden; Wizard, Kniffel, Phase 10, Tischspiele und Ergebnisspiele
+  ohne Wahl. Eigene Spiele: dieselbe Reihenfolge „Offen / Runden / Punkte“.
+- Teams bei jedem Spiel. Anzahl der Teams mit − und +; die Spieler werden dabei reihum neu verteilt
+  (bei 6 Spielern und 3 Teams: 1, 2, 3, 1, 2, 3), einzelne Spieler wechseln wie bisher per Team-Knopf.
+- Summen unten im selben Maß wie die Kacheln (44 px hoch, Zahl 19 px, Rundung 12 px).
+- Hell/Dunkel-Schalter oben rechts im Banner, als kleiner runder Knopf.
