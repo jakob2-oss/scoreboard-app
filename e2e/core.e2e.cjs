@@ -212,7 +212,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.seg >> text=Bei 1000');
   check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
   await p.click('#quick-start');
-  check('Untertitel mit Ziel 1000 und Geber', (await raw('.top .sub')).startsWith('Runde 1, Ziel 1000, ') && (await raw('.top .sub')).endsWith(' gibt'));
+  check('Untertitel mit Ziel 1000, Geber als Schild', (await raw('.top .sub')) === 'Runde 1, Ziel 1000' && await p.isVisible('.dealer-tag'));
   await p.click('.dock .primary'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
@@ -224,7 +224,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt; einfache Eingabe im Menü
   await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
-  check('Wizard: 20 Runden bei 3 Spielern', (await p.locator('tbody tr').count()) === 20);
+  check('Wizard: 20 Runden bei 3 Spielern, ohne Untertitel', (await p.locator('tbody tr').count()) === 20 && !(await p.isVisible('#s-game .top .sub')));
   check('Wizard: kleines Kartensymbol mit 1, Knopf „Ansagen Runde 1“', (await raw('.wz-mini b')) === '1' && (await raw('#round-go')).startsWith('Ansagen Runde 1'));
   await p.click('#round-go'); await p.waitForTimeout(200);
   check('Wizard: Ben sagt zuerst an, im Block', (await raw('.wz-who b')) === 'Ben sagt an' && await p.isVisible('td.cell.wzc.turn'));
@@ -369,7 +369,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Skat: Geber, Alleinspieler, eingepasst, verloren zählt doppelt; Rekorde und neuer Rekord
   await p.click('[data-game="skat"]'); await shot('36g-skat'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  check('Skat: Geber über der Spalte und im Untertitel', await p.isVisible('.dealer-tag') && (await raw('#s-game .sub')).includes('gibt'));
+  check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && !(await raw('#s-game .sub')).includes('gibt'));
   const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
   await p.click('#round-go'); await p.waitForTimeout(150);
   check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));

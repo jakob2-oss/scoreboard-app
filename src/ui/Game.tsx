@@ -36,11 +36,9 @@ function subtitle(g: GameState): string {
   if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
   if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
-  // Geber: steht im Untertitel und über seiner Spalte
-  const d = dealerOf(g), gives = d ? `, ${d.name} gibt` : '';
-  if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}${gives}`;
-  if (end.type === 'rounds') return `Runde ${n} von ${end.value}${gives}`;
-  if (d) return end.type === 'target' ? `Runde ${n}, Ziel ${end.value}${gives}` : `Runde ${n}${gives}`;
+  // Wizard im Block: Runde, Karten und Geber stehen im Block selbst; der Geber sonst als Schild über seiner Spalte
+  if (isBids(g) && entryMode(g.game.rules.key) === 'block') return '';
+  if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
   if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
   return `Runde ${n}`;
 }
@@ -91,7 +89,7 @@ export function GameScreen() {
     <section className={'screen' + (s.pad ? ' pad-open' : '') + (wizBlock ? ' wz' : '') + (wizBlock && s.bidBar ? ' bidding' : '')} id="s-game" ref={screenRef} style={accentStyle(g.game.rules.key)}>
       <div className="top gutter">
         <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zum Start"><IconBack /></button>
-        <div className="grow"><h2>{g.game.rules.name}</h2><div className="sub">{subtitle(g)}</div></div>
+        <div className="grow"><h2>{g.game.rules.name}</h2>{subtitle(g) && <div className="sub">{subtitle(g)}</div>}</div>
         <button className="text-btn" onClick={() => act().openSheet('result')}>Beenden</button>
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>

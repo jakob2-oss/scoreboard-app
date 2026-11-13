@@ -163,3 +163,5 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Zellen: Punkte groß, darunter Treffer-Punkt und „2 von 2“ bzw. „3 statt 0“.
 - Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.
 - Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).
+- Kein Untertitel bei Wizard im Block (Runde, Karten und Geber stehen im Block). Bei allen Spielen mit Geber steht
+  „… gibt“ nicht mehr im Untertitel, nur noch als Schild über der Spalte.
