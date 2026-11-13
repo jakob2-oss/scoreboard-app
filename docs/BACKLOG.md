@@ -139,3 +139,80 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Eigener Reiter „Serien“, Serie starten und beenden, laufende Serie auf der Startseite und beim Speichern vorgewählt.
 - [x] Abschlussseite mit Otter, Gesamtsieger und Auszeichnungen.
 - [ ] Ideen: Serien-Statistik im Profil (Seriensiege), Teilen der Abschlussseite als Bild, Serie mit festen Spielern.
+
+## L. Großes Feedback vom 13.11. (gegliedert, Reihenfolge = Umsetzung)
+
+### L1 Allgemein
+- [ ] Startseite: Hell/Dunkel-Schalter nach rechts oben.
+- [ ] Teams: mehr als zwei Teams einstellbar; Teams bei jedem Spiel möglich (auch Kniffel).
+- [ ] Block: Summen und Platzierungen unten auf dieselbe Skala wie die Kacheln.
+- [ ] Spielende: bei allen Spielen „Offen“ als Standard, dazu immer ein freies Limit (Runden oder Punkte) eingebbar.
+- [ ] Untertitel (Runde …) bei allen Spielen entfernen; steht in den Ansichten selbst.
+- [ ] Standard ist überall die eigens gestaltete Eingabe im Block; Einzelerfassung ist die Alternative.
+
+### L2 Wizard
+- [x] Sehr gut wie es ist. Standard: im Block eintragen, Einzelerfassung als Alternative.
+
+### L3 Rommé
+- [ ] Die Ansage-Logik aus Wizard gehört hier nicht hin.
+- [ ] Standard: großer Block mit direkter Eingabe; Einzelseiten zeigen eine Kurve mit dem Punkteverlauf.
+- [ ] Runden mit 0 im Block mit kleiner Krone (Rundensieg).
+- [ ] Siegerseite: statt „Beste Runde“ „Dickste Packung“ (meiste Punkte in einer Runde) und „Meiste Siege“.
+- [ ] Rekorde: niedrigster Schnitt statt Gesamtpunkte (ab 7 Runden), Größter Vorsprung, Längste Partie, Höchste Siegquote (ab 7 Runden).
+- [ ] Wird eher auf Runden gespielt: wenigste Punkte nach den Runden gewinnt (über freies Limit Runden).
+
+### L4 Uno
+- [ ] Klären: Bekommt wirklich nur, wer fertig ist, Punkte? (Ja, Standardregel: der Sieger bekommt die Kartenwerte der anderen.)
+- [ ] Eintragen direkt im Block, ohne Einzelseiten.
+- [ ] Geber rotiert.
+
+### L5 Phase 10
+- [ ] Phase im Block abhaken.
+- [ ] Geschaffte Phasen grün, gescheiterte rot; Hintergrund je Phase leicht im Regenbogenverlauf.
+- [ ] Geber rotiert.
+
+### L6 Binokel
+- [ ] Geber rotiert.
+- [ ] Eingabe: Meldung, dann Stiche; einfache Korrektur bei Abgehen.
+- [ ] Optional das Gebot erfassen; daraus Vorschlag für Abgehen (einfach negativ) und Verfehlt (doppelt negativ). Punkte tragen die Spieler selbst ein.
+- [ ] Markierungen im Block: abgegangen (einfach), verfehlt (doppelt); geht niemand ab, Spieler mit den meisten Punkten grün.
+- [ ] Kleines Logo oben links: die beiden Karten, die zusammen „Binokel“ ergeben (wenig Platz).
+
+### L7 Arschloch
+- [ ] Im Block Präsident (Krone) und Arschloch (passendes Icon) kennzeichnen.
+- [ ] Das Arschloch der letzten Runde gibt in der aktuellen Runde.
+- [ ] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
+
+### L8 Schwimmen
+- [ ] Zusätzliche Einstellung: Anzahl Personen, die schwimmen (klären).
+
+### L9 Kniffel
+- [ ] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
+- [ ] Gestrichenes ausgrauen.
+- [ ] Summe unten gesondert.
+- [ ] Feld mit dem Summenzeichen bündig zu den Kategorien.
+- [ ] Bonus: anzeigen, wie viele bis 63 fehlen, abgegrenzt, ohne Text.
+
+### L10 Ergebnisspiele (Siedler, Monopoly, eigene „nur am Ende“)
+- [ ] Kein Zettel: eine Eingabe, daraus direkt Podest und Rangliste, darunter Statistik und Rekorde.
+- [ ] Siedler: Notizfelder Längste Straße und Rittermacht entfallen; Seite und Siegerseite kreativer.
+- [ ] Monopoly: dasselbe, eigenes Artwork.
+- [ ] Eigene Ergebnisspiele: freies Artwork, für alle Spiele möglichst einfach.
+- [ ] Fehler: Siedler-Seite hing nach der Partie.
+
+### L11 Freie Erstellung, Chic
+- [ ] Zwei Knöpfe: Person chict sich raus (scheidet aus, keine Gewinnerin) und Person verliert direkt (raus, Runde läuft weiter).
+- [ ] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
+
+### L12 Serien
+- [ ] Banner oben: zuerst 5 Platzhalter (Optik der App, frecher und verrückter, mit atzigem Otter); später eigene Bilder.
+- [ ] Teilnehmer oben auflisten.
+- [ ] Partien der Serie öffnen (Detailansicht).
+- [ ] Siegerbild der Serie anders als bei einer Partie, weiter unten unter dem Banner.
+- [ ] Serienliste: einige Teilnehmer und das Banner als Icon.
+
+### L13 Getrennt besprechen
+- [ ] Skyjo, Schafkopf, Doppelkopf, Scrabble (Eintragen auf der Hauptseite; was unterscheidet sie vom bloßen Aufschreiben?).
+
+### L14 Idee: Strichliste zwischen Personen
+- [ ] Gemeinsame Strichliste (z. B. Wettpunkte) in beide Richtungen, Strichlisten-Look, Notiz je Strich. Konzept: wo integrieren, wie weiterdenken.
