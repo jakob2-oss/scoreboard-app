@@ -166,8 +166,11 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   const turnId = bar ? bidTurn(g, bar) : null;
   useEffect(() => {
     if (!bar) return;
-    const cell = tableRef.current?.querySelector<HTMLElement>('td.cell.turn');
-    cell?.scrollIntoView({ block: 'center' });
+    // Nur den Block senkrecht scrollen (scrollIntoView würde auch die Seiten zum Wischen verschieben)
+    const cell = tableRef.current?.querySelector<HTMLElement>('td.cell.turn'), box = tableRef.current?.closest<HTMLElement>('.ov-scroll');
+    if (!cell || !box) return;
+    const c = cell.getBoundingClientRect(), bx = box.getBoundingClientRect();
+    box.scrollTop += c.top - bx.top - (bx.height - c.height) / 2;
   }, [bar, turnId]);
   return (
     <>
