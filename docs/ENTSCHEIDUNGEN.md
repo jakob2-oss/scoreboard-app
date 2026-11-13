@@ -144,3 +144,10 @@ erstellen“; ob jede Runde oder nur am Ende gezählt wird, wählt man im Erstel
   Uno-Tisch“, ab zehn Siegen „Legende“; „Uno-Pechvogel“, „Lehrgeld bei Rommé“), je Spieler und Spiel fest gewählt,
   damit ein Titel nicht springt. Dazu besondere Titel aus Spielwerten: Kniffel-Jäger, Dauerpräsident, Hellseher
   (Wizard-Ansagen), Dauerschwimmer, Schock-Magnet, Stammgast. Nur bei mindestens drei Partien eines Spiels.
+
+## 13.11.2026: Ausführliche Eingabe immer zusätzlich zur einfachen
+Wo ein Spiel eine eigene, ausführlichere Oberfläche bekommt (z. B. Schafkopf, Doppelkopf, Skat als Spiel-Eingabe,
+Rommé als Wettlauf), bleibt die einfache Eingabe (Punkte je Spieler und Runde) wählbar: auf der Spielseite vor dem
+Start und während der Partie im Menü, gemerkt je Spiel. Beide schreiben dieselben Punkte je Runde; die ausführliche
+legt zusätzlich die Angaben zum Spiel ab (Spielart, Partner …). So lässt sich mitten in der Partie wechseln, und
+Statistik, Rekorde und Verlauf bleiben gleich.
