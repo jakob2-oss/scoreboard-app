@@ -167,7 +167,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   useEffect(() => {
     if (!bar) return;
     const cell = tableRef.current?.querySelector<HTMLElement>('td.cell.turn');
-    cell?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    cell?.scrollIntoView({ block: 'center' });
   }, [bar, turnId]);
   return (
     <>
