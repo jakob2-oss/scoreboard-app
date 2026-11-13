@@ -443,6 +443,13 @@ export function nextStep(s: GameState): NextStep {
   return { kind: 'result' };
 }
 
+/** Wizard: wer als Nächstes ansagt (Reihenfolge ab links vom Geber); null, wenn alle angesagt haben */
+export function bidTurn(s: GameState, roundId: string): string | null {
+  const players = seated(s);
+  const k = inputOrder(s, roundId).find(i => fieldOf(s, roundId, players[i].id, 'bid') === null);
+  return k === undefined ? null : players[k].id;
+}
+
 /** Zweiteilige Runde: erst alle das erste Feld (Ansagen, Meldungen), dann alle das zweite */
 export function bidPhase(s: GameState, roundId: RoundRef): BidField {
   const [a, b] = fieldsOf(s) ?? WIZARD_FIELDS;

@@ -151,3 +151,15 @@ Rommé als Wettlauf), bleibt die einfache Eingabe (Punkte je Spieler und Runde) 
 Start und während der Partie im Menü, gemerkt je Spiel. Beide schreiben dieselben Punkte je Runde; die ausführliche
 legt zusätzlich die Angaben zum Spiel ab (Spielart, Partner …). So lässt sich mitten in der Partie wechseln, und
 Statistik, Rekorde und Verlauf bleiben gleich.
+
+## 13.11.2026: Wizard eigens gestaltet (Spiel 1 der Einzelrunde)
+- Der große Block bleibt das Herzstück. Ansagen werden direkt im Block eingetragen: unten eine Leiste „Ben sagt an“
+  mit 0 bis Kartenzahl, die Zahl steht sofort in seiner Zelle, dann ist der Nächste dran (ab links vom Geber).
+  „Zurück zu …“ nimmt die letzte Ansage zurück. Während der Ansagen rückt die laufende Runde ins Bild.
+- Stiche auf eigenem Blatt: alle Spieler untereinander, Ansage als Rahmen, Punkte sofort; oben die Karten der Runde,
+  jede in der Farbe dessen, der den Stich geholt hat. „Runde eintragen“ erst, wenn die Stiche aufgehen.
+- Über dem Block ein Fächer mit den Karten der Runde (wächst jede Runde, ab zehn Karten enger). Kein Trumpf
+  (liegt im Spiel selbst).
+- Zellen: Punkte groß, darunter Treffer-Punkt und „2 von 2“ bzw. „3 statt 0“.
+- Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.
+- Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).

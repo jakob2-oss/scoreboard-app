@@ -222,21 +222,30 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row[data-own]').count()) === 2);
   await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
 
-  // Wizard: Ansagen, zurück zum Überblick, Stiche
+  // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt; einfache Eingabe im Menü
   await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
   check('Wizard: 20 Runden bei 3 Spielern', (await p.locator('tbody tr').count()) === 20);
-  check('Wizard: Knopf „Ansagen Runde 1“', (await raw('#round-go')).startsWith('Ansagen Runde 1'));
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  check('Wizard: Ben sagt zuerst an', (await page()) === 1);
-  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
-  check('Wizard: nach Ansagen im Überblick', (await page()) === -1 && (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  check('Wizard: Fächer mit einer Karte, Knopf „Ansagen Runde 1“', (await p.locator('.wz-hero .wz-card').count()) === 1 && (await raw('#round-go')).startsWith('Ansagen Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(200);
+  check('Wizard: Ben sagt zuerst an, im Block', (await raw('.wz-who b')) === 'Ben sagt an' && await p.isVisible('td.cell.wzc.turn'));
+  await p.click('#bid-1'); await p.waitForTimeout(100);
+  check('Wizard: Ansage steht sofort im Block, Clara ist dran', (await raw('tbody tr:nth-child(1) td:nth-child(3)')).trim() === '1' && (await raw('.wz-who b')) === 'Clara sagt an');
   await shot('12-wizard-bids');
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  await shot('13-wizard-page');
-  for (const v of ['1', '0', '0']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.waitForTimeout(500); }
-  check('Wizard: Punkte 20, 30, 20', (await text('tbody tr:nth-child(1)')).replace(/ /g, '') === '1+200/0+301/1+200/0', await text('tbody tr:nth-child(1)'));
-  check('Wizard: weiter mit Ansagen Runde 2', (await raw('#round-go')).startsWith('Ansagen Runde 2'));
+  await p.click('#bid-0'); await p.click('#bid-0'); await p.waitForTimeout(200);
+  check('Wizard: nach Ansagen weiter mit Stichen', !(await p.isVisible('.wz-bar')) && (await raw('#round-go')).startsWith('Stiche Runde 1'));
+  await p.click('#round-go'); await p.waitForTimeout(200);
+  check('Wizard: Stiche-Blatt, Knopf erst wenn es aufgeht', await p.isVisible('.wz-tricks') && await p.isDisabled('#tricks-go'));
+  await p.click('.wz-row >> nth=0 >> button >> text="1"'); await p.click('.wz-row >> nth=1 >> button >> text="0"'); await p.click('.wz-row >> nth=2 >> button >> text="0"');
+  await shot('13-wizard-tricks');
+  await p.click('#tricks-go'); await p.waitForTimeout(200);
+  const r1 = (await text('tbody tr:nth-child(1)')).replace(/\s+/g, ' ');
+  check('Wizard: Punkte 20, 30, 20 mit Treffern', r1.includes('+20') && r1.includes('+30') && r1.includes('1 von 1'), r1);
+  check('Wizard: weiter mit Ansagen Runde 2, Fächer mit zwei Karten', (await raw('#round-go')).startsWith('Ansagen Runde 2') && (await p.locator('.wz-hero .wz-card').count()) === 2);
   await shot('14-wizard-ov');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.waitForTimeout(400);
+  check('Wizard: einfache Eingabe pro Spieler wählbar', (await page()) >= 0 && await p.isVisible('.pp-keys'));
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(200);
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
 
   // Nur Ergebnis: Monopoly mit Platzierung

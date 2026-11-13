@@ -1,13 +1,14 @@
 import { useSyncExternalStore } from 'react';
 import type { Category, GameEvent, Player, Result, Template } from './model/types';
 import { haptic } from './lib/device';
+import { entryMode, setEntryMode, type EntryMode } from './lib/modes';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, playedRounds, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -36,12 +37,14 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
   /** Rang-Spiele: Runde, die gerade verteilt wird */
   rankRef: RoundRef | null;
+  /** Wizard im Block: Runde, deren Ansagen gerade unten in der Leiste eingetragen werden */
+  bidBar: string | null;
   toast: { text: string; n: number } | null;
   history: HistGame[];
   profile: ProfileView | null;
@@ -76,20 +79,23 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false, favs: [],
+  tokenTo: null, fireMode: false, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
 };
 
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
-export interface Prefs { getLast(): string[]; setLast(ids: string[]): void; getFavs?(): string[]; setFavs?(keys: string[]): void }
+export interface Prefs { getLast(): string[]; setLast(ids: string[]): void; getFavs?(): string[]; setFavs?(keys: string[]): void;
+  /** Eingabe je Spiel; ohne: einfache Eingabe */
+  getMode?(key: string): EntryMode; setMode?(key: string, mode: EntryMode): void }
 const LAST_KEY = 'pz:lastPlayers';
 export const browserPrefs: Prefs = {
   getLast: () => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '[]'); } catch { return []; } },
   setLast: ids => { try { localStorage.setItem(LAST_KEY, JSON.stringify(ids)); } catch { /* privater Modus */ } },
   getFavs: () => { try { return JSON.parse(localStorage.getItem('pz:favs') || '[]'); } catch { return []; } },
-  setFavs: keys => { try { localStorage.setItem('pz:favs', JSON.stringify(keys)); } catch { /* privater Modus */ } }
+  setFavs: keys => { try { localStorage.setItem('pz:favs', JSON.stringify(keys)); } catch { /* privater Modus */ } },
+  getMode: entryMode, setMode: setEntryMode
 };
 
 /** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
@@ -97,6 +103,7 @@ export const canTeam = (t: Template) => t.scoring === 'rounds' && !t.params?.pha
 
 export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs = browserPrefs) {
   const readLast = prefs.getLast, writeLast = prefs.setLast;
+  const modeOf = (key: string): EntryMode => prefs.getMode?.(key) ?? 'simple';
   let state = initial;
   const listeners = new Set<() => void>();
   const set = (patch: Partial<AppState>) => { state = { ...state, ...patch }; listeners.forEach(l => l()); };
@@ -489,7 +496,48 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (step.kind === 'result') { set({ sheet: 'result' }); return; }
       if (isRanks(g)) { actions.openRanks(step.ref); return; }
       if (g.game.rules.params?.winnerOnly) { set({ sheet: 'winner', rankRef: step.ref, pad: false, edit: null }); return; }
+      // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt
+      if (isBids(g) && modeOf(g.game.rules.key) === 'block' && step.ref !== 'new') {
+        if (step.field === 'bid') set({ bidBar: step.ref, page: -1, pad: false, edit: null });
+        else set({ sheet: 'tricks', rankRef: step.ref, bidBar: null, page: -1, pad: false, edit: null });
+        return;
+      }
       actions.goPage(step.playerIndex, step.ref, step.field);
+    },
+    // ---------- Wizard im Block
+    /** Ansage für den, der dran ist (oder den angetippten); dann weiter zum Nächsten */
+    bidPick(n: number, playerId?: string) {
+      const g = state.game, ref = state.bidBar; if (!g || !ref) return;
+      const who = playerId ?? bidTurn(g, ref); if (!who) return;
+      haptic('tap');
+      const ng = setField(g, ref, who, 'bid', n, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      if (!bidTurn(ng, ref)) { set({ bidBar: null }); toast('Ansagen komplett'); }
+    },
+    /** Letzte Ansage zurücknehmen (der Spieler ist dann wieder dran) */
+    bidBack() {
+      const g = state.game, ref = state.bidBar; if (!g || !ref) return;
+      const players = seated(g), order = inputOrder(g, ref).map(k => players[k].id);
+      const done = order.filter(id => fieldOf(g, ref, id, 'bid') !== null);
+      const last = done[done.length - 1]; if (!last) { set({ bidBar: null }); return; }
+      const ng = setField(g, ref, last, 'bid', null, clock);
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
+    closeBidBar() { set({ bidBar: null }); },
+    /** Stiche aller auf einmal eintragen */
+    tricksCommit(ref: string, tricks: Record<string, number>) {
+      const g = state.game; if (!g) return;
+      let ng = g;
+      for (const p of seated(g)) if (tricks[p.id] !== undefined) ng = setField(ng, ref, p.id, 'tricks', tricks[p.id], clock);
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
+      toast(`Runde ${roundNumber(ng, ref)} eingetragen`);
+    },
+    /** Eingabe je Spiel: ausführlich im Block oder einfach pro Spieler (gemerkt je Spiel) */
+    setEntryMode(key: string, mode: EntryMode) {
+      prefs.setMode?.(key, mode);
+      set({ bidBar: null, sheet: null });
+      toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen pro Spieler');
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
     next() {
