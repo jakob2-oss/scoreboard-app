@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from 'react';
 import type { Category, GameEvent, Player, Result, Template } from './model/types';
+import { haptic } from './lib/device';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, playedRounds, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -360,6 +361,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Spieler in der Reihenfolge des Fertigwerdens antippen; erneutes Antippen nimmt ihn (und alle danach) heraus.
      *  Wer als Letzter übrig bleibt, wird automatisch eingetragen. */
     rankTap(playerId: string) {
+      haptic('tap');
       const g = state.game, ref = state.rankRef; if (!g || !ref) return;
       const players = seated(g);
       const cur = ref === 'new' ? [] : players.filter(p => rankIn(g, ref, p.id) !== null).sort((a, b) => rankIn(g, ref, a.id)! - rankIn(g, ref, b.id)!).map(p => p.id);
@@ -372,6 +374,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Nur der Sieger zählt (Uno): alle anderen bekommen 0, dann Punkte des Siegers eingeben */
     pickWinner(playerId: string) {
+      haptic('tap');
       const g = state.game, ref = state.rankRef; if (!g || !ref) return;
       let ng = g, id: RoundRef = ref;
       for (const p of seated(g)) {
@@ -382,6 +385,15 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       persist(ng);
       actions.goPage(seated(ng).findIndex(p => p.id === playerId), id);
       set({ fromOverview: true });
+    },
+    /** Skat: alle haben gepasst, die Runde zählt für niemanden */
+    passRound() {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      haptic('tap');
+      let ng = g, id: RoundRef = ref;
+      for (const p of seated(g)) { const r = setScore(ng, id, p.id, 0, clock); ng = r.state; id = r.roundId ?? id; }
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
+      toast(`Runde ${roundNumber(ng, id)} eingepasst`);
     },
     rankReset() {
       const g = state.game, ref = state.rankRef; if (!g || !ref || ref === 'new') return;
@@ -397,6 +409,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     // ---------- Tisch-Modus
     /** Schwimmen: Antippen kostet ein Leben; im Feuer-Modus verlieren alle anderen eins */
     tableTap(playerId: string) {
+      haptic('tap');
       const g = state.game; if (!g || !isTable(g)) return;
       if (!isLives(g)) {
         const t = tokenState(g);
@@ -425,6 +438,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (ng === g) return;
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
       const after = tokenState(ng), players = seated(ng);
+      haptic(after.half > before.half ? 'success' : 'tap');
       // Wer hat die Hälfte verloren (bei Chic nicht unbedingt der Angetippte)
       const p = players.find(x => after.halves[x.id] > before.halves[x.id]);
       if (p && !after.loser) { toast(halfLabel(after.need, after.half) === 'Finale' ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`); return; }
@@ -448,6 +462,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Phase 10: Haken „Phase geschafft“ umschalten */
     togglePhase() {
+      haptic('tap');
       const g = state.game, e = state.edit; if (!g || !e) return;
       const on = !(e.ref !== 'new' && phaseIn(g, e.ref, e.playerId));
       const r = setPhase(g, e.ref, e.playerId, on, clock);
@@ -478,6 +493,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
     next() {
+      haptic('tap');
       // Zweiteilige Runde: leere Meldung zählt als 0
       const e0 = state.edit, g0 = state.game;
       if (g0 && e0 && isSplit(g0) && e0.field === fieldsOf(g0)![0].key && numOf(e0.buf) === null) writeBuf({ ...e0, buf: '0', fresh: true });
@@ -571,6 +587,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Beenden und speichern: Platz und Endpunktzahl je Spieler landen im Verlauf. */
     finishGame(eventId: string | null = null) {
       const g = state.game; if (!g) return;
+      haptic('success');
       const f0 = finish(g, clock);
       const ev = eventId ? state.events.find(e => e.id === eventId) : undefined;
       const f = ev ? { ...f0, game: { ...f0.game, eventId: ev.id } } : f0;
@@ -578,6 +595,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const t = clock.now(), rk = ranking(f);
       if (anyScore(f)) {
         // Teampartie: jedes Mitglied bekommt Platz, Punkte und Kennzahlen seines Teams
+        const rn = playedRounds(f);
         const results: Result[] = rk.flatMap(x => {
           let extra: Result['extra'];
           if (isCats(f)) {
@@ -605,6 +623,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
             extra = { ...extra, rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
           }
+          // Rundenzahl für Rekorde (längste Partie); bei reinen Endwertungen ohne Bedeutung
+          if (rn) extra = { ...extra, rn };
           return membersOf(f, x.player.id).map(pid => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: pid, total: x.total, place: x.place, ...(extra ? { extra: { ...extra, ...(isTeamGame(f) ? { team: 1 } : {}) } } : isTeamGame(f) ? { extra: { team: 1 } } : {}) }));
         });
         repo.saveResults(results).catch(() => toast('Speichern auf dem Gerät nicht möglich'));

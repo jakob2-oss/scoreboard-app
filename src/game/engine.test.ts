@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf
 } from './engine';
 import { gameDef } from './games';
 
@@ -323,5 +323,14 @@ describe('Tisch-Modus', () => {
     expect(t.loser).toBe('p1');
     expect(endState(s)?.done).toBe(true);
     expect(ranking(s)[3].player.name).toBe('B');
+  });
+  it('Geber rotiert reihum, Wizard immer, Rommé mit params.dealer', () => {
+    const c = testClock();
+    let s = createGame(gameDef('romme')!.template, players('A', 'B', 'C'), c);
+    expect(dealerOf(s)?.name).toBe('A');
+    s = play(s, liveRounds(s)[0]?.id ?? 'new', [5, 0, 10], c).s;
+    expect(dealerOf(s)?.name).toBe('B');
+    expect(dealerOf(createGame(gameDef('uno')!.template, players('A', 'B'), c))).toBeNull();
+    expect(dealerOf(createGame(gameDef('wizard')!.template, players('A', 'B', 'C'), c))?.name).toBe('A');
   });
 });

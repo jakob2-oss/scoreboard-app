@@ -213,3 +213,100 @@ export function seriesAwards(list: HistGame[]): Award[] {
   if (last) out.push({ key: 'pech', label: 'Pechvogel', n: last.v, unit: '× Letzter', who: last.who });
   return out;
 }
+
+// ---------------------------------------------------------------- Rekorde je Spiel
+
+export interface GameRecord {
+  key: 'best' | 'margin' | 'long' | 'short';
+  label: string; n: number; unit: string;
+  who: string[];
+  /** Partie, in der der Rekord fiel */
+  gameId: string;
+}
+
+/**
+ * Rekorde eines Spiels aus dem Verlauf: beste Siegpunktzahl (höchste oder niedrigste, je nach Gewinnregel),
+ * größter Vorsprung, längste Partie. Ohne Punkte (Tisch-Spiele) längste und kürzeste Partie.
+ * Bei Gleichstand gilt der ältere Rekord.
+ */
+export function gameRecords(list: HistGame[], opts: { win: 'high' | 'low'; points: boolean }): GameRecord[] {
+  const games = [...list].sort((a, b) => a.finishedAt.localeCompare(b.finishedAt)).filter(g => g.results.length > 0);
+  const out: GameRecord[] = [];
+  const pick = (score: (g: HistGame) => number | null, better: (a: number, b: number) => boolean) => {
+    let best: { n: number; g: HistGame } | null = null;
+    for (const g of games) { const v = score(g); if (v !== null && (!best || better(v, best.n))) best = { n: v, g }; }
+    return best;
+  };
+  const winners = (g: HistGame) => g.results.filter(r => r.place === 1).map(r => r.playerId);
+  if (opts.points) {
+    const top = pick(g => { const w = g.results.find(r => r.place === 1); return w ? w.total : null; }, opts.win === 'high' ? (a, b) => a > b : (a, b) => a < b);
+    if (top && (opts.win === 'low' || top.n > 0)) out.push({ key: 'best', label: opts.win === 'high' ? 'Höchste Punktzahl' : 'Niedrigste Punktzahl', n: top.n, unit: 'Punkte', who: winners(top.g), gameId: top.g.id });
+    const gap = pick(g => { const s = [...g.results].sort((a, b) => a.place - b.place); const w = s[0], r2 = s.find(r => r.place > w.place); return r2 ? Math.abs(w.total - r2.total) : null; }, (a, b) => a > b);
+    if (gap && gap.n > 0) out.push({ key: 'margin', label: 'Größter Vorsprung', n: gap.n, unit: 'Punkte', who: winners(gap.g), gameId: gap.g.id });
+  }
+  const rn = (g: HistGame) => { const v = Number(g.results[0]?.extra?.rn || 0); return v > 0 ? v : null; };
+  const long = pick(rn, (a, b) => a > b);
+  if (long) out.push({ key: 'long', label: 'Längste Partie', n: long.n, unit: long.n === 1 ? 'Runde' : 'Runden', who: winners(long.g), gameId: long.g.id });
+  if (!opts.points) {
+    const short = pick(rn, (a, b) => a < b);
+    if (short && short.g !== long?.g) out.push({ key: 'short', label: 'Schnellster Sieg', n: short.n, unit: short.n === 1 ? 'Runde' : 'Runden', who: winners(short.g), gameId: short.g.id });
+  }
+  return out;
+}
+
+/** Rekorde, die eine neue Partie aufstellt (nur wenn es vorher schon Partien dieses Spiels gab) */
+export function newRecords(before: HistGame[], cur: HistGame, opts: { win: 'high' | 'low'; points: boolean }): GameRecord[] {
+  if (!before.length) return [];
+  return gameRecords([...before, cur], opts).filter(r => r.gameId === cur.id);
+}
+
+// ---------------------------------------------------------------- Titel im Profil
+
+export interface PlayerTitle { title: string; reason: string; weight: number }
+
+/** Zahl aus Text, stabil: so bekommt jeder Spieler je Spiel immer dieselbe Variante */
+const hashOf = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+
+/**
+ * Titel aus der Statistik, dezent und abwechslungsreich: je Spiel, in dem jemand die meisten Siege hat
+ * (mindestens zwei, bei mindestens drei Partien), ein Titel aus einer kleinen Auswahl; dazu Pechvogel-Titel
+ * und besondere Titel aus Spielwerten (Kniffel, Präsident, Ansagen, Schwimmen). Sortiert nach Gewicht.
+ */
+export function playerTitles(list: HistGame[], pid: string, names: Record<string, string>): PlayerTitle[] {
+  const out: PlayerTitle[] = [];
+  const keys = [...new Set(list.map(g => g.key))];
+  const WIN = ['{g}-Ass', '{g}-Profi', 'Schrecken am {g}-Tisch', '{g}-Legende'];
+  const LOSE = ['{g}-Pechvogel', '{g}-Trostpreis', 'Lehrgeld bei {g}'];
+  for (const key of keys) {
+    const games = list.filter(g => g.key === key && g.results.length > 1);
+    if (games.length < 3 || !games.some(g => resultOf(g, pid))) continue;
+    const name = names[key] ?? games[0].name;
+    const ids = [...new Set(games.flatMap(g => g.results.map(r => r.playerId)))];
+    const count = (id: string, f: (g: HistGame, id: string) => boolean) => games.filter(g => resultOf(g, id) && f(g, id)).length;
+    const top = (f: (id: string) => number, min: number) => { const v = f(pid); return v >= min && ids.every(o => o === pid || f(o) < v) ? v : 0; };
+    const h = hashOf(pid + key);
+    const wins = top(id => count(id, isWin), 2);
+    if (wins) {
+      const pool = wins >= 10 ? WIN : WIN.slice(0, 3);
+      out.push({ title: pool[h % pool.length].replace('{g}', name), reason: `${wins} Siege bei ${name}`, weight: 10 + wins });
+    }
+    const lasts = top(id => count(id, (g, x) => { const r = resultOf(g, x)!; return r.place > 1 && r.place === Math.max(...g.results.map(y => y.place)); }), 3);
+    if (lasts) out.push({ title: LOSE[h % LOSE.length].replace('{g}', name), reason: `${lasts}× Letzter bei ${name}`, weight: lasts });
+    // Besondere Titel aus Spielwerten
+    const sum = (id: string, k: string) => games.reduce((a, g) => a + Number(resultOf(g, id)?.extra?.[k] || 0), 0);
+    const special: [string, string, (n: number) => string, number][] = [
+      ['kniffel', 'Kniffel-Jäger', n => `${n} Kniffel gewürfelt`, 2], ['praes', 'Dauerpräsident', n => `${n}× Präsident`, 4],
+      ['swum', 'Dauerschwimmer', n => `${n}× geschwommen`, 3], ['schock', 'Schock-Magnet', n => `${n}× Schock aus kassiert`, 2]
+    ];
+    for (const [k, t, r, min] of special) { const v = top(id => sum(id, k), min); if (v) out.push({ title: t, reason: r(v), weight: 5 + v }); }
+    if (key === 'wizard') {
+      const rate = (id: string) => { const b = bidHits(games, id); return b.rounds >= 20 ? b.rate : 0; };
+      const v = top(rate, 40); if (v) out.push({ title: 'Hellseher', reason: `${v} % Ansagen getroffen`, weight: 8 });
+    }
+  }
+  // Über alle Spiele: wer am meisten mitspielt
+  const ids = [...new Set(list.flatMap(g => g.results.map(r => r.playerId)))];
+  const played = (id: string) => list.filter(g => resultOf(g, id)).length;
+  if (list.length >= 10 && ids.length > 2 && ids.every(o => o === pid || played(o) < played(pid))) out.push({ title: 'Stammgast', reason: `${played(pid)} Partien`, weight: 3 });
+  return out.sort((a, b) => b.weight - a.weight);
+}

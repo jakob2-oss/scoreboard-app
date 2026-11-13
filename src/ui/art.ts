@@ -285,6 +285,18 @@ Object.assign(GAME_ART, {
   }
 });
 
+// Skat: Kreuz-Bube vorne, dahinter Pik und Herz; Icon: Kreuz-Symbol mit B
+const KREUZ = (c: string) => `<g fill="${c}"><circle cx="0" cy="-6" r="5.6"/><circle cx="-6" cy="2" r="5.6"/><circle cx="6" cy="2" r="5.6"/><path d="M-2 2h4l2 10h-8z"/></g>`;
+const PIK = (c: string) => `<path d="M0-11C-10-2-11 4-7 6c2.5 1.2 5 0 6-1.5L-3 12h6l-2-7.5c1 1.5 3.5 2.7 6 1.5 4-2 3-8-7-17z" fill="${c}"/>`;
+Object.assign(GAME_ART, {
+  skat: {
+    icon: ICON(`<g transform="translate(32 34) rotate(-8)"><rect x="-17" y="-23" width="34" height="46" rx="6" fill="#fffaf2"/>
+      <text x="-11" y="-9" font-family="Jost, sans-serif" font-weight="700" font-size="11" fill="#5b5a8f">B</text><g transform="translate(2 6) scale(.9)">${KREUZ('#5b5a8f')}</g></g>`),
+    scene: sky('#e4e3f2', '#ecebf7', '#cfcde9', '#f5d58c', 'lozenge')
+      + card(150, 152, -16, 'A', PIK('#5b5a8f'), '#5b5a8f', 56) + card(250, 152, 16, 'K', BAV.herz('#f3a98f'), '#d9634a', 56) + card(200, 140, 0, 'B', KREUZ('#5b5a8f'), '#5b5a8f', 64) + '</svg>'
+  }
+});
+
 const icon: Record<string, string> = {
   uno: ICON(`<g transform="rotate(-20 32 32)">${[0, 1, 2, 3].map(k => `<path d="M32 32L${32 + 22 * Math.cos(k * Math.PI / 2)} ${32 + 22 * Math.sin(k * Math.PI / 2)}A22 22 0 0 1 ${32 + 22 * Math.cos((k + 1) * Math.PI / 2)} ${32 + 22 * Math.sin((k + 1) * Math.PI / 2)}z" fill="${['#f3a98f', '#86cbb8', '#f2cf86', '#97c4e3'][k]}"/>`).join('')}
     <ellipse cx="32" cy="32" rx="9" ry="14" transform="rotate(40 32 32)" fill="#fffaf2"/></g>`),

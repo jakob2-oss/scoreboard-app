@@ -1,6 +1,6 @@
 import { act, useApp } from '../store';
 import { useState } from 'react';
-import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
+import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, playerTitles, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
 import { gameDef } from '../game/games';
 import type { Player } from '../model/types';
 import { fmt, onColor } from '../lib/color';
@@ -30,6 +30,8 @@ export function Profile() {
   const maxAhead = vs ? Math.max(1, ...Object.values(vs.ahead)) : 1;
   const hits = profile.key === 'wizard' ? bidHits(list, profile.id) : null;
   const best = list.length ? list.map(g => resultOf(g, profile.id)!.total) : [];
+  // Titel aus der ganzen Statistik: oben die zwei wichtigsten, unten alle mit Grund
+  const titles = playerTitles(history, profile.id, Object.fromEntries(history.map(h => [h.key, h.name])));
   return (
     <section className="screen" id="s-profile">
       <div className="top gutter">
@@ -38,7 +40,8 @@ export function Profile() {
       </div>
       <div className="scroll">
         <div className="gutter pf-body">
-          <div className="pf-hero"><Avatar p={me} big /><div><h1><input className="pf-name" id="pf-name" key={me.name} defaultValue={me.name} maxLength={18} aria-label="Name" onBlur={e => a.renamePlayer(profile.id, e.target.value)} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} /></h1><small>{mine.length ? `${mine.length} ${mine.length === 1 ? 'Partie' : 'Partien'}` : 'Noch keine Partie'}</small></div></div>
+          <div className="pf-hero"><Avatar p={me} big /><div><h1><input className="pf-name" id="pf-name" key={me.name} defaultValue={me.name} maxLength={18} aria-label="Name" onBlur={e => a.renamePlayer(profile.id, e.target.value)} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} /></h1><small>{mine.length ? `${mine.length} ${mine.length === 1 ? 'Partie' : 'Partien'}` : 'Noch keine Partie'}</small>
+            {titles.length > 0 && <div className="pf-titles">{titles.slice(0, 2).map(t => <span key={t.title}>{t.title}</span>)}</div>}</div></div>
           {mine.length > 0 && <>
             <div className="fchips">
               {chip('Immer', same(profile.time, 'all'), () => a.setProfile({ time: 'all' }))}
@@ -105,6 +108,11 @@ export function Profile() {
                 </div>
               </div>
             )}
+            {titles.length > 0 && <div className="group"><div className="eyebrow">Titel</div>
+              <div className="list pf-title-list">
+                {titles.map(t => <div key={t.title} className="row"><span className="t"><b>{t.title}</b><small>{t.reason}</small></span></div>)}
+              </div>
+            </div>}
             <div className="group"><div className="eyebrow">Letzte Partien</div>
               <div className="list">
                 {list.slice(0, 8).map(g => {

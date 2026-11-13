@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, dealerOf, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -10,6 +10,7 @@ import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
 import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
+import { keepAwake } from '../lib/device';
 import { TableDock, TableView, TokenSheet } from './Table';
 
 const css = (vars: Record<string, string>) => vars as React.CSSProperties;
@@ -32,8 +33,11 @@ function subtitle(g: GameState): string {
   if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
   if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
-  if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}, ${bidPhase(g, liveRounds(g)[n - 1].id) === 'bid' ? 'Ansagen' : 'Stiche'}`;
-  if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
+  // Geber: steht im Untertitel und über seiner Spalte
+  const d = dealerOf(g), gives = d ? `, ${d.name} gibt` : '';
+  if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}${gives}`;
+  if (end.type === 'rounds') return `Runde ${n} von ${end.value}${gives}`;
+  if (d) return end.type === 'target' ? `Runde ${n}, Ziel ${end.value}${gives}` : `Runde ${n}${gives}`;
   if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
   return `Runde ${n}`;
 }
@@ -74,6 +78,9 @@ export function GameScreen() {
     const el = screenRef.current; if (!el) return;
     el.style.paddingBottom = s.pad && padRef.current ? padRef.current.offsetHeight + 'px' : '';
   });
+
+  // Bildschirm bleibt an, solange die Partie offen ist
+  useEffect(() => keepAwake(), []);
 
   const end = endState(g);
   return (
@@ -148,7 +155,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   }, [edit?.ref, edit?.playerId]);
   const players = seated(g), rounds = liveRounds(g), t = totals(g), rk = ranking(g), started = anyScore(g);
   const lead = started ? rk.filter(x => x.place === 1).map(x => x.player.id) : [];
-  const end = g.game.rules.end;
+  const end = g.game.rules.end, dealer = dealerOf(g);
   return (
     <>
       <table className="grid" ref={tableRef}>
@@ -156,7 +163,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
           <tr>
             <th className="corner">#</th>
             {players.map((p, i) => (
-              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}</div></th>
+              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}{dealer?.id === p.id && <small className="dealer-tag">gibt</small>}</div></th>
             ))}
           </tr>
         </thead>
@@ -598,12 +605,13 @@ function WinnerSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
         <div className="grab" />
         <div className="sheet-body">
           <h3>Runde {roundNumber(g, roundRef)}</h3>
-          <div className="eyebrow">Wer hat gewonnen?</div>
+          <div className="eyebrow">{g.game.rules.params?.soloPrompt ?? 'Wer hat gewonnen?'}</div>
           <div className="rank-list">
             {seated(g).map(p => (
               <button key={p.id} className="rank-row" onClick={() => act().pickWinner(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>
             ))}
           </div>
+          {g.game.rules.params?.soloPrompt && <div className="pad-actions"><button className="secondary" id="pass-round" onClick={() => act().passRound()}>Eingepasst</button></div>}
         </div>
       </div>
     </>

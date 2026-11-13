@@ -511,3 +511,15 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .award b { font-family: var(--f-num); font-size: 30px; font-weight: 600; line-height: 1.05; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .award b em { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted); }
 .award-who { font-size: 14px; font-weight: 600; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Geber: kleines Schild unter dem Namen in der Spalte */
+.pn .dealer-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: var(--i-coral); border-radius: 999px; padding: 1px 7px; margin-top: 3px; }
+/* Neuer Rekord auf der Siegerseite: dieselben Karten, mit warmem Akzent */
+.v-records { margin: 4px 0 12px; }
+.v-records .ser-awards { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.award.fresh { background: linear-gradient(0deg, rgba(239, 122, 92, .12), rgba(239, 122, 92, .12)), var(--surface); }
+.award.fresh small { color: var(--i-coral); }
+.records { margin-top: 6px; }
+/* Titel im Profil: dezent, kleine Schrift in Akzentfarbe, höchstens zwei oben */
+.pf-titles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pf-titles span { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: var(--i-coral); background: rgba(239, 122, 92, .12); border-radius: 999px; padding: 3px 10px; }
+.pf-title-list .row { min-height: 56px; }

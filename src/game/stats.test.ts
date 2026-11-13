@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, type HistGame } from './stats';
+import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, gameRecords, newRecords, playerTitles, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -134,4 +134,33 @@ describe('Auszeichnungen einer Serie', () => {
     ]);
   });
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
+});
+
+describe('Rekorde und Titel', () => {
+  const g = (id: string, at: string, rn: number, places: [string, number, number][]) => ({ id, key: 'kniffel', name: 'Kniffel', finishedAt: at,
+    results: places.map(([playerId, place, total]) => ({ playerId, place, total, extra: { rn } })) });
+  const list = [
+    g('1', '2026-11-01T20:00', 13, [['a', 1, 250], ['b', 2, 200]]),
+    g('2', '2026-11-02T20:00', 15, [['b', 1, 310], ['a', 2, 180]]),
+    g('3', '2026-11-03T20:00', 13, [['a', 1, 260], ['b', 2, 250]])
+  ];
+  it('höchste Punktzahl, größter Vorsprung, längste Partie', () => {
+    expect(gameRecords(list, { win: 'high', points: true })).toEqual([
+      { key: 'best', label: 'Höchste Punktzahl', n: 310, unit: 'Punkte', who: ['b'], gameId: '2' },
+      { key: 'margin', label: 'Größter Vorsprung', n: 130, unit: 'Punkte', who: ['b'], gameId: '2' },
+      { key: 'long', label: 'Längste Partie', n: 15, unit: 'Runden', who: ['b'], gameId: '2' }
+    ]);
+  });
+  it('neuer Rekord nur, wenn er die alten schlägt', () => {
+    const cur = g('4', '2026-11-04T20:00', 13, [['a', 1, 320], ['b', 2, 300]]);
+    expect(newRecords(list, cur, { win: 'high', points: true }).map(r => r.key)).toEqual(['best']);
+    expect(newRecords([], cur, { win: 'high', points: true })).toEqual([]);
+  });
+  it('Titel: meiste Siege in einem Spiel, stabil je Spieler', () => {
+    const t = playerTitles(list, 'a', { kniffel: 'Kniffel' });
+    expect(t[0].reason).toBe('2 Siege bei Kniffel');
+    expect(t[0].title).toMatch(/Kniffel/);
+    expect(playerTitles(list, 'a', { kniffel: 'Kniffel' })[0].title).toBe(t[0].title);
+    expect(playerTitles(list, 'b', { kniffel: 'Kniffel' })).toEqual([]);
+  });
 });

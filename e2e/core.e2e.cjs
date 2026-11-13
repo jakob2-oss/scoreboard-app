@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('17 Einträge (15 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 17 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('18 Einträge (16 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 18 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('.new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
@@ -212,7 +212,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.seg >> text=Bei 1000');
   check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
   await p.click('#quick-start');
-  check('Untertitel mit Ziel 1000', (await raw('.top .sub')) === 'Runde 1, Ziel 1000');
+  check('Untertitel mit Ziel 1000 und Geber', (await raw('.top .sub')).startsWith('Runde 1, Ziel 1000, ') && (await raw('.top .sub')).endsWith(' gibt'));
   await p.click('.dock .primary'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
@@ -357,6 +357,33 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('36f-arschloch-victory');
   await p.click('.victory .pad-actions .secondary');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Skat: Geber, Alleinspieler, eingepasst, verloren zählt doppelt; Rekorde und neuer Rekord
+  await p.click('[data-game="skat"]'); await shot('36g-skat'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  check('Skat: Geber über der Spalte und im Untertitel', await p.isVisible('.dealer-tag') && (await raw('#s-game .sub')).includes('gibt'));
+  const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
+  await p.click('#round-go'); await p.waitForTimeout(150);
+  check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));
+  await p.click('#pass-round'); await p.waitForTimeout(200);
+  check('Skat: eingepasst, Geber rückt weiter', (await p.locator('td.cell.zero').count()) >= 3 && (await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent()) !== dealer1);
+  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
+  await p.click('.pp-keys .key >> text="2"'); await p.click('.pp-keys .key >> text="4"'); await p.click('.pp-panel .quick button >> text=Verloren'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  check('Skat: verloren zählt doppelt negativ', (await raw('tfoot td .tot >> nth=0')).includes('48'));
+  await shot('36h-skat-game');
+  await p.click('#s-game .text-btn'); await p.waitForTimeout(400); await p.click('.ser-chips .fchip >> nth=0'); await p.click('.victory .pad-actions .primary'); await p.waitForTimeout(300);
+  await p.click('[data-game="skat"]'); await p.waitForTimeout(200);
+  check('Skat: Rekorde auf der Spielseite', await p.isVisible('.records') && (await raw('.records')).includes('Längste Partie'));
+  await p.evaluate(() => document.querySelector('.records').scrollIntoView({ block: 'center' })); await shot('36i-skat-records');
+  await p.click('#quick-start'); await p.waitForTimeout(300);
+  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
+  await p.click('.pp-keys .key >> text="3"'); await p.click('.pp-keys .key >> text="6"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#s-game .text-btn'); await p.waitForTimeout(400);
+  check('Siegerseite: neuer Rekord', await p.isVisible('.v-records') && (await raw('.v-records')).includes('Neuer Rekord'));
+  await shot('36j-new-record');
+  await p.click('.ser-chips .fchip >> nth=0'); await p.click('.victory .pad-actions .primary'); await p.waitForTimeout(300);
+  // Beide Skat-Partien wieder aus dem Verlauf nehmen, damit spätere Prüfungen gleich bleiben
+  for (let k = 0; k < 2; k++) { await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.click('#hist-delete'); await p.click('#hist-delete-yes'); await p.waitForTimeout(300); }
+  await p.click('#tab-home');
 
   // Eigenes Tisch-Spiel mit Phasen anlegen und bearbeiten
   await p.click('#new-own'); await p.fill('#setup-name', 'Meiern'); await p.click('#kind-tokens'); await p.click('#phase-halves-1');
