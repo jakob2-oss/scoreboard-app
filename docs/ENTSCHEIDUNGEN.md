@@ -160,7 +160,7 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   jede in der Farbe dessen, der den Stich geholt hat. „Runde eintragen“ erst, wenn die Stiche aufgehen.
 - Kartenzahl der Runde als kleine lila Karte mit Zahl in der Ecke des Blocks, nimmt keinen Platz weg. Kein Trumpf
   (liegt im Spiel selbst).
-- Zellen: Punkte groß, darunter Treffer-Punkt und Ansage/Stiche („2/3“).
+- Zellen: Punkte groß, darunter Ansage/Stiche („2/3“); ob getroffen, zeigt das Vorzeichen.
 - Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.
 - Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).
 - Kein Untertitel bei Wizard im Block (Runde, Karten und Geber stehen im Block). Bei allen Spielen mit Geber steht

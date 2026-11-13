@@ -206,7 +206,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                     return (
                       <td key={p.id} className={'cell wzc ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (turn ? ' turn' : '')}
                         onClick={() => (bar === r.id ? undefined : act().openPad(r.id, p.id))} aria-label={`${p.name}, Runde ${ri + 1}`}>
-                        {v !== null ? <>{(v > 0 ? '+' : '') + fmt(v)}<small><i className={b === t2 ? 'hit' : 'miss'} />{b}/{t2}</small></>
+                        {v !== null ? <>{(v > 0 ? '+' : '') + fmt(v)}<small>{b}/{t2}</small></>
                           : b !== null ? <span className="bidn">{b}</span> : turn ? <span className="bidn q">?</span> : ''}
                       </td>
                     );
