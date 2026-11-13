@@ -12,7 +12,7 @@ import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
 import { keepAwake } from '../lib/device';
 import { TableDock, TableView, TokenSheet } from './Table';
-import { BidBar, TricksSheet, WizardHand } from './Wizard';
+import { BidBar, MiniHand, TricksSheet } from './Wizard';
 import { entryMode } from '../lib/modes';
 import { accentStyle } from './accent';
 
@@ -106,7 +106,6 @@ export function GameScreen() {
         </div>
         <div className="pp-swipe" ref={swipe} onScroll={onScroll}>
           <section className="pp-page ov" aria-label="Überblick"><div className="ov-scroll">
-            {wizBlock && <WizardHand cards={handCards(g)} label={`Runde ${handCards(g)}, ${handCards(g)} ${handCards(g) === 1 ? 'Karte' : 'Karten'}`} />}
             <Board g={g} edit={s.pad ? s.edit : null} /></div></section>
           {players.map((p, i) => (
             <section key={p.id} className="pp-page gutter" aria-label={p.name} style={css({ '--c': p.color })}>
@@ -177,7 +176,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
       <table className="grid" ref={tableRef}>
         <thead>
           <tr>
-            <th className="corner">#</th>
+            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : '#'}</th>
             {players.map((p, i) => (
               <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}{dealer?.id === p.id && <small className="dealer-tag">gibt</small>}</div></th>
             ))}

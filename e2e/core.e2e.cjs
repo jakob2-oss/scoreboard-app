@@ -225,7 +225,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt; einfache Eingabe im Menü
   await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
   check('Wizard: 20 Runden bei 3 Spielern', (await p.locator('tbody tr').count()) === 20);
-  check('Wizard: Fächer mit einer Karte, Knopf „Ansagen Runde 1“', (await p.locator('.wz-hero .wz-card').count()) === 1 && (await raw('#round-go')).startsWith('Ansagen Runde 1'));
+  check('Wizard: kleines Kartensymbol mit 1, Knopf „Ansagen Runde 1“', (await raw('.wz-mini b')) === '1' && (await raw('#round-go')).startsWith('Ansagen Runde 1'));
   await p.click('#round-go'); await p.waitForTimeout(200);
   check('Wizard: Ben sagt zuerst an, im Block', (await raw('.wz-who b')) === 'Ben sagt an' && await p.isVisible('td.cell.wzc.turn'));
   await p.click('#bid-1'); await p.waitForTimeout(100);
@@ -240,7 +240,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tricks-go'); await p.waitForTimeout(200);
   const r1 = (await text('tbody tr:nth-child(1)')).replace(/\s+/g, ' ');
   check('Wizard: Punkte 20, 30, 20 mit Treffern', r1.includes('+20') && r1.includes('+30') && r1.includes('1 von 1'), r1);
-  check('Wizard: weiter mit Ansagen Runde 2, Fächer mit zwei Karten', (await raw('#round-go')).startsWith('Ansagen Runde 2') && (await p.locator('.wz-hero .wz-card').count()) === 2);
+  check('Wizard: weiter mit Ansagen Runde 2, Kartensymbol mit 2', (await raw('#round-go')).startsWith('Ansagen Runde 2') && (await raw('.wz-mini b')) === '2');
   await shot('14-wizard-ov');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(200);
   await p.click('#round-go'); await p.waitForTimeout(400);

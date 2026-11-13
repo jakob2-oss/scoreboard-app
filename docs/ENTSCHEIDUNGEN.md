@@ -158,7 +158,7 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   „Zurück zu …“ nimmt die letzte Ansage zurück. Während der Ansagen rückt die laufende Runde ins Bild.
 - Stiche auf eigenem Blatt: alle Spieler untereinander, Ansage als Rahmen, Punkte sofort; oben die Karten der Runde,
   jede in der Farbe dessen, der den Stich geholt hat. „Runde eintragen“ erst, wenn die Stiche aufgehen.
-- Über dem Block ein Fächer mit den Karten der Runde (wächst jede Runde, ab zehn Karten enger). Kein Trumpf
+- Kartenzahl der Runde als kleines Symbol (Mini-Fächer mit Zahl) in der Ecke des Blocks, nimmt keinen Platz weg. Kein Trumpf
   (liegt im Spiel selbst).
 - Zellen: Punkte groß, darunter Treffer-Punkt und „2 von 2“ bzw. „3 statt 0“.
 - Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.

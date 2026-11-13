@@ -9,19 +9,14 @@ import { IconUndo } from './icons';
 /** Kartenzahl der Runde (Runde n = n Karten) */
 const cardsOf = (g: GameState, ref: string) => liveRounds(g).findIndex(r => r.id === ref) + 1;
 
-/** Fächer mit den Karten der laufenden Runde: wächst jede Runde um eine Karte, ab zehn Karten enger */
-export function WizardHand({ cards, label }: { cards: number; label: string }) {
-  const n = Math.max(1, cards), spread = Math.min(15, 90 / n), lift = n > 10 ? 150 : 165;
+/** Kleines Symbol in der Ecke des Blocks: Fächer und Kartenzahl der laufenden Runde */
+export function MiniHand({ cards }: { cards: number }) {
+  const n = Math.min(Math.max(1, cards), 5);
   return (
-    <div className="wz-hero" aria-hidden="true">
-      <div className="wz-label">{label}</div>
-      <div className="wz-hand">
-        {Array.from({ length: n }, (_, k) => {
-          const a = (k - (n - 1) / 2) * spread;
-          return <div key={k} className="wz-card" style={{ transform: `rotate(${a}deg)`, transformOrigin: `50% ${lift}%` }} />;
-        })}
-      </div>
-    </div>
+    <span className="wz-mini" aria-label={`${cards} ${cards === 1 ? 'Karte' : 'Karten'}`}>
+      <span className="wz-mini-fan">{Array.from({ length: n }, (_, k) => <i key={k} style={{ transform: `rotate(${(k - (n - 1) / 2) * 14}deg)` }} />)}</span>
+      <b>{cards}</b>
+    </span>
   );
 }
 
