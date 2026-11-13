@@ -649,8 +649,8 @@ describe('Verlauf und Statistik', () => {
     a.start(); a.roundGo(); a.pick(1); a.pick(0); a.pick(0); a.roundGo(); a.pick(1); a.pick(0); a.pick(1);
     a.finishGame();
     const ex = Object.fromEntries(mem.results.map(r => [r.playerId, r.extra]));
-    expect(ex.id2).toEqual({ rounds: 1, hits: 1 });
-    expect(ex.id1).toEqual({ rounds: 1, hits: 0 });
+    expect(ex.id2).toEqual({ rounds: 1, hits: 1, rn: 1 });
+    expect(ex.id1).toEqual({ rounds: 1, hits: 0, rn: 1 });
   });
   it('öffnet Profil und setzt Filter', async () => {
     const { st, a } = await setup('free', ['A', 'B']);

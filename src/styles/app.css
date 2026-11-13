@@ -511,3 +511,72 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 .award b { font-family: var(--f-num); font-size: 30px; font-weight: 600; line-height: 1.05; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
 .award b em { font-style: normal; font-size: 14px; font-weight: 500; color: var(--muted); }
 .award-who { font-size: 14px; font-weight: 600; color: var(--fg); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Geber: kleines Schild unter dem Namen in der Spalte */
+/* Geber: kleine Karte am Avatar, ohne eigene Zeile */
+.grid thead th .pn { position: relative; }
+.pn .dealer-tag { position: absolute; left: calc(50% + 7px); top: 0; width: 11px; height: 15px; border-radius: 3px; background: var(--i-coral);
+  box-shadow: inset 0 0 0 1.5px #fffaf2, 0 2px 4px rgba(0, 0, 0, .25); transform: rotate(14deg); }
+
+/* Block flacher: niedrigere Kacheln, kompakter Kopf und Summen (alle Spiele) */
+table.grid { border-spacing: 5px; }
+.grid thead th { padding: 4px 2px 2px; }
+.grid thead th .pn { gap: 3px; font-size: 12.5px; }
+.grid thead th .pn .av { width: 28px; height: 28px; font-size: 13px; }
+.grid td.cell { height: 38px; border-radius: 12px; font-size: 19px; line-height: 1.05; }
+.grid td.cell:has(small) { height: 44px; }
+.grid td.cell small { font-size: 10.5px; line-height: 1.1; }
+.grid td.cell.empty::after { width: 6px; height: 6px; }
+.grid tfoot .tt { border-radius: 14px; padding: 5px 4px 6px; }
+.grid tfoot .tot { font-size: 22px; line-height: 1.05; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 10px; }
+td.cell.wzc .bidn { font-size: 19px; }
+/* Neuer Rekord auf der Siegerseite: dieselben Karten, mit warmem Akzent */
+.v-records { margin: 4px 0 12px; }
+.v-records .ser-awards { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.award.fresh { background: linear-gradient(0deg, rgba(239, 122, 92, .12), rgba(239, 122, 92, .12)), var(--surface); }
+.award.fresh small { color: var(--i-coral); }
+.records { margin-top: 6px; }
+/* Titel im Profil: dezent, kleine Schrift in Akzentfarbe, höchstens zwei oben */
+.pf-titles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pf-titles span { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: var(--i-coral); background: rgba(239, 122, 92, .12); border-radius: 999px; padding: 3px 10px; }
+.pf-title-list .row { min-height: 56px; }
+
+/* ---------- Wizard im Block: Spielfarbe Lila, Kartenfächer, Ansage-Leiste, Stiche-Blatt ---------- */
+#s-game.wz .top h2, #s-game.wz .top .text-btn { color: var(--acc); }
+:root[data-theme="dark"] #s-game.wz .top h2, :root[data-theme="dark"] #s-game.wz .top .text-btn { color: var(--acc-l); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #s-game.wz .top h2, :root:not([data-theme="light"]) #s-game.wz .top .text-btn { color: var(--acc-l); } }
+#s-game.bidding /* Kleines Symbol in der Ecke: Fächer und Kartenzahl */
+.wz-mini { position: relative; display: inline-grid; place-items: center; width: 24px; height: 32px; }
+.wz-mini b { position: relative; display: grid; place-items: center; width: 22px; height: 30px; border-radius: 5px; background: var(--acc); color: #fff;
+  box-shadow: inset 0 0 0 2px #fffaf2; font-family: var(--f-num); font-size: 13px; font-weight: 700; transform: rotate(-6deg); }
+.wz-mini-back { position: absolute; width: 22px; height: 30px; border-radius: 5px; background: var(--acc-l); box-shadow: inset 0 0 0 2px #fffaf2; transform: translate(4px, -1px) rotate(10deg); }
+td.cell.wzc small { display: flex; align-items: center; justify-content: center; gap: 4px; }
+td.cell.wzc small i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+td.cell.wzc small i.hit { background: var(--acc-l); }
+td.cell.wzc small i.miss { background: var(--faint); }
+td.cell.wzc .bidn { font-size: 22px; font-weight: 600; color: var(--acc-l); }
+td.cell.wzc .bidn.q { opacity: .45; }
+td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-mix(in srgb, var(--acc) 30%, var(--surface)); }
+.wz-bar { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.wz-who { display: flex; align-items: center; gap: 8px; font-family: var(--f-display); font-size: 17px; }
+.wz-who .av { width: 32px; height: 32px; font-size: 14px; }
+.wz-who small { margin-left: auto; color: var(--muted); font-weight: 600; font-size: 14px; }
+.wz-pick { display: grid; gap: 6px; }
+.wz-pick button { min-height: 46px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); font-family: var(--f-num); font-weight: 600; font-size: 20px; box-shadow: var(--soft); }
+.wz-pick button.on { background: var(--acc); color: #fff; }
+.wz-pick button.bid { box-shadow: inset 0 0 0 2px var(--acc-l); }
+.wz-pick button.on.bid { box-shadow: none; }
+.wz-nav { display: flex; gap: 10px; }
+.wz-nav .wide { flex: 1; }
+.wz-sub { color: var(--muted); font-size: 14px; margin: 2px 0 10px; }
+.wz-tricks { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+.wz-tricks i { width: 26px; height: 38px; border-radius: 6px; background: var(--fill); box-shadow: inset 0 0 0 2px var(--surface); transition: background .2s ease; }
+.wz-row { padding: 10px 0; border-top: 1px solid var(--fill); display: flex; flex-direction: column; gap: 8px; }
+.wz-nm { display: flex; align-items: center; gap: 8px; }
+.wz-nm .av { width: 30px; height: 30px; font-size: 13px; }
+.wz-nm small { color: var(--muted); }
+.wz-res { margin-left: auto; font-family: var(--f-num); font-weight: 700; font-size: 18px; color: #6fbf73; }
+.wz-res.neg { color: #e0705a; }
+.wz-sum { display: flex; justify-content: space-between; align-items: center; background: var(--fill); border-radius: 16px; padding: 12px 14px; margin: 6px 0 4px; font-weight: 600; }
+.wz-sum .ok { color: #6fbf73; } .wz-sum .warn { color: #e0a940; }
+.dock .mode-btn { padding: 0 14px; font-size: 15px; }

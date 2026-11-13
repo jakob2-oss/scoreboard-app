@@ -163,13 +163,26 @@ GAMES.push({
   acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
 });
 
+// Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
+GAMES.push({
+  template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 36 }, players: { min: 3, max: 4 },
+    params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true,
+      quick: [{ label: 'Null 23', op: 'set', v: 23 }, { label: 'Null Hand 35', op: 'set', v: 35 }, { label: 'Null ouvert 46', op: 'set', v: 46 }, times('Verloren', -2)] } },
+  points: [['Reizen', 'wer am höchsten reizt, spielt allein'], ['Spielwert', 'Grundwert mal Spitzen und Stufen'], ['Grundwerte', 'Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24'],
+    ['Null', '23, Hand 35, ouvert 46, ouvert Hand 59'], ['Verloren', 'doppelter Spielwert wird abgezogen'], ['Eingepasst', 'alle passen, niemand schreibt']],
+  acc: '#5b5a8f', tint: '#e4e3f2', text: '', example: [['Kreuz', 'Grundwert 12'], ['×3', 'mit 2, Spiel 3'], ['36', 'Punkte']],
+  endOptions: [{ label: '36 Spiele', end: { type: 'rounds', value: 36 } }, { label: '48 Spiele', end: { type: 'rounds', value: 48 } }, { label: 'Offen', end: { type: 'none' } }]
+});
+
 /** Spielarten für die Startseite, in dieser Reihenfolge */
 export type Family = 'karten' | 'wuerfel' | 'brett';
 export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label: 'Kartenspiele' }, { id: 'wuerfel', label: 'Würfelspiele' }, { id: 'brett', label: 'Brett- und Legespiele' }];
 const FAMILY: Record<string, Family> = {
   wizard: 'karten', romme: 'karten', skyjo: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
-  arschloch: 'karten', schwimmen: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
+  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
+// Geber anzeigen (Wizard zeigt ihn immer)
+for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

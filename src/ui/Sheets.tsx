@@ -1,11 +1,15 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
 import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
 import { loserRoom, trophyRoom } from './trophy';
+import { haptic, hapticOn, setHapticOn } from '../lib/device';
+import { entryMode } from '../lib/modes';
+import { newRecords } from '../game/stats';
+import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState } from '../game/engine';
+import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, isBids } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -67,6 +71,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit }>
 // ---------------------------------------------------------------- Menü
 
 export function MenuSheet({ g }: { g: GameState }) {
+  const [buzz, setBuzz] = useState(hapticOn);
   const theme = useTheme();
   const [confirm, setConfirm] = useState(false);
   const win = g.game.rules.win;
@@ -81,6 +86,8 @@ export function MenuSheet({ g }: { g: GameState }) {
       </div>
       <div className="menu-list">
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
+        {isBids(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
+        <button id="toggle-haptic" onClick={() => { setHapticOn(!buzz); setBuzz(!buzz); if (!buzz) haptic(); }}>Vibration <small>{buzz ? 'An' : 'Aus'}</small></button>
         {g.game.rules.scoring === 'categories' && <button id="open-cats" onClick={() => act().openSheet('cats')}>Kategorien</button>}
         {g.game.rules.scoring === 'rounds' && !g.game.rules.params?.split && <button id="open-notes" onClick={() => act().openSheet('notes')}>Notizfelder <small>{g.game.rules.params?.notes?.length || ''}</small></button>}
         <button onClick={() => act().openSheet('result')}>Beenden und speichern</button>
@@ -95,18 +102,24 @@ export function MenuSheet({ g }: { g: GameState }) {
 // ---------------------------------------------------------------- Ergebnis
 
 export function ResultSheet({ g }: { g: GameState }) {
-  const { events } = useApp();
+  const { events, history } = useApp();
   const [eventId, setEventId] = useState<string | null>(() => {
     // Laufende Serie zuerst, sonst die zuletzt gewählte
     const live = events.find(e => e.active); if (live) return live.id;
     try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
   });
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
+  useEffect(() => { if (started) haptic('success'); }, []);
   const winners = rk.filter(x => x.place === 1);
   const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
   // Deckel-Spiele (Schocken, Chic): es zählt, wer verliert, also der traurige Otter mit dem Deckelstapel
   const scene = isTokens(g) && tokenState(g).loser ? loserRoom(icon, 'deckel') : trophyRoom(icon);
   const stats = started ? highlights(g) : [];
+  // Neue Rekorde: diese Partie gegen den Verlauf desselben Spiels
+  const fresh = started ? newRecords(history.filter(h => h.key === rules.key), {
+    id: g.game.id, key: rules.key, name: rules.name, finishedAt: new Date().toISOString(),
+    results: rk.flatMap(x => membersOf(g, x.player.id).map(pid => ({ playerId: pid, total: x.total, place: x.place, extra: { rn: playedRounds(g) } })))
+  }, recordOpts(rules)) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
   // Tisch-Modus: Leben bzw. verlorene Hälften statt Punkte; bei Schocken zählt, wer verliert
@@ -140,6 +153,7 @@ export function ResultSheet({ g }: { g: GameState }) {
               </div>
             ))}
           </div>
+          {fresh.length > 0 && <div className="v-records"><RecordCards list={fresh} fresh /></div>}
           {stats.length > 0 && (
             <div className="v-stats">
               {stats.map(h => <div key={h.label} className="v-stat"><small>{h.label}</small><b>{h.value}</b>{h.who && <span>{h.who}</span>}</div>)}

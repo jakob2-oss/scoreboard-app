@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, dealerOf, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -10,7 +10,11 @@ import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
 import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
+import { keepAwake } from '../lib/device';
 import { TableDock, TableView, TokenSheet } from './Table';
+import { BidBar, MiniHand, TricksSheet } from './Wizard';
+import { entryMode } from '../lib/modes';
+import { accentStyle } from './accent';
 
 const css = (vars: Record<string, string>) => vars as React.CSSProperties;
 const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
@@ -32,7 +36,8 @@ function subtitle(g: GameState): string {
   if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
   if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
   if (isResultOnly(g)) return 'Endstand';
-  if (isBids(g) && end.type === 'rounds') return `Runde ${n} von ${end.value}, ${bidPhase(g, liveRounds(g)[n - 1].id) === 'bid' ? 'Ansagen' : 'Stiche'}`;
+  // Wizard im Block: Runde, Karten und Geber stehen im Block selbst; der Geber sonst als Schild über seiner Spalte
+  if (isBids(g) && entryMode(g.game.rules.key) === 'block') return '';
   if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
   if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
   return `Runde ${n}`;
@@ -75,12 +80,16 @@ export function GameScreen() {
     el.style.paddingBottom = s.pad && padRef.current ? padRef.current.offsetHeight + 'px' : '';
   });
 
+  const wizBlock = isBids(g) && entryMode(g.game.rules.key) === 'block';
+  // Bildschirm bleibt an, solange die Partie offen ist
+  useEffect(() => keepAwake(), []);
+
   const end = endState(g);
   return (
-    <section className={'screen' + (s.pad ? ' pad-open' : '')} id="s-game" ref={screenRef}>
+    <section className={'screen' + (s.pad ? ' pad-open' : '') + (wizBlock ? ' wz' : '') + (wizBlock && s.bidBar ? ' bidding' : '')} id="s-game" ref={screenRef} style={accentStyle(g.game.rules.key)}>
       <div className="top gutter">
         <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zum Start"><IconBack /></button>
-        <div className="grow"><h2>{g.game.rules.name}</h2><div className="sub">{subtitle(g)}</div></div>
+        <div className="grow"><h2>{g.game.rules.name}</h2>{subtitle(g) && <div className="sub">{subtitle(g)}</div>}</div>
         <button className="text-btn" onClick={() => act().openSheet('result')}>Beenden</button>
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>
@@ -94,7 +103,8 @@ export function GameScreen() {
           ))}
         </div>
         <div className="pp-swipe" ref={swipe} onScroll={onScroll}>
-          <section className="pp-page ov" aria-label="Überblick"><div className="ov-scroll"><Board g={g} edit={s.pad ? s.edit : null} /></div></section>
+          <section className="pp-page ov" aria-label="Überblick"><div className="ov-scroll">
+            <Board g={g} edit={s.pad ? s.edit : null} /></div></section>
           {players.map((p, i) => (
             <section key={p.id} className="pp-page gutter" aria-label={p.name} style={css({ '--c': p.color })}>
               <PlayerPage g={g} p={p} i={i} edit={s.page === i ? s.edit : null} />
@@ -113,6 +123,7 @@ export function GameScreen() {
       {!s.pad && (
         <div className="dock gutter">
           {isTable(g) ? <TableDock g={g} canUndo={s.undo.length > 0} />
+            : s.bidBar && s.page < 0 ? <BidBar g={g} roundId={s.bidBar} />
             : s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
             : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
               ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />
@@ -128,6 +139,7 @@ export function GameScreen() {
       {s.sheet === 'ranks' && s.rankRef && <RankSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
+      {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
 }
@@ -148,15 +160,26 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   }, [edit?.ref, edit?.playerId]);
   const players = seated(g), rounds = liveRounds(g), t = totals(g), rk = ranking(g), started = anyScore(g);
   const lead = started ? rk.filter(x => x.place === 1).map(x => x.player.id) : [];
-  const end = g.game.rules.end;
+  const end = g.game.rules.end, dealer = dealerOf(g);
+  const blockMode = isBids(g) && entryMode(g.game.rules.key) === 'block', bar = useApp().bidBar;
+  // Während der Ansagen: die Zelle dessen, der dran ist, in den sichtbaren Bereich holen
+  const turnId = bar ? bidTurn(g, bar) : null;
+  useEffect(() => {
+    if (!bar) return;
+    // Nur den Block senkrecht scrollen (scrollIntoView würde auch die Seiten zum Wischen verschieben)
+    const cell = tableRef.current?.querySelector<HTMLElement>('td.cell.turn'), box = tableRef.current?.closest<HTMLElement>('.ov-scroll');
+    if (!cell || !box) return;
+    const c = cell.getBoundingClientRect(), bx = box.getBoundingClientRect();
+    box.scrollTop += c.top - bx.top - (bx.height - c.height) / 2;
+  }, [bar, turnId]);
   return (
     <>
       <table className="grid" ref={tableRef}>
         <thead>
           <tr>
-            <th className="corner">#</th>
+            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : '#'}</th>
             {players.map((p, i) => (
-              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}</div></th>
+              <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}{dealer?.id === p.id && <i className="dealer-tag" role="img" aria-label={`${p.name} gibt`} />}</div></th>
             ))}
           </tr>
         </thead>
@@ -180,6 +203,17 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 if (fs) {
                   const b = fieldOf(g, r.id, p.id, fs[0].key), t2 = fieldOf(g, r.id, p.id, fs[1].key), has = b !== null || t2 !== null;
                   const wiz = isBids(g);
+                  // Wizard im Block: Ansage groß, solange die Stiche fehlen; danach Punkte mit Treffer-Punkt und „2 von 2“
+                  if (wiz && blockMode) {
+                    const turn = bar === r.id && bidTurn(g, r.id) === p.id;
+                    return (
+                      <td key={p.id} className={'cell wzc ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (turn ? ' turn' : '')}
+                        onClick={() => (bar === r.id ? undefined : act().openPad(r.id, p.id))} aria-label={`${p.name}, Runde ${ri + 1}`}>
+                        {v !== null ? <>{(v > 0 ? '+' : '') + fmt(v)}<small>{b}/{t2}</small></>
+                          : b !== null ? <span className="bidn">{b}</span> : turn ? <span className="bidn q">?</span> : ''}
+                      </td>
+                    );
+                  }
                   return (
                     <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
                       {v === null ? (wiz || b === null ? '' : fmt(b)) : (wiz && v > 0 ? '+' : '') + fmt(v)}
@@ -236,6 +270,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
+      {isBids(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
         : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
@@ -598,14 +633,21 @@ function WinnerSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
         <div className="grab" />
         <div className="sheet-body">
           <h3>Runde {roundNumber(g, roundRef)}</h3>
-          <div className="eyebrow">Wer hat gewonnen?</div>
+          <div className="eyebrow">{g.game.rules.params?.soloPrompt ?? 'Wer hat gewonnen?'}</div>
           <div className="rank-list">
             {seated(g).map(p => (
               <button key={p.id} className="rank-row" onClick={() => act().pickWinner(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>
             ))}
           </div>
+          {g.game.rules.params?.soloPrompt && <div className="pad-actions"><button className="secondary" id="pass-round" onClick={() => act().passRound()}>Eingepasst</button></div>}
         </div>
       </div>
     </>
   );
+}
+
+/** Karten der laufenden Wizard-Runde (für den Fächer) */
+function handCards(g: GameState): number {
+  const rounds = liveRounds(g), i = rounds.findIndex(r => !roundFull(g, r.id));
+  return i === -1 ? rounds.length : i + 1;
 }

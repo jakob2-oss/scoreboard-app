@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { act, useApp } from '../store';
 import { gameDef } from '../game/games';
 import { GamePage } from './GamePage';
+import { GameRecords } from './Records';
 import { GAME_ART } from './art';
 
 /** Spielseite eines festen Spiels: Szene, Regeln als Fließtext mit Beispiel, Optionen, Start */
@@ -41,6 +42,7 @@ export function GameInfo() {
           </div>
         </div>
       )}
+      <GameRecords tpl={template} />
       <div className="menu-list own-actions">
         <button id="customize" onClick={() => a.customizeGame(def.template)}>Als eigenes Spiel anpassen</button>
       </div>

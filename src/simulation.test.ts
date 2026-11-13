@@ -65,6 +65,13 @@ function playOut(st: Store, r: () => number, maxRounds: number): GameState {
       else a.closeSheet();
       continue;
     }
+    // Wizard im Block: Ansagen in der Leiste, Stiche auf einem Blatt
+    if (s.bidBar) { const cards = liveRounds(g).findIndex(r => r.id === s.bidBar) + 1; a.bidPick(Math.floor(r() * (cards + 1))); continue; }
+    if (s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new') {
+      const ref = s.rankRef, cards = liveRounds(g).findIndex(x => x.id === ref) + 1, ps = seated(g), t: Record<string, number> = {};
+      let left = cards; ps.forEach((p, i) => { const v = i === ps.length - 1 ? left : Math.floor(r() * (left + 1)); t[p.id] = v; left -= v; });
+      a.tricksCommit(ref, t); continue;
+    }
     if (s.sheet === 'winner') { a.pickWinner(pickOf(seated(g)).id); continue; }
     if (s.sheet === 'ranks') {
       const ref = s.rankRef!, open = seated(g).filter(p => ref === 'new' || rankIn(g, ref, p.id) === null);
@@ -143,8 +150,8 @@ function check(g: GameState, results: Result[]) {
   for (const h of highlights(g)) { expect(h.value).not.toMatch(/NaN|undefined|Infinity/); expect(h.label.length).toBeGreaterThan(0); }
 }
 
-async function series(tpl: Template, games: number, seed: number, opts: { teams?: boolean; maxRounds?: number } = {}) {
-  const r = rng(seed), mem = memRepo(), st = createStore(mem.repo, clock(), prefs), a = st.actions;
+async function series(tpl: Template, games: number, seed: number, opts: { teams?: boolean; maxRounds?: number; prefs?: Prefs } = {}) {
+  const r = rng(seed), mem = memRepo(), st = createStore(mem.repo, clock(), opts.prefs ?? prefs), a = st.actions;
   await a.init();
   const hist: HistGame[] = [];
   for (let k = 0; k < games; k++) {
@@ -182,6 +189,9 @@ describe('Testspiele: jedes feste Spiel mehrfach durchgespielt', () => {
 });
 
 describe('Testspiele: Varianten', () => {
+  it('Wizard im Block: Ansagen in der Leiste, Stiche auf einem Blatt, 4 Partien', async () => {
+    await series(GAMES.find(g => g.template.key === 'wizard')!.template, 4, 31, { prefs: { ...prefs, getMode: () => 'block' }, maxRounds: 30 });
+  });
   it('Rommé in Teams: 4 Partien', async () => { await series(GAMES.find(g => g.template.key === 'romme')!.template, 4, 7, { teams: true }); });
   it('Rommé bis 500: endet von selbst', async () => {
     const r = rng(3), mem = memRepo(), st = createStore(mem.repo, clock(), prefs), a = st.actions;

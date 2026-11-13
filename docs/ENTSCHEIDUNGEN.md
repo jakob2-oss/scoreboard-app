@@ -127,3 +127,45 @@ Eigene Spiele bekommen beim Erstellen eine Spielart (`params.family`); Kopien fe
 „Freies Spiel“ heißt jetzt „Schnelles Spiel“ und steht immer ganz oben bei den Favoriten. „Anderes Spiel“ entfällt
 (doppelte sich mit der eigenen Endwertung; alte Partien bleiben im Verlauf). Unten gibt es nur noch „Eigenes Spiel
 erstellen“; ob jede Runde oder nur am Ende gezählt wird, wählt man im Erstellen („Gezählt wird“).
+
+## 13.11.2026: Geber, Vibration, Bildschirm an, Rekorde, Skat, Titel
+- **Geber** (`params.dealer`, Wizard immer): rotiert reihum, steht im Untertitel („Runde 3, Ben gibt“) und als kleines
+  Schild über seiner Spalte. Bei Rommé, Schafkopf, Doppelkopf, Skat.
+- **Vibration** beim Eintragen, bei Leben, Deckeln und Rollen, deutlicher bei Hälften und Siegen. Android über
+  `navigator.vibrate`, iPhone über ein verstecktes Schalter-Element (Safari ab 17.4). Im Menü der Partie abschaltbar.
+- **Bildschirm bleibt an** während einer Partie (Wake Lock), wo der Browser es kann.
+- **Rekorde je Spiel** (`gameRecords`): höchste bzw. niedrigste Siegpunktzahl, größter Vorsprung, längste Partie;
+  bei Tisch-Spielen längste und schnellste Partie. Jede Partie speichert dazu ihre Rundenzahl (`extra.rn`).
+  Rekorde stehen auf der Spielseite, ein neuer Rekord erscheint auf der Siegerseite.
+- **Skat:** Alleinspieler antippen („Wer spielt?“), Spielwert eintippen, „Verloren“ zählt doppelt negativ,
+  „Eingepasst“ ergibt eine leere Runde. 36 oder 48 Spiele oder offen.
+- **Titel im Profil** (`playerTitles`): dezent als kleine Schilder unter dem Namen (höchstens zwei), alle mit Grund
+  in der Liste „Titel“. Abwechslung durch kleine Auswahl je Art („Kniffel-Ass“, „Skat-Profi“, „Schrecken am
+  Uno-Tisch“, ab zehn Siegen „Legende“; „Uno-Pechvogel“, „Lehrgeld bei Rommé“), je Spieler und Spiel fest gewählt,
+  damit ein Titel nicht springt. Dazu besondere Titel aus Spielwerten: Kniffel-Jäger, Dauerpräsident, Hellseher
+  (Wizard-Ansagen), Dauerschwimmer, Schock-Magnet, Stammgast. Nur bei mindestens drei Partien eines Spiels.
+
+## 13.11.2026: Ausführliche Eingabe immer zusätzlich zur einfachen
+Wo ein Spiel eine eigene, ausführlichere Oberfläche bekommt (z. B. Schafkopf, Doppelkopf, Skat als Spiel-Eingabe,
+Rommé als Wettlauf), bleibt die einfache Eingabe (Punkte je Spieler und Runde) wählbar: auf der Spielseite vor dem
+Start und während der Partie im Menü, gemerkt je Spiel. Beide schreiben dieselben Punkte je Runde; die ausführliche
+legt zusätzlich die Angaben zum Spiel ab (Spielart, Partner …). So lässt sich mitten in der Partie wechseln, und
+Statistik, Rekorde und Verlauf bleiben gleich.
+
+## 13.11.2026: Wizard eigens gestaltet (Spiel 1 der Einzelrunde)
+- Der große Block bleibt das Herzstück. Ansagen werden direkt im Block eingetragen: unten eine Leiste „Ben sagt an“
+  mit 0 bis Kartenzahl, die Zahl steht sofort in seiner Zelle, dann ist der Nächste dran (ab links vom Geber).
+  „Zurück zu …“ nimmt die letzte Ansage zurück. Während der Ansagen rückt die laufende Runde ins Bild.
+- Stiche auf eigenem Blatt: alle Spieler untereinander, Ansage als Rahmen, Punkte sofort; oben die Karten der Runde,
+  jede in der Farbe dessen, der den Stich geholt hat. „Runde eintragen“ erst, wenn die Stiche aufgehen.
+- Kartenzahl der Runde als kleine lila Karte mit Zahl in der Ecke des Blocks, nimmt keinen Platz weg. Kein Trumpf
+  (liegt im Spiel selbst).
+- Zellen: Punkte groß, darunter Ansage/Stiche („2/3“); ob getroffen, zeigt das Vorzeichen.
+- Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.
+- Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).
+- Kein Untertitel bei Wizard im Block (Runde, Karten und Geber stehen im Block). Bei allen Spielen mit Geber steht
+  „… gibt“ nicht mehr im Untertitel, nur noch als Schild über der Spalte.
+- Geber als kleine Karte am Avatar (keine eigene Zeile mehr). Block bei allen Spielen flacher: Kacheln 38 px
+  (mit Zusatzzeile 44 px), kompakter Kopf und Summen.
+- Manuelle Eingabe jederzeit mit einem Tipp: „Manuell“ in der unteren Leiste, in der Ansage-Leiste und im Stiche-Blatt;
+  zurück mit „Im Block“. Es geht direkt dort weiter, wo man gerade ist.

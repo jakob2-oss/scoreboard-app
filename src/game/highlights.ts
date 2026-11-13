@@ -25,7 +25,7 @@ export function highlights(s: GameState): Highlight[] {
   const high = s.game.rules.win === 'high';
   const top = <T,>(vals: { name: string; v: T }[], better: (a: T, b: T) => boolean) => {
     const best = vals.reduce<T | undefined>((m, x) => (m === undefined || better(x.v, m) ? x.v : m), undefined);
-    return { v: best as T, who: names(vals.filter(x => x.v === best).map(x => x.name)) };
+    return { v: best as T, who: names([...new Set(vals.filter(x => x.v === best).map(x => x.name))]) };
   };
 
   // Arschloch: Rollen-Geschichten statt Punkte

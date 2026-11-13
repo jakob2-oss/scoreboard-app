@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { act, useApp } from '../store';
 import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, stepsOf } from '../game/templates';
 import type { End, Template } from '../model/types';
+import { GameRecords } from './Records';
 import { GamePage } from './GamePage';
 import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, ownArt, lookOf } from './art';
 import { names } from './Home';
@@ -91,6 +92,7 @@ export function Setup() {
         <div className="rule-card" style={{ ['--acc' as string]: lookOf(own.key, own.params?.look).color }}>
           <ul className="rule-points">{pointsOf(own).map(([k, t]) => <li key={k}><b>{k}</b><span>{t}</span></li>)}</ul>
         </div>
+        <GameRecords tpl={own} />
         <div className="menu-list own-actions">
           <button id="tpl-edit" onClick={() => setEditing(true)}>Bearbeiten</button>
           {!confirm

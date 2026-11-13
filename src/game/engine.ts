@@ -443,6 +443,13 @@ export function nextStep(s: GameState): NextStep {
   return { kind: 'result' };
 }
 
+/** Wizard: wer als Nächstes ansagt (Reihenfolge ab links vom Geber); null, wenn alle angesagt haben */
+export function bidTurn(s: GameState, roundId: string): string | null {
+  const players = seated(s);
+  const k = inputOrder(s, roundId).find(i => fieldOf(s, roundId, players[i].id, 'bid') === null);
+  return k === undefined ? null : players[k].id;
+}
+
 /** Zweiteilige Runde: erst alle das erste Feld (Ansagen, Meldungen), dann alle das zweite */
 export function bidPhase(s: GameState, roundId: RoundRef): BidField {
   const [a, b] = fieldsOf(s) ?? WIZARD_FIELDS;
@@ -459,6 +466,26 @@ export const fieldLabel = (s: GameState, f: BidField, plural = false) => {
 export function restOf(s: GameState, ref: RoundRef, playerId: string): number {
   if (ref === 'new') return 0;
   return -seated(s).filter(p => p.id !== playerId).reduce((a, p) => a + (scoreOf(s, ref, p.id) ?? 0), 0);
+}
+
+/** Gespielte Runden (für Rekorde): bei Tisch-Spielen jede Aktion, sonst Runden mit Werten; reine Endwertung 0 */
+export function playedRounds(s: GameState): number {
+  if (isResultOnly(s)) return 0;
+  if (isTable(s)) return tableRounds(s).length;
+  return liveRounds(s).filter(r => seated(s).some(p => scoreOf(s, r.id, p.id) !== null)).length;
+}
+
+/** Spiele mit Geber: Wizard und alle mit params.dealer */
+export const hasDealer = (s: GameState) => isBids(s) || !!s.game.rules.params?.dealer;
+/** Wer gibt in der laufenden Runde? Der Geber rotiert reihum, in Runde 1 gibt der erste Platz. */
+export function dealerOf(s: GameState): Player | null {
+  if (!hasDealer(s)) return null;
+  const players = seated(s);
+  if (!players.length) return null;
+  // Laufende Runde: die erste unvollständige, sonst die nächste neue
+  const rounds = liveRounds(s); let i = rounds.findIndex(r => !roundFull(s, r.id));
+  if (i === -1) i = rounds.length;
+  return players[i % players.length];
 }
 
 /** Reihenfolge der Eingabe in einer Runde: bei Wizard beginnt der Spieler links vom Geber. */

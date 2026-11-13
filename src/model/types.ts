@@ -60,6 +60,10 @@ export interface TemplateParams {
   split?: SplitField[];
   /** Nur der Rundensieger bekommt Punkte (Uno): erst Sieger wählen, alle anderen 0 */
   winnerOnly?: boolean;
+  /** Geber anzeigen; er rotiert jede Runde reihum (Wizard immer) */
+  dealer?: boolean;
+  /** Frage im Auswahlblatt bei winnerOnly, z. B. „Wer spielt?“ (Skat); dazu „Eingepasst“ */
+  soloPrompt?: string;
   /** Spielart für die Startseite (eigene Spiele): Karten, Würfel, Brett und Legen */
   family?: 'karten' | 'wuerfel' | 'brett';
   /** Tisch-Modus: Leben je Spieler (Schwimmen) */

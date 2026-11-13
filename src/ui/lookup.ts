@@ -43,3 +43,9 @@ export function spanOf(dates: string[]): string {
 
 /** Leistung als Faktor der Erwartung, z. B. „1,6×“ */
 export const fmtPerf = (x: number) => x.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '×';
+
+/** Namen als Aufzählung: „Anna“, „Anna und Ben“, „Anna, Ben und Clara“ (ohne Doppelte) */
+export function nameList(list: string[]): string {
+  const l = [...new Set(list)];
+  return l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' und ' + l[l.length - 1];
+}
