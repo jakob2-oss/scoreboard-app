@@ -85,7 +85,7 @@ export function Home() {
             {q.trim() ? (
               <div className="group">
                 <div className="list" id="search-results">
-                  {GAMES.filter(d => hit(d.template.name)).map(d => (
+                  {GAMES.filter(d => d.family && hit(d.template.name)).map(d => (
                     <button key={d.template.key} className="row tpl" data-game={d.template.key} onClick={() => act().openGame(d.template)}>
                       <GameIcon icon={GAME_ART[d.template.key].icon} tint={d.tint} />
                       <span className="t"><b>{d.template.name}</b></span>
@@ -93,16 +93,20 @@ export function Home() {
                     </button>
                   ))}
                   {templates.filter(t => hit(t.name)).map(t => <OwnRow key={t.key} t={t} />)}
-                  {!GAMES.some(d => hit(d.template.name)) && !templates.some(t => hit(t.name)) && <div className="row"><span className="t"><small>Keine Treffer</small></span></div>}
+                  {!GAMES.some(d => d.family && hit(d.template.name)) && !templates.some(t => hit(t.name)) && <div className="row"><span className="t"><small>Keine Treffer</small></span></div>}
                 </div>
               </div>
             ) : <>
-            {favGames.length + favOwn.length > 0 && (
-              <Section id="favs" title="Favoriten" count={favGames.length + favOwn.length} open={isOpen('favs')} onToggle={toggle}>
-                {favGames.map(d => <GameRow key={d.template.key} d={d} />)}
-                {favOwn.map(t => <OwnRow key={t.key} t={t} />)}
-              </Section>
-            )}
+            {/* Oben: Schnelles Spiel (Zettel ohne Vorlage) und die Favoriten */}
+            <Section id="favs" title="Favoriten" count={favGames.length + favOwn.length} open={isOpen('favs')} onToggle={toggle}>
+              <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
+                <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
+                <span className="t"><b>Schnelles Spiel</b></span>
+                <Chevron />
+              </button>
+              {favGames.map(d => <GameRow key={d.template.key} d={d} />)}
+              {favOwn.map(t => <OwnRow key={t.key} t={t} />)}
+            </Section>
             {FAMILIES.map(f => {
               const fixed = GAMES.filter(d => d.family === f.id), own = templates.filter(t => familyOf(t) === f.id);
               return (
@@ -114,19 +118,9 @@ export function Home() {
             })}
             <Section id="own" title="Eigene Spiele" count={ownOther.length} open={isOpen('own')} onToggle={toggle} listId="my-games">
               {ownOther.map(t => <OwnRow key={t.key} t={t} />)}
-              <button className="row tpl" id="new-free" onClick={() => act().openSetup()}>
-                <GameIcon icon={FREE_ICON} tint={FREE_TINT} />
-                <span className="t"><b>Freies Spiel</b></span>
-                <Chevron />
-              </button>
-              {GAMES.filter(d => !d.family).map(d => <GameRow key={d.template.key} d={d} />)}
               <button className="row tpl new-own" id="new-own" onClick={() => act().openSetup(true)}>
                 <span className="plus-ic" aria-hidden="true">+</span>
-                <span className="t"><b>Eigene Vorlage erstellen</b></span>
-              </button>
-              <button className="row tpl new-own" id="new-result" onClick={() => act().openSetup(true, 'result')}>
-                <span className="plus-ic" aria-hidden="true">+</span>
-                <span className="t"><b>Eigene Endwertung erstellen</b></span>
+                <span className="t"><b>Eigenes Spiel erstellen</b></span>
               </button>
             </Section>
             </>}

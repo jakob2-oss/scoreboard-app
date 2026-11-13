@@ -77,7 +77,7 @@ const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Ob
 export const defaultFreeConfig = (): FreeConfig => ({ name: '', win: 'high', end: { type: 'none' }, steps: [...DEFAULT_STEPS], save: false, notes: [], mode: 'rounds', unit: 'Punkte', kind: 'points', splitNames: ['', ''], zeroSum: false, keys: [], start: 0, swim: true, halves: 2, phase2: 'pass', family: null });
 
 export function fallbackName(date = new Date()): string {
-  return 'Freies Spiel vom ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+  return 'Schnelles Spiel vom ' + date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
 }
 
 /** Aus den Einstellungen des freien Spiels eine eigene Vorlage machen (eigener Schlüssel, eigene Statistik). */

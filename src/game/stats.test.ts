@@ -127,10 +127,10 @@ describe('Auszeichnungen einer Serie', () => {
       g('3', 'uno', '2026-11-01T22:00', [['b', 1], ['a', 2], ['c', 3]])
     ];
     expect(seriesAwards(list)).toEqual([
-      { label: 'Meiste Siege', value: '2×', who: ['a'] },
-      { label: 'Längste Siegesserie', value: '2 in Folge', who: ['a'] },
-      { label: 'Allrounder', value: '2 Spiele', who: ['a'] },
-      { label: 'Pechvogel', value: '2× Letzter', who: ['c'] }
+      { key: 'siege', label: 'Meiste Siege', n: 2, unit: 'Siege', who: ['a'] },
+      { key: 'serie', label: 'Siegesserie', n: 2, unit: 'in Folge', who: ['a'] },
+      { key: 'allround', label: 'Allrounder', n: 2, unit: 'Spiele', who: ['a'] },
+      { key: 'pech', label: 'Pechvogel', n: 2, unit: '× Letzter', who: ['c'] }
     ]);
   });
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });

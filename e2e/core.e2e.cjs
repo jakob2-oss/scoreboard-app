@@ -23,8 +23,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('19 Einträge (16 Spiele, Freies Spiel, zweimal Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
-  check('Eigene Endwertung erstellbar', (await raw('#s-home')).includes('Eigene Endwertung erstellen'));
+  check('17 Einträge (15 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 17 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('.new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
   // Eigene Vorlage erstellen
@@ -240,7 +240,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
 
   // Nur Ergebnis: Monopoly mit Platzierung
-  for (const k of ['uno', 'scrabble', 'siedler', 'ergebnis']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
+  for (const k of ['uno', 'scrabble', 'siedler']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
   await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
   check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
   check('Monopoly: Untertitel „Endstand“', (await raw('.top .sub')) === 'Endstand');
@@ -410,7 +410,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Favoriten stehen oben', await p.isVisible('#grp-favs') && (await p.locator('.grp >> nth=0').getAttribute('class')).includes('open') && (await raw('.grp >> nth=0')).includes('Kniffel'));
   await shot('01c-home-favs');
   await p.click('#grp-favs ~ .list [data-game="kniffel"]'); await p.click('#fav-toggle'); await p.click('.tpl-back'); await p.waitForTimeout(150);
-  check('Favorit wieder gelöst', !(await p.isVisible('#grp-favs')));
+  check('Favorit wieder gelöst', !(await raw('#grp-favs + .list')).includes('Kniffel') && (await raw('#grp-favs + .list')).includes('Schnelles Spiel'));
 
   // Tisch-Modus: Schwimmen (Leben) und Schocken (Deckel)
   await p.click('[data-game="schwimmen"]'); await shot('37a-schwimmen'); await p.click('#quick-start'); await p.waitForTimeout(300);
@@ -493,7 +493,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#series-live'); await p.waitForTimeout(150);
   await p.click('#series-end'); await p.waitForTimeout(250);
   check('Serie beendet: Abschluss mit Otter, Sieger und Auszeichnungen', await p.isVisible('.ser-trophy') && (await raw('.ser-champ')).endsWith('die Serie') && (await raw('.ser-awards')).includes('Meiste Siege'));
-  await shot('42c-series-done');
+  await shot('42c-series-done'); await p.evaluate(() => document.querySelector('.ser-awards').scrollIntoView({ block: 'center' })); await shot('42d-series-awards'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42d-series-awards-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; document.querySelector('#s-series .scroll').scrollTo(0, 0); });
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42c-series-done-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
   check('zurück in der Serienliste', await p.isVisible('.series-row') && !(await p.isVisible('#series-live')));
@@ -528,7 +528,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Suche findet Rommé', (await p.locator('#search-results .row.tpl').count()) === 1 && (await text('#search-results')).includes('Rommé'));
   await p.fill('#game-search', 'xyz');
   check('Suche ohne Treffer', (await text('#search-results')).includes('Keine Treffer'));
-  await p.fill('#game-search', 'freies spiel vom');
+  await p.fill('#game-search', 'schnelles spiel vom');
   check('Suche findet eigene Spiele', (await p.locator('#search-results .row[data-own]').count()) === 1);
   await shot('45b-search');
   await p.fill('#game-search', '');
@@ -543,7 +543,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.row[data-own] >> text=Skyjo Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
 
   // Eigene Endwertung erstellen
-  await p.click('#new-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
+  await p.click('#new-own'); await p.click('#mode-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
   check('Endwertung: ohne Spielende und Zählschritte, Gewinner nicht wählbar', !(await p.isVisible('#setup-end')) && !(await p.isVisible('.step-chips')) && !(await raw('#s-setup')).includes('Wer gewinnt'));
   await p.fill('#note-name', 'Reihen'); await p.press('#note-name', 'Enter'); await shot('44b-own-result-edit');
   await p.click('#setup-save'); await p.waitForTimeout(200);
