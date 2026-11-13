@@ -546,12 +546,10 @@ td.cell.wzc .bidn { font-size: 19px; }
 :root[data-theme="dark"] #s-game.wz .top h2, :root[data-theme="dark"] #s-game.wz .top .text-btn { color: var(--acc-l); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #s-game.wz .top h2, :root:not([data-theme="light"]) #s-game.wz .top .text-btn { color: var(--acc-l); } }
 #s-game.bidding /* Kleines Symbol in der Ecke: Fächer und Kartenzahl */
-.wz-mini { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
-.wz-mini-fan { position: relative; width: 26px; height: 18px; }
-.wz-mini-fan i { position: absolute; left: 50%; bottom: 0; width: 10px; height: 15px; margin-left: -5px; border-radius: 2.5px; background: var(--acc); box-shadow: inset 0 0 0 1.5px #fffaf2; transform-origin: 50% 140%; }
-.wz-mini b { font-family: var(--f-num); font-size: 13px; font-weight: 600; color: var(--acc); line-height: 1; }
-:root[data-theme="dark"] .wz-mini b { color: var(--acc-l); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wz-mini b { color: var(--acc-l); } }
+.wz-mini { position: relative; display: inline-grid; place-items: center; width: 24px; height: 32px; }
+.wz-mini b { position: relative; display: grid; place-items: center; width: 22px; height: 30px; border-radius: 5px; background: var(--acc); color: #fff;
+  box-shadow: inset 0 0 0 2px #fffaf2; font-family: var(--f-num); font-size: 13px; font-weight: 700; transform: rotate(-6deg); }
+.wz-mini-back { position: absolute; width: 22px; height: 30px; border-radius: 5px; background: var(--acc-l); box-shadow: inset 0 0 0 2px #fffaf2; transform: translate(4px, -1px) rotate(10deg); }
 td.cell.wzc small { display: flex; align-items: center; justify-content: center; gap: 4px; }
 td.cell.wzc small i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 td.cell.wzc small i.hit { background: var(--acc-l); }
@@ -581,3 +579,4 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .wz-res.neg { color: #e0705a; }
 .wz-sum { display: flex; justify-content: space-between; align-items: center; background: var(--fill); border-radius: 16px; padding: 12px 14px; margin: 6px 0 4px; font-weight: 600; }
 .wz-sum .ok { color: #6fbf73; } .wz-sum .warn { color: #e0a940; }
+.dock .mode-btn { padding: 0 14px; font-size: 15px; }

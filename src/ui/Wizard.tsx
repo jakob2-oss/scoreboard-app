@@ -9,13 +9,11 @@ import { IconUndo } from './icons';
 /** Kartenzahl der Runde (Runde n = n Karten) */
 const cardsOf = (g: GameState, ref: string) => liveRounds(g).findIndex(r => r.id === ref) + 1;
 
-/** Kleines Symbol in der Ecke des Blocks: Fächer und Kartenzahl der laufenden Runde */
+/** Kleines Symbol in der Ecke des Blocks: eine Karte mit der Kartenzahl der laufenden Runde, dahinter angedeutet weitere */
 export function MiniHand({ cards }: { cards: number }) {
-  const n = Math.min(Math.max(1, cards), 5);
   return (
     <span className="wz-mini" aria-label={`${cards} ${cards === 1 ? 'Karte' : 'Karten'}`}>
-      <span className="wz-mini-fan">{Array.from({ length: n }, (_, k) => <i key={k} style={{ transform: `rotate(${(k - (n - 1) / 2) * 14}deg)` }} />)}</span>
-      <b>{cards}</b>
+      {cards > 1 && <i className="wz-mini-back" />}<b>{cards}</b>
     </span>
   );
 }
@@ -38,6 +36,7 @@ export function BidBar({ g, roundId: ref }: { g: GameState; roundId: string }) {
       <div className="wz-nav">
         <button className="secondary" aria-label="Rückgängig" disabled={!s.undo.length} onClick={() => act().undo()}><IconUndo /></button>
         <button className="secondary wide" onClick={() => (prev ? act().bidBack() : act().closeBidBar())}>{prev ? `Zurück zu ${prev.name}` : 'Schließen'}</button>
+        <button className="secondary" id="bid-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Manuell</button>
       </div>
     </div>
   );
@@ -77,6 +76,7 @@ export function TricksSheet({ g, roundId: ref }: { g: GameState; roundId: string
           })}
           <div className="wz-sum"><span>Stiche verteilt</span><b className={ok ? 'ok' : 'warn'}>{sum} von {cards}</b></div>
           <div className="pad-actions">
+            <button className="secondary" id="tricks-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Manuell</button>
             <button className="primary" id="tricks-go" disabled={!ok} onClick={() => act().tricksCommit(ref, t)}>Runde {no} eintragen</button>
           </div>
         </div>

@@ -158,12 +158,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   „Zurück zu …“ nimmt die letzte Ansage zurück. Während der Ansagen rückt die laufende Runde ins Bild.
 - Stiche auf eigenem Blatt: alle Spieler untereinander, Ansage als Rahmen, Punkte sofort; oben die Karten der Runde,
   jede in der Farbe dessen, der den Stich geholt hat. „Runde eintragen“ erst, wenn die Stiche aufgehen.
-- Kartenzahl der Runde als kleines Symbol (Mini-Fächer mit Zahl) in der Ecke des Blocks, nimmt keinen Platz weg. Kein Trumpf
+- Kartenzahl der Runde als kleine lila Karte mit Zahl in der Ecke des Blocks, nimmt keinen Platz weg. Kein Trumpf
   (liegt im Spiel selbst).
-- Zellen: Punkte groß, darunter Treffer-Punkt und „2 von 2“ bzw. „3 statt 0“.
+- Zellen: Punkte groß, darunter Treffer-Punkt und Ansage/Stiche („2/3“).
 - Spielfarbe Lila (`src/ui/accent.ts`), Mechanik für weitere Spiele vorbereitet.
 - Einfache Eingabe pro Spieler bleibt im Menü wählbar (`src/lib/modes.ts`, gemerkt je Spiel).
 - Kein Untertitel bei Wizard im Block (Runde, Karten und Geber stehen im Block). Bei allen Spielen mit Geber steht
   „… gibt“ nicht mehr im Untertitel, nur noch als Schild über der Spalte.
 - Geber als kleine Karte am Avatar (keine eigene Zeile mehr). Block bei allen Spielen flacher: Kacheln 38 px
   (mit Zusatzzeile 44 px), kompakter Kopf und Summen.
+- Manuelle Eingabe jederzeit mit einem Tipp: „Manuell“ in der unteren Leiste, in der Ansage-Leiste und im Stiche-Blatt;
+  zurück mit „Im Block“. Es geht direkt dort weiter, wo man gerade ist.

@@ -206,7 +206,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                     return (
                       <td key={p.id} className={'cell wzc ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (turn ? ' turn' : '')}
                         onClick={() => (bar === r.id ? undefined : act().openPad(r.id, p.id))} aria-label={`${p.name}, Runde ${ri + 1}`}>
-                        {v !== null ? <>{(v > 0 ? '+' : '') + fmt(v)}<small><i className={b === t2 ? 'hit' : 'miss'} />{t2} {b === t2 ? 'von' : 'statt'} {b}</small></>
+                        {v !== null ? <>{(v > 0 ? '+' : '') + fmt(v)}<small><i className={b === t2 ? 'hit' : 'miss'} />{b}/{t2}</small></>
                           : b !== null ? <span className="bidn">{b}</span> : turn ? <span className="bidn q">?</span> : ''}
                       </td>
                     );
@@ -267,6 +267,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
+      {isBids(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
         : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}

@@ -533,6 +533,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
       toast(`Runde ${roundNumber(ng, ref)} eingetragen`);
     },
+    /** Umschalten zwischen Block und manueller Eingabe pro Spieler; geht direkt dort weiter, wo man war */
+    switchEntry(key: string) {
+      const g = state.game; if (!g) return;
+      const next: EntryMode = modeOf(key) === 'block' ? 'simple' : 'block';
+      actions.setEntryMode(key, next);
+      if (g.game.rules.key === key && nextStep(g).kind !== 'result') actions.roundGo();
+    },
     /** Eingabe je Spiel: ausführlich im Block oder einfach pro Spieler (gemerkt je Spiel) */
     setEntryMode(key: string, mode: EntryMode) {
       prefs.setMode?.(key, mode);

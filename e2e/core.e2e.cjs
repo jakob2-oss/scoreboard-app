@@ -239,13 +239,16 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('13-wizard-tricks');
   await p.click('#tricks-go'); await p.waitForTimeout(200);
   const r1 = (await text('tbody tr:nth-child(1)')).replace(/\s+/g, ' ');
-  check('Wizard: Punkte 20, 30, 20 mit Treffern', r1.includes('+20') && r1.includes('+30') && r1.includes('1 von 1'), r1);
+  check('Wizard: Punkte 20, 30, 20 mit Treffern', r1.includes('+20') && r1.includes('+30') && r1.includes('1/1'), r1);
   check('Wizard: weiter mit Ansagen Runde 2, Kartensymbol mit 2', (await raw('#round-go')).startsWith('Ansagen Runde 2') && (await raw('.wz-mini b')) === '2');
   await shot('14-wizard-ov');
-  await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(200);
-  await p.click('#round-go'); await p.waitForTimeout(400);
-  check('Wizard: einfache Eingabe pro Spieler wählbar', (await page()) >= 0 && await p.isVisible('.pp-keys'));
-  await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(200);
+  await p.click('#mode-switch'); await p.waitForTimeout(400);
+  check('Wizard: „Manuell“ geht direkt zur Eingabe pro Spieler', (await page()) >= 0 && await p.isVisible('.pp-keys'));
+  await p.click('.pp-tab >> nth=0'); await p.waitForTimeout(300);
+  check('Wizard: zurück „Im Block“ sichtbar', (await raw('#mode-switch')) === 'Im Block');
+  await p.click('#mode-switch'); await p.waitForTimeout(300);
+  check('Wizard: im Block geht es mit der Leiste weiter', await p.isVisible('.wz-bar') && await p.isVisible('#bid-manual'));
+  await p.click('#bid-manual'); await p.waitForTimeout(300); await p.click('.pp-tab >> nth=0'); await p.waitForTimeout(200); await p.click('#mode-switch'); await p.waitForTimeout(200); await p.click('.wz-nav .wide'); await p.waitForTimeout(200);
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
 
   // Nur Ergebnis: Monopoly mit Platzierung
