@@ -361,6 +361,18 @@ describe('Otter im Spiel', () => {
   });
 });
 
+describe('Spieler im Reiter Spieler', () => {
+  it('legt an, ohne auszuwählen; doppelte Namen gibt es nicht', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); await a.addPlayer(' Lena ', false);
+    expect(st.get().players.map(p => p.name)).toEqual(['Lena']);
+    expect(st.get().selected).toEqual([]);
+    await a.addPlayer('lena', false);
+    expect(st.get().players).toHaveLength(1);
+    expect(st.get().toast?.text).toBe('Lena gibt es schon');
+  });
+});
+
 describe('Turnier', () => {
   it('Duelle: auslosen, Partie für den Tisch spielen, Sieger rückt vor, von Hand entscheiden, Turniersieger', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;

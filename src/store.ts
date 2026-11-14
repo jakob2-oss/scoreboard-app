@@ -229,7 +229,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, tallies, favs: prefs.getFavs?.() ?? [] });
       } catch {
         set({ ready: true });
-        toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
+        toast('Gerätespeicher nicht verfügbar, Daten gehen beim Schließen verloren');
       }
     },
     /** Sicherung als Text (JSON) */
@@ -340,14 +340,20 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
       set({ selected: sel, teamOf: state.teamMode && state.teamOf[id] === undefined && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
     },
-    async addPlayer(rawName: string) {
+    /** Spieler anlegen; bei der Spielerwahl gleich auswählen, im Reiter „Spieler“ nur anlegen */
+    async addPlayer(rawName: string, select = true) {
       const name = rawName.trim().slice(0, 18);
       if (!name) return;
       const existing = state.players.find(p => p.name.toLowerCase() === name.toLowerCase());
-      if (existing) { if (!state.selected.includes(existing.id)) set({ selected: [...state.selected, existing.id] }); return; }
+      if (existing) {
+        if (!select) { toast(`${existing.name} gibt es schon`); return; }
+        if (!state.selected.includes(existing.id)) set({ selected: [...state.selected, existing.id] });
+        return;
+      }
       const t = clock.now();
       const p: Player = { id: clock.uid(), name, color: PLAYER_COLORS[state.players.length % PLAYER_COLORS.length], createdAt: t, updatedAt: t };
-      set({ players: [...state.players, p], selected: [...state.selected, p.id] });
+      set({ players: [...state.players, p], selected: select ? [...state.selected, p.id] : state.selected });
+      if (!select) toast(`${name} angelegt`);
       repo.savePlayer(p).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
     /** Neue Partie starten. Eine laufende wird geparkt (leere werden verworfen) und bleibt unter „Laufende Partien“. */

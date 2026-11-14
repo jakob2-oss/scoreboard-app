@@ -10,6 +10,7 @@ import { TabBar } from './TabBar';
 /** Alle gespeicherten Spieler mit Partien und Siegen */
 export function People() {
   const { players, history } = useApp();
+  const [name, setName] = useState('');
   const rows = players.map(p => ({ p, s: summary(filterGames(history, p.id, 'all', null), p.id) }))
     .sort((a, b) => b.s.played - a.s.played || a.p.name.localeCompare(b.p.name));
   return (
@@ -17,6 +18,10 @@ export function People() {
       <div className="scroll">
         <div className="gutter page-body">
           <h1 className="page-title">Spieler</h1>
+          <form className="add-row people-add" onSubmit={e => { e.preventDefault(); act().addPlayer(name, false); setName(''); (document.activeElement as HTMLElement | null)?.blur(); }}>
+            <input id="people-name" value={name} onChange={e => setName(e.target.value)} placeholder="Neuer Name" autoComplete="off" maxLength={18} aria-label="Neuer Spielername" />
+            <button type="submit" id="people-add" disabled={!name.trim()}>Hinzufügen</button>
+          </form>
           {!players.length && <div className="card empty"><p>Noch keine Spieler</p></div>}
           {players.length > 0 && (
             <div className="list">
