@@ -9,7 +9,7 @@ import { entryMode } from '../lib/modes';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { hasPhases, phasesDone, phaseIn, liveRounds, phaseHue, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
+import { hasPhases, phasesDone, phaseIn, liveRounds, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -62,8 +62,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>
         {keys ? <>
-          {phaseNo > 0 && <button className={'pad-phase' + (phaseOk ? ' on' : '')} id="pad-phase" aria-pressed={phaseOk} onClick={() => a.togglePhase()}
-            style={{ ['--ph-h' as string]: String(phaseHue(phaseNo)) }}>
+          {phaseNo > 0 && <button className={'pad-phase' + (phaseOk ? ' on' : '')} id="pad-phase" aria-pressed={phaseOk} onClick={() => a.togglePhase()}>
             <span className="ph-no">{phaseNo}</span><b>{phaseOk ? `Phase ${phaseNo} geschafft` : `Phase ${phaseNo}`}</b><i className="ph-tick" aria-hidden="true" />
           </button>}
           <div className="quick pad-quick">

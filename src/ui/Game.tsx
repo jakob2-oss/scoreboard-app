@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, phaseHue, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -212,10 +212,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
                 // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
                 const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
-                // Phase 10: Farbe der Phase, an der gearbeitet wurde; Nummer grün, wenn geschafft
+                // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
                 return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
-                  style={ph ? css({ '--ph-h': String(phaseHue(ph)) }) : undefined}
                   onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
                   {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}

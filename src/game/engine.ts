@@ -231,8 +231,6 @@ export function setOrder(s: GameState, ref: RoundRef, order: string[], clock: Cl
   return { state: { ...state, game: touch(state, clock), entries }, roundId };
 }
 export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
-/** Phase 10: Farbton je Phase, ein leiser Regenbogen von Phase 1 (rot) bis Phase 10 (violett) */
-export const phaseHue = (phase: number) => Math.round(((Math.max(1, Math.min(10, phase)) - 1) * 290) / 9);
 /** Phase 10: an welcher Phase ein Spieler in einer Runde gearbeitet hat (1 bis 10) */
 export const phaseAt = (s: GameState, roundIndex: number, playerId: string) => Math.min(phasesDone(s, playerId, roundIndex) + 1, 10);
 

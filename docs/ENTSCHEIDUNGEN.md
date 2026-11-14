@@ -202,7 +202,7 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Uno im Block: „Runde n eintragen“, Sieger wählen, nur der Sieger trägt im kompakten Ziffernblock ein
   (Knopf „Eintragen“), danach zurück. Krone über dem Rundensieger. Einzelseiten über „Manuell“.
 - Phase 10 im Block: im Ziffernblock ein Knopf „Phase n“ zum Abhaken; „Raus“ hakt die Phase gleich mit ab.
-  Jede Zelle im Farbton der Phase, an der gearbeitet wurde (leiser Regenbogen von Rot bis Violett, im Dunkeln
-  gedeckt), oben rechts die Phasennummer: grün geschafft, rot nicht geschafft.
+  Geschaffte Phase: Zelle grün hinterlegt, sonst normale Kachel. Die Phasennummer steht leise oben rechts,
+  ohne Farbe. (Ein Regenbogen je Phase war zu viel.)
 - Arschloch im Block: Krone für den Präsidenten, kleines Häufchen für das Arschloch; Vize und Bürger als Kürzel.
   Spielerseite zeigt die Plätze je Runde als Kurve (oben der Präsident).

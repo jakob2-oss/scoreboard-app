@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, phaseHue } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -264,7 +264,6 @@ describe('Uno und Phase 10 im Block', () => {
     expect(phaseIn(g, r.id, 'id2')).toBe(false);
     expect(phaseAt(g, 1, 'id1')).toBe(2);
     expect(phaseAt(g, 1, 'id2')).toBe(1);
-    expect(phaseHue(1)).toBe(0); expect(phaseHue(10)).toBe(290);
   });
 });
 
