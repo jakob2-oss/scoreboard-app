@@ -16,7 +16,7 @@ const nest = (icon: string, x: number, y: number, s: number) =>
 const SAD_EYE = `<ellipse cx="-17.5" cy="-6" rx="6" ry="5" fill="#271d18"/><path d="M-25-7.5C-23-14-12-14-10-9.5L-11-6C-15-10-21-10-25-7.5z" fill="#8f6447"/><circle cx="-15.5" cy="-6" r="1.4" fill="#fff" opacity=".7"/><rect x="-27" y="-18" width="15" height="3.2" rx="1.6" fill="#5e3f2d" transform="rotate(-16 -19 -16)"/>`;
 
 /** Otter: fröhlich mit Krone und Pokal, oder traurig mit eigenem Gegenstand in den Pfoten (prop, Ursprung bei den Pfoten) */
-function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
+export function otter(o: { sad?: boolean; prop?: string; tear?: boolean; shades?: boolean; hat?: 'crown' | 'cap' | 'none' } = {}) {
   // Ursprung: Mitte zwischen den Füßen; Kopf bei y = -142. Licht kommt von links oben (Lampe).
   const mirror = (part: string) => `${part}<g transform="scale(-1 1)">${part}</g>`;
   const eye = `<path d="M-25-7C-22-15-13-15-10-7C-12.5-10.5-22.5-10.5-25-7z" fill="${C.eye}"/>`;
@@ -40,6 +40,8 @@ function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
       ${mirror(`<circle cx="-16" cy="8" r="12.5" fill="${C.muzzle}"/>`)}
       ${mirror(dots)}
       ${o.sad ? mirror(SAD_EYE) : mirror(eye)}
+      ${o.shades ? `<path d="M-30-14h24c1 9-3 14-11 14s-13-5-13-14zM6-14h24c0 9-5 14-13 14S5-5 6-14z" fill="#1d1a2e"/><rect x="-7" y="-13" width="14" height="3" rx="1.5" fill="#1d1a2e"/>
+        <path d="M-26-11h7l-6 8z" fill="#fff" opacity=".35"/><path d="M10-11h7l-6 8z" fill="#fff" opacity=".35"/>` : ''}
       ${mirror(`<ellipse cx="-27" cy="1" rx="5" ry="3" fill="#e9a58b" opacity=".35"/>`)}
       <path d="M-9-4C-9-10 9-10 9-4 9 1 4 4 0 4S-9 1-9-4z" fill="${C.nose}"/>
       <ellipse cx="-3" cy="-6" rx="3" ry="1.5" fill="#fff" opacity=".45"/>
@@ -47,7 +49,9 @@ function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
       ${o.sad ? `<path d="M-9 19C-6 13 6 13 9 19 5 16.5-5 16.5-9 19z" fill="#4a2f25"/>${o.tear ? `<path d="M-19 4c2 4 4 7 4 9a4 4 0 0 1-8 0c0-2 2-5 4-9z" fill="#97c4e3" class="vo-tear"/>` : ''}`
         : `<path d="M-13 9C-9 23 9 23 13 9 7 12.5-7 12.5-13 9z" fill="#4a2f25"/><ellipse cx="0" cy="16.5" rx="5.5" ry="3" fill="#e98a86"/>`}
       ${mirror(whisker.replace(/x="22"/g, 'x="-42"').replace(/rotate\((-?\d+) 22/g, (_m, a) => `rotate(${-Number(a)} -22`))}
-      ${o.sad ? '' : `<g transform="translate(0 -34) rotate(-6)">
+      ${o.hat === 'cap' ? `<g transform="translate(2 -22) rotate(-8)"><path d="M-34 6C-34-16-18-30 2-30S36-16 36 6z" fill="#d9634a"/><path d="M-6 6h56c4 0 4 7 0 7H-6z" fill="#b5452f"/>
+        <circle cx="2" cy="-30" r="4" fill="#b5452f"/><path d="M-20-6c4-10 12-16 22-17" stroke="#fff" stroke-width="3" fill="none" opacity=".35" stroke-linecap="round"/></g>` : ''}
+      ${o.sad || o.hat === 'cap' || o.hat === 'none' ? '' : `<g transform="translate(0 -34) rotate(-6)">
         <path d="M-27 10l-5-26 15 12 17-22 17 22 15-12-5 26z" fill="${C.gold}"/>
         <path d="M0-26l17 22 15-12-3 14c-8 2-20-2-29-24z" fill="${C.goldDark}" opacity=".35"/>
         <rect x="-28" y="5" width="56" height="11" rx="4" fill="${C.goldDark}"/>

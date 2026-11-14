@@ -565,12 +565,20 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Serien: Statistikseite
   await p.click('#tab-events'); await p.waitForTimeout(200);
-  check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
+  check('Serie in der Liste mit Banner und Teilnehmern', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026' && await p.isVisible('.series-row .ser-bicon svg') && (await p.locator('.series-row .ser-stack .av').count()) === 3);
   await shot('40-series-list');
   await p.click('.series-row'); await p.waitForTimeout(200);
   const nSer = Number((await text('.ser-hero small')).split(' ')[0]);
   check('Serie: Partien von späteren Abschlüssen vorbelegt', nSer >= 2, await text('.ser-hero small'));
   check('Serie: Tabelle mit drei Spielern', (await p.locator('.ser-table .prow').count()) === 3);
+  check('Serie: Banner oben, Teilnehmer aufgelistet', await p.isVisible('.ser-banner svg') && (await p.locator('#series-people .ser-person').count()) === 3);
+  await p.click('.ser-game >> nth=0'); await p.waitForTimeout(250);
+  check('Serie: Partie öffnet die Einzelheiten', await p.isVisible('.bsheet[aria-label="Partie"] .podium'));
+  await shot('41b-series-detail');
+  await p.mouse.click(195, 160); await p.waitForTimeout(300);
+  check('Serie: Einzelheiten wieder zu', !(await p.isVisible('.bsheet[aria-label="Partie"]')));
+  await p.click('#banner-2'); await p.waitForTimeout(150);
+  check('Serie: Banner wählbar', (await p.getAttribute('#banner-2', 'aria-pressed')) === 'true');
   check('Serie: Leistung ist Standard', (await p.getAttribute('#sort-perf', 'aria-pressed')) === 'true' && (await text('.ser-table .prow .pts >> nth=0')).endsWith('×'));
   await shot('41-series');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });

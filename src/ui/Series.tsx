@@ -1,6 +1,8 @@
 import { act, useApp } from '../store';
 import { DEFAULT_POINTS, seriesAwards, seriesGames, seriesPlaces, seriesTable, type SeriesRow, type SeriesSort } from '../game/stats';
-import { trophyRoom } from './trophy';
+import { BANNERS, bannerOf, seriesChampScene } from './banners';
+import { GameDetail } from './History';
+import { useState } from 'react';
 import { AWARD_ART } from './awardArt';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
@@ -15,6 +17,7 @@ const VALUE: Record<SeriesSort, (r: SeriesRow) => string> = {
 /** Statistikseite einer Serie: Tabelle, Spiele, Partien und die Platzpunkte */
 export function Series() {
   const { series, events, history, players } = useApp();
+  const [open, setOpen] = useState<string | null>(null);
   const ev = events.find(e => e.id === series?.id);
   if (!series || !ev) return null;
   const a = act(), pts = ev.points ?? DEFAULT_POINTS;
@@ -32,8 +35,9 @@ export function Series() {
   // Beendet: Abschlussseite mit Otter, Sieger und Auszeichnungen. Bild: das meistgespielte Spiel
   const done = !!ev.endedAt && !ev.active && games.length > 0;
   const champ = rows.filter((_, i) => places[i] === 1).map(r => r.playerId);
-  const topGame = seriesGames(games)[0];
-  const hero = done && topGame ? trophyRoom(iconFor(topGame.key, topGame.name).icon, 'GESAMTSIEG') : null;
+  const banner = bannerOf(ev.id, ev.banner);
+  // Teilnehmer: alle, die in einer Partie der Serie mitgespielt haben (Reihenfolge wie die Tabelle)
+  const people = rows.map(r => ({ ...playerOf(players, r.playerId), id: r.playerId }));
   return (
     <section className="screen" id="s-series">
       <div className="top gutter">
@@ -42,13 +46,19 @@ export function Series() {
       </div>
       <div className="scroll">
         <div className="gutter pf-body">
-          {hero && <div className="ser-trophy" dangerouslySetInnerHTML={{ __html: hero }} />}
+          <div className="ser-banner" dangerouslySetInnerHTML={{ __html: banner.svg }} />
           <div className="ser-hero">
             {ev.active && <span className="ser-badge">Läuft</span>}
             <h1>{ev.name}</h1>
-            {done && champ.length > 0 && <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'gewinnen' : 'gewinnt'} die Serie</div>}
-            <small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'} mit ${rows.length} ${rows.length === 1 ? 'Spieler' : 'Spielern'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small>
+            <small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small>
+            {people.length > 0 && <div className="ser-people" id="series-people">
+              {people.map(p => <button key={p.id} className="ser-person" onClick={() => a.openProfile(p.id)}><Avatar p={p} /><span>{p.name}</span></button>)}
+            </div>}
           </div>
+          {done && champ.length > 0 && <div className="ser-champ-card">
+            <div className="ser-trophy" dangerouslySetInnerHTML={{ __html: seriesChampScene() }} />
+            <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'gewinnen' : 'gewinnt'} die Serie</div>
+          </div>}
           {ev.active
             ? <button className="secondary ser-end" id="series-end" onClick={() => a.endEvent(ev.id)}>Serie beenden</button>
             : <button className="secondary ser-end" id="series-resume" onClick={() => a.resumeEvent(ev.id)}>{ev.endedAt ? 'Fortsetzen' : 'Starten'}</button>}
@@ -101,11 +111,11 @@ export function Series() {
                 {games.map(h => {
                   const ic = iconFor(h.key, h.name);
                   return (
-                    <div key={h.id} className="row">
+                    <button key={h.id} className="row ser-game" onClick={() => setOpen(h.id)}>
                       <GameIcon icon={ic.icon} tint={ic.tint} />
                       <span className="t"><b>{h.name}</b><small>{dateShort(h.finishedAt)}, {h.results.length} Spieler</small></span>
                       <span className="win-stack">{h.results.filter(r => r.place === 1).slice(0, 2).map(w => <Avatar key={w.playerId} p={playerOf(players, w.playerId)} />)}</span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -124,12 +134,21 @@ export function Series() {
               {!isDefault && <button className="text-btn pt-reset" onClick={() => a.updateEvent(ev.id, { points: [...DEFAULT_POINTS] })}>Vorschlag 3, 2, 1</button>}
             </div>
           </div>
+          <div className="group"><div className="eyebrow">Banner</div>
+            <div className="ser-banners">
+              {BANNERS.map((b, i) => (
+                <button key={b.name} className="ser-bthumb" aria-pressed={banner.i === i} aria-label={b.name} id={`banner-${i}`} onClick={() => a.updateEvent(ev.id, { banner: i })}
+                  dangerouslySetInnerHTML={{ __html: bannerOf(ev.id, i).svg }} />
+              ))}
+            </div>
+          </div>
           <div className="group"><div className="eyebrow">Name</div>
             <input className="ser-rename" id="series-rename" defaultValue={ev.name} maxLength={32} autoComplete="off" aria-label="Name der Serie"
               onBlur={e => a.updateEvent(ev.id, { name: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
           </div>
         </div>
       </div>
+      {open && games.some(h => h.id === open) && <GameDetail h={games.find(h => h.id === open)!} onClose={() => setOpen(null)} />}
     </section>
   );
 }

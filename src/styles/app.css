@@ -699,3 +699,20 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 #tk-sendout { background: color-mix(in srgb, var(--good) 22%, var(--surface)); color: var(--fg); }
 #tk-chicloss { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--fg); }
 .tb-chic { display: block; font-size: 10.5px; font-weight: 700; color: #d9634a; letter-spacing: .02em; }
+
+/* Serien: Banner oben, Teilnehmer, Siegerbild darunter, Banner-Wahl, Banner als Icon in der Liste */
+.ser-banner { margin: 2px 0 12px; border-radius: 22px; overflow: hidden; aspect-ratio: 390 / 150; }
+.ser-banner svg, .ser-bthumb svg, .ser-bicon svg { display: block; width: 100%; height: 100%; }
+.ser-people { display: flex; flex-wrap: wrap; gap: 6px 8px; justify-content: center; margin-top: 12px; }
+.ser-person { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--surface); box-shadow: var(--soft); font-weight: 600; font-size: 14px; }
+.ser-person .av { width: 26px; height: 26px; font-size: 12px; }
+.ser-champ-card { margin: 4px 0 16px; border-radius: 22px; overflow: hidden; background: var(--surface); box-shadow: var(--soft); }
+.ser-champ-card .ser-trophy { margin: 0; border-radius: 0; }
+.ser-champ-card .ser-champ { padding: 12px 16px 14px; text-align: center; font-family: var(--f-display); font-weight: 600; font-size: 19px; }
+.ser-banners { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.ser-bthumb { aspect-ratio: 390 / 150; border-radius: 10px; overflow: hidden; padding: 0; opacity: .55; transition: opacity .15s, transform .15s; }
+.ser-bthumb[aria-pressed="true"] { opacity: 1; transform: scale(1.06); }
+.ser-bicon { flex: none; width: 58px; height: 42px; border-radius: 12px; overflow: hidden; }
+.ser-bicon svg { width: 100%; height: 100%; }
+.ser-stack .av { width: 26px; height: 26px; font-size: 12px; }
+.ser-game { text-align: left; width: 100%; }

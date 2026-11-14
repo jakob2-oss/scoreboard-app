@@ -252,3 +252,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
     als Einziger noch Deckel hat.
   - „Chic aus dem Rohr“: zahlt sofort die Runde, das Spiel läuft weiter. Am Platz steht „zahlt“. In der Wertung
     steht er wie der Verlierer hinten, beide zählen als verloren.
+
+## 14.11.2026: Serien (Paket 8)
+- Jede Serie hat ein Banner oben (`src/ui/banners.ts`): fünf freche Motive mit dem Otter (Kneipe mit Bier und
+  Sonnenbrille, Strand mit Cocktail, Disco mit Cap und Mikro, Lagerfeuer mit Würfelbecher, Pokerabend mit Karten).
+  Ohne eigene Wahl ergibt sich das Motiv aus der Serie; wählbar unten auf der Serienseite. Eigene Bilder später.
+- Unter Name und Zeitraum stehen die Teilnehmer als Namensknöpfe (öffnen das Profil).
+- Siegerbild der Serie ist eigenes: Nacht mit Feuerwerk, Otter mit Sonnenbrille, Krone und Pokal, Schild
+  „SERIENSIEG“, als Karte unter dem Banner mit „… gewinnt die Serie“.
+- Partien der Serie lassen sich öffnen (dieselbe Ansicht wie im Verlauf: Serie ändern, löschen, Plätze).
+- Serienliste und laufende Serie zeigen das Banner als kleines Bild und die Teilnehmer.
+- Der Otter kann jetzt Sonnenbrille, Cap oder keine Krone tragen (`otter({ shades, hat })`).

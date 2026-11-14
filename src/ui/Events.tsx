@@ -6,6 +6,7 @@ import { Avatar } from './Avatar';
 import { Chevron } from './icons';
 import { playerOf, recentEvents, spanOf } from './lookup';
 import { TabBar } from './TabBar';
+import { bannerOf } from './banners';
 
 /** Laufende Serie als Karte: Name, Partien und wer führt (Startseite und Reiter Serien) */
 export function LiveSeries({ ev }: { ev: GameEvent }) {
@@ -15,7 +16,7 @@ export function LiveSeries({ ev }: { ev: GameEvent }) {
   const lead = top ? playerOf(players, top.playerId) : null;
   return (
     <button className="ser-live" id="series-live" onClick={() => act().openSeries(ev.id)}>
-      <span className="ser-live-dot" aria-hidden="true" />
+      <span className="ser-bicon" dangerouslySetInnerHTML={{ __html: bannerOf(ev.id, ev.banner).svg }} />
       <span className="t"><small>Läuft</small><b>{ev.name}</b>
         <span className="sub">{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}${lead ? `, ${lead.name} führt` : ''}` : 'Noch keine Partien'}</span></span>
       {lead && <Avatar p={lead} />}
@@ -52,12 +53,12 @@ export function Events() {
             <div className="list">
               {others.map(e => {
                 const games = history.filter(h => h.eventId === e.id);
-                const top = seriesTable(games, e.points ?? DEFAULT_POINTS)[0];
+                const table = seriesTable(games, e.points ?? DEFAULT_POINTS);
                 return (
                   <button key={e.id} className="row series-row" onClick={() => act().openSeries(e.id)}>
-                    <span className="ser-count"><b>{games.length}</b></span>
+                    <span className="ser-bicon" dangerouslySetInnerHTML={{ __html: bannerOf(e.id, e.banner).svg }} />
                     <span className="t"><b>{e.name}</b><small>{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}, ${spanOf(games.map(g => g.finishedAt))}` : 'Noch keine Partien'}</small></span>
-                    {top && <Avatar p={playerOf(players, top.playerId)} />}
+                    <span className="win-stack ser-stack">{table.slice(0, 4).map(r => <Avatar key={r.playerId} p={playerOf(players, r.playerId)} />)}</span>
                     <Chevron />
                   </button>
                 );

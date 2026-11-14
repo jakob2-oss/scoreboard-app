@@ -208,11 +208,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
 
 ### L12 Serien
-- [ ] Banner oben: zuerst 5 Platzhalter (Optik der App, frecher und verrückter, mit atzigem Otter); später eigene Bilder.
-- [ ] Teilnehmer oben auflisten.
-- [ ] Partien der Serie öffnen (Detailansicht).
-- [ ] Siegerbild der Serie anders als bei einer Partie, weiter unten unter dem Banner.
-- [ ] Serienliste: einige Teilnehmer und das Banner als Icon.
+- [x] Banner oben: zuerst 5 Platzhalter (Optik der App, frecher und verrückter, mit atzigem Otter); später eigene Bilder.
+- [x] Teilnehmer oben auflisten.
+- [x] Partien der Serie öffnen (Detailansicht).
+- [x] Siegerbild der Serie anders als bei einer Partie, weiter unten unter dem Banner.
+- [x] Serienliste: einige Teilnehmer und das Banner als Icon.
 
 ### L13 Getrennt besprechen
 - [ ] Skyjo, Schafkopf, Doppelkopf, Scrabble (Eintragen auf der Hauptseite; was unterscheidet sie vom bloßen Aufschreiben?).

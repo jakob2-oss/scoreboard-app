@@ -162,4 +162,6 @@ export interface GameEvent extends Base {
   endedAt?: ISODate | null;
   /** Platzpunkte je Platz (Index 0 = Platz 1); fehlt: Vorschlag 3, 2, 1 */
   points?: number[];
+  /** Banner-Motiv (Index in BANNERS); fehlt: ergibt sich aus der ID */
+  banner?: number | null;
 }

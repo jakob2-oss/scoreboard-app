@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; Pakete 1 bis 5 fertig: Allgemein, Rommé, Uno, Phase 10, Arschloch, Kniffel, Binokel)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; alle Pakete aus BACKLOG L umgesetzt, offen sind nur die Konzepte L13 und L14)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

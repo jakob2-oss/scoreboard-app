@@ -856,7 +856,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ events: state.events.map(x => (x.id === id ? e : x)) });
       repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
-    updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points'>>) {
+    updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points' | 'banner'>>) {
       const old = state.events.find(e => e.id === id); if (!old) return;
       if (patch.name !== undefined && !patch.name.trim()) return;
       const e = { ...old, ...patch, updatedAt: clock.now() };
