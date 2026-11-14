@@ -397,6 +397,33 @@ function rawScore(s: GameState, roundId: string, playerId: string): number | nul
   const e = entryOf(s, roundId, playerId);
   return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
 }
+/**
+ * Doppelkopf und Schafkopf: Rundenwert verteilen. Mit Partner zählt der Wert je Kopf (2 gegen 2),
+ * allein (Solo, Wenz) zahlt jeder Gegner den Wert an den Spieler. Wer aussetzt, bekommt 0. Summe immer 0.
+ */
+export function dealScores(active: string[], declarers: string[], value: number, won: boolean): Record<string, number> {
+  const out: Record<string, number> = {}, sign = won ? 1 : -1, others = active.filter(id => !declarers.includes(id));
+  if (!declarers.length || !others.length) return Object.fromEntries(active.map(id => [id, 0]));
+  // Allein gegen alle: der Spieler bekommt so viel, wie die Gegner zusammen zahlen
+  const per = declarers.length === 1 ? value * others.length : value * others.length / declarers.length;
+  for (const id of declarers) out[id] = sign * per;
+  for (const id of others) out[id] = -sign * value;
+  return out;
+}
+/** Schafkopf: Wert einer Runde aus Tarif, Schneider, Schwarz und Laufenden (Zuschläge je Grundtarif) */
+export function schafkopfValue(tarif: number, base: number, o: { schneider?: boolean; schwarz?: boolean; laufende?: number }): number {
+  return tarif + (o.schneider || o.schwarz ? base : 0) + (o.schwarz ? base : 0) + (o.laufende ?? 0) * base;
+}
+/** Doppelkopf: wie viele Bockrunden vor Runde index noch offen sind (Ansage in einer Runde gilt ab der nächsten) */
+export function bockLeft(s: GameState, index: number): number {
+  let left = 0;
+  liveRounds(s).slice(0, index).forEach(r => {
+    if (left > 0) left--;
+    left += seated(s).reduce((a, p) => a + (fieldOf(s, r.id, p.id, 'bockAdd') ?? 0), 0);
+  });
+  return left;
+}
+
 /** Skyjo: wer hat die Runde beendet? */
 export const enderOf = (s: GameState, roundId: RoundRef): string | null =>
   roundId === 'new' ? null : seated(s).find(p => fieldOf(s, roundId, p.id, 'ender') === 1)?.id ?? null;

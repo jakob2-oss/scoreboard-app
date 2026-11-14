@@ -50,6 +50,27 @@ export function GameInfo() {
           <button id="swim-first" aria-pressed={!!template.params?.swimFirst} onClick={() => a.setTemplateParam('swimFirst', true)}>Nur der Erste</button>
         </div>
       </div>}
+      {template.params?.deal === 'schafkopf' && <div className="field">
+        <label>Tarife</label>
+        <div className="card ser-points">
+          {(['Sauspiel', 'Solo'] as const).map((nm, i) => {
+            const t = (template.params?.tarif as number[] | undefined) ?? [10, 50];
+            const set = (d: number) => a.setTemplateParam('tarif', t.map((x, k) => (k === i ? Math.max(5, x + d) : x)));
+            return (
+              <div key={nm} className="pt-row">
+                <span className="pt-place">{nm}</span>
+                <button className="pt-btn" aria-label={`${nm} weniger`} onClick={() => set(-5)}>−</button>
+                <b className="pt-val" id={`tarif-${i}`}>{t[i]}</b>
+                <button className="pt-btn" aria-label={`${nm} mehr`} onClick={() => set(5)}>+</button>
+              </div>
+            );
+          })}
+        </div>
+      </div>}
+      {template.params?.deal === 'doko' && <label className="switch-row">
+        <input type="checkbox" id="bock-on" checked={!!template.params?.bock} onChange={e => a.setTemplateParam('bock', e.target.checked || undefined)} />
+        <span className="t"><b>Bockrunden</b></span>
+      </label>}
       <GameRecords tpl={template} />
       <div className="menu-list own-actions">
         <button id="customize" onClick={() => a.customizeGame(def.template)}>Als eigenes Spiel anpassen</button>

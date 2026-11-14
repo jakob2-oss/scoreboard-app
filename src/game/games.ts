@@ -120,13 +120,13 @@ GAMES.push(
   },
   {
     template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
-      params: { zeroSum: true, quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
+      params: { zeroSum: true, block: true, deal: 'schafkopf', tarif: [10, 50], quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
     points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider', 'und Laufende erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
   },
   {
     template: { key: 'doppelkopf', version: 1, name: 'Doppelkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 5 },
-      params: { zeroSum: true, quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
+      params: { zeroSum: true, block: true, deal: 'doko', quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
     points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Ansagen', 'Re, Kontra und Absagen erhöhen den Wert'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },

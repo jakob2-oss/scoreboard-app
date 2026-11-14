@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow, dealScores, schafkopfValue
 } from './engine';
 import { gameDef } from './games';
 
@@ -223,6 +223,16 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
     for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
     expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
     expect(gameDef('binokel')!.template.end).toEqual({ type: 'none' });
+  });
+});
+
+describe('Doppelkopf und Schafkopf', () => {
+  it('verteilt den Rundenwert als Nullsumme: 2 gegen 2 je Kopf, allein dreifach, Aussetzer 0', () => {
+    expect(dealScores(['a', 'b', 'c', 'd'], ['a', 'c'], 3, true)).toEqual({ a: 3, c: 3, b: -3, d: -3 });
+    expect(dealScores(['a', 'b', 'c', 'd'], ['b'], 2, false)).toEqual({ b: -6, a: 2, c: 2, d: 2 });
+    expect(schafkopfValue(10, 10, {})).toBe(10);
+    expect(schafkopfValue(50, 10, { schneider: true, laufende: 3 })).toBe(90);
+    expect(schafkopfValue(10, 10, { schwarz: true })).toBe(30);
   });
 });
 
