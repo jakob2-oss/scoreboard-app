@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchdays, tableMoves, dayStar, bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, gameRecords, newRecords, playerTitles, type HistGame } from './stats';
+import { suggestEvent, matchdays, tableMoves, dayStar, bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, gameRecords, newRecords, playerTitles, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -134,6 +134,18 @@ describe('Auszeichnungen einer Serie', () => {
     ]);
   });
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
+});
+
+describe('Passende Serie', () => {
+  it('schlägt die laufende Serie mit den meisten bekannten Mitspielern vor, sonst die zuletzt genutzte', () => {
+    const g = (id: string, ev: string, at: string, ps: string[]) => ({ id, key: 'uno', name: 'Uno', finishedAt: at, eventId: ev, results: ps.map((playerId, i) => ({ playerId, place: i + 1, total: 0 })) });
+    const list = [g('1', 'liga', '2026-11-01T20:00', ['a', 'b', 'c']), g('2', 'urlaub', '2026-11-10T20:00', ['d', 'e'])];
+    const active = [{ id: 'liga', createdAt: '2026-10-01' }, { id: 'urlaub', createdAt: '2026-11-09' }];
+    expect(suggestEvent(active, list, ['a', 'b'])).toBe('liga');
+    expect(suggestEvent(active, list, ['d', 'x'])).toBe('urlaub');
+    expect(suggestEvent(active, list, ['x', 'y'])).toBe('urlaub');   // niemand bekannt: zuletzt genutzt
+    expect(suggestEvent([], list, ['a'])).toBeNull();
+  });
 });
 
 describe('Liga in Serien', () => {

@@ -9,13 +9,13 @@ import { TabBar } from './TabBar';
 import { bannerOf } from './banners';
 
 /** Laufende Serie als Karte: Name, Partien und wer führt (Startseite und Reiter Serien) */
-export function LiveSeries({ ev }: { ev: GameEvent }) {
+export function LiveSeries({ ev, first = true }: { ev: GameEvent; first?: boolean }) {
   const { history, players } = useApp();
   const games = history.filter(h => h.eventId === ev.id);
   const top = seriesTable(games, ev.points ?? DEFAULT_POINTS)[0];
   const lead = top ? playerOf(players, top.playerId) : null;
   return (
-    <button className="ser-live" id="series-live" onClick={() => act().openSeries(ev.id)}>
+    <button className="ser-live" id={first ? 'series-live' : undefined} data-series={ev.name} onClick={() => act().openSeries(ev.id)}>
       <span className="ser-bicon" dangerouslySetInnerHTML={{ __html: bannerOf(ev.id, ev.banner).svg }} />
       <span className="t"><small>Läuft</small><b>{ev.name}</b>
         <span className="sub">{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}${lead ? `, ${lead.name} führt` : ''}` : 'Noch keine Partien'}</span></span>
@@ -28,7 +28,7 @@ export function LiveSeries({ ev }: { ev: GameEvent }) {
 /** Reiter Serien: Spieleabende, Urlaube, Turniere. Eine läuft, die anderen sind Geschichte. */
 export function Events() {
   const { events, history, players } = useApp();
-  const live = events.find(e => e.active);
+  const lives = events.filter(e => e.active), live = lives[0];
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [kind, setKind] = useState<'serie' | 'liga' | 'turnier'>('serie');
@@ -43,7 +43,7 @@ export function Events() {
       <div className="scroll">
         <div className="gutter page-body">
           <h1 className="page-title">Serien</h1>
-          {live && <LiveSeries ev={live} />}
+          {lives.map((e, i) => <LiveSeries key={e.id} ev={e} first={i === 0} />)}
           {!live || adding
             ? <form className="ser-start-wrap" onSubmit={start}>
               <div className="seg" role="group" aria-label="Art">

@@ -1042,10 +1042,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       actions.resumeEvent(e.id);
       return state.events.find(x => x.id === e.id) ?? e;
     },
-    /** Serie (wieder) laufen lassen; eine andere laufende pausiert dann */
+    /** Serie (wieder) laufen lassen; andere laufende bleiben laufen */
     resumeEvent(id: string) {
       const t = clock.now();
-      const events = state.events.map(e => (e.id === id ? { ...e, active: true, endedAt: null, updatedAt: t } : e.active ? { ...e, active: false, updatedAt: t } : e));
+      // Mehrere Serien dürfen gleichzeitig laufen; die passende wählt man beim Beenden einer Partie
+      const events = state.events.map(e => (e.id === id ? { ...e, active: true, endedAt: null, updatedAt: t } : e));
       set({ events });
       for (const e of events.filter(x => x.updatedAt === t)) repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
       try { localStorage.setItem('pz:lastEvent', id); } catch { /* egal */ }

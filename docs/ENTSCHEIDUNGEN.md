@@ -330,3 +330,10 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   - Nächste Runde entsteht, sobald alle Tische entschieden sind; künftige Runden stehen als leere Plätze im Baum.
     Rundennamen: Finale, Halbfinale, Viertelfinale, Achtelfinale bzw. Finaltisch. Am Ende Siegerbild
     „… gewinnt das Turnier“.
+
+## 14.11.2026: Mehrere Serien gleichzeitig
+- Serien, Ligen und Turniere können parallel laufen; Starten oder Fortsetzen pausiert keine andere mehr.
+  Startseite und Reiter „Serien“ zeigen alle laufenden.
+- Beim Beenden einer Partie ist die passende Serie vorausgewählt (`suggestEvent`): Turnier-Partie immer ihr Turnier,
+  sonst die laufende Serie, in der die meisten Mitspieler schon gespielt haben, bei Gleichstand die zuletzt genutzte.
+  Änderbar mit einem Tipp, „Keine“ bleibt möglich. Eine Partie gehört weiterhin zu höchstens einer Serie.

@@ -367,3 +367,19 @@ export function playerTitles(list: HistGame[], pid: string, names: Record<string
   if (list.length >= 10 && ids.length > 2 && ids.every(o => o === pid || played(o) < played(pid))) out.push({ title: 'Stammgast', reason: `${played(pid)} Partien`, weight: 3 });
   return out.sort((a, b) => b.weight - a.weight);
 }
+
+/**
+ * Passende laufende Serie für eine neue Partie: die, in der die meisten dieser Spieler schon gespielt haben;
+ * bei Gleichstand die zuletzt genutzte (oder zuletzt angelegte). Ohne laufende Serie: keine.
+ */
+export function suggestEvent(active: { id: string; createdAt: string }[], list: HistGame[], playerIds: string[]): string | null {
+  if (!active.length) return null;
+  const score = (id: string) => {
+    const games = list.filter(g => g.eventId === id);
+    const known = new Set(games.flatMap(g => g.results.map(r => r.playerId)));
+    const last = games.reduce((m, g) => (g.finishedAt > m ? g.finishedAt : m), '');
+    return { hit: playerIds.filter(p => known.has(p)).length, last };
+  };
+  return [...active].map(e => ({ e, ...score(e.id) }))
+    .sort((a, b) => b.hit - a.hit || (b.last || b.e.createdAt).localeCompare(a.last || a.e.createdAt))[0].e.id;
+}
