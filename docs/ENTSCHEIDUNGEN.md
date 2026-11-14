@@ -206,3 +206,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   ohne Farbe. (Ein Regenbogen je Phase war zu viel.)
 - Arschloch im Block: Krone für den Präsidenten, kleines Häufchen für das Arschloch; Vize und Bürger als Kürzel.
   Spielerseite zeigt die Plätze je Runde als Kurve (oben der Präsident).
+
+## 14.11.2026: Kniffel (Paket 4)
+- Eingabe im Block ist Standard: Feld antippen öffnet die Auswahl der möglichen Werte direkt über dem Block
+  (dazu Streichen und bei belegtem Feld Leeren); Chance und Felder ohne feste Werte mit dem kompakten Ziffernblock.
+  Danach meldet die App, wer dran ist. Die Spalte dessen, der dran ist, ist leise getönt.
+  Einzelseiten bleiben über „Manuell“ und „Zug von …“ erreichbar.
+- Gestrichene Felder grau hinterlegt mit Strich.
+- Rechenzeilen: „Summe oben“ (nur die Zahl), „Bonus“ und neu „Summe unten“; Σ unten ist die Gesamtsumme,
+  links bündig zu den Kategorien.
+- Bonus ohne Text: erreicht „+35“ in Grün, sonst ein kleiner Kuchen mit dem Fortschritt und der Zahl,
+  die bis 63 fehlt, als graue Kapsel abgesetzt.

@@ -187,11 +187,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.
 
 ### L9 Kniffel
-- [ ] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
-- [ ] Gestrichenes ausgrauen.
-- [ ] Summe unten gesondert.
-- [ ] Feld mit dem Summenzeichen bündig zu den Kategorien.
-- [ ] Bonus: anzeigen, wie viele bis 63 fehlen, abgegrenzt, ohne Text.
+- [x] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
+- [x] Gestrichenes ausgrauen.
+- [x] Summe unten gesondert.
+- [x] Feld mit dem Summenzeichen bündig zu den Kategorien.
+- [x] Bonus: anzeigen, wie viele bis 63 fehlen, abgegrenzt, ohne Text.
 
 ### L10 Ergebnisspiele (Siedler, Monopoly, eigene „nur am Ende“)
 - [ ] Kein Zettel: eine Eingabe, daraus direkt Podest und Rangliste, darunter Statistik und Rekorde.

@@ -57,7 +57,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
       <div className="sheet-body">
         <div className="pad-head">
           <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
-          <div className="who"><b>{p.name}</b><small>Runde {roundNumber(g, edit.ref)}</small></div>
+          <div className="who"><b>{p.name}</b><small>{liveRounds(g).find(r => r.id === edit.ref)?.cat?.label ?? `Runde ${roundNumber(g, edit.ref)}`}</small></div>
           {keys && display}
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>

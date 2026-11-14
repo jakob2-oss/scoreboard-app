@@ -252,6 +252,11 @@ export function upperSum(s: GameState, playerId: string): { sum: number; bonus: 
   return { sum, bonus: b && sum >= b.at ? b.value : 0 };
 }
 
+/** Kniffel: Summe der unteren Hälfte (alles außer oben) */
+export function lowerSum(s: GameState, playerId: string): number {
+  return liveRounds(s).filter(r => r.cat && r.cat.section !== 'up').reduce((a, r) => a + (scoreOf(s, r.id, playerId) ?? 0), 0);
+}
+
 /** Phase 10: Anzahl geschaffter Phasen (optional nur Runden vor einem Index) */
 export function phasesDone(s: GameState, playerId: string, beforeIndex = Infinity): number {
   return liveRounds(s).slice(0, beforeIndex).filter(r => {

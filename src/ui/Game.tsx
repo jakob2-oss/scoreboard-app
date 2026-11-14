@@ -2,13 +2,13 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
-import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
+import { Crown, IconBack, IconBackspace, IconClose, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
 import { keepAwake } from '../lib/device';
 import { TableDock, TableView, TokenSheet } from './Table';
@@ -118,7 +118,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
+      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={isCats(g) ? catKeys(g, s.edit.ref) : g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
@@ -126,6 +126,7 @@ export function GameScreen() {
       {s.sheet === 'ranks' && s.rankRef && <RankSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
+      {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -149,6 +150,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   const lead = started ? rk.filter(x => x.place === 1).map(x => x.player.id) : [];
   const end = g.game.rules.end, dealer = dealerOf(g);
   const blockMode = isBids(g) && entryMode(g.game.rules.key) === 'block', bar = useApp().bidBar;
+  // Kniffel: Spalte dessen, der dran ist, leise hervorheben
+  const catStep = isCats(g) ? nextStep(g) : null;
+  const catTurnId = catStep && catStep.kind !== 'result' ? players[catStep.playerIndex].id : null;
   // Während der Ansagen: die Zelle dessen, der dran ist, in den sichtbaren Bereich holen
   const turnId = bar ? bidTurn(g, bar) : null;
   useEffect(() => {
@@ -161,7 +165,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   }, [bar, turnId]);
   return (
     <>
-      <table className="grid" ref={tableRef}>
+      <table className={'grid' + (isCats(g) ? ' cats' : '')} ref={tableRef}>
         <thead>
           <tr>
             <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : '#'}</th>
@@ -209,20 +213,24 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                   );
                 }
                 const struck = !!r.cat && v === 0;
+                const myTurn = catTurnId === p.id && v === null;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
                 // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
                 const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
                 // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
                   onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
                   {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
-              <tr className="calc"><th className="cat">Summe oben</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.sum}/{g.game.rules.params!.bonus!.at}</td>; })}</tr>
-              <tr className="calc"><th className="cat">Bonus</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.bonus ? '+' + u.bonus : '–'}</td>; })}</tr>
+              <tr className="calc"><th className="cat">Summe oben</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.sum}</td>; })}</tr>
+              <tr className="calc bonus"><th className="cat">Bonus</th>{players.map(p => <td key={p.id}><BonusMark g={g} pid={p.id} /></td>)}</tr>
             </>)}
+            {r.cat && r.cat.section !== 'up' && ri === rounds.length - 1 && rounds.some(x => x.cat?.section === 'up') && (
+              <tr className="calc"><th className="cat">Summe unten</th>{players.map(p => <td key={p.id}>{lowerSum(g, p.id)}</td>)}</tr>
+            )}
           </Fragment>))}
           {!isBids(g) && !isResultOnly(g) && canAddRound(g) && rounds.length > 0 && roundFull(g, rounds[rounds.length - 1].id) && (
             <tr className="new-row">
@@ -325,6 +333,50 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
           return <button key={r.id} aria-current={r.id === ref} onClick={() => pick(r.id)}><small>R{k + 1}</small><b>{v === null ? '–' : fmt(v)}</b></button>;
         })}
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
+      </div>
+    </>
+  );
+}
+
+/** Kniffel-Bonus: erreicht „+35“, sonst ein kleiner Kuchen mit dem Fortschritt und wie viel noch fehlt */
+function BonusMark({ g, pid }: { g: GameState; pid: string }) {
+  const b = g.game.rules.params!.bonus!, u = upperSum(g, pid);
+  if (u.bonus) return <span className="bon hit">+{u.bonus}</span>;
+  const f = Math.min(1, u.sum / b.at), a = f * 2 * Math.PI, R = 7;
+  const d = f >= 1 ? '' : `M8 8V${8 - R}A${R} ${R} 0 ${a > Math.PI ? 1 : 0} 1 ${(8 + R * Math.sin(a)).toFixed(2)} ${(8 - R * Math.cos(a)).toFixed(2)}Z`;
+  return (
+    <span className="bon miss" aria-label={`Noch ${b.at - u.sum} bis zum Bonus`}>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r={R} className="pie-bg" />{f > 0 && <path d={d} className="pie" />}</svg>
+      {b.at - u.sum}
+    </span>
+  );
+}
+
+/** Kniffel im Block: Werte der Kategorie direkt über dem Block wählen */
+function CatPickSheet({ g, edit }: { g: GameState; edit: Edit }) {
+  const r = liveRounds(g).find(x => x.id === edit.ref), cat = r?.cat;
+  const p = seated(g).find(x => x.id === edit.playerId)!;
+  const choices = catChoices(cat) ?? [], cur = edit.ref === 'new' ? null : scoreOf(g, edit.ref, p.id);
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closePad()} />
+      <div className="bsheet" id="cat-pick" role="dialog" aria-label={`${p.name}: ${cat?.label}`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <div className="pad-head">
+            <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
+            <div className="who"><b>{cat?.label}</b><small>{p.name}</small></div>
+            <button className="icon-btn" onClick={a.closePad} aria-label="Schließen"><IconClose /></button>
+          </div>
+          <div className={'cp-grid' + (choices.length > 6 ? ' many' : '')}>
+            {choices.map(v => <button key={v} aria-pressed={cur === v} onClick={() => a.pick(v)}>{v}</button>)}
+          </div>
+          <div className="pad-actions">
+            {cur !== null && <button className="secondary" id="cat-clear" onClick={() => { a.clear(); a.next(); }}>Leeren</button>}
+            <button className="cp-strike" id="cat-strike" aria-pressed={cur === 0} onClick={() => a.pick(0)}>Streichen</button>
+          </div>
+        </div>
       </div>
     </>
   );

@@ -282,7 +282,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Kniffel: Kategorien, Bonuszeilen, Kategorien verwalten
   await p.click('[data-game="kniffel"]'); await shot('30-kniffel'); await p.click('#quick-start');
-  check('Kniffel: 13 Kategorien + 2 Rechenzeilen', (await p.locator('tbody tr').count()) === 15, String(await p.locator('tbody tr').count()));
+  check('Kniffel: 13 Kategorien + 3 Rechenzeilen (oben, Bonus, unten)', (await p.locator('tbody tr').count()) === 16, String(await p.locator('tbody tr').count()));
+  check('Kniffel: Bonus zeigt, wie viel bis 63 fehlt', (await raw('tr.bonus td >> nth=0')) === '63');
   check('Kniffel: Zug von Anna', (await raw('#round-go')).includes('Anna'));
   await p.click('#round-go'); await p.waitForTimeout(500);
   await shot('31-kniffel-page');
@@ -295,14 +296,17 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#cat-strike'); await p.waitForTimeout(500);
   await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
   check('Kniffel: gestrichenes Feld markiert', (await p.locator('td.struck').count()) === 1);
+  const turnName = (await raw('#round-go')).replace('Zug von ', '');
+  check('Kniffel: Spalte dessen, der dran ist, getönt', (await p.locator('td.myturn').count()) > 0 && (await p.locator(`td.myturn[aria-label^="${turnName},"]`).count()) === (await p.locator('td.myturn').count()), turnName);
   await p.click('td[aria-label="Clara, Kniffel"]'); await p.waitForTimeout(400);
-  check('Kniffel: Feld im Überblick öffnet Auswahl', (await p.locator('.cp-grid button').count()) === 1);
-  await p.click('.cp-grid button'); await p.waitForTimeout(500);
-  check('Kniffel: danach zurück im Überblick', (await page()) === -1 && (await text('td[aria-label="Clara, Kniffel"]')) === '50');
+  check('Kniffel: Feld im Block öffnet Auswahl direkt im Block', await p.isVisible('#cat-pick') && (await p.locator('#cat-pick .cp-grid button').count()) === 1 && (await page()) === -1);
+  await shot('31c-kniffel-pick');
+  await p.click('#cat-pick .cp-grid button'); await p.waitForTimeout(500);
+  check('Kniffel: eingetragen, Auswahl zu', !(await p.isVisible('#cat-pick')) && (await text('td[aria-label="Clara, Kniffel"]')) === '50' && (await raw('tr.calc >> text=Summe unten')).length > 0);
   await p.click('td[aria-label="Clara, Chance"]'); await p.waitForTimeout(400);
-  check('Kniffel: Chance mit Zahlenfeld', await p.isVisible('.pp-keys'));
-  await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(300);
-  await shot('31c-kniffel-ov');
+  check('Kniffel: Chance mit Zahlenfeld im Block', await p.isVisible('#pad.compact') && (await raw('#pad .who small')) === 'Chance');
+  await p.click('#pad [aria-label="Ziffernblock schließen"]'); await p.waitForTimeout(300);
+  await shot('31d-kniffel-ov');
   await p.goto(URL); await p.waitForTimeout(600);
   await p.click('.resume'); await p.waitForTimeout(300);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('#open-cats');

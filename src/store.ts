@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, blockEntry, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, blockEntry, catChoices, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -511,7 +511,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         return;
       }
       // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
-      if (blockEntry(g) && !isBids(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
+      if (blockEntry(g) && !isBids(g) && !isCats(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
         set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
       }
       actions.goPage(step.playerIndex, step.ref, step.field);
@@ -585,8 +585,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         return;
       }
       // Kniffel: jeder trägt in ein Feld seiner Wahl ein, dann ist der Nächste dran
-      if (isCats(g) && !state.pad) {
-        if (state.fromOverview) { set({ page: -1, edit: null, fromOverview: false }); return; }
+      if (isCats(g) && (!state.pad || state.fromOverview)) {
+        if (state.fromOverview) {
+          const turn = actions.catDone(e);
+          set({ page: -1, edit: null, fromOverview: false, pad: false, sheet: null });
+          if (turn) toast(turn);
+          return;
+        }
         if (i < players.length - 1) { actions.goPage(i + 1); return; }
         set({ page: -1, edit: null }); toast('Zug fertig'); return;
       }
@@ -607,10 +612,26 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (isRanks(g)) { actions.openRanks(ref); return; }
       if (hasFields(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
       // Kniffel: Auswahl auf der Spielerseite, danach zurück zum Überblick
-      if (isCats(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return; }
+      if (isCats(g)) {
+        // Im Block: Auswahl der Werte direkt über dem Block; freie Felder (Chance) mit dem Ziffernblock
+        if (blockEntry(g) && modeOf(g.game.rules.key) === 'block') {
+          const cat = liveRounds(g).find(r => r.id === ref)?.cat;
+          if (catChoices(cat)) set({ sheet: 'catpick', pad: false, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true });
+          else set({ sheet: null, pad: true, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true });
+          return;
+        }
+        actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return;
+      }
       set({ pad: true, edit: makeEdit(g, ref, playerId) });
     },
-    closePad() { set({ pad: false, edit: null, fromOverview: false }); },
+    closePad() { set({ pad: false, edit: null, fromOverview: false, sheet: state.sheet === 'catpick' ? null : state.sheet }); },
+    /** Kniffel im Block: nach einem Eintrag sagen, wer dran ist (nur wenn der Zug gewechselt hat) */
+    catDone(e: Edit): string | null {
+      const g = state.game; if (!g || !e.dirty) return null;
+      const st = nextStep(g); if (st.kind === 'result') return null;
+      const who = seated(g)[st.playerIndex];
+      return who.id !== e.playerId ? `${who.name} ist dran` : null;
+    },
 
     // ---------- Ziffernblock
     digit(d: number) {

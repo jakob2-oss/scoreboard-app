@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -232,6 +232,27 @@ describe('Arschloch', () => {
     expect(dealerOf(st.get().game!)?.id).toBe('id2');
     a.roundGo(); a.rankTap('id2'); a.rankTap('id1'); a.rankTap('id3');
     expect(dealerOf(st.get().game!)?.id).toBe('id4');
+  });
+});
+
+describe('Kniffel im Block', () => {
+  it('Feld antippen öffnet die Auswahl im Block; Chance mit Ziffernblock; danach sagt die App, wer dran ist', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'kniffel')!.template); a.toPlayers();
+    for (const n of ['A', 'B']) await a.addPlayer(n);
+    a.start();
+    const rounds = liveRounds(st.get().game!), einser = rounds[0], chance = rounds[rounds.length - 1];
+    a.openPad(einser.id, 'id1');
+    expect(st.get()).toMatchObject({ sheet: 'catpick', pad: false, page: -1, edit: { playerId: 'id1' } });
+    a.pick(3);
+    expect(st.get()).toMatchObject({ sheet: null, edit: null, fromOverview: false });
+    expect(st.get().toast?.text).toBe('B ist dran');
+    a.openPad(chance.id, 'id2');
+    expect(st.get()).toMatchObject({ sheet: null, pad: true });
+    a.digit(2); a.digit(2); a.next();
+    expect(st.get()).toMatchObject({ pad: false, edit: null });
+    expect(totals(st.get().game!)).toEqual({ id1: 3, id2: 22 });
+    expect(lowerSum(st.get().game!, 'id2')).toBe(22);
   });
 });
 

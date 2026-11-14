@@ -103,7 +103,7 @@ const rest = { label: 'Ausgleich', op: 'rest' as const, v: 0 };
 GAMES.push(
   {
     template: { key: 'kniffel', version: 1, name: 'Kniffel', scoring: 'categories', win: 'high', end: { type: 'categories' }, players: { min: 1, max: 8 },
-      params: { bonus: { at: 63, value: 35 }, categories: [
+      params: { block: true, bonus: { at: 63, value: 35 }, categories: [
         { label: 'Einser', section: 'up', quick: mult(1) }, { label: 'Zweier', section: 'up', quick: mult(2) }, { label: 'Dreier', section: 'up', quick: mult(3) },
         { label: 'Vierer', section: 'up', quick: mult(4) }, { label: 'Fünfer', section: 'up', quick: mult(5) }, { label: 'Sechser', section: 'up', quick: mult(6) },
         { label: 'Dreierpasch', section: 'low', range: [5, 30] }, { label: 'Viererpasch', section: 'low', range: [5, 30] }, { label: 'Full House', section: 'low', fixed: 25 },
