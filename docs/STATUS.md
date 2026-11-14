@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; alle Pakete aus BACKLOG L umgesetzt; Spiel-Vorschläge M1, Strichliste M2 und Otter mit Regler umgesetzt; übrige Design-Konzepte M3 offen)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; alle Pakete aus BACKLOG L umgesetzt; Spiel-Vorschläge M1, Strichliste M2, Otter mit Regler und Liga umgesetzt; offen: Titelseite, Stammtisch, Nachtschicht)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

@@ -236,7 +236,7 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Ort: Karte „Strichlisten“ auf der Startseite unter „Laufende Partien“, Bilanz im Profil. Später erstes geteiltes Ding mit der Synchronisierung.
 
 ### M3 Design und Geschichte (fünf Konzepte)
-- [ ] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Absteiger.
+- [x] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Rote Laterne.
 - [x] Otter: kurze Sprüche bei besonderen Momenten, Regler Brav, Frech, Atzig (cool, artsy). Nebenfiguren später.
 - [ ] Titelseite: nach jedem Abend eine teilbare Klatschblatt-Titelseite aus den echten Zahlen (eigene Optik, kein echtes Logo).
 - [ ] Stammtisch: Kreidetafel, Bierdeckel, neue Siegerbänder in der Mitternacht-Variante.

@@ -637,7 +637,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Startseite zeigt die laufende Serie', await p.isVisible('#series-live'));
   await p.click('#series-live'); await p.waitForTimeout(150);
   await p.click('#series-end'); await p.waitForTimeout(250);
-  check('Serie beendet: Abschluss mit Otter, Sieger und Auszeichnungen', await p.isVisible('.ser-trophy') && (await raw('.ser-champ')).endsWith('die Serie') && (await raw('.ser-awards')).includes('Meiste Siege'));
+  check('Serie beendet: Abschluss mit Otter, Sieger und Auszeichnungen', await p.isVisible('.ser-trophy') && (await raw('.ser-champ')).endsWith('den Titel') && (await raw('.ser-awards')).includes('Meiste Siege'));
   await shot('42c-series-done'); await p.evaluate(() => document.querySelector('.ser-awards').scrollIntoView({ block: 'center' })); await shot('42d-series-awards'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42d-series-awards-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; document.querySelector('#s-series .scroll').scrollTo(0, 0); });
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42c-series-done-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);

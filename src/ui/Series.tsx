@@ -1,5 +1,5 @@
 import { act, useApp } from '../store';
-import { DEFAULT_POINTS, seriesAwards, seriesGames, seriesPlaces, seriesTable, type SeriesRow, type SeriesSort } from '../game/stats';
+import { DEFAULT_POINTS, dayStar, matchdays, seriesAwards, seriesGames, seriesPlaces, seriesTable, tableMoves, type SeriesRow, type SeriesSort } from '../game/stats';
 import { BANNERS, bannerOf, seriesChampScene } from './banners';
 import { GameDetail } from './History';
 import { useState } from 'react';
@@ -13,6 +13,18 @@ const dec = (n: number) => n.toLocaleString('de-DE', { maximumFractionDigits: 1 
 const VALUE: Record<SeriesSort, (r: SeriesRow) => string> = {
   perf: r => fmtPerf(r.perf), points: r => String(r.points), avg: r => dec(r.avg), rate: r => r.rate + ' %'
 };
+
+/** Bewegung seit dem letzten Spieltag: kleines Dreieck nach oben oder unten, „neu“ für Neue */
+function Move({ m }: { m: number | 'neu' | undefined }) {
+  if (m === undefined) return null;
+  if (m === 'neu') return <span className="mv neu">neu</span>;
+  if (m === 0) return <span className="mv same" aria-label="unverändert" />;
+  return <span className={'mv ' + (m > 0 ? 'up' : 'down')} aria-label={m > 0 ? `${m} hoch` : `${-m} runter`}><i />{Math.abs(m)}</span>;
+}
+/** Rote Laterne: kleine rote Laterne für den Letzten */
+function Lantern() {
+  return <svg className="lantern-ic" viewBox="0 0 16 22" aria-hidden="true"><rect x="6.5" y="0" width="3" height="3" rx="1" fill="#7e5136" /><path d="M3 5h10l-1 2v9l1 2H3l1-2V7z" fill="#d9463a" /><rect x="5.5" y="8" width="5" height="7" rx="2" fill="#ffd27a" /><rect x="2" y="18" width="12" height="3" rx="1.5" fill="#7e5136" /></svg>;
+}
 
 /** Statistikseite einer Serie: Tabelle, Spiele, Partien und die Platzpunkte */
 export function Series() {
@@ -36,6 +48,10 @@ export function Series() {
   const done = !!ev.endedAt && !ev.active && games.length > 0;
   const champ = rows.filter((_, i) => places[i] === 1).map(r => r.playerId);
   const banner = bannerOf(ev.id, ev.banner);
+  // Liga: Spieltage, Bewegung seit dem letzten Spieltag, Spieler des Spieltags, Rote Laterne für den Letzten (ab drei)
+  const days = matchdays(games), moves = tableMoves(games, pts, series.sort), star = days.length ? dayStar(games, pts) : null;
+  const lastPl = Math.max(...places, 0), lanternIds = rows.filter((_, i) => places[i] === lastPl).map(r => r.playerId);
+  const lantern = rows.length >= 3 && lanternIds.length === 1 ? lanternIds[0] : null;
   // Teilnehmer: alle, die in einer Partie der Serie mitgespielt haben (Reihenfolge wie die Tabelle)
   const people = rows.map(r => ({ ...playerOf(players, r.playerId), id: r.playerId }));
   return (
@@ -57,7 +73,8 @@ export function Series() {
           </div>
           {done && champ.length > 0 && <div className="ser-champ-card">
             <div className="ser-trophy" dangerouslySetInnerHTML={{ __html: seriesChampScene() }} />
-            <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'gewinnen' : 'gewinnt'} die Serie</div>
+            <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'holen den Titel' : 'holt den Titel'}</div>
+            {lantern && <div className="ser-lantern"><Lantern />Rote Laterne für {playerOf(players, lantern).name}</div>}
           </div>}
           {ev.active
             ? <button className="secondary ser-end" id="series-end" onClick={() => a.endEvent(ev.id)}>Serie beenden</button>
@@ -75,6 +92,13 @@ export function Series() {
             </div>
           </div>}
           {rows.length > 0 && <>
+            {star && <div className="ser-star" id="series-star">
+              <span className="ser-star-ic" aria-hidden="true" />
+              <Avatar p={playerOf(players, star.playerId)} />
+              <span className="t"><small>Spieler des Spieltags</small><b>{playerOf(players, star.playerId).name}</b>
+                <span>{star.points} Punkte, {star.wins} {star.wins === 1 ? 'Sieg' : 'Siege'} am {dateShort(star.day + 'T12:00:00')}</span></span>
+            </div>}
+            <div className="eyebrow ser-table-h">Tabelle nach Spieltag {days.length}</div>
             <div className="seg" role="group" aria-label="Wertung">
               <button id="sort-perf" aria-pressed={series.sort === 'perf'} onClick={() => a.setSeriesSort('perf')}>Leistung</button>
               <button id="sort-points" aria-pressed={series.sort === 'points'} onClick={() => a.setSeriesSort('points')}>Punkte</button>
@@ -84,10 +108,10 @@ export function Series() {
               {rows.map((r, i) => {
                 const p = playerOf(players, r.playerId);
                 return (
-                  <button key={r.playerId} className={'prow' + (places[i] === 1 ? ' win' : '')} onClick={() => a.openProfile(r.playerId)}>
-                    <span className="place">{places[i]}</span><Avatar p={p} />
-                    <span className="nm">{p.name}<small>{r.played} {r.played === 1 ? 'Partie' : 'Partien'}, {r.wins} {r.wins === 1 ? 'Sieg' : 'Siege'}</small></span>
-                    {places[i] === 1 && <Crown />}<span className="pts">{VALUE[series.sort](r)}</span>
+                  <button key={r.playerId} className={'prow' + (places[i] === 1 ? ' win' : '') + (lantern === r.playerId ? ' lantern' : '')} onClick={() => a.openProfile(r.playerId)}>
+                    <span className="place">{places[i]}</span><Move m={moves[r.playerId]} /><Avatar p={p} />
+                    <span className="nm">{p.name}<small>{lantern === r.playerId ? 'Rote Laterne' : `${r.played} ${r.played === 1 ? 'Partie' : 'Partien'}, ${r.wins} ${r.wins === 1 ? 'Sieg' : 'Siege'}`}</small></span>
+                    {places[i] === 1 && <Crown />}{lantern === r.playerId && <Lantern />}<span className="pts">{VALUE[series.sort](r)}</span>
                   </button>
                 );
               })}
@@ -106,20 +130,22 @@ export function Series() {
                 })}
               </div>
             </div>
-            <div className="group"><div className="eyebrow">Partien</div>
-              <div className="list">
-                {games.map(h => {
-                  const ic = iconFor(h.key, h.name);
-                  return (
-                    <button key={h.id} className="row ser-game" onClick={() => setOpen(h.id)}>
-                      <GameIcon icon={ic.icon} tint={ic.tint} />
-                      <span className="t"><b>{h.name}</b><small>{dateShort(h.finishedAt)}, {h.results.length} Spieler</small></span>
-                      <span className="win-stack">{h.results.filter(r => r.place === 1).slice(0, 2).map(w => <Avatar key={w.playerId} p={playerOf(players, w.playerId)} />)}</span>
-                    </button>
-                  );
-                })}
+            {[...days].reverse().map((d, k) => (
+              <div key={d.day} className="group"><div className="eyebrow">Spieltag {days.length - k}, {dateShort(d.day + 'T12:00:00')}</div>
+                <div className="list">
+                  {[...d.games].reverse().map(h => {
+                    const ic = iconFor(h.key, h.name);
+                    return (
+                      <button key={h.id} className="row ser-game" onClick={() => setOpen(h.id)}>
+                        <GameIcon icon={ic.icon} tint={ic.tint} />
+                        <span className="t"><b>{h.name}</b><small>{h.results.length} Spieler</small></span>
+                        <span className="win-stack">{h.results.filter(r => r.place === 1).slice(0, 2).map(w => <Avatar key={w.playerId} p={playerOf(players, w.playerId)} />)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            ))}
           </>}
           <div className="group"><div className="eyebrow">Platzpunkte</div>
             <div className="card ser-points">

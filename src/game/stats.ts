@@ -111,6 +111,36 @@ export function seriesTable(list: HistGame[], pts: number[], sort: SeriesSort = 
   return rows.sort((a, b) => val(b) - val(a) || b.points - a.points || b.played - a.played);
 }
 
+// ---------------------------------------------------------------- Liga: Spieltage, Bewegung, Spieler des Spieltags
+
+/** Kalendertag (Ortszeit) einer Partie, z. B. „2026-11-14“ */
+const dayOf = (iso: string) => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+/** Spieltage einer Serie: jeder Kalendertag mit Partien, in zeitlicher Reihenfolge */
+export function matchdays(list: HistGame[]): { day: string; games: HistGame[] }[] {
+  const map = new Map<string, HistGame[]>();
+  for (const g of [...list].sort((a, b) => a.finishedAt.localeCompare(b.finishedAt))) {
+    const d = dayOf(g.finishedAt); map.set(d, [...(map.get(d) ?? []), g]);
+  }
+  return [...map.entries()].map(([day, games]) => ({ day, games }));
+}
+/** Bewegung in der Tabelle seit dem letzten Spieltag: positiv = aufgestiegen; neu = erst am letzten Spieltag dabei */
+export function tableMoves(list: HistGame[], pts: number[], sort: SeriesSort): Record<string, number | 'neu'> {
+  const days = matchdays(list); if (days.length < 2) return {};
+  const before = new Set(days[days.length - 1].games.map(g => g.id));
+  const prevRows = seriesTable(list.filter(g => !before.has(g.id)), pts, sort), prevPl = seriesPlaces(prevRows, sort);
+  const rows = seriesTable(list, pts, sort), pl = seriesPlaces(rows, sort);
+  const out: Record<string, number | 'neu'> = {};
+  rows.forEach((r, i) => { const k = prevRows.findIndex(x => x.playerId === r.playerId); out[r.playerId] = k < 0 ? 'neu' : prevPl[k] - pl[i]; });
+  return out;
+}
+/** Spieler des (letzten) Spieltags: meiste Platzpunkte an diesem Tag, bei Gleichstand mehr Siege */
+export function dayStar(list: HistGame[], pts: number[]): { playerId: string; points: number; wins: number; day: string; index: number } | null {
+  const days = matchdays(list); const last = days[days.length - 1]; if (!last) return null;
+  const rows = seriesTable(last.games, pts, 'points');
+  const top = rows.sort((a, b) => b.points - a.points || b.wins - a.wins)[0];
+  return top && top.points > 0 ? { playerId: top.playerId, points: top.points, wins: top.wins, day: last.day, index: days.length } : null;
+}
+
 /** Plätze in der Serientabelle (Gleichstand teilt den Platz) */
 export function seriesPlaces(rows: SeriesRow[], sort: SeriesSort): number[] {
   return rows.map((r, i) => rows.findIndex(o => o[sort] === r[sort]) + 1 || i + 1);

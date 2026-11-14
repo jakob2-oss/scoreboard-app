@@ -306,3 +306,12 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Strichliste, Notizen je Strich: nach jedem Tipp ein kleines Blatt „Strich für …“ mit Notiz (oder „Ohne Notiz“).
   Im Verlauf hat jeder Strich ein ✕; Streichen fragt „Warum gestrichen?“ (optional). Gestrichene Striche stehen
   durchgestrichen mit Grund unter „Gestrichen“ und zählen nicht mehr (`deleteNote` am Strich).
+
+## 14.11.2026: Liga für Serien
+- Jeder Kalendertag mit Partien ist ein Spieltag (`matchdays`). Partien der Serie nach Spieltagen gruppiert,
+  „Spieltag 2, 14. Nov.“, neueste oben.
+- Tabelle „nach Spieltag n“ mit Bewegung seit dem Spieltag davor: grünes Dreieck hoch, rotes runter, Strich
+  unverändert, „neu“ für Neue. Ab drei Spielern trägt der alleinige Letzte die „Rote Laterne“ (kleine Laterne,
+  rote Linie darüber).
+- Karte „Spieler des Spieltags“: meiste Platzpunkte am letzten Spieltag, bei Gleichstand mehr Siege.
+- Ende der Serie: „Clara holt den Titel“ und „Rote Laterne für Dora“ unter dem Siegerbild.
