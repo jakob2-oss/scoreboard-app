@@ -41,7 +41,7 @@ export const GAMES: GameDef[] = [
   {
     template: {
       key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 8 },
-      params: { quick: [{ label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '×2', op: 'mul', v: 2 }] }
+      params: { block: true, ender: true, lowCrown: true, quick: [{ label: '\u22122', op: 'add', v: -2 }, { label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }] }
     },
     points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
     acc: '#5fa8d3', tint: '#e1f0fa',

@@ -384,9 +384,33 @@ export function scoreOf(s: GameState, roundId: string, playerId: string): number
     const a = fieldOf(s, roundId, playerId, sp[0].key), b = fieldOf(s, roundId, playerId, sp[1].key);
     return b !== null ? (a ?? 0) + b : null;
   }
+  const v = rawScore(s, roundId, playerId);
+  // Skyjo: wer die Runde beendet hat und nicht allein die wenigsten Punkte hat, zählt doppelt (nur positiv)
+  if (v !== null && v > 0 && s.game.rules.params?.ender && fieldOf(s, roundId, playerId, 'ender') === 1) {
+    const others = seated(s).filter(p => p.id !== playerId).map(p => rawScore(s, roundId, p.id));
+    if (others.every(x => x !== null) && others.some(x => x! <= v)) return v * 2;
+  }
+  return v;
+}
+/** Eingetragener Wert ohne Regeln obendrauf */
+function rawScore(s: GameState, roundId: string, playerId: string): number | null {
   const e = entryOf(s, roundId, playerId);
   return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
 }
+/** Skyjo: wer hat die Runde beendet? */
+export const enderOf = (s: GameState, roundId: RoundRef): string | null =>
+  roundId === 'new' ? null : seated(s).find(p => fieldOf(s, roundId, p.id, 'ender') === 1)?.id ?? null;
+/** Skyjo: wurde dieser Eintrag verdoppelt? */
+export const isDoubled = (s: GameState, roundId: string, playerId: string) => {
+  const v = rawScore(s, roundId, playerId), sc = scoreOf(s, roundId, playerId);
+  return v !== null && sc !== null && sc !== v;
+};
+/** Rundenbester bei „wenig gewinnt“ (Skyjo): niedrigster Wert der vollständigen Runde */
+export const roundLow = (s: GameState, roundId: string, playerId: string) => {
+  if (!roundFull(s, roundId)) return false;
+  const v = scoreOf(s, roundId, playerId)!;
+  return seated(s).every(p => scoreOf(s, roundId, p.id)! >= v);
+};
 
 export function roundFull(s: GameState, roundId: string): boolean {
   return seated(s).every(p => scoreOf(s, roundId, p.id) !== null);

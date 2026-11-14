@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, enderOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | 'ender' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -535,6 +535,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         }
         set({ page: -1, pad: true, sheet: null, fromOverview: false, edit: makeEdit(g, step.ref, seated(g)[step.playerIndex].id, step.field) }); return;
       }
+      // Skyjo: zuerst, wer die Runde beendet hat (für die Verdopplung)
+      if (g.game.rules.params?.ender && !enderOf(g, step.ref) && (step.ref === 'new' || seated(g).every(p => scoreOf(g, step.ref as string, p.id) === null))) {
+        set({ sheet: 'ender', rankRef: step.ref, page: -1, pad: false, edit: null }); return;
+      }
       // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
       if (blockEntry(g) && !isBids(g) && !isCats(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
         set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
@@ -561,6 +565,21 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Skyjo: wer hat die Runde beendet; danach Punkte eintragen (im Block oder pro Spieler) */
+    setEnder(playerId: string | null) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      let ng = g, id: RoundRef = ref;
+      if (playerId) {
+        if (id === 'new') { const a = addRound(ng, clock); ng = a.state; id = a.roundId; }
+        for (const p of seated(ng)) if (fieldOf(ng, id, p.id, 'ender') !== null) ng = setField(ng, id, p.id, 'ender', null, clock);
+        ng = setField(ng, id, playerId, 'ender', 1, clock);
+        set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      }
+      haptic('tap');
+      set({ sheet: null, rankRef: null });
+      if (modeOf(ng.game.rules.key) === 'block') set({ page: -1, pad: true, fromOverview: false, edit: makeEdit(ng, id, seated(ng)[0].id) });
+      else actions.goPage(0, id);
+    },
     /** Endwertung nach Platz (Monopoly …): Antippen vergibt den nächsten freien Platz, nochmal nimmt ihn zurück */
     placeTap(playerId: string) {
       const g = state.game; if (!g) return;

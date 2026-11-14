@@ -343,7 +343,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
   await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
   check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));
-  await p.click('.dock .primary'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.waitForTimeout(200);
+  check('Skyjo: zuerst „Wer hat beendet?“', await p.isVisible('#ender'));
+  await p.click('#ender .rank-row >> text=Ben'); await p.waitForTimeout(200);
+  for (const v of ['+5', '+10', '+1']) { await p.click(`#pad .pad-quick >> text="${v}"`); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150); }
+  check('Skyjo: Ben beendet, nicht niedrigster: doppelt, Krone für Anna', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '15×2201' && (await p.locator('td.cell.won').count()) === 1);
+  await shot('35a-skyjo');
   await p.click('#s-game [aria-label="Zum Start"]'); await p.waitForTimeout(200);
   check('zwei laufende Partien auf der Startseite', (await p.locator('.resume').count()) === 2 && (await raw('#s-home')).includes('Laufende Partien'));
   await shot('35b-two-running');

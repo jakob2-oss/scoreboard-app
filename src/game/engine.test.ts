@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow
 } from './engine';
 import { gameDef } from './games';
 
@@ -223,6 +223,25 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
     for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
     expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
     expect(gameDef('binokel')!.template.end).toEqual({ type: 'none' });
+  });
+});
+
+describe('Skyjo', () => {
+  it('wer beendet und nicht allein am wenigsten hat, zählt doppelt (nur positiv); Krone für die niedrigste Runde', () => {
+    const c = testClock();
+    let s = createGame(gameDef('skyjo')!.template, players('A', 'B', 'C'), c);
+    const r = liveRounds(s)[0].id;
+    s = setField(s, r, 'p1', 'ender', 1, c);
+    for (const [pid, v] of [['p0', 5], ['p1', 10], ['p2', 1]] as const) s = setScore(s, r, pid, v, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(20);
+    expect(isDoubled(s, r, 'p1')).toBe(true);
+    expect(roundLow(s, r, 'p2')).toBe(true);
+    s = setScore(s, r, 'p1', 0, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(0);
+    s = setScore(s, r, 'p1', -3, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(-3);   // allein am wenigsten: keine Verdopplung
+    s = setScore(s, r, 'p1', 1, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(2);    // Gleichstand mit C reicht nicht
   });
 });
 

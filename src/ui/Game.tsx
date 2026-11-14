@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, roundLow, isDoubled, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -128,6 +128,7 @@ export function GameScreen() {
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
       {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
       {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'ender' && s.rankRef && <EnderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -223,12 +224,13 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const myTurn = catTurnId === p.id && v === null;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
                 // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
-                const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
+                const won = v !== null && (zeroWins(g) ? v === 0 : g.game.rules.params?.lowCrown ? roundLow(g, r.id, p.id) : !!g.game.rules.params?.winnerOnly && v > 0);
+                const dbl = v !== null && !!g.game.rules.params?.ender && isDoubled(g, r.id, p.id);
                 // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '') + (dbl ? ' ph dbl' : '')}
                   onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
-                  {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                  {ph > 0 && <small className="phb">{ph}</small>}{dbl && <small className="phb dbl">×2</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -393,6 +395,27 @@ function BinokelMark() {
       <g transform="rotate(-12 11 16)"><rect x="3" y="4" width="15" height="21" rx="3" fill="#fffaf2" /><path d="M10.5 10c2.6 2 4 3.4 4 5a2.2 2.2 0 0 1-3.6 1.6l.8 2.4h-2.4l.8-2.4A2.2 2.2 0 0 1 6.5 15c0-1.6 1.4-3 4-5z" fill="#2e2b4f" /></g>
       <g transform="rotate(10 23 15)"><rect x="15" y="3" width="15" height="21" rx="3" fill="#fffaf2" /><circle cx="22.5" cy="13.5" r="4.2" fill="#f0b13e" /><circle cx="22.5" cy="13.5" r="1.6" fill="#e0923a" /></g>
     </svg>
+  );
+}
+
+/** Skyjo: wer hat die Runde beendet? */
+function EnderSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="ender" role="dialog" aria-label="Wer hat beendet?">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">Wer hat beendet?</div>
+          <div className="rank-list">
+            {seated(g).map(p => <button key={p.id} className="rank-row" onClick={() => a.setEnder(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>)}
+          </div>
+          <div className="pad-actions"><button className="secondary" id="ender-skip" onClick={() => a.setEnder(null)}>Überspringen</button></div>
+        </div>
+      </div>
+    </>
   );
 }
 
