@@ -66,7 +66,7 @@ export function TableView({ g }: { g: GameState }) {
   };
 
   return (
-    <div className={'tbl' + (s.fireMode ? ' fire' : '') + (n > 6 ? ' many' : '')}>
+    <div className={'tbl' + (s.fireMode || s.chicMode ? ' fire' : '') + (n > 6 ? ' many' : '')}>
       <div className="tbl-stage" ref={stage}>
         <svg className="tbl-art" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
           <g dangerouslySetInnerHTML={{ __html: scene }} />
@@ -120,6 +120,10 @@ export function TableDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   if (lives) return s.fireMode
     ? <><div className="tb-ask">Wer hat Feuer?</div><button className="secondary" onClick={() => act().setFireMode(false)}>Abbrechen</button></>
     : <>{undo}<button className="secondary wide" id="fire" onClick={() => act().setFireMode(true)}>Feuer</button></>;
+  // Chic: Antippen gibt einen Deckel; die Sonderfälle über zwei Knöpfe, danach den Spieler antippen
+  if (g.game.rules.params?.chic) return s.chicMode
+    ? <><div className="tb-ask">{s.chicMode === 'out' ? 'Wer hat sich rausgeschickt?' : 'Wer hat Chic aus dem Rohr?'}</div><button className="secondary" onClick={() => act().setChicMode(null)}>Abbrechen</button></>
+    : <>{undo}<button className="secondary chic-btn" id="chic-out" onClick={() => act().setChicMode('out')}>Rausgeschickt</button><button className="secondary chic-btn" id="chic-loss" onClick={() => act().setChicMode('loss')}>Aus dem Rohr</button></>;
   const ts = tokenState(g), players = seated(g);
   const loserOf = (h: number) => {
     // Wer hat die h-te Hälfte verloren? Aus der Reihenfolge der Hälften ablesen
@@ -165,10 +169,6 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
             {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={k > ts.hold[to]} onClick={() => act().tableGive(k)}>{k}</button>)}
             <button className="wide" id="tk-all" onClick={() => act().tableGive('all')}>Alle</button>
           </div>
-          {!!g.game.rules.params?.chic && <div className="tk-chic">
-            <button id="tk-sendout" onClick={() => act().tableChic('out')}>Rausgeschickt</button>
-            <button id="tk-chicloss" onClick={() => act().tableChic('loss')}>Chic aus dem Rohr</button>
-          </div>}
         </div>
       </div>
     </>
@@ -192,10 +192,6 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
               : THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={!ready} onClick={() => act().tableGive(k, from, label)}>{label}<b>{k}</b></button>)}
             {!chic && <button className="wide" id="tk-schock" onClick={() => act().tableGive('schock')}>Schock aus</button>}
           </div>
-          {!!g.game.rules.params?.chic && <div className="tk-chic">
-            <button id="tk-sendout" onClick={() => act().tableChic('out')}>Rausgeschickt</button>
-            <button id="tk-chicloss" onClick={() => act().tableChic('loss')}>Chic aus dem Rohr</button>
-          </div>}
         </div>
       </div>
     </>

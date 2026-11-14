@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep, tokenState } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -325,6 +325,25 @@ describe('Doppelkopf und Schafkopf im Block', () => {
     const tt = totals(st.get().game!);
     expect(tt).toEqual({ id1: -20, id2: 20, id3: 20, id4: -20 });
     expect(Object.values(tt).reduce((x, y) => x + y, 0)).toBe(0);
+  });
+});
+
+describe('Chic am Tisch', () => {
+  it('Antippen gibt je einen Deckel, in der zweiten Phase zurück; Sonderknöpfe wirken auf den nächsten Tipp', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'chic')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    for (let k = 0; k < 13; k++) a.tableTap(k < 7 ? 'id1' : 'id2');
+    let ts = tokenState(st.get().game!);
+    expect([ts.hold.id1, ts.hold.id2, ts.middle, ts.phase]).toEqual([7, 6, 0, 2]);
+    expect(ts.out.id3).toBe(true);
+    a.setChicMode('loss'); a.tableTap('id1');
+    expect(tokenState(st.get().game!).chic.id1).toBe(1);
+    for (let k = 0; k < 6; k++) a.tableTap('id2');
+    ts = tokenState(st.get().game!);
+    expect(ts.loser).toBe('id1');
+    expect(st.get().chicMode).toBeNull();
   });
 });
 

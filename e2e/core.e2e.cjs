@@ -553,12 +553,13 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Chic: rausschicken und Chic aus dem Rohr
   await p.click('[data-game="chic"]'); await shot('37g-chic'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  await seat(0).click(); await p.click('#tk-3'); await p.waitForTimeout(150);
-  await seat(0).click(); await p.waitForTimeout(150);
-  check('Chic: Knöpfe im Deckel-Blatt', await p.isVisible('#tk-sendout') && await p.isVisible('#tk-chicloss'));
-  await p.click('#tk-sendout'); await p.waitForTimeout(200);
+  for (let k = 0; k < 3; k++) { await seat(0).click(); await p.waitForTimeout(80); }
+  check('Chic: Antippen gibt je einen Deckel, kein Blatt', !(await p.isVisible('.bsheet')) && (await seat(0).getAttribute('aria-label')).endsWith('3 Deckel') && (await raw('.tb-count')) === '10');
+  check('Chic: Sonderknöpfe in der Leiste', await p.isVisible('#chic-out') && await p.isVisible('#chic-loss'));
+  await p.click('#chic-out'); check('Chic: fragt, wer sich rausgeschickt hat', (await raw('.tb-ask')).startsWith('Wer hat sich'));
+  await seat(0).click(); await p.waitForTimeout(200);
   check('Chic: rausgeschickt, Deckel zurück in die Mitte', (await seat(0).getAttribute('aria-label')).endsWith('raus') && (await raw('.tb-count')) === '13' && (await raw('.toast')).includes('rausgeschickt'));
-  await seat(1).click(); await p.click('#tk-chicloss'); await p.waitForTimeout(200);
+  await p.click('#chic-loss'); await seat(1).click(); await p.waitForTimeout(200);
   check('Chic: aus dem Rohr zahlt, Spiel läuft weiter', (await raw('.toast')).includes('zahlt die Runde') && (await p.locator('.tb-chic').count()) === 1);
   await shot('37h-chic-tisch');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);

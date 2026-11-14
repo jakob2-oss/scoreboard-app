@@ -288,3 +288,6 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Kein „Schock aus“ und keine Schocken-Würfe: im Deckel-Blatt die Deckelzahl 1 bis 6 direkt (gilt für alle Spiele
   mit „Zurück in die Mitte“). Unten keine Hälften-Leiste, auf der Siegerseite „zahlt“ statt „1 Hälfte“,
   rausgeschickte Spieler stehen als „raus“ auf dem Treppchen. Band „ALLE DECKEL“ und die übrigen Kennzahlen bleiben.
+- Chic am Tisch: Antippen eines Platzes gibt genau einen Deckel (erste Phase aus der Mitte, zweite Phase zurück in
+  die Mitte), ohne Blatt und ohne Zahlen. „Rausgeschickt“ (grün) und „Aus dem Rohr“ (rot) stehen unten in der Leiste;
+  wie bei Feuer in Schwimmen erst den Knopf, dann den Spieler antippen.

@@ -41,6 +41,8 @@ export interface AppState {
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
+  /** Chic: nächstes Antippen schickt raus bzw. heißt „Chic aus dem Rohr“ */
+  chicMode: 'out' | 'loss' | null;
   /** Rang-Spiele: Runde, die gerade verteilt wird */
   rankRef: RoundRef | null;
   /** Wizard im Block: Runde, deren Ansagen gerade unten in der Leiste eingetragen werden */
@@ -79,7 +81,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false, favs: [], bidBar: null,
+  tokenTo: null, fireMode: false, chicMode: null, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
@@ -434,6 +436,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g || !isTable(g)) return;
       if (!isLives(g)) {
         const t = tokenState(g);
+        // Chic: erst die Sonderknöpfe, sonst gibt jedes Antippen einen Deckel (aus der Mitte bzw. zurück in die Mitte)
+        if (g.game.rules.params?.chic) {
+          const mode = state.chicMode;
+          if (mode) { set({ tokenTo: playerId, chicMode: null }); actions.tableChic(mode); return; }
+          if (t.loser || t.gone[playerId] || (t.phase === 2 && !t.hold[playerId])) return;
+          set({ tokenTo: playerId }); actions.tableGive(1); return;
+        }
         if (t.loser || t.out[playerId] || (t.mode === 'return' && t.phase === 2 && !t.hold[playerId])) return;
         set({ sheet: 'tokens', tokenTo: playerId, pad: false }); return;
       }
@@ -448,6 +457,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       else if (ls.out[playerId] !== null) toast(`${p.name} ist raus`);
     },
     setFireMode(on: boolean) { set({ fireMode: on }); },
+    setChicMode(mode: 'out' | 'loss' | null) { set({ chicMode: mode }); },
     /** Chic: der Angetippte schickt sich raus (positiv) oder würfelt Chic aus dem Rohr (verliert sofort) */
     tableChic(kind: 'out' | 'loss') {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;
@@ -811,7 +821,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') { set({ sheet, pad: false, fireMode: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') { set({ sheet, pad: false, fireMode: false, chicMode: null }); },
     closeSheet() { set({ sheet: null, tokenTo: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;
@@ -885,7 +895,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         ? createTeamGame(rules, order.map(tp => ({ members: (teams.find(t => t.id === tp.id)?.members ?? []).map(person).filter((p): p is Player => !!p) })), clock)
         : createGame(rules, order.map(p => person(p.id)).filter((p): p is Player => !!p), clock);
       if (seated(ng).length < Math.max(1, rules.players.min)) return;
-      set({ bidBar: null, game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
+      set({ bidBar: null, game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, chicMode: null, tokenTo: null });
       persist(ng);
       toast('Oina no! Neue Partie läuft');
     },
