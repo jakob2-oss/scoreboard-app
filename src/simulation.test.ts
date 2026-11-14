@@ -73,6 +73,10 @@ function playOut(st: Store, r: () => number, maxRounds: number): GameState {
       a.tricksCommit(ref, t); continue;
     }
     if (s.sheet === 'winner') { a.pickWinner(pickOf(seated(g)).id); continue; }
+    if (s.sheet === 'skat') {
+      if (r() < .1) { a.passRoundRef(s.rankRef!); continue; }
+      a.setSkat({ player: pickOf(seated(g)).id, game: Math.floor(r() * 9), value: 18 + Math.floor(r() * 100), won: r() < .6 }); continue;
+    }
     if (s.sheet === 'deal') {
       const ps = seated(g), d1 = pickOf(ps), d2 = r() < .7 ? pickOf(ps.filter(p => p.id !== d1.id)) : null;
       a.setDeal({ declarers: d2 ? [d1.id, d2.id] : [d1.id], kind: d2 ? 0 : 1, value: 1 + Math.floor(r() * 4), won: r() < .5, bockAdd: r() < .1 }); continue;

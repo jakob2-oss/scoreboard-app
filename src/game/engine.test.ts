@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow, dealScores, schafkopfValue
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow, dealScores, schafkopfValue, skatValue, skatScores
 } from './engine';
 import { gameDef } from './games';
 
@@ -233,6 +233,19 @@ describe('Doppelkopf und Schafkopf', () => {
     expect(schafkopfValue(10, 10, {})).toBe(10);
     expect(schafkopfValue(50, 10, { schneider: true, laufende: 3 })).toBe(90);
     expect(schafkopfValue(10, 10, { schwarz: true })).toBe(30);
+  });
+});
+
+describe('Skat', () => {
+  it('Spielwert: Grundwert mal (Spitzen + Spiel + Stufen), Null fest, Kontra und Re; Wertung mit Seeger-Fabian', () => {
+    expect(skatValue(3, { spitzen: 2 })).toBe(36);                                    // Kreuz mit 2, Spiel 3
+    expect(skatValue(4, { spitzen: 1, hand: true, schneider: true })).toBe(96);       // Grand mit 1, Spiel 2, Hand 3, Schneider 4
+    expect(skatValue(0, { spitzen: 1, schwarz: true })).toBe(36);                     // Karo mit 1, Spiel 2, Schneider 3, Schwarz 4
+    expect(skatValue(7, { spitzen: 5, hand: true })).toBe(46);                        // Null ouvert: fest
+    expect(skatValue(4, { spitzen: 2, kontra: 1 })).toBe(144);
+    expect(skatScores(['a', 'b', 'c'], 'a', 36, false)).toEqual({ a: -72, b: 0, c: 0 });
+    expect(skatScores(['a', 'b', 'c'], 'a', 36, true, true)).toEqual({ a: 86, b: 0, c: 0 });
+    expect(skatScores(['a', 'b', 'c', 'd'], 'b', 24, false, true)).toEqual({ a: 30, b: -98, c: 30, d: 30 });
   });
 });
 

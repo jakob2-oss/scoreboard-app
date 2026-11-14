@@ -175,7 +175,7 @@ GAMES.push({
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
 GAMES.push({
   template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
-    params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true,
+    params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true, block: true, skatCalc: true,
       quick: [{ label: 'Null 23', op: 'set', v: 23 }, { label: 'Null Hand 35', op: 'set', v: 35 }, { label: 'Null ouvert 46', op: 'set', v: 46 }, times('Verloren', -2)] } },
   points: [['Reizen', 'wer am höchsten reizt, spielt allein'], ['Spielwert', 'Grundwert mal Spitzen und Stufen'], ['Grundwerte', 'Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24'],
     ['Null', '23, Hand 35, ouvert 46, ouvert Hand 59'], ['Verloren', 'doppelter Spielwert wird abgezogen'], ['Eingepasst', 'alle passen, niemand schreibt']],

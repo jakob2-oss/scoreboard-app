@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, roundLow, isDoubled, schafkopfValue, bockLeft, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, roundLow, isDoubled, SKAT_GAMES, skatValue, schafkopfValue, bockLeft, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -130,6 +130,7 @@ export function GameScreen() {
       {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'ender' && s.rankRef && <EnderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'deal' && s.rankRef && <DealSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'skat' && s.rankRef && <SkatSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -225,10 +226,11 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const struck = !!r.cat && v === 0;
                 const myTurn = catTurnId === p.id && v === null;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
-                // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
-                const won = v !== null && (zeroWins(g) ? v === 0 : g.game.rules.params?.lowCrown ? roundLow(g, r.id, p.id) : !!g.game.rules.params?.winnerOnly && v > 0);
+                const dk = (g.game.rules.params?.deal ?? (g.game.rules.params?.skatCalc ? 'skat' : undefined)) as string | undefined, dl = dk ? fieldOf(g, r.id, p.id, 'decl') : null;
+                // Rundensieg: Rommé 0, Skyjo niedrigste Runde, Skat der Alleinspieler bei Gewinn, Uno der Sieger
+                const won = v !== null && (zeroWins(g) ? v === 0 : g.game.rules.params?.lowCrown ? roundLow(g, r.id, p.id)
+                  : g.game.rules.params?.skatCalc ? !!dl && v > 0 : !!g.game.rules.params?.winnerOnly && v > 0);
                 const dbl = v !== null && !!g.game.rules.params?.ender && isDoubled(g, r.id, p.id);
-                const dk = g.game.rules.params?.deal as string | undefined, dl = dk ? fieldOf(g, r.id, p.id, 'decl') : null;
                 // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
                 return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '') + (dbl ? ' ph dbl' : '') + (dl ? ' ph decl' : '')}
@@ -402,7 +404,7 @@ function BinokelMark() {
 }
 
 /** Doppelkopf und Schafkopf: Spielarten, wie sie im Block an der Zelle stehen */
-const DEAL_KINDS: Record<string, string[]> = { doko: ['Re', 'Solo'], schafkopf: ['Sau', 'Wenz', 'Solo'] };
+const DEAL_KINDS: Record<string, string[]> = { doko: ['Re', 'Solo'], schafkopf: ['Sau', 'Wenz', 'Solo'], skat: ['Karo', 'Herz', 'Pik', 'Kreuz', 'Grand', 'Null', 'Null', 'Null', 'Null'] };
 
 /** Doppelkopf und Schafkopf: ein Blatt für die ganze Runde. Die App verteilt den Wert als Nullsumme. */
 function DealSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
@@ -462,6 +464,64 @@ function DealSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
           <div className="pad-actions">
             <button className="primary" id="deal-go" disabled={!ready} onClick={() => a.setDeal({ declarers: decl, kind: doko ? (solo ? 1 : 0) : kind, value: v, won: !!won, bockAdd })}>
               {ready ? `${shown} ${solo && !doko ? 'je Gegner' : ''} eintragen`.replace('  ', ' ') : 'Eintragen'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Skat: Alleinspieler, Spielwert-Rechner, gewonnen oder verloren; eingepasst zählt für niemanden */
+function SkatSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const a = act(), players = seated(g), dealer = players.length === 4 ? dealerOf(g)?.id : undefined;
+  const [who, setWho] = useState<string | null>(null);
+  const [game, setGame] = useState(3);
+  const [spitzen, setSpitzen] = useState(1);
+  const [x, setX] = useState<Record<string, boolean>>({});
+  const [kontra, setKontra] = useState<0 | 1 | 2>(0);
+  const [won, setWon] = useState<boolean | null>(null);
+  const nul = !!SKAT_GAMES[game].nul, maxSp = game === 4 ? 4 : 11;
+  const value = skatValue(game, { spitzen, ...x, kontra });
+  const flip = (k: string) => setX(o => ({ ...o, [k]: !o[k] }));
+  const ready = !!who && won !== null;
+  const tog = (k: string, label: string) => <button id={`sx-${k}`} aria-pressed={!!x[k]} onClick={() => flip(k)}>{label}</button>;
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="skat" role="dialog" aria-label={`Runde ${roundNumber(g, roundRef)}`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="deal-who">
+            {players.filter(p => p.id !== dealer).map(p => <button key={p.id} className="deal-p" aria-pressed={who === p.id} onClick={() => setWho(p.id)}><Avatar p={p} /><span>{p.name}</span></button>)}
+          </div>
+          <div className="skat-games">
+            {SKAT_GAMES.map((sg, i) => <button key={sg.label} id={`sg-${i}`} aria-pressed={game === i} onClick={() => { setGame(i); setSpitzen(s0 => Math.min(s0, i === 4 ? 4 : 11)); }}>{sg.label}<b>{sg.base}</b></button>)}
+          </div>
+          {!nul && <>
+            <div className="gebot-row deal-row">
+              <span className="lbl">Spitzen</span>
+              <button className="step" aria-label="Spitzen weniger" onClick={() => setSpitzen(v => Math.max(1, v - 1))}>−</button>
+              <b id="skat-spitzen">{spitzen}</b>
+              <button className="step" aria-label="Spitzen mehr" onClick={() => setSpitzen(v => Math.min(maxSp, v + 1))}>+</button>
+            </div>
+            <div className="deal-extra skat-extra">
+              {tog('hand', 'Hand')}{tog('schneider', 'Schneider')}{tog('schneiderAn', 'Schneider angesagt')}
+              {tog('schwarz', 'Schwarz')}{tog('schwarzAn', 'Schwarz angesagt')}{tog('ouvert', 'Ouvert')}
+            </div>
+          </>}
+          <div className="seg" role="group" aria-label="Kontra">
+            {(['Ohne', 'Kontra', 'Re'] as const).map((k, i) => <button key={k} id={`kontra-${i}`} aria-pressed={kontra === i} onClick={() => setKontra(i as 0 | 1 | 2)}>{k}</button>)}
+          </div>
+          <div className="seg" role="group" aria-label="Ausgang">
+            <button id="skat-won" aria-pressed={won === true} onClick={() => setWon(true)}>Gewonnen</button>
+            <button id="skat-lost" aria-pressed={won === false} onClick={() => setWon(false)}>Verloren</button>
+          </div>
+          <div className="pad-actions">
+            <button className="secondary" id="pass-round" onClick={() => { a.closeSheet(); act().passRoundRef(roundRef); }}>Eingepasst</button>
+            <button className="primary" id="skat-go" disabled={!ready} onClick={() => a.setSkat({ player: who!, game, value, won: !!won })}>
+              {won === false ? `−${value * 2}` : value} eintragen
             </button>
           </div>
         </div>

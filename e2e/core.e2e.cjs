@@ -425,11 +425,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && (await p.locator('#s-game .top .sub').count()) === 0);
   const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
   await p.click('#round-go'); await p.waitForTimeout(150);
-  check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));
+  check('Skat: Rechner-Blatt mit Spielarten und Eingepasst', await p.isVisible('#skat') && (await p.locator('#skat .skat-games button').count()) === 9 && await p.isVisible('#pass-round'));
   await p.click('#pass-round'); await p.waitForTimeout(200);
   check('Skat: eingepasst, Geber rückt weiter', (await p.locator('td.cell.zero').count()) >= 3 && (await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent()) !== dealer1);
-  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
-  await p.click('.pp-keys .key >> text="2"'); await p.click('.pp-keys .key >> text="4"'); await p.click('.pp-panel .quick button >> text=Verloren'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.click('#skat .deal-p >> nth=0'); await p.waitForTimeout(150);
+  check('Skat: Kreuz mit 1 ist 24', (await raw('#skat-go')) === '24 eintragen');
+  await p.click('#skat-lost'); await shot('36g2-skat-sheet'); await p.click('#skat-go'); await p.waitForTimeout(200);
   check('Skat: verloren zählt doppelt negativ', (await raw('tfoot td .tot >> nth=0')).includes('48'));
   await shot('36h-skat-game');
   await p.click('#s-game .text-btn'); await p.waitForTimeout(400); await p.click('.ser-chips .fchip >> nth=0'); await p.click('.victory .pad-actions .primary'); await p.waitForTimeout(300);
@@ -437,8 +438,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Skat: Rekorde auf der Spielseite', await p.isVisible('.records') && (await raw('.records')).includes('Längste Partie'));
   await p.evaluate(() => document.querySelector('.records').scrollIntoView({ block: 'center' })); await shot('36i-skat-records');
   await p.click('#quick-start'); await p.waitForTimeout(300);
-  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
-  await p.click('.pp-keys .key >> text="3"'); await p.click('.pp-keys .key >> text="6"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.click('#skat .deal-p >> nth=0'); await p.click('#skat [aria-label="Spitzen mehr"]'); await p.click('#skat-won');
+  check('Skat: Kreuz mit 2 ist 36', (await raw('#skat-go')) === '36 eintragen');
+  await p.click('#skat-go'); await p.waitForTimeout(200);
   await p.click('#s-game .text-btn'); await p.waitForTimeout(400);
   check('Siegerseite: neuer Rekord', await p.isVisible('.v-records') && (await raw('.v-records')).includes('Neuer Rekord'));
   await shot('36j-new-record');

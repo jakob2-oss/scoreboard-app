@@ -67,6 +67,10 @@ export function GameInfo() {
           })}
         </div>
       </div>}
+      {!!template.params?.skatCalc && <label className="switch-row">
+        <input type="checkbox" id="seeger-on" checked={!!template.params?.seeger} onChange={e => a.setTemplateParam('seeger', e.target.checked || undefined)} />
+        <span className="t"><b>Seeger-Fabian</b></span>
+      </label>}
       {template.params?.deal === 'doko' && <label className="switch-row">
         <input type="checkbox" id="bock-on" checked={!!template.params?.bock} onChange={e => a.setTemplateParam('bock', e.target.checked || undefined)} />
         <span className="t"><b>Bockrunden</b></span>

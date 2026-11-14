@@ -424,6 +424,27 @@ export function bockLeft(s: GameState, index: number): number {
   return left;
 }
 
+/** Skat: Spielarten mit Grundwert; Null hat feste Werte ohne Spitzen und Stufen */
+export const SKAT_GAMES: { label: string; base: number; nul?: boolean }[] = [
+  { label: 'Karo', base: 9 }, { label: 'Herz', base: 10 }, { label: 'Pik', base: 11 }, { label: 'Kreuz', base: 12 }, { label: 'Grand', base: 24 },
+  { label: 'Null', base: 23, nul: true }, { label: 'Null Hand', base: 35, nul: true }, { label: 'Null ouvert', base: 46, nul: true }, { label: 'Null ouvert Hand', base: 59, nul: true }
+];
+/** Skat-Spielwert: Grundwert mal (Spitzen + 1 + Stufen); Kontra verdoppelt, Re vervierfacht */
+export function skatValue(game: number, o: { spitzen?: number; hand?: boolean; schneider?: boolean; schneiderAn?: boolean; schwarz?: boolean; schwarzAn?: boolean; ouvert?: boolean; kontra?: 0 | 1 | 2 }): number {
+  const g = SKAT_GAMES[game]; if (!g) return 0;
+  const k = o.kontra === 2 ? 4 : o.kontra === 1 ? 2 : 1;
+  if (g.nul) return g.base * k;
+  const stufen = (o.hand ? 1 : 0) + (o.schneider || o.schwarz ? 1 : 0) + (o.schneiderAn ? 1 : 0) + (o.schwarz ? 1 : 0) + (o.schwarzAn ? 1 : 0) + (o.ouvert ? 1 : 0);
+  return g.base * (Math.max(1, o.spitzen ?? 1) + 1 + stufen) * k;
+}
+/** Skat-Wertung einer Runde: gewonnen +Wert, verloren −2×Wert; Seeger-Fabian: ±50, bei Verlust +40 (zu dritt) bzw. +30 je Gegner */
+export function skatScores(players: string[], player: string, value: number, won: boolean, seeger = false): Record<string, number> {
+  const out: Record<string, number> = Object.fromEntries(players.map(id => [id, 0]));
+  out[player] = won ? value + (seeger ? 50 : 0) : -2 * value - (seeger ? 50 : 0);
+  if (seeger && !won) for (const id of players) if (id !== player) out[id] = players.length === 3 ? 40 : 30;
+  return out;
+}
+
 /** Skyjo: wer hat die Runde beendet? */
 export const enderOf = (s: GameState, roundId: RoundRef): string | null =>
   roundId === 'new' ? null : seated(s).find(p => fieldOf(s, roundId, p.id, 'ender') === 1)?.id ?? null;
