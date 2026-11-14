@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep, tokenState } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -299,6 +299,51 @@ describe('Binokel im Block', () => {
     a.roundGo(); expect(st.get().sheet).toBe('bidder');
     a.setBidder(null, null);
     expect(st.get()).toMatchObject({ sheet: null, pad: true, edit: { ref: 'new', field: 'meld' } });
+  });
+});
+
+describe('Doppelkopf und Schafkopf im Block', () => {
+  it('Doppelkopf zu fünft: der Geber setzt aus; Bock danach verdoppelt die nächsten Runden', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init();
+    const t = GAMES.find(g => g.template.key === 'doppelkopf')!.template;
+    a.openGame({ ...t, params: { ...t.params, bock: true } }); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D', 'E']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get().sheet).toBe('deal');
+    a.setDeal({ declarers: ['id2', 'id3'], kind: 0, value: 2, won: true, bockAdd: true });
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 2, id3: 2, id4: -2, id5: -2 });
+    a.roundGo(); a.setDeal({ declarers: ['id3'], kind: 1, value: 1, won: false });
+    // Bockrunde: doppelt; Geber B setzt aus, Solo C verliert dreifach
+    expect(totals(st.get().game!)).toEqual({ id1: 2, id2: 2, id3: -4, id4: 0, id5: 0 });
+  });
+  it('Schafkopf: Sauspiel mit Schneider, die Summe ist immer 0', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'schafkopf')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D']) await a.addPlayer(n);
+    a.start(); a.roundGo(); a.setDeal({ declarers: ['id1', 'id4'], kind: 0, value: 20, won: false });
+    const tt = totals(st.get().game!);
+    expect(tt).toEqual({ id1: -20, id2: 20, id3: 20, id4: -20 });
+    expect(Object.values(tt).reduce((x, y) => x + y, 0)).toBe(0);
+  });
+});
+
+describe('Chic am Tisch', () => {
+  it('Antippen gibt je einen Deckel, in der zweiten Phase zurück; Sonderknöpfe wirken auf den nächsten Tipp', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'chic')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    for (let k = 0; k < 13; k++) a.tableTap(k < 7 ? 'id1' : 'id2');
+    let ts = tokenState(st.get().game!);
+    expect([ts.hold.id1, ts.hold.id2, ts.middle, ts.phase]).toEqual([7, 6, 0, 2]);
+    expect(ts.out.id3).toBe(true);
+    a.setChicMode('loss'); a.tableTap('id1');
+    expect(tokenState(st.get().game!).chic.id1).toBe(1);
+    for (let k = 0; k < 6; k++) a.tableTap('id2');
+    ts = tokenState(st.get().game!);
+    expect(ts.loser).toBe('id1');
+    expect(st.get().chicMode).toBeNull();
   });
 });
 

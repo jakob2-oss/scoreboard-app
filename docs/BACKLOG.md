@@ -223,13 +223,13 @@ Erstellungsmodus, fehlende Bausteine:
 ## M. Vorschläge vom 14.11. (Ideenbuch, noch nicht entschieden)
 
 ### M1 Spiele
-- [ ] Skyjo: Eingabe im Block; „Wer hat beendet?“ antippen, die App verdoppelt, wenn er nicht allein die wenigsten Punkte hat (nur positiv); Krone für die niedrigste Runde; Ende-Vorschlag 100.
-- [ ] Schocken: im Deckel-Blatt den Wurf antippen (Schock aus, Schock 2 bis 6, General, Straße, Zahl), die App kennt die Deckelzahl.
-- [ ] Doppelkopf: Re-Partei antippen, Spielwert mit − und +, Re oder Kontra gewinnt, Solo dreifach; Bockrunden als Schalter.
-- [ ] Schafkopf: wer spielt (plus Partner beim Sauspiel), Spielart, gewonnen oder verloren; Schneider, Schwarz, Laufende; Tarife auf der Spielseite.
-- [ ] Skat: Spielwert-Rechner (Farbe/Grand/Null, Spitzen, Hand, Schneider, Schwarz, Ouvert, Kontra/Re); optional Seeger-Fabian; Ende-Vorschlag Bierlachs.
-- [ ] Scrabble: Taste Bingo +50, Reststeine am Ende, optional das Wort für Rekorde.
-- [ ] Wizard: Hausregel „Ansagen dürfen nicht aufgehen“ als Schalter.
+- [x] Skyjo: Eingabe im Block; „Wer hat beendet?“ antippen, die App verdoppelt, wenn er nicht allein die wenigsten Punkte hat (nur positiv); Krone für die niedrigste Runde; Ende-Vorschlag 100.
+- [x] Schocken: im Deckel-Blatt den Wurf antippen (Schock aus, Schock 2 bis 6, General, Straße, Zahl), die App kennt die Deckelzahl.
+- [x] Doppelkopf: Re-Partei antippen, Spielwert mit − und +, Re oder Kontra gewinnt, Solo dreifach; Bockrunden als Schalter.
+- [x] Schafkopf: wer spielt (plus Partner beim Sauspiel), Spielart, gewonnen oder verloren; Schneider, Schwarz, Laufende; Tarife auf der Spielseite.
+- [x] Skat: Spielwert-Rechner (Farbe/Grand/Null, Spitzen, Hand, Schneider, Schwarz, Ouvert, Kontra/Re); optional Seeger-Fabian; Ende-Vorschlag Bierlachs.
+- [x] Scrabble: Taste Bingo +50, Reststeine am Ende, optional das Wort für Rekorde.
+- [x] Wizard: Hausregel „Ansagen dürfen nicht aufgehen“ als Schalter.
 
 ### M2 Strichliste (L14)
 - [ ] Liste zwischen zwei Personen, Strich je Tipp in Fünferbündeln, Notiz je Strich, Ausgleichen mit Verlauf.

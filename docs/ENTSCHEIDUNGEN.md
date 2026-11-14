@@ -263,3 +263,31 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Partien der Serie lassen sich öffnen (dieselbe Ansicht wie im Verlauf: Serie ändern, löschen, Plätze).
 - Serienliste und laufende Serie zeigen das Banner als kleines Bild und die Teilnehmer.
 - Der Otter kann jetzt Sonnenbrille, Cap oder keine Krone tragen (`otter({ shades, hat })`).
+
+## 14.11.2026: Vorschläge zu den übrigen Spielen umgesetzt (BACKLOG M1)
+- Skyjo: „Runde n eintragen“ fragt zuerst „Wer hat beendet?“ (oder Überspringen). Hat der nicht allein am wenigsten,
+  verdoppelt die App seine positiven Punkte (gerechnet, nicht gespeichert: Ändern bleibt richtig). „×2“ an der Zelle,
+  Krone für die niedrigste Runde, Eingabe im Block mit −2, −1, +1, +5, +10.
+- Schocken und Chic: im Deckel-Blatt den Wurf antippen (Schock 6 bis 2, General 3, Straße 2, Zahl 1, Schock aus);
+  der Wurf wird am Eintrag gespeichert, für spätere Statistik.
+- Doppelkopf und Schafkopf: ein Runden-Blatt. Doppelkopf: Re-Partei (ein Spieler heißt Solo, zählt dreifach),
+  Spielwert, Re oder Kontra gewinnt, zu fünft setzt der Geber aus. Bockrunden als Schalter auf der Spielseite;
+  „Bock danach“ gibt so viele Bockrunden, wie Spieler am Tisch sind. Schafkopf: Sauspiel (Spieler und Partner),
+  Wenz, Solo; Schneider, Schwarz, Laufende je Grundtarif; Tarife auf der Spielseite (Vorschlag 10 und 50).
+  Die Nullsumme verteilt die App. Spielart klein an der Zelle, „Bock“ an der Rundennummer.
+- Skat: Rechner-Blatt mit Alleinspieler (zu viert ohne Geber), Spielart mit Grundwert, Spitzen, Hand, Schneider,
+  Schwarz (auch angesagt), Ouvert, Kontra und Re; verloren doppelt negativ. Seeger-Fabian als Schalter (+50 bzw. −50,
+  bei Verlust +40 je Gegner zu dritt, +30 zu viert). Krone nur für den Alleinspieler bei Gewinn. Bierlachs nicht
+  umgesetzt (offenes Spielende mit Grenze deckt es weitgehend ab).
+- Scrabble: Eingabe im Block, Taste „Bingo +50“, im Menü „Reststeine verrechnen“ (wer zuerst fertig war, bekommt die
+  Summe der anderen). Das Wort zur Zelle ist nicht umgesetzt (Tippen am Tisch kostet zu viel).
+- Wizard: Schalter „Ansagen dürfen nicht aufgehen“; beim Letzten ist die passende Zahl gesperrt.
+
+## 14.11.2026: Chic ohne Schocken-Reste
+- Chic hat keine Hälften und kein Finale: eine Runde, wer am Ende als Einziger noch Deckel hat, zahlt (`halves: 1`).
+- Kein „Schock aus“ und keine Schocken-Würfe: im Deckel-Blatt die Deckelzahl 1 bis 6 direkt (gilt für alle Spiele
+  mit „Zurück in die Mitte“). Unten keine Hälften-Leiste, auf der Siegerseite „zahlt“ statt „1 Hälfte“,
+  rausgeschickte Spieler stehen als „raus“ auf dem Treppchen. Band „ALLE DECKEL“ und die übrigen Kennzahlen bleiben.
+- Chic am Tisch: Antippen eines Platzes gibt genau einen Deckel (erste Phase aus der Mitte, zweite Phase zurück in
+  die Mitte), ohne Blatt und ohne Zahlen. „Rausgeschickt“ (grün) und „Aus dem Rohr“ (rot) stehen unten in der Leiste;
+  wie bei Feuer in Schwimmen erst den Knopf, dann den Spieler antippen.
