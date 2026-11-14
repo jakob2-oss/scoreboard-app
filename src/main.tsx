@@ -18,6 +18,9 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 
+// Dauerhafter Speicher: das iPhone soll die Spieldaten nicht bei Speichermangel löschen
+navigator.storage?.persist?.().catch(() => undefined);
+
 // Updates: Die App vom Homescreen startet auf dem iPhone oft nicht neu, sondern wird nur wieder angezeigt.
 // Deshalb beim Zurückkehren und alle 30 Minuten nach einer neuen Version fragen; sie lädt sich dann selbst.
 const updateSW = registerSW({
@@ -28,5 +31,9 @@ const updateSW = registerSW({
     setInterval(check, 30 * 60 * 1000);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
   },
-  onNeedRefresh() { updateSW(true); }
+  onNeedRefresh() {
+    // Wer gerade in einer Partie ist, landet nach dem Update wieder dort
+    try { if (sessionStorage.getItem('pz:screen') === 'game') sessionStorage.setItem('pz:resumeGame', '1'); } catch { /* egal */ }
+    updateSW(true);
+  }
 });

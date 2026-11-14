@@ -860,3 +860,8 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .tn-game .gicon, .tn-game svg { width: 34px; height: 34px; flex: none; }
 .tn-match.tn-empty { min-height: 74px; justify-content: space-around; background: transparent; box-shadow: none; border-radius: 16px; padding: 10px; gap: 8px; }
 .tn-match.tn-empty span { height: 22px; border-radius: 11px; background: var(--fill); }
+
+/* Lange Blätter auf kleinen iPhones: die Knöpfe bleiben unten sichtbar, der Inhalt scrollt darüber */
+.bsheet .sheet-body > .pad-actions:last-child { position: sticky; bottom: 0; z-index: 2; margin: 0 -16px; padding: 10px 16px 4px; background: var(--bg); }
+.bsheet.victory .sheet-body > .pad-actions:last-child { position: static; margin: 0; padding: 0; background: none; }
+.people-add { margin-bottom: 14px; }

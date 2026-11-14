@@ -579,6 +579,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
+  // Spieler im Reiter Spieler anlegen
+  await p.click('#tab-people'); await p.fill('#people-name', 'Lena'); await p.click('#people-add'); await p.waitForTimeout(200);
+  check('Spieler: im Reiter anlegbar', (await raw('#s-people .list')).includes('Lena') && (await raw('.toast')) === 'Lena angelegt');
+  await p.click('#tab-home');
+
   // Strichliste: anlegen, Striche, Notiz, Rückgängig, Ausgleichen, Bilanz im Profil
   await p.click('#tally-new'); await p.click('#tally-sheet .chip >> text=Anna'); await p.click('#tally-sheet .chip >> text=Ben'); await p.fill('#tally-name', 'Wetten');
   await p.click('#tally-start'); await p.waitForTimeout(250);
@@ -712,7 +717,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Sicherung speichern und wieder einlesen
   await p.click('#tab-people');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#backup-save')]);
-  check('Sicherung als Datei', dl.suggestedFilename().startsWith('punktezettel-') && (await text('#backup-save small')).startsWith('Zuletzt am'));
+  check('Sicherung als Datei', dl.suggestedFilename().startsWith('oina-no-') && (await text('#backup-save small')).startsWith('Zuletzt am'));
   await p.setInputFiles('#backup-file', await dl.path()); await p.waitForTimeout(500);
   check('Sicherung einlesen ohne Doppelte', (await text('.toast')) === 'Nichts Neues in der Sicherung', await text('.toast'));
   await p.setInputFiles('#backup-file', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"a":1}') }); await p.waitForTimeout(400);

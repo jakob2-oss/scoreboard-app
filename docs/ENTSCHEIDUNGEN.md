@@ -337,3 +337,15 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Beim Beenden einer Partie ist die passende Serie vorausgewählt (`suggestEvent`): Turnier-Partie immer ihr Turnier,
   sonst die laufende Serie, in der die meisten Mitspieler schon gespielt haben, bei Gleichstand die zuletzt genutzte.
   Änderbar mit einem Tipp, „Keine“ bleibt möglich. Eine Partie gehört weiterhin zu höchstens einer Serie.
+
+## 15.11.2026: Gesamtdurchgang (Teil 1) und Spieler anlegen
+- Spieler lassen sich im Reiter „Spieler“ anlegen (Feld „Neuer Name“, „Hinzufügen“); dort werden sie nur angelegt,
+  nicht für die nächste Partie ausgewählt. Doppelte Namen: „Lena gibt es schon“.
+- Texte geprüft (keine Trennpunkte, Pfeile, Erklär-Hinweise); eine Meldung ohne Gedankenstrich als Trenner.
+- Alle Ansichten aller Spiele auf dem iPhone SE in Hell und Dunkel automatisch geprüft: kein Überlauf, keine
+  Konsolenfehler. In langen Blättern (Skat, Schafkopf, Doppelkopf, Binokel) bleibt die Knopfleiste unten sichtbar.
+- Gesamtdurchgang Teil 2: Sicherung heißt „oina-no-Datum.json“. Export und Import auf ein leeres Gerät geprüft:
+  Spieler, Partien, Serien, Strichlisten mit Notizen und laufende Partien kommen vollständig zurück; nochmaliges
+  Einlesen meldet „Nichts Neues“. Die App bittet um dauerhaften Speicher (`navigator.storage.persist`).
+  Kommt ein Update mitten in einer Partie, öffnet die App danach wieder die Partie (Marke in sessionStorage);
+  normales Neuladen startet wie bisher auf der Startseite.
