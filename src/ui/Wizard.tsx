@@ -38,7 +38,7 @@ export function BidBar({ g, roundId: ref }: { g: GameState; roundId: string }) {
       <div className="wz-nav">
         <button className="secondary" aria-label="Rückgängig" disabled={!s.undo.length} onClick={() => act().undo()}><IconUndo /></button>
         <button className="secondary wide" onClick={() => (prev ? act().bidBack() : act().closeBidBar())}>{prev ? `Zurück zu ${prev.name}` : 'Schließen'}</button>
-        <button className="secondary" id="bid-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Manuell</button>
+        <button className="secondary" id="bid-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Pro Spieler</button>
       </div>
     </div>
   );
@@ -78,7 +78,7 @@ export function TricksSheet({ g, roundId: ref }: { g: GameState; roundId: string
           })}
           <div className="wz-sum"><span>Stiche verteilt</span><b className={ok ? 'ok' : 'warn'}>{sum} von {cards}</b></div>
           <div className="pad-actions">
-            <button className="secondary" id="tricks-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Manuell</button>
+            <button className="secondary" id="tricks-manual" onClick={() => act().switchEntry(g.game.rules.key)}>Pro Spieler</button>
             <button className="primary" id="tricks-go" disabled={!ok} onClick={() => act().tricksCommit(ref, t)}>Runde {no} eintragen</button>
           </div>
         </div>

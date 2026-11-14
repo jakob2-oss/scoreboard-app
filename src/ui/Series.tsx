@@ -141,7 +141,7 @@ export function Series() {
                     return (
                       <button key={h.id} className="row ser-game" onClick={() => setOpen(h.id)}>
                         <GameIcon icon={ic.icon} tint={ic.tint} />
-                        <span className="t"><b>{h.name}</b><small>{h.results.length} Spieler</small></span>
+                        <span className="t"><b>{h.name}</b></span>
                         <span className="win-stack">{h.results.filter(r => r.place === 1).slice(0, 2).map(w => <Avatar key={w.playerId} p={playerOf(players, w.playerId)} />)}</span>
                       </button>
                     );

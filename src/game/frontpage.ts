@@ -58,29 +58,29 @@ export interface Story {
 type T = Record<QuipLevel, string | string[]>;
 const hash = (x: string) => [...x].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
 /** Variante stabil aus dem seed (Abend und Geschichte), damit dieselbe Titelseite gleich bleibt */
-const pick = (t: T, level: QuipLevel, seed = '') => { const v = t[level]; return Array.isArray(v) ? v[hash(seed) % v.length] : v; };
+const pick = (t: T, level: QuipLevel, seed = '', rot = 0) => { const v = t[level]; return Array.isArray(v) ? v[(hash(seed) + rot) % v.length] : v; };
 
-export function rivalStory(n: RivalNews, nm: (id: string) => string, level: QuipLevel, seed = ''): Story {
+export function rivalStory(n: RivalNews, nm: (id: string) => string, level: QuipLevel, rot = 0): Story {
   const W = nm(n.who), O = nm(n.other), a = n.after.a === n.who ? n.after.winsA : n.after.winsB, b = n.after.a === n.who ? n.after.winsB : n.after.winsA;
-  const score = `${a} zu ${b}`, sd = seed + n.kind + n.who + n.other;
+  const score = `${a} zu ${b}`, sd = n.kind + n.who + n.other;
   const s = (kicker: string, headline: T, title: string, text: string, poster: string[]): Story =>
-    ({ kind: n.kind, weight: newsWeight(n), kicker, headline: pick(headline, level, sd), title, text, poster, who: n.who });
+    ({ kind: n.kind, weight: newsWeight(n), kicker, headline: pick(headline, level, sd, rot), title, text, poster, who: n.who });
   switch (n.kind) {
     case 'streak': return s('Dauerduell', {
       brav: [`${W} gewinnt zum *${ordWord(n.n)}* Mal in Folge gegen ${O}`, `${W} bleibt gegen ${O} ungeschlagen, *${numWord(n.n)}* Siege in Serie`],
       frech: [`${W} schlägt ${O} zum *${ordWord(n.n)}* Mal in Folge`, `${O} sucht noch das Rezept gegen ${W}. *${cap(numWord(n.n))}* Pleiten in Serie`, `${W} gegen ${O}: Es wird *langsam peinlich*`],
-      atzig: [`${W} schlägt ${O}. *Wieder.*`, `${W}. ${O}. Das *alte Lied.*`, `Serie Nummer *${n.n}.* ${W} über ${O}.`]
+      atzig: [`${W} schlägt ${O}. *Wieder.*`, `${W}. ${O}. Das *alte Lied.*`, `*${n.n}* in Folge. ${W} gegen ${O}.`]
     }, 'Dauerduell', `${W} schlägt ${O} zum ${ordWord(n.n)} Mal in Folge.`, [W, 'SCHON', 'WIEDER.']);
     case 'revenge': return s('Revanche', {
       brav: [`${W} beendet ${gen(O)} Siegesserie`, `Endlich: ${W} schlägt ${O} *wieder*`],
-      frech: [`Revanche! ${W} stoppt ${O} nach *${numWord(n.n)}* Niederlagen`, `${O} verliert gegen ${W}. Die Serie ist *Geschichte*`, `${W} hat ${gen(O)} Serie *beerdigt*`],
-      atzig: [`${W} dreht das Duell. ${O} *staunt.*`, `Plot-Twist: ${W} schlägt ${O}.`, `${gen(O)} Serie? *War einmal.*`]
-    }, 'Revanche', `${W} beendet ${gen(O)} Serie von ${numWord(n.n)} Siegen.`, ['REVANCHE.', W, 'SAGT', 'DANKE.']);
+      frech: [`Revanche! ${W} stoppt ${O} nach *${numWord(n.n)}* Niederlagen`, `${O} verliert gegen ${W}. Die Serie ist *Geschichte*`, `Schluss mit lustig für ${O}: ${W} *gewinnt*`],
+      atzig: [`${W} dreht das Duell. ${O} *staunt.*`, `Und plötzlich gewinnt *${W}.*`, `${gen(O)} Serie ist *vorbei.*`]
+    }, 'Revanche', `${W} beendet ${gen(O)} Serie von ${numWord(n.n)} Siegen.`, ['REVANCHE', 'FÜR', `${W}.`]);
     case 'lead': return s('Machtwechsel', {
       brav: [`${W} übernimmt im Duell mit ${O} die *Führung*`, `${W} liegt gegen ${O} jetzt *vorn*`],
       frech: [`Machtwechsel: ${W} zieht an ${O} *vorbei*`, `${O} muss ${W} jetzt *hinterherschauen*`],
-      atzig: [`Neue Ordnung. ${W} *vor* ${O}.`, `${W} übernimmt. ${O} *notiert.*`]
-    }, 'Machtwechsel', `${W} führt im Duell mit ${O} jetzt ${score}.`, ['NEUE', 'ORDNUNG.', W, 'VORN.']);
+      atzig: [`${W} *vorn.* ${O} dahinter.`, `${W} zieht vorbei. *Einfach so.*`]
+    }, 'Machtwechsel', `${W} führt im Duell mit ${O} jetzt ${score}.`, [W, 'ZIEHT', 'VORBEI.']);
     case 'level': return s('Ausgleich', {
       brav: [`${W} gleicht im Duell mit ${O} *aus*`, `Wieder *Gleichstand* zwischen ${W} und ${O}`],
       frech: [`Ausgleich! ${W} holt ${O} *ein*`, `${O} hat sich zu früh gefreut. *${score}*`],
@@ -88,13 +88,13 @@ export function rivalStory(n: RivalNews, nm: (id: string) => string, level: Quip
     }, 'Ausgleich', `${W} und ${O} stehen jetzt ${score}.`, [`${a} ZU ${b}.`, 'ALLES', 'OFFEN.']);
     case 'milestone': return s('Jubiläum', {
       brav: `${W} und ${O} spielen zum *${n.n}.* Mal gegeneinander`,
-      frech: `*${n.n}* Duelle und ${W} und ${O} können nicht voneinander lassen`,
-      atzig: `${W} gegen ${O}. Folge *${n.n}.*`
-    }, 'Jubiläum', `${n.n}. Duell, ${W} liegt ${score} ${a >= b ? 'vorn' : 'zurück'}.`, [`FOLGE ${n.n}.`, W, 'GEGEN', `${O}.`]);
+      frech: `${W} gegen ${O}, zum *${n.n}.* Mal. Kein Ende in Sicht`,
+      atzig: `${W} gegen ${O}. Zum *${n.n}.* Mal.`
+    }, 'Jubiläum', `${n.n}. Duell, ${W} liegt ${score} ${a >= b ? 'vorn' : 'zurück'}.`, ['DUELL', `NR. ${n.n}.`]);
     default: return s('Duell', {
       brav: [`${W} gewinnt das Duell gegen ${O}`, `${W} hat gegen ${O} die *Nase vorn*`],
       frech: [`${W} schlägt ${O}, *mal wieder*`, `${O} gegen ${W}: Es bleibt *schwierig*`],
-      atzig: [`${W} gegen ${O}. *${score}.*`, `${W} über ${O}. *Notiert.*`]
+      atzig: [`${W} gegen ${O}. *${score}.*`, `${W} vor ${O}. *Wie so oft.*`]
     }, 'Duell', `${W} gegen ${O} steht jetzt ${score}.`, [W, 'GEGEN', `${O}.`]);
   }
 }
@@ -127,7 +127,9 @@ export interface FrontPage {
   variant: 'zeitung' | 'sport' | 'poster';
 }
 
-export interface FrontOpts { level: QuipLevel; names: Record<string, string>; events?: { id: string; name: string; kind?: string; points?: number[] }[] }
+export interface FrontOpts { level: QuipLevel; names: Record<string, string>; events?: { id: string; name: string; kind?: string; points?: number[] }[];
+  /** intern: ohne Blick auf den Vorabend */
+  inner?: boolean }
 
 /** Titelseite eines Abends; `all` ist der ganze Verlauf (für Rivalitäten und Serien), `day` der Abend (eveningOf) */
 export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage | null {
@@ -143,10 +145,11 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
   const low = players.length > 1 ? [...players].sort((a, b) => performance(tonight, a).score - performance(tonight, b).score)[0] : null;
   const laterne = low && low !== star.id ? low : null;
 
-  const stories: Story[] = rivalNews(before, tonight).map(n => rivalStory(n, nm, L, day));
+  // Fassungen wechseln von Abend zu Abend (rot), damit dieselbe Geschichte nicht gleich klingt
+  const stories: Story[] = rivalNews(before, tonight).map(n => rivalStory(n, nm, L, idx));
   const G = tonight.length, kinds = new Set(tonight.map(g => g.key)).size;
   const add = (kind: StoryKind, weight: number, who: string, kicker: string, headline: T, title: string, text: string, poster: string[]) =>
-    stories.push({ kind, weight, who, kicker, headline: pick(headline, L, day + kind + who), title, text, poster });
+    stories.push({ kind, weight, who, kicker, headline: pick(headline, L, kind + who, idx), title, text, poster });
   const winsOf = (id: string) => tonight.filter(g => resultOf(g, id)?.place === 1).length;
   const playedOf = (id: string) => tonight.filter(g => resultOf(g, id)).length;
 
@@ -174,20 +177,20 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
       if (idx > 0 && w) add('debut', 6.5, id, 'Neu dabei', {
         brav: [`${N} gewinnt gleich beim ersten Mal`, `Starker Einstand für ${N}`],
         frech: [`Neu dabei und *schon gewonnen*: ${N}`, `${N} kommt, sieht und *gewinnt*`],
-        atzig: [`${N}. Debüt. *Sieg.*`, `Neues Gesicht, *alter Glanz.* ${N}.`]
+        atzig: [`${N}. Debüt. *Sieg.*`, `Neu am Tisch und *gleich vorn*: ${N}`]
       }, 'Einstand', `${N} spielt zum ersten Mal mit und gewinnt.`, ['NEU.', N, 'GEWINNT.']);
       else if (idx > 0) add('debut', 1.5, id, 'Neu dabei', { brav: `Willkommen, ${N}`, frech: `${N} ist neu und lernt noch`, atzig: `Neu am Tisch: *${N}.*` }, 'Neu dabei', `${N} spielt zum ersten Mal mit.`, ['HALLO,', `${N}.`]);
     } else if (w && !prev.some(g => resultOf(g, id)!.place === 1)) add('firstWin', 7, id, 'Erster Sieg', {
       brav: [`Der *erste Sieg* für ${N}`, `${N} gewinnt *zum ersten Mal*`],
-      frech: [`Es ist passiert: ${N} *gewinnt*`, `${N} gewinnt. Die Welt *staunt*`],
-      atzig: [`${N}. Erster Sieg. *Rahmt das ein.*`]
+      frech: [`Es ist passiert: ${N} *gewinnt*`, `${N} gewinnt. *Wurde auch Zeit*`],
+      atzig: [`${N}. Erster Sieg. *Endlich.*`]
     }, 'Erster Sieg', `${N} gewinnt zum ersten Mal überhaupt.`, ['ENDLICH', `${N}.`]);
     else if (w) {
       const dry = runFromEnd(before, id, g => resultOf(g, id)!.place !== 1);
       if (dry >= 5) add('drought', 5 + Math.min(4, dry / 3), id, 'Comeback', {
         brav: [`${N} gewinnt wieder`, `Durststrecke vorbei für ${N}`],
         frech: [`${N} gewinnt endlich wieder. *Nach ${dry} Partien.*`, `${N} hat das Gewinnen *nicht verlernt*`],
-        atzig: [`${N} ist *zurück.*`, `Comeback des Jahres. *${N}.*`]
+        atzig: [`${N} ist *zurück.*`, `${N} kann es *noch.*`]
       }, 'Durststrecke vorbei', `${N} gewinnt zum ersten Mal nach ${dry} Partien.`, [N, 'IST', 'ZURÜCK.']);
     }
     // Dreierpack: drei Siege hintereinander an diesem Abend (ohne alle gewonnen)
@@ -195,7 +198,7 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
     if (best >= 3 && w < G) add('hattrick', 5 + best, id, 'Lauf', {
       brav: [`${N} gewinnt *${numWord(best)}* Partien in Folge`],
       frech: [`${N} ist nicht zu bremsen: *${numWord(best)}* Siege am Stück`, `Hattrick! ${N} läuft *heiß*`],
-      atzig: [`${N} on fire. *${best} am Stück.*`]
+      atzig: [`${best} Siege am Stück. *${N}.*`]
     }, 'Lauf', `${N} gewinnt ${numWord(best)} Partien hintereinander.`, [N, 'LÄUFT.']);
     else if (w === 2 && G >= 3 && id === star.id) add('double', 3, id, 'Doppelpack', {
       brav: [`Doppelpack für ${N}`], frech: [`${N} gewinnt zweimal und *redet von nichts anderem*`], atzig: [`Zwei Siege. *${N}.* Läuft.`]
@@ -205,7 +208,7 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
   if (players.length >= 3 && G >= players.length && players.every(id => winsOf(id) > 0)) add('everyone', 5, star.id, 'Gerecht', {
     brav: [`*Jeder* gewinnt mindestens einmal`, `Ein Abend mit *lauter Siegern*`],
     frech: [`Kuschelabend: *jeder* gewinnt mal`, `Heute gibt es *keine* Verlierer. Fast.`],
-    atzig: [`Alle gewinnen. *Sozialismus am Spieltisch.*`, `Fair verteilt. *Verdächtig fair.*`]
+    atzig: [`Jeder einmal. *Gerecht verteilt.*`, `Fair verteilt. *Verdächtig fair.*`]
   }, 'Für jeden was', `Alle ${numWord(players.length)} gewinnen mindestens eine Partie.`, ['JEDER', 'MAL.']);
 
   // Knappe und klare Partien (nur mit echten Punkten, nicht bei Platz-Spielen)
@@ -216,21 +219,21 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
     if (gap > 0 && gap <= Math.max(2, top * .03)) add('close', 4.5, r1.playerId, 'Krimi', {
       brav: [`${W} gewinnt ${g.name} *ganz knapp*`, `Krimi beim ${g.name}: ${W} vor ${O}`],
       frech: [`${W} gewinnt ${g.name} mit *${gap === 1 ? 'einem Punkt' : `${gap} Punkten`}*. ${O} schäumt`, `Fotofinish beim ${g.name}: ${W} hauchdünn vor ${O}`],
-      atzig: [`${g.name}. ${W}. *Millimeter.*`, `${gap === 1 ? 'Ein Punkt' : `${gap} Punkte`}. ${W} über ${O}. *Kunst.*`]
+      atzig: [`${g.name}. ${W}. *Millimeter.*`, `${W} vor ${O}. *Um ${gap === 1 ? 'einen Punkt' : `${gap} Punkte`}.*`]
     }, 'Fotofinish', `${W} gewinnt ${g.name} mit ${gap === 1 ? 'einem Punkt' : `${gap} Punkten`} vor ${O}.`, ['KNAPP.', W, 'VORN.']);
     else if (r.length >= 2 && gap >= top * .5 && top >= 20) add('blowout', 3, r1.playerId, 'Machtdemonstration', {
       brav: [`Deutlicher Sieg für ${W} beim ${g.name}`],
       frech: [`${W} zerlegt alle beim ${g.name}`, `${g.name}: ${W} spielt allein, die anderen *zählen mit*`],
-      atzig: [`${g.name}. ${W}. *Kein Wettbewerb.*`]
+      atzig: [`${g.name}. ${W}. *Deutlich.*`]
     }, 'Klare Sache', `${W} gewinnt ${g.name} mit großem Vorsprung.`, ['KLARE', 'SACHE.', W]);
     if (r1.place === 1 && g.results.filter(x => x.place === 1).length > 1) add('tie', 3, r1.playerId, 'Unentschieden', {
-      brav: [`Geteilter Sieg beim ${g.name}`], frech: [`${g.name} endet *unentschieden*. Keiner gibt nach.`], atzig: [`${g.name}. *Patt.* Stilvoll.`]
+      brav: [`Geteilter Sieg beim ${g.name}`], frech: [`${g.name} endet *unentschieden*. Keiner gibt nach.`], atzig: [`${g.name}. *Unentschieden.*`]
     }, 'Geteilt', `${g.name} endet mit geteiltem ersten Platz.`, ['PATT.']);
   }
 
   if (G >= 6) add('marathon', 3 + G / 4, star.id, 'Marathon', {
     brav: [`*${cap(numWord(G))}* Partien an einem Abend`],
-    frech: [`*${cap(numWord(G))}* Partien. Morgen ist auch noch ein Tag`, `Keiner wollte nach Hause: *${numWord(G)}* Partien`],
+    frech: [`*${cap(numWord(G))}* Partien. Hat keiner auf die Uhr geschaut?`, `Keiner wollte nach Hause: *${numWord(G)}* Partien`],
     atzig: [`${G} Partien. *Durchgezogen.*`]
   }, 'Marathon', `${cap(numWord(G))} Partien an einem Abend.`, [`${G}`, 'PARTIEN.']);
   if (kinds >= 3) add('variety', 2.5, star.id, 'Querbeet', {
@@ -269,10 +272,13 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
       brav: [`${S} gewinnt den Abend`, `${S} ist der Star des Abends`, `${S} holt ${plural(star.wins, 'Sieg', 'Siege')}`],
       frech: [`${S} holt sich den Abend`, `${S} gewinnt und wird es *allen erzählen*`, `Alle gegen ${S}. Und ${S} *gewinnt*`, lostAll.length ? `${S} gewinnt, ${nm(lostAll[0])} *guckt zu*` : `${S} räumt ab`],
       atzig: [`Der Abend gehört *${S}.*`, `${S}. *Einfach ${S}.*`, `Heute: *${S}.*`]
-    }, L, day + 'star'),
+    }, L, 'star', idx),
     title: 'Abendsieg', text: `${S} gewinnt ${star.wins} von ${G} ${G === 1 ? 'Partie' : 'Partien'}.`, poster: [S, 'WAR', 'HIER.']
   };
   stories.push(starStory);
+  // Dieselbe Schlagzeile wie am Abend davor (gleiche Art, gleiche Person) rückt nach hinten
+  const prev = idx > 0 && !o.inner ? frontPage(all, evs[idx - 1].day, { ...o, inner: true }) : null;
+  if (prev) for (const st of stories) if (st.kind === prev.lead.kind && st.who === prev.lead.who) st.weight -= 6;
   stories.sort((a, b) => b.weight - a.weight);
   const lead = stories[0];
   // Kurzmeldungen: zwei weitere, möglichst über andere Leute oder andere Themen; die Rote Laterne, wenn Platz ist
@@ -285,7 +291,7 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
   }
   if (laterne && briefs.length < 2 && !briefs.some(b => b.kind === 'redLamp') && lead.kind !== 'redLamp') briefs.push({
     kind: 'star', weight: 0, kicker: '', who: laterne, headline: '', poster: [],
-    title: 'Rote Laterne', text: pick({ brav: [`${nm(laterne)} hat noch Luft nach oben.`, `${nm(laterne)} übt noch.`], frech: [`${nm(laterne)} zahlt die Runde.`, `${nm(laterne)} spendiert die nächste Runde.`], atzig: [`${nm(laterne)} sammelt Inspiration.`, `${nm(laterne)} spielt auf lange Sicht.`] }, L, day + 'lamp')
+    title: 'Rote Laterne', text: pick({ brav: [`${nm(laterne)} hat noch Luft nach oben.`, `${nm(laterne)} übt noch.`], frech: [`${nm(laterne)} zahlt die Runde.`, `${nm(laterne)} spendiert die nächste Runde.`], atzig: [`${nm(laterne)} war heute großzügig.`, `${nm(laterne)} spielt auf lange Sicht.`] }, L, 'lamp', idx)
   });
   if (briefs.length < 2 && lead.kind !== 'star') briefs.push(starStory);
 
@@ -306,7 +312,7 @@ export function frontPage(all: HistGame[], day: string, o: FrontOpts): FrontPage
     brav: [`${S} freut sich über ${plural(star.wins, 'Sieg', 'Siege')}.`, `${S} nach dem Abend: zufrieden.`],
     frech: [`${S} nach dem Abend: unbeeindruckt.`, `${S} gibt keine Interviews.`, `${S} lässt sich feiern. Ausgiebig.`],
     atzig: [`${S}, ganz entspannt.`, `${S}, Sonnenbrille auf, Blick nach vorn.`]
-  }, L, day + 'cap');
+  }, L, 'cap', idx);
   const summary = cap(`${plural(G, 'Partie', 'Partien', 'eine')}, ${plural(star.wins, 'Sieg', 'Siege')} für ${S}`) + (laterne ? `, die Rote Laterne für ${nm(laterne)}.` : '.');
   const variant = liga ? 'sport' : L === 'atzig' ? 'poster' : 'zeitung';
   return { day, number: idx + 1, games: G, kinds, lead, briefs, star, laterne, caption, summary, table, duel, liga, variant };

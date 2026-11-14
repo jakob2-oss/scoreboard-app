@@ -61,7 +61,7 @@ export function GameDetail({ h: open, onClose }: { h: HistGame; onClose?: () => 
         <div className="bsheet" role="dialog" aria-label="Partie">
           <div className="grab" />
           <div className="sheet-body">
-            <div className="eyebrow">{dateLong(open.finishedAt)}{open.occasion ? `, ${open.occasion}` : ''}</div>
+            <div className="eyebrow">{dateLong(open.finishedAt)}</div>
             <h3>{open.name}</h3>
             <div className="field"><label>Serie</label>
               <SeriesPicker value={open.eventId ?? null} onChange={id => act().setGameEvent(open.id, id)} />

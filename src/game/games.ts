@@ -22,7 +22,7 @@ export interface GameDef {
 export const GAMES: GameDef[] = [
   {
     template: { key: 'wizard', version: 1, name: 'Wizard', scoring: 'bids', win: 'high', end: { type: 'rounds', value: 0 }, players: { min: 3, max: 6 } },
-    points: [['Jede Runde', 'eine Karte mehr'], ['Vor dem Spiel', 'jeder sagt seine Stiche an'], ['Genau getroffen', '20 Punkte plus 10 je Stich'], ['Daneben', 'minus 10 je Stich Abweichung']],
+    points: [['Karten', 'jede Runde eine mehr'], ['Ansage', 'vor dem Spiel sagt jeder seine Stiche an'], ['Getroffen', '20 Punkte plus 10 je Stich'], ['Daneben', 'minus 10 je Stich Abweichung']],
     acc: '#9a7ad6', tint: '#ece6fb',
     text: 'Jede Runde gibt es <b>eine Karte mehr</b>. Bevor gespielt wird, sagt jeder an, wie viele Stiche er holt. Wer <b>genau richtig liegt</b>, bekommt <b>20 Punkte plus 10 pro Stich</b>. Wer danebenliegt, verliert <b>10 Punkte pro Stich Abweichung</b>.',
     example: [['2', 'angesagt'], ['2', 'geholt'], ['+40', 'Punkte']]
@@ -32,7 +32,7 @@ export const GAMES: GameDef[] = [
       key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
       params: { zeroWins: true, block: true, quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
     },
-    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'nach den Runden oder an der Grenze, wenigste Punkte gewinnen']],
+    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'zählen als Strafpunkte: Bilder 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'nach vereinbarten Runden oder ab einer Punktgrenze'], ['Sieger', 'die wenigsten Punkte']],
     acc: '#ef7a5c', tint: '#fde6df',
     text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Nach den vereinbarten Runden oder an der Grenze ist Schluss, die <b>wenigsten Punkte gewinnen</b>.',
     example: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']],
@@ -43,10 +43,10 @@ export const GAMES: GameDef[] = [
       key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 8 },
       params: { block: true, ender: true, lowCrown: true, quick: [{ label: '\u22122', op: 'add', v: -2 }, { label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }] }
     },
-    points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
+    points: [['Kartenwerte', 'von −2 bis 12'], ['Aufdecken', 'wer die Runde beendet und nicht am wenigsten hat, zählt doppelt'], ['Ende', 'ab 100 Punkten'], ['Sieger', 'die wenigsten Punkte']],
     acc: '#5fa8d3', tint: '#e1f0fa',
     text: 'Am Ende jeder Runde zählt jeder seine Karten zusammen, von <b>−2 bis 12</b>. Wer die Runde beendet, aber nicht am wenigsten hat, zählt <b>doppelt</b>. Bei <b>100 Punkten</b> ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
-    example: [['18', 'beendet'], ['×2', 'nicht niedrigster'], ['36', 'Punkte']],
+    example: [['18', 'beendet'], ['×2', 'nicht am wenigsten'], ['36', 'Punkte']],
     endOptions: [{ label: 'Bei 100', end: { type: 'target', value: 100 } }, { label: 'Offen', end: { type: 'none' } }]
   }
 ];
@@ -58,7 +58,7 @@ GAMES.push(
   {
     template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 8 },
       params: { winnerOnly: true, block: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
-    points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
+    points: [['Rundensieger', 'bekommt die Kartenwerte der anderen'], ['Zahlenkarten', 'ihr Augenwert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
     text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
     example: [['7 + 20', 'Karten der anderen'], ['+50', 'schwarze Karte'], ['77', 'für den Sieger']],
@@ -67,7 +67,7 @@ GAMES.push(
   {
     template: { key: 'scrabble', version: 1, name: 'Scrabble', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 4 },
       params: { block: true, restTiles: true, quick: [add('+1', 1), add('+10', 10), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }, add('Bingo +50', 50)] } },
-    points: [['Je Zug', 'Buchstabenwerte des Worts'], ['Prämienfelder', 'doppelt oder dreifach'], ['Alle sieben Steine', '50 Punkte extra'], ['Ende', 'Reststeine werden abgezogen']],
+    points: [['Je Zug', 'Wert des gelegten Worts'], ['Prämienfelder', 'Buchstabe oder Wort doppelt oder dreifach'], ['Alle sieben Steine', '50 Punkte extra'], ['Ende', 'übrige Steine werden abgezogen']],
     acc: '#3fb39b', tint: '#dcf1e7',
     text: 'Nach jedem Zug werden die <b>Buchstabenwerte des Worts</b> notiert, samt Prämienfeldern für doppelten oder dreifachen Wert. Wer alle sieben Steine auf einmal legt, bekommt <b>50 Punkte extra</b>. Am Ende zählen übrige Steine als Abzug.',
     example: [['12', 'Wortwert'], ['×3', 'Prämienfeld'], ['36', 'Punkte']]
@@ -75,21 +75,21 @@ GAMES.push(
   {
     template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
       params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
-    points: [['Am Ende', 'Siegpunkte je Spieler'], ['Gewinner', 'die meisten Siegpunkte']],
+    points: [['Eintragen', 'Siegpunkte am Ende'], ['Sieger', 'die meisten Siegpunkte']],
     acc: '#f0b13e', tint: '#fbecc9', group: 'result',
     text: 'Am Ende trägt jeder seine <b>Siegpunkte</b> ein.'
   },
   {
     template: { key: 'monopoly', version: 1, name: 'Monopoly', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
-    points: [['Am Ende', 'Platz je Spieler'], ['Erster', 'wer zuletzt übrig bleibt']],
+    points: [['Eintragen', 'Platz am Ende'], ['Erster', 'wer als Letzter übrig bleibt']],
     acc: '#3fb39b', tint: '#daf1e6', group: 'result',
     text: 'Am Ende trägt jeder seinen <b>Platz</b> ein. Wer zuletzt übrig bleibt, ist Erster.'
   },
   {
     template: { key: 'ergebnis', version: 1, name: 'Anderes Spiel', scoring: 'rounds', win: 'low', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 8 },
       params: { resultOnly: true, unit: 'Platz', quick: place(6) } },
-    points: [['Am Ende', 'Platz je Spieler']],
+    points: [['Eintragen', 'Platz am Ende']],
     acc: '#9a7ad6', tint: '#e7e4f7', group: 'result',
     text: 'Am Ende trägt jeder seinen <b>Platz</b> ein.'
   }
@@ -109,25 +109,25 @@ GAMES.push(
         { label: 'Dreierpasch', section: 'low', range: [5, 30] }, { label: 'Viererpasch', section: 'low', range: [5, 30] }, { label: 'Full House', section: 'low', fixed: 25 },
         { label: 'Kleine Straße', section: 'low', fixed: 30 }, { label: 'Große Straße', section: 'low', fixed: 40 }, { label: 'Kniffel', section: 'low', fixed: 50 },
         { label: 'Chance', section: 'low' }] } },
-    points: [['Pro Zug', 'bis zu drei Würfe, dann ein freies Feld'], ['Oben', 'nur die passenden Augen zählen'], ['Bonus', '35 Punkte ab 63 oben'], ['Kategorien', 'im Menü der Partie anpassbar']],
+    points: [['Pro Zug', 'bis zu drei Würfe, dann ein Feld ausfüllen'], ['Oben', 'nur die passenden Augen zählen'], ['Bonus', '35 Punkte ab 63 oben'], ['Kategorien', 'im Menü der Partie anpassbar']],
     acc: '#3fb39b', tint: '#dff1ee', text: '', example: [['3×', 'Vierer'], ['12', 'Punkte'], ['+35', 'ab 63 oben']]
   },
   {
     template: { key: 'phase10', version: 1, name: 'Phase 10', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
       params: { phases: true, block: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
-    points: [['Je Runde', 'eigene Phase auslegen, dann Haken setzen'], ['Handkarten', '1 bis 9 sind 5, 10 bis 12 sind 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
+    points: [['Je Runde', 'eigene Phase auslegen und abhaken'], ['Handkarten', '1 bis 9 zählen 5, 10 bis 12 zählen 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
     acc: '#f0b13e', tint: '#fdeccc', text: ''
   },
   {
     template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
       params: { zeroSum: true, block: true, deal: 'schafkopf', tarif: [10, 50], quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
-    points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider', 'und Laufende erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
+    points: [['Sauspiel', 'das Paar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider und Laufende', 'erhöhen den Tarif'], ['Summe', 'jede Runde ergibt zusammen 0']],
     acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
   },
   {
     template: { key: 'doppelkopf', version: 1, name: 'Doppelkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 5 },
       params: { zeroSum: true, block: true, deal: 'doko', quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
-    points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Ansagen', 'Re, Kontra und Absagen erhöhen den Wert'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
+    points: [['Gewinner', 'bekommen den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Ansagen', 'Re, Kontra und Absagen erhöhen den Wert'], ['Solo', 'der Solist zählt dreifach'], ['Summe', 'jede Runde ergibt zusammen 0']],
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },
   {
@@ -135,7 +135,7 @@ GAMES.push(
       params: { block: true, bidder: true, split: [
         { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
         { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('Abgehen', -1), times('Verfehlt', -2)] }] } },
-    points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Abgehen', 'vor dem Spiel aufgeben: Gebot einfach negativ'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
+    points: [['Reizen', 'wer am höchsten bietet, spielt'], ['Meldung', 'wird vor dem Ausspielen geschrieben'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Abgehen', 'vor dem Spiel aufgeben, das Gebot zählt einfach negativ'], ['Gebot verfehlt', 'die Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
     acc: '#f09a4a', tint: '#fbe9d6', text: '', example: [['80', 'Meldung'], ['+170', 'Stiche'], ['250', 'Punkte']],
     endOptions: [{ label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Bei 1500', end: { type: 'target', value: 1500 } }, { label: 'Offen', end: { type: 'none' } }]
   }
@@ -144,7 +144,7 @@ GAMES.push(
 GAMES.push({
   template: { key: 'arschloch', version: 1, name: 'Arschloch', scoring: 'rank', win: 'high', end: { type: 'none' }, players: { min: 3, max: 8 } },
   points: [['Jede Runde', 'wer zuerst alle Karten los ist, wird Präsident'], ['Rollen', 'Präsident, Vize, Bürger, Vize-Arschloch, Arschloch'],
-    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt und schenkt dem Präsidenten seine besten Karten']],
+    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt und muss dem Präsidenten seine besten Karten geben']],
   acc: '#bba8e6', tint: '#ece6fb', text: '', example: [['+2', 'Präsident'], ['0', 'Bürger'], ['−2', 'Arschloch']],
   endOptions: [{ label: 'Offen', end: { type: 'none' } }, { label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: '20 Runden', end: { type: 'rounds', value: 20 } }]
 });
@@ -152,15 +152,15 @@ GAMES.push({
 // Tisch-Modus: Leben verlieren und Deckel verteilen, eingetragen direkt am Tisch
 GAMES.push({
   template: { key: 'schwimmen', version: 1, name: 'Schwimmen', scoring: 'lives', win: 'high', end: { type: 'none' }, players: { min: 2, max: 9 }, params: { lives: 3 } },
-  points: [['Ziel', '31 in einer Farbe, drei Gleiche zählen 30½'], ['Verlierer', 'das schwächste Blatt kostet ein Leben'], ['Ohne Leben', 'man schwimmt und spielt weiter'],
+  points: [['Ziel', '31 in einer Farbe, drei Gleiche zählen 30½'], ['Rundenende', 'das schwächste Blatt kostet ein Leben'], ['Ohne Leben', 'man schwimmt und spielt weiter'],
     ['Feuer', 'drei Asse, alle anderen verlieren ein Leben'], ['Sieger', 'wer als Letzter übrig bleibt']],
-  acc: '#5fa8d3', tint: '#e2eff8', text: '', example: [['3', 'Leben'], ['+1', 'Schwimmen'], ['1', 'bleibt übrig']]
+  acc: '#5fa8d3', tint: '#e2eff8', text: ''
 });
 GAMES.push({
   template: { key: 'schocken', version: 1, name: 'Schocken', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13 } },
   points: [['Mitte', '13 Deckel'], ['Verlierer', 'bekommt so viele Deckel, wie der Wurf des Siegers wert ist'], ['Leere Mitte', 'der Sieger gibt eigene Deckel ab'],
-    ['Schock aus', 'alle Deckel auf einmal'], ['Hälfte', 'wer alle Deckel hat, verliert sie'], ['Partie', 'zwei Hälften verloren, sonst entscheidet das Finale']],
-  acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
+    ['Schock aus', 'alle Deckel auf einmal'], ['Hälfte', 'verliert, wer alle Deckel hat'], ['Partie', 'verliert, wer zwei Hälften verliert, sonst entscheidet das Finale']],
+  acc: '#d9634a', tint: '#fde6df', text: ''
 });
 
 // Chic: wie Schocken, in der zweiten Phase gehen Deckel zurück in die Mitte; rausschicken und Chic aus dem Rohr
@@ -169,7 +169,7 @@ GAMES.push({
   points: [['Mitte', '13 Deckel'], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'], ['Zweite Phase', 'Sieger spielen Deckel zurück, wer keine mehr hat, ist raus'],
     ['Rausschicken', 'wer sich rausschickt, ist mit allen Deckeln raus und kann nicht mehr verlieren'], ['Chic aus dem Rohr', 'verliert sofort und zahlt die Runde, gespielt wird weiter'],
     ['Verloren', 'wer am Ende als Einziger noch Deckel hat, zahlt']],
-  acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['raus', 'rausgeschickt'], ['zahlt', 'aus dem Rohr']]
+  acc: '#d9634a', tint: '#fde6df', text: ''
 });
 
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ

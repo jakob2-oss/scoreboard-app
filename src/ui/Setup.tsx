@@ -22,16 +22,16 @@ function pointsOf(t: Template): [string, string][] {
   if (t.scoring === 'tokens') {
     const h = t.params?.halves ?? 2;
     if (t.params?.phase2 === 'return') return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'],
-      ['Mitte leer', 'wer keine Deckel hat, ist raus'], ['Zweite Phase', 'Sieger spielen Deckel zurück in die Mitte, ohne Deckel ist man raus'],
+      ['Zweite Phase', 'Sieger spielen Deckel zurück in die Mitte, ohne Deckel ist man raus'],
       ['Verlierer', `wer zuletzt Deckel hat${h > 1 ? `, verloren nach ${h} Hälften` : ''}`]];
-    return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'wer alle Deckel hat, verliert sie'],
+    return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'verliert, wer alle Deckel hat'],
       ['Verlierer', h === 1 ? 'wer die erste Hälfte verliert' : `wer ${h} Hälften verliert${h === 2 ? ', sonst entscheidet das Finale' : ''}`]];
   }
   const base = t.params?.base ? gameDef(t.params.base) : undefined;
   if (base?.points) return [...base.points, ...(t.params?.notes?.length ? [['Notizfelder', names(t.params.notes)] as [string, string]] : [])];
   if (t.params?.resultOnly) {
     const place = t.params.unit === 'Platz';
-    const p: [string, string][] = [['Am Ende', place ? 'Platz je Spieler' : 'Punkte je Spieler'], ['Gewinner', place ? 'Platz 1' : t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl']];
+    const p: [string, string][] = [['Eintragen', place ? 'Platz am Ende' : 'Punkte am Ende'], ['Gewinner', place ? 'Platz 1' : t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl']];
     if (t.params.notes?.length) p.push(['Zusatzfelder', names(t.params.notes)]);
     return p;
   }
