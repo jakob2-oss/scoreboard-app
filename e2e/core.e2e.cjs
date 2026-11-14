@@ -355,16 +355,27 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Binokel: erst Meldungen, dann Stiche
   await p.click('[data-game="binokel"]'); await p.click('#quick-start');
   check('Binokel: Knopf „Meldungen Runde 1“', (await raw('#round-go')).startsWith('Meldungen Runde 1'));
-  await p.click('#round-go'); await p.waitForTimeout(400);
-  check('Binokel: Feld Meldung aktiv', (await p.getAttribute('section[aria-label="Anna"] .wz-f[data-field="meld"]', 'aria-pressed')) === 'true');
-  await p.click('.pp-panel .quick >> text="+40"'); await shot('44-binokel-meld');
-  await p.click('.pp-keys .go'); await p.waitForTimeout(300);
-  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-keys .go'); await p.waitForTimeout(300);
-  await p.click('.pp-keys .go'); await p.waitForTimeout(400);
+  check('Binokel: Logo in der Ecke, Geber', await p.isVisible('.corner .bino-mark') && await p.isVisible('.dealer-tag'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  check('Binokel: zuerst „Wer spielt?“', await p.isVisible('#bidder') && (await p.isDisabled('#bidder-go')));
+  await p.click('#bidder .rank-row >> text=Ben'); await p.click('#bidder [aria-label="10 mehr"]');
+  check('Binokel: Gebot 210 bei drei Spielern', (await raw('#gebot-val')) === '210');
+  await shot('44-binokel-bidder');
+  await p.click('#bidder-go'); await p.waitForTimeout(300);
+  check('Binokel: Meldungen im Block, ab Anna', await p.isVisible('#pad.compact') && (await raw('#pad .who b')) === 'Anna' && (await raw('#pad .who small')) === 'Meldung in Runde 1');
+  await p.click('#pad .pad-quick >> text="+40"'); await shot('44b-binokel-meld');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  check('Binokel: Spielmacher sieht Gebot, Abgehen und Verfehlt', (await raw('#pad .pad-out')).includes('210') && await p.isVisible('#out-2'));
+  await p.click('#pad .pad-quick >> text="+20"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
   check('Binokel: weiter mit „Stiche Runde 1“', (await raw('#round-go')).startsWith('Stiche Runde 1'));
-  await p.click('#round-go'); await p.waitForTimeout(400);
-  for (const k of ['+50', '+20', '+10']) { await p.click(`.pp-panel .quick >> text="${k}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(300); }
-  check('Binokel: Runde 90, 40, 10', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '190\n40+5040\n20+2010\n0+10'.replace(/\s/g, ''), await text('tbody tr:nth-child(1)'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  await p.click('#pad .pad-quick >> text="+50"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+20"'); await p.waitForTimeout(100);
+  check('Binokel: unter dem Gebot wird Verfehlt vorgeschlagen', (await p.getAttribute('#out-2', 'class')) === 'suggest');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+10"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Binokel: Runde 90, 40, 10; Bester grün, Gebot beim Spielmacher', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '19040+502104020+20100+10'.replace(/\s/g, '') && (await p.locator('td.cell.best').count()) === 1, await text('tbody tr:nth-child(1)'));
   await shot('45-binokel-ov');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 

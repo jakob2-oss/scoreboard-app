@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -118,7 +118,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={isCats(g) ? catKeys(g, s.edit.ref) : g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
+      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={isCats(g) ? catKeys(g, s.edit.ref) : isSplit(g) ? splitPadKeys(g, s.edit) : g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
@@ -127,6 +127,7 @@ export function GameScreen() {
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
       {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
+      {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -168,7 +169,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
       <table className={'grid' + (isCats(g) ? ' cats' : '')} ref={tableRef}>
         <thead>
           <tr>
-            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : '#'}</th>
+            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : (g.game.rules.params?.base ?? g.game.rules.key) === 'binokel' ? <BinokelMark /> : '#'}</th>
             {players.map((p, i) => (
               <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}{dealer?.id === p.id && <i className="dealer-tag" role="img" aria-label={`${p.name} gibt`} />}</div></th>
             ))}
@@ -205,8 +206,14 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                       </td>
                     );
                   }
+                  // Binokel: Spielmacher mit Gebot in der Ecke; abgegangen und verfehlt markiert; sonst Rundenbester grün
+                  const bid = wiz ? null : gebotOf(g, r.id), out = wiz ? 0 : outOf(g, r.id, p.id);
+                  const best = !wiz && v !== null && roundFull(g, r.id) && !players.some(x => outOf(g, r.id, x.id) === 1) && out === 0
+                    && players.every(x => (scoreOf(g, r.id, x.id) ?? 0) <= v) && v > 0;
                   return (
-                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
+                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '') + (out === 1 ? ' out1' : out === 2 ? ' out2' : '') + (best ? ' best' : '')}
+                      onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}${bid?.playerId === p.id ? `, spielt mit ${bid.gebot}` : ''}${out === 1 ? ', abgegangen' : out === 2 ? ', verfehlt' : ''}`}>
+                      {bid?.playerId === p.id && <small className="gb">{bid.gebot}</small>}
                       {v === null ? (wiz || b === null ? '' : fmt(b)) : (wiz && v > 0 ? '+' : '') + fmt(v)}
                       {has && (wiz ? <small>{b ?? '–'}/{t2 ?? '–'}</small> : v !== null && <small>{fmt(b ?? 0)} + {fmt(t2!)}</small>)}
                     </td>
@@ -336,6 +343,56 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
       </div>
     </>
   );
+}
+
+/** Binokel: die beiden Karten, die zusammen den Binokel ergeben (Schippen-Ober und Schellen-Unter) */
+function BinokelMark() {
+  return (
+    <svg className="bino-mark" viewBox="0 0 34 30" role="img" aria-label="Binokel">
+      <g transform="rotate(-12 11 16)"><rect x="3" y="4" width="15" height="21" rx="3" fill="#fffaf2" /><path d="M10.5 10c2.6 2 4 3.4 4 5a2.2 2.2 0 0 1-3.6 1.6l.8 2.4h-2.4l.8-2.4A2.2 2.2 0 0 1 6.5 15c0-1.6 1.4-3 4-5z" fill="#2e2b4f" /></g>
+      <g transform="rotate(10 23 15)"><rect x="15" y="3" width="15" height="21" rx="3" fill="#fffaf2" /><circle cx="22.5" cy="13.5" r="4.2" fill="#f0b13e" /><circle cx="22.5" cy="13.5" r="1.6" fill="#e0923a" /></g>
+    </svg>
+  );
+}
+
+/** Binokel: wer spielt, und optional das Gebot (in Zehnern) */
+function BidderSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const [who, setWho] = useState<string | null>(null);
+  const [bid, setBid] = useState(seated(g).length === 3 ? 200 : 150);
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="bidder" role="dialog" aria-label="Wer spielt?">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">Wer spielt?</div>
+          <div className="rank-list">
+            {seated(g).map(p => (
+              <button key={p.id} className="rank-row" aria-pressed={who === p.id} onClick={() => setWho(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>
+            ))}
+          </div>
+          {who && <div className="gebot-row">
+            <span className="lbl">Gebot</span>
+            <button className="step" aria-label="10 weniger" onClick={() => setBid(b => Math.max(10, b - 10))}>−</button>
+            <b id="gebot-val">{bid}</b>
+            <button className="step" aria-label="10 mehr" onClick={() => setBid(b => b + 10)}>+</button>
+          </div>}
+          <div className="pad-actions">
+            <button className="secondary" id="bidder-skip" onClick={() => a.setBidder(null, null)}>Ohne Gebot</button>
+            <button className="primary" id="bidder-go" disabled={!who} onClick={() => a.setBidder(who, bid)}>Meldungen</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Binokel im Ziffernblock: Schnelltasten des Feldes; mit Gebot ersetzen eigene Knöpfe das Mal −1 und Mal −2 */
+function splitPadKeys(g: GameState, e: Edit): QuickKey[] {
+  const f = fieldsOf(g)!.find(x => x.key === e.field), keys = f?.quick ?? [];
+  return gebotOf(g, e.ref) ? keys.filter(k => k.op !== 'mul') : keys;
 }
 
 /** Kniffel-Bonus: erreicht „+35“, sonst ein kleiner Kuchen mit dem Fortschritt und wie viel noch fehlt */

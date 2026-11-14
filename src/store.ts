@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, blockEntry, catChoices, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -152,7 +152,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     if (edit.field) {
       // Neue Runde entsteht erst mit dem ersten Wert
       const base = edit.ref === 'new' ? addRound(g, clock) : { state: g, roundId: edit.ref };
-      const ng = setField(base.state, base.roundId, edit.playerId, edit.field, value, clock);
+      let ng = setField(base.state, base.roundId, edit.playerId, edit.field, value, clock);
+      // Binokel: wer von Hand nachträgt, hebt „abgegangen“ oder „verfehlt“ wieder auf
+      if (!isNoteField(edit.field) && fieldOf(ng, base.roundId, edit.playerId, 'res') !== null) ng = setField(ng, base.roundId, edit.playerId, 'res', null, clock);
       const stored = fieldOf(ng, base.roundId, edit.playerId, edit.field);
       set({ game: ng, undo: edit.dirty ? state.undo : [...state.undo.slice(-99), g], edit: { ...edit, ref: base.roundId, dirty: true, buf: stored === null ? edit.buf : String(stored) } });
       persist(ng); return;
@@ -510,6 +512,15 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         else set({ sheet: 'tricks', rankRef: step.ref, bidBar: null, page: -1, pad: false, edit: null });
         return;
       }
+      // Binokel im Block: erst „Wer spielt?“ mit Gebot, dann Meldungen und Stiche im Ziffernblock unter dem Block
+      if (isSplit(g) && blockEntry(g) && modeOf(g.game.rules.key) === 'block' && step.field) {
+        const fs = fieldsOf(g)!;
+        const untouched = step.ref === 'new' || seated(g).every(p => fieldOf(g, step.ref as string, p.id, fs[0].key) === null);
+        if (g.game.rules.params?.bidder && step.field === fs[0].key && untouched && !gebotOf(g, step.ref)) {
+          set({ sheet: 'bidder', rankRef: step.ref, page: -1, pad: false, edit: null }); return;
+        }
+        set({ page: -1, pad: true, sheet: null, fromOverview: false, edit: makeEdit(g, step.ref, seated(g)[step.playerIndex].id, step.field) }); return;
+      }
       // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
       if (blockEntry(g) && !isBids(g) && !isCats(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
         set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
@@ -536,6 +547,32 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Binokel: wer spielt, mit welchem Gebot; danach Meldungen im Block. Ohne Angabe geht es gleich weiter. */
+    setBidder(playerId: string | null, gebot: number | null) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      let ng = g, id: RoundRef = ref;
+      if (playerId && gebot && gebot > 0) {
+        if (id === 'new') { const a = addRound(ng, clock); ng = a.state; id = a.roundId; }
+        for (const p of seated(ng)) if (fieldOf(ng, id, p.id, 'gebot') !== null) ng = setField(ng, id, p.id, 'gebot', null, clock);
+        ng = setField(ng, id, playerId, 'gebot', gebot, clock);
+        set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      }
+      haptic('tap');
+      const fs = fieldsOf(ng)!;
+      set({ sheet: null, rankRef: null, page: -1, pad: true, fromOverview: false, edit: makeEdit(ng, id, seated(ng)[0].id, fs[0].key) });
+    },
+    /** Binokel: Spielmacher geht ab (Gebot einfach negativ) oder verfehlt (doppelt); die Meldung zählt dann nicht */
+    binokelOut(k: 1 | 2) {
+      const g = state.game, e = state.edit; if (!g || !e || e.ref === 'new') return;
+      const b = gebotOf(g, e.ref); if (!b || b.playerId !== e.playerId) return;
+      const fs = fieldsOf(g)!;
+      let ng = setField(g, e.ref, e.playerId, fs[0].key, 0, clock);
+      ng = setField(ng, e.ref, e.playerId, fs[1].key, -k * b.gebot, clock);
+      ng = setField(ng, e.ref, e.playerId, 'res', k, clock);
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], edit: { ...makeEdit(ng, e.ref, e.playerId, e.field), dirty: true } }); persist(ng);
+      actions.next();
+    },
     /** Stiche aller auf einmal eintragen */
     tricksCommit(ref: string, tricks: Record<string, number>) {
       const g = state.game; if (!g) return;
@@ -577,9 +614,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const players = seated(g), i = players.findIndex(p => p.id === e.playerId);
       if (e.field && e.ref !== 'new') {
         const order = inputOrder(g, e.ref), pos = order.indexOf(i);
-        if (pos < order.length - 1) { actions.goPage(order[pos + 1], e.ref, e.field); return; }
+        if (pos < order.length - 1) {
+          if (state.pad) set({ edit: makeEdit(g, e.ref, players[order[pos + 1]].id, e.field) });
+          else actions.goPage(order[pos + 1], e.ref, e.field);
+          return;
+        }
         const fs = fieldsOf(g)!, full = roundFull(g, e.ref), firstDone = bidPhase(g, e.ref) === fs[1].key;
-        set({ page: -1, edit: null });
+        set({ page: -1, edit: null, pad: false });
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         else if (e.field === fs[0].key && firstDone) toast(`${fieldLabel(g, fs[0].key, true)} komplett`);
         return;
@@ -610,7 +651,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
       if (isRanks(g)) { actions.openRanks(ref); return; }
-      if (hasFields(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
+      if (hasFields(g)) {
+        if (isSplit(g) && blockEntry(g) && modeOf(g.game.rules.key) === 'block') { set({ pad: true, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true }); return; }
+        actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return;
+      }
       // Kniffel: Auswahl auf der Spielerseite, danach zurück zum Überblick
       if (isCats(g)) {
         // Im Block: Auswahl der Werte direkt über dem Block; freie Felder (Chance) mit dem Ziffernblock

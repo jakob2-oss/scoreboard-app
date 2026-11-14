@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -253,6 +253,51 @@ describe('Kniffel im Block', () => {
     expect(st.get()).toMatchObject({ pad: false, edit: null });
     expect(totals(st.get().game!)).toEqual({ id1: 3, id2: 22 });
     expect(lowerSum(st.get().game!, 'id2')).toBe(22);
+  });
+});
+
+describe('Binokel im Block', () => {
+  async function binokel() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'binokel')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); return { st, a };
+  }
+  it('Wer spielt mit Gebot, dann Meldungen und Stiche im Block; Verfehlt zählt das Gebot doppelt negativ', async () => {
+    const { st, a } = await binokel();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo();
+    expect(st.get().sheet).toBe('bidder');
+    a.setBidder('id2', 250);
+    expect(st.get()).toMatchObject({ sheet: null, pad: true, edit: { playerId: 'id1', field: 'meld' } });
+    a.add(20); a.next(); a.add(100); a.next(); a.add(40); a.next();
+    expect(st.get().pad).toBe(false);
+    a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, edit: { playerId: 'id1', field: 'play' } });
+    a.add(50); a.next();
+    a.add(100); a.binokelOut(2);
+    a.add(60); a.next();
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(totals(g)).toEqual({ id1: 70, id2: -500, id3: 100 });
+    expect(gebotOf(g, r.id)).toEqual({ playerId: 'id2', gebot: 250 });
+    expect(outOf(g, r.id, 'id2')).toBe(2);
+    expect(dealerOf(g)?.id).toBe('id2');
+  });
+  it('Abgehen schon bei den Meldungen; ohne Gebot geht es direkt zu den Meldungen', async () => {
+    const { st, a } = await binokel();
+    a.roundGo(); a.setBidder('id1', 200);
+    a.binokelOut(1);
+    expect(st.get().edit).toMatchObject({ playerId: 'id2', field: 'meld' });
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(scoreOf(g, r.id, 'id1')).toBe(-200);
+    expect(outOf(g, r.id, 'id1')).toBe(1);
+    a.add(40); a.next(); a.add(20); a.next();
+    a.roundGo(); expect(st.get().edit).toMatchObject({ playerId: 'id2', field: 'play' });
+    a.add(80); a.next(); a.add(60); a.next();
+    expect(totals(st.get().game!)).toEqual({ id1: -200, id2: 120, id3: 80 });
+    a.roundGo(); expect(st.get().sheet).toBe('bidder');
+    a.setBidder(null, null);
+    expect(st.get()).toMatchObject({ sheet: null, pad: true, edit: { ref: 'new', field: 'meld' } });
   });
 });
 

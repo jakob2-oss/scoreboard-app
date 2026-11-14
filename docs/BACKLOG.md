@@ -172,11 +172,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Geber rotiert.
 
 ### L6 Binokel
-- [ ] Geber rotiert.
-- [ ] Eingabe: Meldung, dann Stiche; einfache Korrektur bei Abgehen.
-- [ ] Optional das Gebot erfassen; daraus Vorschlag für Abgehen (einfach negativ) und Verfehlt (doppelt negativ). Punkte tragen die Spieler selbst ein.
-- [ ] Markierungen im Block: abgegangen (einfach), verfehlt (doppelt); geht niemand ab, Spieler mit den meisten Punkten grün.
-- [ ] Kleines Logo oben links: die beiden Karten, die zusammen „Binokel“ ergeben (wenig Platz).
+- [x] Geber rotiert.
+- [x] Eingabe: Meldung, dann Stiche; einfache Korrektur bei Abgehen.
+- [x] Optional das Gebot erfassen; daraus Vorschlag für Abgehen (einfach negativ) und Verfehlt (doppelt negativ). Punkte tragen die Spieler selbst ein.
+- [x] Markierungen im Block: abgegangen (einfach), verfehlt (doppelt); geht niemand ab, Spieler mit den meisten Punkten grün.
+- [x] Kleines Logo oben links: die beiden Karten, die zusammen „Binokel“ ergeben (wenig Platz).
 
 ### L7 Arschloch
 - [x] Im Block Präsident (Krone) und Arschloch (passendes Icon) kennzeichnen.

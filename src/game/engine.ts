@@ -313,6 +313,18 @@ export const hasFields = (s: GameState) => !!fieldsOf(s);
 /** Zweiteilig, aber nicht Wizard (Rundenwert ist die Summe der Felder) */
 export const isSplit = (s: GameState) => !isBids(s) && hasFields(s);
 
+/** Binokel: wer spielt in dieser Runde und mit welchem Gebot (optional erfasst) */
+export function gebotOf(s: GameState, roundId: RoundRef): { playerId: string; gebot: number } | null {
+  if (roundId === 'new') return null;
+  for (const p of seated(s)) { const g = fieldOf(s, roundId, p.id, 'gebot'); if (g !== null && g > 0) return { playerId: p.id, gebot: g }; }
+  return null;
+}
+/** Binokel: Ausgang für den Spielmacher: 1 abgegangen (Gebot einfach negativ), 2 verfehlt (doppelt negativ), 0 sonst */
+export const outOf = (s: GameState, roundId: string, playerId: string): 0 | 1 | 2 => {
+  const v = fieldOf(s, roundId, playerId, 'res');
+  return v === 1 || v === 2 ? v : 0;
+};
+
 /** Wert eines Feldes (Ansage, Stiche, Meldung …) eines Spielers in einer Runde */
 export function fieldOf(s: GameState, roundId: string, playerId: string, field: BidField): number | null {
   const e = entryOf(s, roundId, playerId);

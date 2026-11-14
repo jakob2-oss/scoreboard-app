@@ -132,7 +132,7 @@ GAMES.push(
   },
   {
     template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
-      params: { split: [
+      params: { block: true, bidder: true, split: [
         { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
         { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('Abgehen', -1), times('Verfehlt', -2)] }] } },
     points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Abgehen', 'vor dem Spiel aufgeben: Gebot einfach negativ'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
@@ -183,6 +183,6 @@ const FAMILY: Record<string, Family> = {
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
 // Geber anzeigen (Wizard zeigt ihn immer)
-for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat', 'uno', 'phase10', 'arschloch']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
+for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat', 'uno', 'phase10', 'arschloch', 'binokel']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

@@ -9,7 +9,7 @@ import { entryMode } from '../lib/modes';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { hasPhases, phasesDone, phaseIn, liveRounds, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
+import { hasPhases, phasesDone, phaseIn, liveRounds, fieldsOf, fieldOf, fieldLabel, gebotOf, isNoteField, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -33,7 +33,13 @@ function Sheet({ label, children }: { label: string; children: React.ReactNode }
 export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; keys?: QuickKey[] }>(function PadSheet({ g, edit, keys }, ref) {
   const players = seated(g), i = players.findIndex(p => p.id === edit.playerId), p = players[i];
   const v = numOf(edit.buf), cur = edit.ref === 'new' ? null : scoreOf(g, edit.ref, p.id);
-  const after = totals(g)[p.id] - (cur ?? 0) + (v ?? 0);
+  // Zweiteilige Runde (Binokel): Rundenwert ist Meldung plus Stiche
+  const fs = edit.field && !isNoteField(edit.field) ? fieldsOf(g) : null;
+  const other = fs && edit.ref !== 'new' ? fieldOf(g, edit.ref, p.id, fs.find(f => f.key !== edit.field)!.key) : null;
+  const after = totals(g)[p.id] - (cur ?? 0) + (v ?? 0) + (other ?? 0);
+  // Binokel: der Spielmacher kann abgehen oder hat verfehlt; Verfehlt wird vorgeschlagen, wenn er unter dem Gebot bleibt
+  const bid = fs ? gebotOf(g, edit.ref) : null, maker = !!bid && bid.playerId === p.id;
+  const short = maker && fs && edit.field === fs[1].key && v !== null && (other ?? 0) + v < bid!.gebot;
   const a = act();
   const solo = useApp().fromOverview;
   // Phase 10: Haken für die Phase dieser Runde direkt im Ziffernblock
@@ -57,7 +63,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
       <div className="sheet-body">
         <div className="pad-head">
           <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
-          <div className="who"><b>{p.name}</b><small>{liveRounds(g).find(r => r.id === edit.ref)?.cat?.label ?? `Runde ${roundNumber(g, edit.ref)}`}</small></div>
+          <div className="who"><b>{p.name}</b><small>{liveRounds(g).find(r => r.id === edit.ref)?.cat?.label ?? (fs ? `${fieldLabel(g, edit.field!)} in Runde ${roundNumber(g, edit.ref)}` : `Runde ${roundNumber(g, edit.ref)}`)}</small></div>
           {keys && display}
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>
@@ -65,6 +71,11 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
           {phaseNo > 0 && <button className={'pad-phase' + (phaseOk ? ' on' : '')} id="pad-phase" aria-pressed={phaseOk} onClick={() => a.togglePhase()}>
             <span className="ph-no">{phaseNo}</span><b>{phaseOk ? `Phase ${phaseNo} geschafft` : `Phase ${phaseNo}`}</b><i className="ph-tick" aria-hidden="true" />
           </button>}
+          {maker && <div className="pad-out">
+            <span className="gebot"><small>Gebot</small>{bid!.gebot}</span>
+            <button id="out-1" onClick={() => a.binokelOut(1)}>Abgehen <b>−{bid!.gebot}</b></button>
+            <button id="out-2" className={short ? 'suggest' : ''} onClick={() => a.binokelOut(2)}>Verfehlt <b>−{bid!.gebot * 2}</b></button>
+          </div>}
           <div className="quick pad-quick">
             {keys.map(k => <button key={k.label} className={k.label.length > 3 ? 'wide' : ''}
               onClick={() => {

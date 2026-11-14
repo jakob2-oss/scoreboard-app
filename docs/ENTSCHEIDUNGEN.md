@@ -217,3 +217,15 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   links bündig zu den Kategorien.
 - Bonus ohne Text: erreicht „+35“ in Grün, sonst ein kleiner Kuchen mit dem Fortschritt und der Zahl,
   die bis 63 fehlt, als graue Kapsel abgesetzt.
+
+## 14.11.2026: Binokel (Paket 5)
+- Eingabe im Block ist Standard. „Meldungen Runde n“ fragt zuerst „Wer spielt?“ mit Gebot (Start 200 bei drei,
+  150 bei vier Spielern, in Zehnern) oder „Ohne Gebot“. Dann Meldungen Spieler für Spieler im kompakten
+  Ziffernblock, danach die Stiche. Die Punkte tragen die Spieler selbst ein.
+- Spielmacher mit Gebot: im Ziffernblock „Abgehen −Gebot“ und „Verfehlt −2× Gebot“; die Meldung zählt dann nicht
+  (gespeichert als Meldung 0, Stiche negativ, `res` 1 oder 2). Bleibt er mit Meldung und Stichen unter dem Gebot,
+  wird „Verfehlt“ rot vorgeschlagen. Wer danach von Hand nachträgt, hebt die Markierung auf.
+- Block: Gebot klein in der Ecke beim Spielmacher, abgegangen leicht rot, verfehlt kräftiger rot. Geht niemand ab,
+  ist der Rundenbeste grün.
+- Geber rotiert. In der Ecke des Blocks ein kleines Logo: Schippen-Ober und Schellen-Unter.
+- Ohne Gebot (und auf den Einzelseiten) bleiben die bisherigen Tasten „Abgehen ×−1“ und „Verfehlt ×−2“.
