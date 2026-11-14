@@ -1,19 +1,21 @@
 import { useSyncExternalStore } from 'react';
-import type { Category, GameEvent, Player, Result, Template } from './model/types';
+import type { Category, GameEvent, Player, Result, Tally, Template } from './model/types';
 import { haptic } from './lib/device';
-import { entryMode, setEntryMode, type EntryMode } from './lib/modes';
+import { entryMode, setEntryMode, quipLevel, type EntryMode, type QuipLevel } from './lib/modes';
+import { quip, type QuipEvent } from './game/quips';
+import { addMark, createTally, noteLast, noteMark, removeMark, settle, undoMark } from './game/tally';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, forbiddenBid, restScores, enderOf, skatScores, SKAT_GAMES, dealScores, bockLeft, dealerOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, isDoubled, forbiddenBid, restScores, enderOf, skatScores, SKAT_GAMES, dealScores, bockLeft, dealerOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series';
+export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series' | 'tally';
 
 /** Filter und Vergleich auf der Profilseite */
 export interface ProfileView { id: string; time: TimeFilter; key: string | null; vs: string[] }
@@ -47,13 +49,16 @@ export interface AppState {
   rankRef: RoundRef | null;
   /** Wizard im Block: Runde, deren Ansagen gerade unten in der Leiste eingetragen werden */
   bidBar: string | null;
-  toast: { text: string; n: number } | null;
+  toast: { text: string; n: number; otter?: boolean } | null;
   history: HistGame[];
   profile: ProfileView | null;
   /** Geöffnete Partie im Verlauf */
   detail: string | null;
   /** Serien und Spieleabende */
   events: GameEvent[];
+  /** Strichlisten zwischen zwei Personen; tally: die geöffnete */
+  tallies: Tally[];
+  tally: string | null;
   /** Verlauf: Partien oder Serien */
   histTab: 'games' | 'series';
   /** Geöffnete Serie und ihre Sortierung */
@@ -81,7 +86,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false, chicMode: null, favs: [], bidBar: null,
+  tokenTo: null, fireMode: false, chicMode: null, tallies: [], tally: null, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
@@ -90,14 +95,16 @@ const initial: AppState = {
 /** Kleine Einstellungen (letzte Spielerauswahl), austauschbar für Tests. */
 export interface Prefs { getLast(): string[]; setLast(ids: string[]): void; getFavs?(): string[]; setFavs?(keys: string[]): void;
   /** Eingabe je Spiel; ohne: einfache Eingabe */
-  getMode?(key: string): EntryMode; setMode?(key: string, mode: EntryMode): void }
+  getMode?(key: string): EntryMode; setMode?(key: string, mode: EntryMode): void;
+  /** Wie frech der Otter kommentiert; ohne: brav */
+  getQuip?(): QuipLevel }
 const LAST_KEY = 'pz:lastPlayers';
 export const browserPrefs: Prefs = {
   getLast: () => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || '[]'); } catch { return []; } },
   setLast: ids => { try { localStorage.setItem(LAST_KEY, JSON.stringify(ids)); } catch { /* privater Modus */ } },
   getFavs: () => { try { return JSON.parse(localStorage.getItem('pz:favs') || '[]'); } catch { return []; } },
   setFavs: keys => { try { localStorage.setItem('pz:favs', JSON.stringify(keys)); } catch { /* privater Modus */ } },
-  getMode: entryMode, setMode: setEntryMode
+  getMode: entryMode, setMode: setEntryMode, getQuip: quipLevel
 };
 
 /** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
@@ -113,6 +120,21 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const get = () => state;
   let toastN = 0;
   const toast = (text: string) => set({ toast: { text, n: ++toastN } });
+  /** Otter-Spruch zu einem Moment; brav: die sachliche Meldung (oder nichts) */
+  const say = (e: QuipEvent, name: string, plain: string | null) => {
+    const level = prefs.getQuip?.() ?? 'brav';
+    if (level === 'brav') { if (plain) toast(plain); return; }
+    set({ toast: { text: quip(e, level, name), n: ++toastN, otter: true } });
+  };
+  /** Besonderer Moment, wenn eine Runde voll ist: Rommé raus (0), Skyjo doppelt */
+  const roundMoment = (g: GameState, ref: string): { e: QuipEvent; name: string } | null => {
+    if (!roundFull(g, ref)) return null;
+    const ps = seated(g);
+    const dbl = g.game.rules.params?.ender ? ps.find(p => isDoubled(g, ref, p.id)) : undefined;
+    if (dbl) return { e: 'skyjoDouble', name: dbl.name };
+    const zero = zeroWins(g) ? ps.find(p => scoreOf(g, ref, p.id) === 0) : undefined;
+    return zero ? { e: 'roundZero', name: zero.name } : null;
+  };
 
   const names = (l: string[]) => (l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' und ' + l[l.length - 1]);
   const persist = (g: GameState) => {
@@ -200,7 +222,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
         const soft = (x: GameState) => ({ ...x, players: x.players.map(p => ({ ...p, color: pastel(p.color) })) });
         const [g = null, ...parked] = running.map(soft);
-        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, favs: prefs.getFavs?.() ?? [] });
+        const tallies = (await repo.loadTallies?.()) ?? [];
+        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, tallies, favs: prefs.getFavs?.() ?? [] });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -466,9 +489,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       haptic(kind === 'out' ? 'success' : 'tap');
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
       const p = seated(ng).find(x => x.id === to)!, ts = tokenState(ng);
-      if (kind === 'loss') toast(`${p.name} zahlt die Runde`);
+      if (kind === 'loss') say('chicRohr', p.name, `${p.name} zahlt die Runde`);
       else if (ts.loser) toast(`${p.name} ist raus, ${seated(ng).find(x => x.id === ts.loser)!.name} verliert`);
-      else toast(`${p.name} hat sich rausgeschickt`);
+      else say('rausgeschickt', p.name, `${p.name} hat sich rausgeschickt`);
     },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
     tableGive(n: number | 'schock' | 'all', from: string | null = null, wurf?: string) {
@@ -484,6 +507,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       haptic(after.half > before.half ? 'success' : 'tap');
       // Wer hat die Hälfte verloren (bei Chic nicht unbedingt der Angetippte)
       const p = players.find(x => after.halves[x.id] > before.halves[x.id]);
+      if (p && n === 'schock' && !after.loser) { say('schockAus', p.name, `${p.name} verliert die Hälfte`); return; }
       if (p && !after.loser) { toast(halfLabel(after.need, after.half) === 'Finale' ? `${p.name} verliert die Hälfte, jetzt das Finale` : `${p.name} verliert die Hälfte`); return; }
       if (after.mode !== 'return' || after.loser) return;
       const gone = players.filter(x => after.out[x.id] && !before.out[x.id]).map(x => x.name);
@@ -581,6 +605,49 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    // ---------- Strichlisten
+    /** Neue Strichliste zwischen zwei Personen, gleich geöffnet */
+    newTally(a: string, b: string, name: string | null) {
+      if (!a || !b || a === b) return;
+      const t = createTally(a, b, name, clock);
+      set({ tallies: [t, ...state.tallies], tally: t.id, screen: 'tally' });
+      repo.saveTally?.(t).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+    },
+    openTally(id: string | null) { set({ tally: id, screen: id ? 'tally' : 'home' }); },
+    /** Strichliste ändern und speichern (Strich, Notiz, Rückgängig, Ausgleichen, Löschen) */
+    tallyDo(kind: 'mark0' | 'mark1' | 'undo' | 'settle' | 'delete'): string | undefined {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = kind === 'mark0' ? addMark(t, 0, clock) : kind === 'mark1' ? addMark(t, 1, clock) : kind === 'undo' ? undoMark(t, clock)
+        : kind === 'settle' ? settle(t, clock) : { ...t, deletedAt: clock.now(), updatedAt: clock.now() };
+      if (nt === t) return;
+      haptic(kind === 'settle' ? 'success' : 'tap');
+      repo.saveTally?.(nt).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      if (kind === 'delete') { set({ tallies: state.tallies.filter(x => x.id !== t.id), tally: null, screen: 'home' }); toast('Strichliste gelöscht'); return; }
+      set({ tallies: [nt, ...state.tallies.filter(x => x.id !== t.id)] });
+      if (kind === 'settle') toast('Ausgeglichen');
+      return kind === 'mark0' || kind === 'mark1' ? nt.marks[nt.marks.length - 1].id : undefined;
+    },
+    tallyNote(note: string) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = noteLast(t, note, clock); if (nt === t) return;
+      repo.saveTally?.(nt).catch(() => undefined);
+      set({ tallies: state.tallies.map(x => (x.id === t.id ? nt : x)) });
+    },
+    /** Notiz zu einem bestimmten Strich (beim Anlegen) */
+    tallyNoteMark(markId: string, note: string) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = noteMark(t, markId, note, clock); if (nt === t) return;
+      repo.saveTally?.(nt).catch(() => undefined);
+      set({ tallies: state.tallies.map(x => (x.id === t.id ? nt : x)) });
+    },
+    /** Einen Strich streichen, mit optionalem Grund */
+    tallyRemove(markId: string, note: string | null) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = removeMark(t, markId, note, clock); if (nt === t) return;
+      haptic('tap');
+      repo.saveTally?.(nt).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      set({ tallies: [nt, ...state.tallies.filter(x => x.id !== t.id)] });
+    },
     /** Scrabble: Schlussrunde mit den Reststeinen; wer zuerst fertig war, bekommt die Summe der anderen */
     setRest(rest: Record<string, number>, finisher: string | null) {
       const g = state.game; if (!g) return;
@@ -601,7 +668,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       ng = setField(ng, id as string, o.player, 'decl', o.game + 1, clock);
       haptic('tap');
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
-      toast(`${SKAT_GAMES[o.game].label} ${o.won ? 'gewonnen' : 'verloren'}`);
+      if (o.won) toast(`${SKAT_GAMES[o.game].label} gewonnen`);
+      else say('skatLost', seated(ng).find(p => p.id === o.player)!.name, `${SKAT_GAMES[o.game].label} verloren`);
     },
     /** Doppelkopf und Schafkopf: Runde aus Spielern, Art, Wert und Ausgang; die App verteilt die Nullsumme */
     setDeal(o: { declarers: string[]; kind: number; value: number; won: boolean; bockAdd?: boolean }) {
@@ -684,6 +752,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       ng = setField(ng, e.ref, e.playerId, 'res', k, clock);
       haptic('tap');
       set({ game: ng, undo: [...state.undo.slice(-99), g], edit: { ...makeEdit(ng, e.ref, e.playerId, e.field), dirty: true } }); persist(ng);
+      if (k === 2) say('verfehlt', seated(ng).find(p => p.id === e.playerId)!.name, null);
       actions.next();
     },
     /** Stiche aller auf einmal eintragen */
@@ -757,9 +826,11 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
       const no = roundNumber(g, e.ref);
       const done = e.ref !== 'new' && roundFull(g, e.ref);
-      if (state.pad) { set({ pad: false, edit: null }); return; }
+      const moment = done ? roundMoment(g, e.ref as string) : null;
+      if (state.pad) { set({ pad: false, edit: null }); if (moment) say(moment.e, moment.name, null); return; }
       set({ page: -1, edit: null });
-      if (done) toast(isResultOnly(g) ? 'Ergebnis komplett' : `Runde ${no} komplett`);
+      if (moment) say(moment.e, moment.name, `Runde ${no} komplett`);
+      else if (done) toast(isResultOnly(g) ? 'Ergebnis komplett' : `Runde ${no} komplett`);
     },
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
@@ -785,6 +856,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Kniffel im Block: nach einem Eintrag sagen, wer dran ist (nur wenn der Zug gewechselt hat) */
     catDone(e: Edit): string | null {
       const g = state.game; if (!g || !e.dirty) return null;
+      const cat = e.ref !== 'new' ? liveRounds(g).find(r => r.id === e.ref)?.cat : undefined;
+      if (cat?.fixed === 50 && e.ref !== 'new' && scoreOf(g, e.ref, e.playerId) === 50) { say('kniffel', seated(g).find(p => p.id === e.playerId)!.name, null); if ((prefs.getQuip?.() ?? 'brav') !== 'brav') return null; }
       const st = nextStep(g); if (st.kind === 'result') return null;
       const who = seated(g)[st.playerIndex];
       return who.id !== e.playerId ? `${who.name} ist dran` : null;

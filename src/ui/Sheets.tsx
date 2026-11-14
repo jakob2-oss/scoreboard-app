@@ -5,7 +5,8 @@ import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
 import { loserRoom, themeRoom, trophyRoom } from './trophy';
 import { haptic, hapticOn, setHapticOn } from '../lib/device';
-import { entryMode } from '../lib/modes';
+import { entryMode, quipLevel, setQuipLevel } from '../lib/modes';
+import { quip, type QuipEvent } from '../game/quips';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
@@ -109,6 +110,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
 
 export function MenuSheet({ g }: { g: GameState }) {
   const [buzz, setBuzz] = useState(hapticOn);
+  const [otter, setOtter] = useState(quipLevel);
   const theme = useTheme();
   const [confirm, setConfirm] = useState(false);
   const win = g.game.rules.win;
@@ -125,6 +127,9 @@ export function MenuSheet({ g }: { g: GameState }) {
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
         {blockEntry(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
         <button id="toggle-haptic" onClick={() => { setHapticOn(!buzz); setBuzz(!buzz); if (!buzz) haptic(); }}>Vibration <small>{buzz ? 'An' : 'Aus'}</small></button>
+        <div className="menu-seg"><span>Otter</span><div className="seg" role="group" aria-label="Otter">
+          {(['brav', 'frech', 'atzig'] as const).map(l => <button key={l} id={`quip-${l}`} aria-pressed={otter === l} onClick={() => { setQuipLevel(l); setOtter(l); }}>{l === 'brav' ? 'Brav' : l === 'frech' ? 'Frech' : 'Atzig'}</button>)}
+        </div></div>
         {!!g.game.rules.params?.restTiles && <button id="open-rest" onClick={() => act().openSheet('rest')}>Reststeine verrechnen</button>}
         {g.game.rules.scoring === 'categories' && <button id="open-cats" onClick={() => act().openSheet('cats')}>Kategorien</button>}
         {g.game.rules.scoring === 'rounds' && !g.game.rules.params?.split && <button id="open-notes" onClick={() => act().openSheet('notes')}>Notizfelder <small>{g.game.rules.params?.notes?.length || ''}</small></button>}
@@ -168,6 +173,12 @@ export function ResultSheet({ g }: { g: GameState }) {
   // Ohne Hälften (Chic): wer verloren oder aus dem Rohr gewürfelt hat, „zahlt“, die anderen zeigen ihre Deckel
   const pts = (v: number, id: string) => (isLives(g) ? `${v} Leben` : ts ? (v ? (ts.need === 1 ? 'zahlt' : `${v} ${v === 1 ? 'Hälfte' : 'Hälften'}`) : ts.gone[id] ? 'raus' : `${ts.taken[id]} Deckel`) : fmt(v));
   const loser = ts ? seated(g).find(p => p.id === ts.loser) : undefined;
+  // Otter-Spruch: Verlierer bei Deckel-Spielen, sonst knapp, deutlich oder einfach gewonnen (stabil je Partie)
+  const level = quipLevel();
+  const pointsGame = !isLives(g) && !ts && rk.length > 1 && rules.params?.unit !== 'Platz';
+  const gap = pointsGame ? Math.abs(rk[0].total - rk[1].total) : 0, top = Math.max(1, Math.abs(rk[0]?.total ?? 1));
+  const qe: QuipEvent = loser ? 'last' : pointsGame && rk[0].place !== rk[1].place && gap <= Math.max(2, top * .03) ? 'close' : pointsGame && gap >= top * .4 ? 'blowout' : 'win';
+  const line = started && winners.length ? quip(qe, level, loser ? loser.name : names(winners.map(x => x.player.name)), g.game.id) : null;
   return (
     <>
       <div className="scrim" onClick={() => act().closeSheet()} />
@@ -178,6 +189,7 @@ export function ResultSheet({ g }: { g: GameState }) {
         <div className="sheet-body">
           <div className="eyebrow v-meta">{rules.name}, {new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <h3 className="v-title">{loser ? `${loser.name} verliert` : started ? names(winners.map(x => x.player.name)) + (winners.length > 1 || membersOf(g, winners[0].player.id).length > 1 ? ' gewinnen' : ' gewinnt') : 'Noch keine Punkte'}</h3>
+          {line && <p className={'v-quip q-' + level} id="v-quip"><span className="otter-ic" aria-hidden="true" />{line}</p>}
           {started && (
             <div className="v-podium">
               {podium.map(x => (

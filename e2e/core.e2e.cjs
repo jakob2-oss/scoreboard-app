@@ -21,6 +21,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const typeNum = async n => { for (const d of String(n)) await p.click(`.pp-keys .key >> text="${d}"`); };
 
   await p.goto(URL); await p.waitForSelector('.wordmark');
+  // Der Klicktest prüft die sachlichen Meldungen; die Otter-Sprüche werden weiter unten gezielt geprüft
+  await p.evaluate(() => localStorage.setItem('pz:quip', 'brav'));
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
   check('19 Einträge (17 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
@@ -562,6 +564,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#chic-loss'); await seat(1).click(); await p.waitForTimeout(200);
   check('Chic: aus dem Rohr zahlt, Spiel läuft weiter', (await raw('.toast')).includes('zahlt die Runde') && (await p.locator('.tb-chic').count()) === 1);
   await shot('37h-chic-tisch');
+  // Otter: Regler im Menü, frecher Spruch statt sachlicher Meldung
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#quip-frech'); await p.mouse.click(195, 160); await p.waitForTimeout(200);
+  await p.click('#chic-loss'); await seat(2).click(); await p.waitForTimeout(200);
+  check('Otter: frecher Spruch mit Otterkopf', await p.isVisible('.toast.otter .otter-ic') && !(await raw('.toast')).endsWith('zahlt die Runde'));
+  await shot('37i-otter-toast');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#quip-brav'); await p.mouse.click(195, 160); await p.waitForTimeout(200);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   // Schwimmen: nur der Erste darf schwimmen
   await p.click('[data-game="schwimmen"]');
@@ -570,6 +578,26 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.tpl-back');
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
+
+  // Strichliste: anlegen, Striche, Notiz, Rückgängig, Ausgleichen, Bilanz im Profil
+  await p.click('#tally-new'); await p.click('#tally-sheet .chip >> text=Anna'); await p.click('#tally-sheet .chip >> text=Ben'); await p.fill('#tally-name', 'Wetten');
+  await p.click('#tally-start'); await p.waitForTimeout(250);
+  check('Strichliste: eigene Seite mit zwei Seiten', await p.isVisible('#s-tally') && (await raw('#s-tally h2')) === 'Wetten' && (await raw('#tally-lead')) === 'Gleichstand');
+  for (let k = 0; k < 6; k++) { await p.click('#tally-0'); await p.click('#mark-note-skip'); }
+  await p.click('#tally-1'); check('Strichliste: Notiz beim Anlegen', await p.isVisible('#mark-note') && (await raw('#mark-note h3')) === 'Strich für Ben');
+  await p.fill('#mark-note-input', 'Ben verliert die Wette'); await p.click('#mark-note-go'); await p.waitForTimeout(150);
+  check('Strichliste: Fünferbündel, Stand und Notiz im Verlauf', (await p.locator('#tally-0 .tally-marks svg').count()) === 2 && (await raw('#tally-lead')) === 'Anna liegt 5 vorn' && (await raw('#tally-hist')).includes('Ben verliert die Wette'));
+  await p.click('#tally-hist [aria-label="Strich streichen"] >> nth=1'); await p.fill('#mark-note-input', 'war doch Ben'); await p.click('#mark-note-go'); await p.waitForTimeout(150);
+  check('Strichliste: Streichen mit Grund, bleibt sichtbar', (await raw('#tally-lead')) === 'Anna liegt 4 vorn' && (await raw('#tally-struck')).includes('war doch Ben'));
+  await p.click('#tally-0'); await p.click('#mark-note-skip');
+  await shot('39a-tally');
+  await p.click('[aria-label="Letzten Strich zurücknehmen"]'); await p.waitForTimeout(100);
+  check('Strichliste: Rückgängig nimmt den letzten Strich', (await raw('#tally-lead')) === 'Anna liegt 4 vorn');
+  await p.click('#tally-settle'); await p.click('#tally-settle-yes'); await p.waitForTimeout(150);
+  check('Strichliste: ausgeglichen', (await raw('#tally-lead')) === 'Gleichstand');
+  await p.click('#tally-0'); await p.click('#mark-note-skip'); await p.click('#s-tally .dock .secondary.wide'); await p.waitForTimeout(200);
+  check('Strichliste: auf der Startseite', (await raw('.tally-row')).includes('Wetten') && (await raw('.tally-row')).includes('1 zu 0'));
+  await shot('39b-tally-home');
 
   // Serien: Statistikseite
   await p.click('#tab-events'); await p.waitForTimeout(200);

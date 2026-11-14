@@ -1,5 +1,6 @@
 import { act, useApp } from '../store';
 import { useState } from 'react';
+import { TallyBalance } from './Tally';
 import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, playerTitles, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
 import { gameDef } from '../game/games';
 import type { Player } from '../model/types';
@@ -42,6 +43,7 @@ export function Profile() {
         <div className="gutter pf-body">
           <div className="pf-hero"><Avatar p={me} big /><div><h1><input className="pf-name" id="pf-name" key={me.name} defaultValue={me.name} maxLength={18} aria-label="Name" onBlur={e => a.renamePlayer(profile.id, e.target.value)} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} /></h1><small>{mine.length ? `${mine.length} ${mine.length === 1 ? 'Partie' : 'Partien'}` : 'Noch keine Partie'}</small>
             {titles.length > 0 && <div className="pf-titles">{titles.slice(0, 2).map(t => <span key={t.title}>{t.title}</span>)}</div>}</div></div>
+          <TallyBalance pid={profile.id} />
           {mine.length > 0 && <>
             <div className="fchips">
               {chip('Immer', same(profile.time, 'all'), () => a.setProfile({ time: 'all' }))}
