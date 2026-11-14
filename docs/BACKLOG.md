@@ -154,7 +154,7 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Sehr gut wie es ist. Standard: im Block eintragen, Einzelerfassung als Alternative.
 
 ### L3 Rommé
-- [ ] Die Ansage-Logik aus Wizard gehört hier nicht hin.
+- [x] Die Ansage-Logik aus Wizard gehört hier nicht hin. Ursache: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie. Behoben, Rommé selbst kennt keine Ansagen.
 - [ ] Standard: großer Block mit direkter Eingabe; Einzelseiten zeigen eine Kurve mit dem Punkteverlauf.
 - [ ] Runden mit 0 im Block mit kleiner Krone (Rundensieg).
 - [ ] Siegerseite: statt „Beste Runde“ „Dickste Packung“ (meiste Punkte in einer Runde) und „Meiste Siege“.
@@ -184,7 +184,7 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
 
 ### L8 Schwimmen
-- [ ] Zusätzliche Einstellung: Anzahl Personen, die schwimmen (klären).
+- [ ] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.
 
 ### L9 Kniffel
 - [ ] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
@@ -201,7 +201,10 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Fehler: Siedler-Seite hing nach der Partie.
 
 ### L11 Freie Erstellung, Chic
-- [ ] Zwei Knöpfe: Person chict sich raus (scheidet aus, keine Gewinnerin) und Person verliert direkt (raus, Runde läuft weiter).
+- [ ] Zwei Knöpfe je Person:
+  - „Rausgeschickt“: scheidet positiv aus, eigene Deckel weg, kann nicht mehr verlieren, egal wie viele Deckel.
+  - „Chic aus dem Rohr“: verliert sofort und zahlt eine Runde; das Spiel läuft weiter, bis am Schluss noch jemand verliert.
+  - Am Ende also mehrere Verlierer möglich (Sofortverlierer plus Schlussverlierer); Statistik zählt beide als verloren.
 - [ ] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
 
 ### L12 Serien

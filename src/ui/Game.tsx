@@ -110,7 +110,7 @@ export function GameScreen() {
       {!s.pad && (
         <div className="dock gutter">
           {isTable(g) ? <TableDock g={g} canUndo={s.undo.length > 0} />
-            : s.bidBar && s.page < 0 ? <BidBar g={g} roundId={s.bidBar} />
+            : wizBlock && s.bidBar && s.page < 0 ? <BidBar g={g} roundId={s.bidBar} />
             : s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
             : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
               ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />

@@ -490,6 +490,16 @@ describe('Freies Spiel', () => {
 });
 
 describe('Feste Spiele', () => {
+  it('Wizard-Ansageleiste wandert nicht in die nächste Partie (Rommé)', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get().bidBar).not.toBeNull();
+    a.goHome(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.start();
+    expect(st.get().game!.game.rules.key).toBe('romme');
+    expect(st.get().bidBar).toBeNull();
+  });
   it('Rommé: Raus, Schnelltasten und ×2, Ende per Option, keine eigene Vorlage', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
     await a.init();

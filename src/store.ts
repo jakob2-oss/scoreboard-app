@@ -338,7 +338,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         : null;
       if (teams && teams.length < 2) return;
       const g = teams ? createTeamGame(t, teams, clock) : createGame(t, chosen, clock);
-      set({ game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+      set({ bidBar: null, game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
       persist(g);
     },
     /** Partie fortsetzen; ohne ID die aktive, sonst eine geparkte (die aktive wird dafür geparkt) */
@@ -346,9 +346,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (id && state.game?.game.id !== id) {
         const target = state.parked.find(x => x.game.id === id); if (!target) return;
         const parked = [...(state.game ? [state.game] : []), ...state.parked.filter(x => x !== target)];
-        set({ game: target, parked, undo: [] });
+        set({ bidBar: null, game: target, parked, undo: [] });
       }
-      if (state.game) set({ screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+      if (state.game) set({ bidBar: null, screen: 'game', page: -1, edit: null, pad: false, sheet: null });
     },
 
     // ---------- Navigation in der Partie
@@ -697,7 +697,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
             // Freies Spiel ohne Vorlage bleibt eine Einmal-Partie (nur im Verlauf)
       const auto = false;
-      set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
+      set({ bidBar: null, game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
     /** Oina no: Partie speichern und gleich noch eine mit denselben Regeln, Spielern und Plätzen */
@@ -710,7 +710,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         ? createTeamGame(rules, order.map(tp => ({ members: (teams.find(t => t.id === tp.id)?.members ?? []).map(person).filter((p): p is Player => !!p) })), clock)
         : createGame(rules, order.map(p => person(p.id)).filter((p): p is Player => !!p), clock);
       if (seated(ng).length < Math.max(1, rules.players.min)) return;
-      set({ game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
+      set({ bidBar: null, game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
       persist(ng);
       toast('Oina no! Neue Partie läuft');
     },
@@ -785,7 +785,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       const t = clock.now();
       persist({ ...g, game: { ...g.game, status: 'abandoned', updatedAt: t, deletedAt: t } });
-      set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
+      set({ bidBar: null, game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       if (!quiet || anyScore(g)) toast('Partie verworfen');
     },
     /** Kurze Meldung (z. B. aus der Oberfläche) */
