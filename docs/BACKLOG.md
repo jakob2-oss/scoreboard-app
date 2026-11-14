@@ -219,3 +219,26 @@ Erstellungsmodus, fehlende Bausteine:
 
 ### L14 Idee: Strichliste zwischen Personen
 - [ ] Gemeinsame Strichliste (z. B. Wettpunkte) in beide Richtungen, Strichlisten-Look, Notiz je Strich. Konzept: wo integrieren, wie weiterdenken.
+
+## M. Vorschläge vom 14.11. (Ideenbuch, noch nicht entschieden)
+
+### M1 Spiele
+- [ ] Skyjo: Eingabe im Block; „Wer hat beendet?“ antippen, die App verdoppelt, wenn er nicht allein die wenigsten Punkte hat (nur positiv); Krone für die niedrigste Runde; Ende-Vorschlag 100.
+- [ ] Schocken: im Deckel-Blatt den Wurf antippen (Schock aus, Schock 2 bis 6, General, Straße, Zahl), die App kennt die Deckelzahl.
+- [ ] Doppelkopf: Re-Partei antippen, Spielwert mit − und +, Re oder Kontra gewinnt, Solo dreifach; Bockrunden als Schalter.
+- [ ] Schafkopf: wer spielt (plus Partner beim Sauspiel), Spielart, gewonnen oder verloren; Schneider, Schwarz, Laufende; Tarife auf der Spielseite.
+- [ ] Skat: Spielwert-Rechner (Farbe/Grand/Null, Spitzen, Hand, Schneider, Schwarz, Ouvert, Kontra/Re); optional Seeger-Fabian; Ende-Vorschlag Bierlachs.
+- [ ] Scrabble: Taste Bingo +50, Reststeine am Ende, optional das Wort für Rekorde.
+- [ ] Wizard: Hausregel „Ansagen dürfen nicht aufgehen“ als Schalter.
+
+### M2 Strichliste (L14)
+- [ ] Liste zwischen zwei Personen, Strich je Tipp in Fünferbündeln, Notiz je Strich, Ausgleichen mit Verlauf.
+- [ ] Ort: Karte „Strichlisten“ auf der Startseite unter „Laufende Partien“, Bilanz im Profil. Später erstes geteiltes Ding mit der Synchronisierung.
+
+### M3 Design und Geschichte (fünf Konzepte)
+- [ ] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Absteiger.
+- [ ] Otter-Gang: kurze freche Sprüche bei besonderen Momenten, Frechheitsregler Brav, Frech, Ätzend.
+- [ ] Titelseite: nach jedem Abend eine teilbare Klatschblatt-Titelseite aus den echten Zahlen (eigene Optik, kein echtes Logo).
+- [ ] Stammtisch: Kreidetafel, Bierdeckel, neue Siegerbänder in der Mitternacht-Variante.
+- [ ] Nachtschicht: ab 23 Uhr dunkler und größer, am nächsten Tag Kater-Report; insgesamt weniger Pastell.
+- Empfehlung: zuerst Liga und Otter mit Regler, dann Titelseite, dann Stammtisch und Nachtschicht als dunkles Thema.
