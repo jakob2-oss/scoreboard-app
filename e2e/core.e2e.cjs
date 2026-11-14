@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('18 Einträge (16 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 18 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('19 Einträge (17 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('.new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
@@ -482,7 +482,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Startseite: Gruppen nach Spielart, aufklappbar, Favoriten oben
-  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('2'));
+  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('3'));
   await p.click('#grp-karten'); await p.waitForTimeout(100);
   check('Gruppe zuklappbar', !(await p.isVisible('[data-game="wizard"]')) && (await p.getAttribute('#grp-karten', 'aria-expanded')) === 'false');
   await p.reload(); await p.waitForSelector('.wordmark');
@@ -543,6 +543,23 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('.tb-phase >> nth=0')) === '2. Hälfte');
   await shot('37f-schocken-tisch');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Chic: rausschicken und Chic aus dem Rohr
+  await p.click('[data-game="chic"]'); await shot('37g-chic'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  await seat(0).click(); await p.click('#tk-3'); await p.waitForTimeout(150);
+  await seat(0).click(); await p.waitForTimeout(150);
+  check('Chic: Knöpfe im Deckel-Blatt', await p.isVisible('#tk-sendout') && await p.isVisible('#tk-chicloss'));
+  await p.click('#tk-sendout'); await p.waitForTimeout(200);
+  check('Chic: rausgeschickt, Deckel zurück in die Mitte', (await seat(0).getAttribute('aria-label')).endsWith('raus') && (await raw('.tb-count')) === '13' && (await raw('.toast')).includes('rausgeschickt'));
+  await seat(1).click(); await p.click('#tk-chicloss'); await p.waitForTimeout(200);
+  check('Chic: aus dem Rohr zahlt, Spiel läuft weiter', (await raw('.toast')).includes('zahlt die Runde') && (await p.locator('.tb-chic').count()) === 1);
+  await shot('37h-chic-tisch');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  // Schwimmen: nur der Erste darf schwimmen
+  await p.click('[data-game="schwimmen"]');
+  check('Schwimmen: Einstellung „Schwimmen darf“', (await p.getAttribute('#swim-all', 'aria-pressed')) === 'true');
+  await p.click('#swim-first'); check('Schwimmen: „Nur der Erste“ gewählt', (await p.getAttribute('#swim-first', 'aria-pressed')) === 'true');
+  await p.click('.tpl-back');
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 

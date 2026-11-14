@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss
 } from './engine';
 import { gameDef } from './games';
 
@@ -227,6 +227,36 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
 });
 
 describe('Tisch-Modus', () => {
+  it('Schwimmen: nur der Erste darf schwimmen, wer danach sein letztes Leben verliert, ist sofort raus', () => {
+    const c = testClock();
+    const t = gameDef('schwimmen')!.template;
+    let s = createGame({ ...t, params: { ...t.params, swimFirst: true } }, players('A', 'B', 'C'), c);
+    for (let k = 0; k < 3; k++) s = loseLife(s, 'p0', c);
+    expect(lifeState(s).swimming.p0).toBe(true);
+    for (let k = 0; k < 3; k++) s = loseLife(s, 'p1', c);
+    expect(lifeState(s).swimming.p1).toBe(false);
+    expect(lifeState(s).out.p1).toBe(5);
+    expect(lifeState(s).alive).toEqual(['p0', 'p2']);
+    s = loseLife(s, 'p0', c);
+    expect(endState(s)?.text).toBe('C bleibt übrig');
+  });
+  it('Chic: rausschicken (Deckel zurück, kann nicht mehr verlieren) und Chic aus dem Rohr (verliert sofort, Spiel läuft weiter)', () => {
+    const c = testClock();
+    let s = createGame(gameDef('chic')!.template, players('A', 'B', 'C'), c);
+    s = giveTokens(s, 'p0', 5, null, c); s = giveTokens(s, 'p1', 3, null, c);
+    s = sendOut(s, 'p0', c);
+    let ts = tokenState(s);
+    expect(ts.gone.p0).toBe(true); expect(ts.hold.p0).toBe(0); expect(ts.middle).toBe(10); expect(ts.out.p0).toBe(true);
+    expect(giveTokens(s, 'p0', 2, null, c)).toBe(s);   // Rausgeschickte bekommen keine Deckel mehr
+    s = chicLoss(s, 'p1', c);
+    ts = tokenState(s);
+    expect(ts.chic.p1).toBe(1); expect(ts.loser).toBeNull();
+    // B steht wie ein Verlierer hinten, A (rausgeschickt) nicht
+    expect(totals(s)).toEqual({ p0: 0, p1: 2, p2: 0 });
+    s = sendOut(s, 'p2', c);
+    expect(tokenState(s).loser).toBe('p1');
+    expect(endState(s)?.done).toBe(true);
+  });
   it('Schwimmen: drei Leben, dann schwimmen, dann raus; der Letzte gewinnt', () => {
     const c = testClock();
     let s = createGame(gameDef('schwimmen')!.template, players('A', 'B', 'C'), c);

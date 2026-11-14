@@ -163,6 +163,15 @@ GAMES.push({
   acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
 });
 
+// Chic: wie Schocken, in der zweiten Phase gehen Deckel zurück in die Mitte; rausschicken und Chic aus dem Rohr
+GAMES.push({
+  template: { key: 'chic', version: 1, name: 'Chic', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13, phase2: 'return', chic: true } },
+  points: [['Mitte', '13 Deckel'], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'], ['Zweite Phase', 'Sieger spielen Deckel zurück, wer keine mehr hat, ist raus'],
+    ['Rausschicken', 'wer sich rausschickt, ist mit allen Deckeln raus und kann nicht mehr verlieren'], ['Chic aus dem Rohr', 'verliert sofort und zahlt die Runde, gespielt wird weiter'],
+    ['Partie', 'zwei Hälften verloren, sonst entscheidet das Finale']],
+  acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['raus', 'rausgeschickt'], ['zahlt', 'aus dem Rohr']]
+});
+
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
 GAMES.push({
   template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
@@ -179,7 +188,7 @@ export type Family = 'karten' | 'wuerfel' | 'brett';
 export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label: 'Kartenspiele' }, { id: 'wuerfel', label: 'Würfelspiele' }, { id: 'brett', label: 'Brett- und Legespiele' }];
 const FAMILY: Record<string, Family> = {
   wizard: 'karten', romme: 'karten', skyjo: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
-  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
+  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', chic: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
 // Geber anzeigen (Wizard zeigt ihn immer)

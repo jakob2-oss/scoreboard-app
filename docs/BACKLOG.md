@@ -184,7 +184,7 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
 
 ### L8 Schwimmen
-- [ ] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.
+- [x] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.
 
 ### L9 Kniffel
 - [x] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
@@ -201,11 +201,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Fehler: Siedler-Seite hing nach der Partie.
 
 ### L11 Freie Erstellung, Chic
-- [ ] Zwei Knöpfe je Person:
+- [x] Zwei Knöpfe je Person:
   - „Rausgeschickt“: scheidet positiv aus, eigene Deckel weg, kann nicht mehr verlieren, egal wie viele Deckel.
   - „Chic aus dem Rohr“: verliert sofort und zahlt eine Runde; das Spiel läuft weiter, bis am Schluss noch jemand verliert.
   - Am Ende also mehrere Verlierer möglich (Sofortverlierer plus Schlussverlierer); Statistik zählt beide als verloren.
-- [ ] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
+- [x] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
 
 ### L12 Serien
 - [ ] Banner oben: zuerst 5 Platzhalter (Optik der App, frecher und verrückter, mit atzigem Otter); später eigene Bilder.

@@ -692,3 +692,10 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .res-row .nm { flex: 1; font-weight: 600; font-size: 17px; }
 .res-row .res-v { font-family: var(--f-num); font-weight: 600; font-size: 22px; }
 .res-row .res-v.ph { color: var(--faint); }
+
+/* Chic: rausschicken und Chic aus dem Rohr im Deckel-Blatt; „zahlt“ am Platz */
+.tk-chic { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tk-chic button { min-height: 50px; border-radius: 999px; font-family: var(--f-display); font-weight: 600; font-size: 15px; }
+#tk-sendout { background: color-mix(in srgb, var(--good) 22%, var(--surface)); color: var(--fg); }
+#tk-chicloss { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--fg); }
+.tb-chic { display: block; font-size: 10.5px; font-weight: 700; color: #d9634a; letter-spacing: .02em; }

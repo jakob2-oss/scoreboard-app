@@ -99,9 +99,10 @@ export function TableView({ g }: { g: GameState }) {
                 {ls ? (
                   <span className="tb-state">{out ? 'raus' : swim ? 'schwimmt' : `${ls.left[p.id]} Leben`}</span>
                 ) : (
-                  out ? <span className="tb-state">raus</span> : <span className="tb-deck"><span className="tb-dk" key={hold} dangerouslySetInnerHTML={{ __html: DECKEL }} /><b>{hold}</b>
+                  out ? <span className="tb-state">{ts?.gone[p.id] ? 'rausgeschickt' : 'raus'}</span> : <span className="tb-deck"><span className="tb-dk" key={hold} dangerouslySetInnerHTML={{ __html: DECKEL }} /><b>{hold}</b>
                     {halves > 0 && <span className="tb-halves">{Array.from({ length: halves }, (_, k) => <i key={k} />)}</span>}</span>
                 )}
+                {!!ts?.chic[p.id] && <span className="tb-chic">{ts.chic[p.id] > 1 ? `zahlt ${ts.chic[p.id]}×` : 'zahlt'}</span>}
               </span>
             </button>
           );
@@ -157,6 +158,10 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
             {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={k > ts.hold[to]} onClick={() => act().tableGive(k)}>{k}</button>)}
             <button className="wide" id="tk-all" onClick={() => act().tableGive('all')}>Alle</button>
           </div>
+          {!!g.game.rules.params?.chic && <div className="tk-chic">
+            <button id="tk-sendout" onClick={() => act().tableChic('out')}>Rausgeschickt</button>
+            <button id="tk-chicloss" onClick={() => act().tableChic('loss')}>Chic aus dem Rohr</button>
+          </div>}
         </div>
       </div>
     </>
@@ -178,6 +183,10 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
             {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={!ready} onClick={() => act().tableGive(k, from)}>{k}</button>)}
             <button className="wide" id="tk-schock" onClick={() => act().tableGive('schock')}>Schock aus</button>
           </div>
+          {!!g.game.rules.params?.chic && <div className="tk-chic">
+            <button id="tk-sendout" onClick={() => act().tableChic('out')}>Rausgeschickt</button>
+            <button id="tk-chicloss" onClick={() => act().tableChic('loss')}>Chic aus dem Rohr</button>
+          </div>}
         </div>
       </div>
     </>

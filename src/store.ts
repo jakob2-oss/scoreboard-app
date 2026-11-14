@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -279,6 +279,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ teamMode: false, teamOf: {}, template: structuredClone(t), pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'gamepage' });
     },
     setTemplateEnd(end: Template['end']) { if (state.template) set({ template: { ...state.template, end } }); },
+    /** Einstellung auf der Spielseite, z. B. bei Schwimmen „nur der Erste schwimmt“ */
+    setTemplateParam(key: string, value: unknown) { if (state.template) set({ template: { ...state.template, params: { ...state.template.params, [key]: value } } }); },
     toPlayers() { set({ screen: 'players' }); },
 
     // ---------- Spieler wählen
@@ -444,6 +446,18 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       else if (ls.out[playerId] !== null) toast(`${p.name} ist raus`);
     },
     setFireMode(on: boolean) { set({ fireMode: on }); },
+    /** Chic: der Angetippte schickt sich raus (positiv) oder würfelt Chic aus dem Rohr (verliert sofort) */
+    tableChic(kind: 'out' | 'loss') {
+      const g = state.game, to = state.tokenTo; if (!g || !to) return;
+      const ng = kind === 'out' ? sendOut(g, to, clock) : chicLoss(g, to, clock);
+      if (ng === g) return;
+      haptic(kind === 'out' ? 'success' : 'tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
+      const p = seated(ng).find(x => x.id === to)!, ts = tokenState(ng);
+      if (kind === 'loss') toast(`${p.name} zahlt die Runde`);
+      else if (ts.loser) toast(`${p.name} ist raus, ${seated(ng).find(x => x.id === ts.loser)!.name} verliert`);
+      else toast(`${p.name} hat sich rausgeschickt`);
+    },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
     tableGive(n: number | 'schock' | 'all', from: string | null = null) {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;

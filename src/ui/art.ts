@@ -285,6 +285,16 @@ Object.assign(GAME_ART, {
   }
 });
 
+// Chic: umgekippter Becher, die Würfel rollen heraus, ein Deckel fliegt weg
+Object.assign(GAME_ART, {
+  chic: {
+    icon: ICON(`${dcup(26, 34, .6, 70)}${die(44, 42, 13, 14, 1, '#fffaf2', '#d9634a', '#e8dccb')}${die(52, 24, 11, -18, 1, '#fffaf2', '#d9634a', '#e8dccb')}${deckel(18, 52, 12, '#f2cf86')}`),
+    scene: sky('#fbe0d4', '#fdebe3', '#f2c4b2', '#f5d58c', 'checker')
+      + [0, 1, 2].map(k => deckel(94, 196 - k * 9, 38, k % 2 ? '#f2cf86' : '#f3a98f')).join('') + deckel(150, 120, 30, '#f3a98f')
+      + dcup(200, 176, 1.3, 78) + die(258, 198, 30, -16, 1, '#fffaf2', '#d9634a', '#e8dccb') + die(300, 186, 30, 12, 1, '#fffaf2', '#d9634a', '#e8dccb')
+  }
+});
+
 // Skat: Kreuz-Bube vorne, dahinter Pik und Herz; Icon: Kreuz-Symbol mit B
 const KREUZ = (c: string) => `<g fill="${c}"><circle cx="0" cy="-6" r="5.6"/><circle cx="-6" cy="2" r="5.6"/><circle cx="6" cy="2" r="5.6"/><path d="M-2 2h4l2 10h-8z"/></g>`;
 const PIK = (c: string) => `<path d="M0-11C-10-2-11 4-7 6c2.5 1.2 5 0 6-1.5L-3 12h6l-2-7.5c1 1.5 3.5 2.7 6 1.5 4-2 3-8-7-17z" fill="${c}"/>`;

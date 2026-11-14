@@ -43,6 +43,13 @@ export function GameInfo() {
       </div>
       {endEditable(template) && <EndPicker end={template.end} onChange={e => a.setTemplateEnd(e)} pointsOk={template.scoring !== 'rank'}
         rounds={limitOf(def.endOptions, 'rounds')} points={limitOf(def.endOptions, 'target')} />}
+      {template.scoring === 'lives' && template.params?.swim !== false && <div className="field">
+        <label>Schwimmen darf</label>
+        <div className="seg">
+          <button id="swim-all" aria-pressed={!template.params?.swimFirst} onClick={() => a.setTemplateParam('swimFirst', undefined)}>Jeder</button>
+          <button id="swim-first" aria-pressed={!!template.params?.swimFirst} onClick={() => a.setTemplateParam('swimFirst', true)}>Nur der Erste</button>
+        </div>
+      </div>}
       <GameRecords tpl={template} />
       <div className="menu-list own-actions">
         <button id="customize" onClick={() => a.customizeGame(def.template)}>Als eigenes Spiel anpassen</button>

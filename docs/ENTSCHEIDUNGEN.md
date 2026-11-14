@@ -241,3 +241,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   eigene Ergebnisspiele auf einer Bühne mit Treppchen. So bekommt jedes eigene Ergebnisspiel ohne Zutun ein Bild.
 - Siedler ohne die Notizfelder „Längste Straße“ und „Rittermacht“. Die gemeldete hängende Seite ließ sich nicht
   nachstellen; wahrscheinlich war es der Sprung zwischen Notizfeld und Punktefeld, der mit der neuen Eingabe entfällt.
+
+## 14.11.2026: Schwimmen und Chic (Paket 7)
+- Schwimmen: auf der Spielseite „Schwimmen darf: Jeder / Nur der Erste“ (`params.swimFirst`). Bei „Nur der Erste“
+  schwimmt nur, wer zuerst sein letztes Leben verliert; alle anderen sind mit dem letzten Leben sofort raus.
+- Chic ist ein festes Spiel (bei den Würfelspielen), eigene Spiele mit „Zurück in die Mitte“ gehen weiter.
+  Im Deckel-Blatt zwei Knöpfe:
+  - „Rausgeschickt“: Deckel zurück in die Mitte, für die ganze Partie raus, bekommt keine Deckel mehr und kann
+    nicht verlieren. Bleibt nur einer übrig, verliert er. In der zweiten Phase verliert die Hälfte, wer danach
+    als Einziger noch Deckel hat.
+  - „Chic aus dem Rohr“: zahlt sofort die Runde, das Spiel läuft weiter. Am Platz steht „zahlt“. In der Wertung
+    steht er wie der Verlierer hinten, beide zählen als verloren.
