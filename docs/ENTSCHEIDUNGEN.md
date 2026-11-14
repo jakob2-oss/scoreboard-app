@@ -360,6 +360,10 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Abends). Zwei Kurzmeldungen, Rote Laterne. Ton nach der Frech-Stufe.
 - Drei Seiten zur Wahl: Zeitung (Standard), Sport (Standard bei Liga-Abenden, mit Tabelle und Bewegung), Poster
   (Standard bei „atzig“). Gezeichnet als SVG 9:16; „Teilen“ erzeugt ein PNG 1080 × 1920 mit eingebetteter Jost.
-- Zu sehen auf der Startseite (bis 16 Stunden nach der letzten Partie), im Verlauf als Reihe „Titelseiten“.
+- Zu sehen im Verlauf als Reihe „Titelseiten“, nicht auf der Startseite (Jakob).
+- Viele Schlagzeilen auch für die ersten Abende ohne Vorgeschichte: Premiere, Krimi (knappe Partie), klare Sache,
+  Unentschieden, jeder gewinnt einmal, Neu dabei, erster Sieg überhaupt, Lauf (drei Siege am Stück), Doppelpack,
+  Rote Laterne in allen Partien, Marathon (ab 6 Partien), Querbeet (ab 3 Spielen), nach Mitternacht, Liga-Auftakt.
+  Jede Geschichte hat je Frech-Stufe mehrere Fassungen; die Wahl ist je Abend fest, damit die Seite gleich bleibt.
   Profil zeigt die drei häufigsten Rivalen mit Stand; die Siegerseite einer Partie zeigt, was sie im Dauerduell ändert.
 - Stammtisch, Nachtschicht und Kater-Report verworfen.

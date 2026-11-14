@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { act, useApp } from '../store';
-import { eveningOf, evenings, frontPage, type FrontPage as FP } from '../game/frontpage';
+import { evenings, frontPage, type FrontPage as FP } from '../game/frontpage';
 import { quipLevel } from '../lib/modes';
 import { frontPng, frontSvg, type FrontLook, type FrontVariant } from './frontArt';
 import { IconClose } from './icons';
@@ -53,25 +53,6 @@ export function FrontView() {
         <button className="primary" id="front-share" disabled={busy} onClick={share}>{busy ? 'Einen Moment' : 'Teilen'}</button>
       </div>
     </div>
-  );
-}
-
-/** Der letzte Abend, wenn er höchstens 16 Stunden zurückliegt */
-export function recentEvening(history: { finishedAt: string }[], now = Date.now()): string | null {
-  const last = history.reduce<string | null>((m, h) => (!m || h.finishedAt > m ? h.finishedAt : m), null);
-  return last && now - Date.parse(last) <= 16 * 36e5 ? eveningOf(last) : null;
-}
-
-/** Startseite: Titelseite des aktuellen Abends als kleine Zeitung */
-export function FrontTeaser() {
-  const { history } = useApp(), day = recentEvening(history), fp = useFront(day);
-  if (!fp || !day) return null;
-  return (
-    <button className="front-teaser" id="front-teaser" onClick={() => act().openFront(day)}>
-      <span className="ft-mast"><b>Oina no?</b><small>Abend Nr. {fp.number}</small></span>
-      <span className="ft-kick">{fp.lead.kicker}</span>
-      <span className="ft-head">{plain(fp.lead.headline)}</span>
-    </button>
   );
 }
 

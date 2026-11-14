@@ -51,7 +51,7 @@ describe('Titelseite', () => {
     expect(fp.games).toBe(2);
     // Clara beendet Serien gegen Anna und Ben: wiegt mehr als Bens fünften Sieg in Folge gegen Anna
     expect(fp.lead.kind).toBe('revenge');
-    expect(fp.lead.headline).toMatch(/^Revanche! Clara stoppt (Anna|Ben) nach \*drei\* Niederlagen$/);
+    expect(fp.lead.headline).toMatch(/Clara/);
     expect([fp.lead, ...fp.briefs].map(s => s.text)).toContain('Ben schlägt Anna zum fünften Mal in Folge.');
     expect(fp.laterne).toBe('a');
     expect(fp.variant).toBe('zeitung');
@@ -80,4 +80,30 @@ describe('Titelseite', () => {
     expect([fp.lead, ...fp.briefs].some(s => s.kind === 'drought' || s.kind === 'revenge')).toBe(true);
   });
   it('unbekannter Abend', () => { expect(frontPage([], '2026-11-14', { level: 'brav', names })).toBeNull(); });
+
+  /** Partie mit Punkten (erster gewinnt) */
+  const pg = (when: string, scores: [string, number][], name = 'Rommé') => ({ ...g(when, scores.map(x => x[0])), name, results: scores.map(([p, t], i) => ({ playerId: p, total: t, place: i + 1 })) });
+  it('neue Geschichten ohne Vorgeschichte', () => {
+    const kinds = (h: HistGame[], day = '2026-11-14') => { const fp = frontPage(h, day, { level: 'frech', names })!; return [fp.lead, ...fp.briefs].map(s => s.kind); };
+    // Premiere und Krimi: erster Abend, eine knappe Partie
+    expect(kinds([pg(at(14, 20), [['a', 101], ['b', 100]])])).toContain('close');
+    expect(kinds([pg(at(14, 20), [['a', 50], ['b', 10]]), pg(at(14, 21), [['a', 60], ['b', 40]])])).toContain('premiere');
+    // Jeder gewinnt einmal
+    expect(kinds([g(at(14, 20), ['a', 'b', 'c']), g(at(14, 21), ['b', 'c', 'a']), g(at(14, 22), ['c', 'a', 'b'])])).toContain('everyone');
+    // Neu dabei und gewonnen, erster Sieg überhaupt
+    const old = [g(at(1, 20), ['a', 'b']), g(at(2, 20), ['a', 'b'])];
+    expect(kinds([...old, g(at(14, 20), ['d', 'a', 'b'])])[0]).toBe('debut');
+    expect(kinds([...old, g(at(14, 20), ['b', 'a'])])[0]).toBe('firstWin');
+    // Lauf: drei Siege hintereinander, aber nicht alle
+    expect(kinds([g(at(14, 19), ['b', 'a']), g(at(14, 20), ['a', 'b']), g(at(14, 21), ['a', 'b']), g(at(14, 22), ['a', 'b'])])).toContain('hattrick');
+  });
+  it('frühe Abende: viele verschiedene Schlagzeilen', () => {
+    const heads = new Set<string>();
+    for (let d = 1; d <= 20; d++) {
+      const day = `2026-11-${String(d).padStart(2, '0')}`;
+      const fp = frontPage([g(at(d, 20), ['a', 'b', 'c']), g(at(d, 21), ['a', 'c', 'b'])], day, { level: 'frech', names })!;
+      heads.add(fp.lead.headline);
+    }
+    expect(heads.size).toBeGreaterThanOrEqual(3);
+  });
 });
