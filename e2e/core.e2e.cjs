@@ -343,7 +343,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
   await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
   check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));
-  await p.click('.dock .primary'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.waitForTimeout(200);
+  check('Skyjo: zuerst „Wer hat beendet?“', await p.isVisible('#ender'));
+  await p.click('#ender .rank-row >> text=Ben'); await p.waitForTimeout(200);
+  for (const v of ['+5', '+10', '+1']) { await p.click(`#pad .pad-quick >> text="${v}"`); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150); }
+  check('Skyjo: Ben beendet, nicht niedrigster: doppelt, Krone für Anna', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '15×2201' && (await p.locator('td.cell.won').count()) === 1);
+  await shot('35a-skyjo');
   await p.click('#s-game [aria-label="Zum Start"]'); await p.waitForTimeout(200);
   check('zwei laufende Partien auf der Startseite', (await p.locator('.resume').count()) === 2 && (await raw('#s-home')).includes('Laufende Partien'));
   await shot('35b-two-running');
@@ -420,11 +425,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && (await p.locator('#s-game .top .sub').count()) === 0);
   const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
   await p.click('#round-go'); await p.waitForTimeout(150);
-  check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));
+  check('Skat: Rechner-Blatt mit Spielarten und Eingepasst', await p.isVisible('#skat') && (await p.locator('#skat .skat-games button').count()) === 9 && await p.isVisible('#pass-round'));
   await p.click('#pass-round'); await p.waitForTimeout(200);
   check('Skat: eingepasst, Geber rückt weiter', (await p.locator('td.cell.zero').count()) >= 3 && (await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent()) !== dealer1);
-  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
-  await p.click('.pp-keys .key >> text="2"'); await p.click('.pp-keys .key >> text="4"'); await p.click('.pp-panel .quick button >> text=Verloren'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.click('#skat .deal-p >> nth=0'); await p.waitForTimeout(150);
+  check('Skat: Kreuz mit 1 ist 24', (await raw('#skat-go')) === '24 eintragen');
+  await p.click('#skat-lost'); await shot('36g2-skat-sheet'); await p.click('#skat-go'); await p.waitForTimeout(200);
   check('Skat: verloren zählt doppelt negativ', (await raw('tfoot td .tot >> nth=0')).includes('48'));
   await shot('36h-skat-game');
   await p.click('#s-game .text-btn'); await p.waitForTimeout(400); await p.click('.ser-chips .fchip >> nth=0'); await p.click('.victory .pad-actions .primary'); await p.waitForTimeout(300);
@@ -432,8 +438,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Skat: Rekorde auf der Spielseite', await p.isVisible('.records') && (await raw('.records')).includes('Längste Partie'));
   await p.evaluate(() => document.querySelector('.records').scrollIntoView({ block: 'center' })); await shot('36i-skat-records');
   await p.click('#quick-start'); await p.waitForTimeout(300);
-  await p.click('#round-go'); await p.click('.rank-row >> nth=0'); await p.waitForTimeout(200);
-  await p.click('.pp-keys .key >> text="3"'); await p.click('.pp-keys .key >> text="6"'); await p.click('.pp-keys .go'); await p.waitForTimeout(200);
+  await p.click('#round-go'); await p.click('#skat .deal-p >> nth=0'); await p.click('#skat [aria-label="Spitzen mehr"]'); await p.click('#skat-won');
+  check('Skat: Kreuz mit 2 ist 36', (await raw('#skat-go')) === '36 eintragen');
+  await p.click('#skat-go'); await p.waitForTimeout(200);
   await p.click('#s-game .text-btn'); await p.waitForTimeout(400);
   check('Siegerseite: neuer Rekord', await p.isVisible('.v-records') && (await raw('.v-records')).includes('Neuer Rekord'));
   await shot('36j-new-record');
@@ -466,7 +473,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.waitForSelector('.tbl');
   const chicSeat = i => p.locator('.tb-seat').nth(i);
   check('Chic: erste Phase aus der Mitte', (await raw('.tb-phase text >> nth=0')) === 'Aus der Mitte');
-  await chicSeat(0).click(); await p.click('#tk-4'); await chicSeat(1).click(); await p.click('#tk-2'); await p.waitForTimeout(200);
+  await chicSeat(0).click(); await p.click('#w-schock4'); await chicSeat(1).click(); await p.click('#w-strasse'); await p.waitForTimeout(200);
   const nChic = await p.locator('.tb-seat').count();
   check('Chic: Mitte leer, ohne Deckel raus', (await raw('.tb-phase text >> nth=0')) === 'Zurückspielen' && (await p.locator('.tb-seat.out').count()) === nChic - 2);
   await shot('37h-chic-phase2');
@@ -537,7 +544,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await seat(0).click(); await p.waitForTimeout(150);
   check('Schocken: Deckel aus der Mitte', (await raw('.bsheet h3')).startsWith('Deckel für') && (await raw('.bsheet .eyebrow')).includes('13'));
   await shot('37e-schocken-sheet');
-  await p.click('#tk-3'); await p.waitForTimeout(150);
+  await p.click('#w-general'); await p.waitForTimeout(150);
   check('Schocken: Spieler hat 3, Mitte 10', (await seat(0).getAttribute('aria-label')).endsWith('3 Deckel') && (await raw('.tb-count')) === '10');
   await seat(1).click(); await p.click('#tk-schock'); await p.waitForTimeout(200);
   check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('.tb-phase >> nth=0')) === '2. Hälfte');
@@ -546,7 +553,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Chic: rausschicken und Chic aus dem Rohr
   await p.click('[data-game="chic"]'); await shot('37g-chic'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  await seat(0).click(); await p.click('#tk-3'); await p.waitForTimeout(150);
+  await seat(0).click(); await p.click('#w-general'); await p.waitForTimeout(150);
   await seat(0).click(); await p.waitForTimeout(150);
   check('Chic: Knöpfe im Deckel-Blatt', await p.isVisible('#tk-sendout') && await p.isVisible('#tk-chicloss'));
   await p.click('#tk-sendout'); await p.waitForTimeout(200);

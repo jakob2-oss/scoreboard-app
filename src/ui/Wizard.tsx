@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
-import { bidTurn, fieldOf, inputOrder, liveRounds, seated, type GameState } from '../game/engine';
+import { bidTurn, forbiddenBid, fieldOf, inputOrder, liveRounds, seated, type GameState } from '../game/engine';
 import { wizardScore } from '../rules/wizard';
 import { fmt } from '../lib/color';
 import { Avatar } from './Avatar';
@@ -27,11 +27,13 @@ export function BidBar({ g, roundId: ref }: { g: GameState; roundId: string }) {
   const order = inputOrder(g, ref).map(k => players[k].id);
   const prev = players.find(x => x.id === order[order.indexOf(who ?? '') - 1]);
   if (!p) return null;
+  // Hausregel: der Letzte darf die Summe nicht genau aufgehen lassen
+  const no = forbiddenBid(g, ref, p.id);
   return (
     <div className="wz-bar">
       <div className="wz-who"><Avatar p={p} /><b>{p.name} sagt an</b><small>angesagt {sum} von {cards}</small></div>
       <div className="wz-pick" style={{ gridTemplateColumns: `repeat(${Math.min(cards + 1, 7)}, 1fr)` }}>
-        {Array.from({ length: cards + 1 }, (_, k) => <button key={k} id={`bid-${k}`} onClick={() => act().bidPick(k)}>{k}</button>)}
+        {Array.from({ length: cards + 1 }, (_, k) => <button key={k} id={`bid-${k}`} disabled={k === no} onClick={() => act().bidPick(k)}>{k}</button>)}
       </div>
       <div className="wz-nav">
         <button className="secondary" aria-label="Rückgängig" disabled={!s.undo.length} onClick={() => act().undo()}><IconUndo /></button>

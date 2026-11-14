@@ -35,7 +35,7 @@ export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
 export const isLives = (s: GameState) => s.game.rules.scoring === 'lives';
 export const isTokens = (s: GameState) => s.game.rules.scoring === 'tokens';
 export const isTable = (s: GameState) => isLives(s) || isTokens(s);
-type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean; sentOut?: boolean; chicLoss?: boolean };
+type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean; sentOut?: boolean; chicLoss?: boolean; wurf?: string };
 const tv = (e: Entry) => e.values as TableValues;
 const roundEntries = (s: GameState, roundId: string) => s.entries.filter(e => !e.deletedAt && e.roundId === roundId);
 /** Aktionen am Tisch (Runden mit Einträgen) */
@@ -154,7 +154,7 @@ export function tokenState(s: GameState): TokenState {
  * Schocken: Deckel an den Verlierer der Runde. Solange die Mitte nicht leer ist, kommen sie aus der Mitte,
  * danach vom Gewinner (from). Wer alle Deckel hat, verliert die Hälfte; alles geht zurück in die Mitte.
  */
-export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false): GameState {
+export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false, wurf?: string): GameState {
   const st = tokenState(s);
   if (st.loser || st.gone[to] || (st.mode === 'return' && st.phase === 2)) return s;
   const giver = st.middle > 0 ? null : from;
@@ -165,7 +165,7 @@ export function giveTokens(s: GameState, to: string, n: number, from: string | n
   const after = st.hold[to] + amount, middleAfter = giver ? st.middle : st.middle - amount;
   const halfLost = middleAfter === 0 && after === st.total;
   const entries: Entry[] = [{ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: to,
-    values: { take: amount, ...(schock ? { schock: true } : {}), ...(halfLost ? { halfLost: true } : {}) } as never }];
+    values: { take: amount, ...(schock ? { schock: true } : {}), ...(wurf ? { wurf } : {}), ...(halfLost ? { halfLost: true } : {}) } as never }];
   if (giver) entries.push({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: giver, values: { give: amount } as never });
   return { ...a.state, entries: [...a.state.entries, ...entries] };
 }
@@ -174,7 +174,7 @@ export function giveTokens(s: GameState, to: string, n: number, from: string | n
  * Chic, zweite Phase: der Sieger der Runde spielt Deckel zurück in die Mitte. Wer keine mehr hat, ist raus;
  * wer als Letzter noch Deckel hat, verliert die Hälfte.
  */
-export function returnTokens(s: GameState, from: string, n: number, clock: Clock): GameState {
+export function returnTokens(s: GameState, from: string, n: number, clock: Clock, wurf?: string): GameState {
   const st = tokenState(s);
   if (st.loser || st.mode !== 'return' || st.phase !== 2 || st.out[from]) return s;
   const amount = Math.max(0, Math.min(n, st.hold[from]));
@@ -182,7 +182,7 @@ export function returnTokens(s: GameState, from: string, n: number, clock: Clock
   const a = addRound(s, clock), t = clock.now();
   const e = (playerId: string, values: TableValues): Entry => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId, values: values as never });
   const holders = seated(s).filter(p => (p.id === from ? st.hold[p.id] - amount : st.hold[p.id]) > 0);
-  const entries = [e(from, { give: amount })];
+  const entries = [e(from, { give: amount, ...(wurf ? { wurf } : {}) })];
   if (holders.length === 1) entries.push(e(holders[0].id, { halfLost: true }));
   return { ...a.state, entries: [...a.state.entries, ...entries] };
 }
@@ -384,9 +384,81 @@ export function scoreOf(s: GameState, roundId: string, playerId: string): number
     const a = fieldOf(s, roundId, playerId, sp[0].key), b = fieldOf(s, roundId, playerId, sp[1].key);
     return b !== null ? (a ?? 0) + b : null;
   }
+  const v = rawScore(s, roundId, playerId);
+  // Skyjo: wer die Runde beendet hat und nicht allein die wenigsten Punkte hat, zählt doppelt (nur positiv)
+  if (v !== null && v > 0 && s.game.rules.params?.ender && fieldOf(s, roundId, playerId, 'ender') === 1) {
+    const others = seated(s).filter(p => p.id !== playerId).map(p => rawScore(s, roundId, p.id));
+    if (others.every(x => x !== null) && others.some(x => x! <= v)) return v * 2;
+  }
+  return v;
+}
+/** Eingetragener Wert ohne Regeln obendrauf */
+function rawScore(s: GameState, roundId: string, playerId: string): number | null {
   const e = entryOf(s, roundId, playerId);
   return e && 'score' in e.values && typeof e.values.score === 'number' ? e.values.score : null;
 }
+/**
+ * Doppelkopf und Schafkopf: Rundenwert verteilen. Mit Partner zählt der Wert je Kopf (2 gegen 2),
+ * allein (Solo, Wenz) zahlt jeder Gegner den Wert an den Spieler. Wer aussetzt, bekommt 0. Summe immer 0.
+ */
+export function dealScores(active: string[], declarers: string[], value: number, won: boolean): Record<string, number> {
+  const out: Record<string, number> = {}, sign = won ? 1 : -1, others = active.filter(id => !declarers.includes(id));
+  if (!declarers.length || !others.length) return Object.fromEntries(active.map(id => [id, 0]));
+  // Allein gegen alle: der Spieler bekommt so viel, wie die Gegner zusammen zahlen
+  const per = declarers.length === 1 ? value * others.length : value * others.length / declarers.length;
+  for (const id of declarers) out[id] = sign * per;
+  for (const id of others) out[id] = -sign * value;
+  return out;
+}
+/** Schafkopf: Wert einer Runde aus Tarif, Schneider, Schwarz und Laufenden (Zuschläge je Grundtarif) */
+export function schafkopfValue(tarif: number, base: number, o: { schneider?: boolean; schwarz?: boolean; laufende?: number }): number {
+  return tarif + (o.schneider || o.schwarz ? base : 0) + (o.schwarz ? base : 0) + (o.laufende ?? 0) * base;
+}
+/** Doppelkopf: wie viele Bockrunden vor Runde index noch offen sind (Ansage in einer Runde gilt ab der nächsten) */
+export function bockLeft(s: GameState, index: number): number {
+  let left = 0;
+  liveRounds(s).slice(0, index).forEach(r => {
+    if (left > 0) left--;
+    left += seated(s).reduce((a, p) => a + (fieldOf(s, r.id, p.id, 'bockAdd') ?? 0), 0);
+  });
+  return left;
+}
+
+/** Skat: Spielarten mit Grundwert; Null hat feste Werte ohne Spitzen und Stufen */
+export const SKAT_GAMES: { label: string; base: number; nul?: boolean }[] = [
+  { label: 'Karo', base: 9 }, { label: 'Herz', base: 10 }, { label: 'Pik', base: 11 }, { label: 'Kreuz', base: 12 }, { label: 'Grand', base: 24 },
+  { label: 'Null', base: 23, nul: true }, { label: 'Null Hand', base: 35, nul: true }, { label: 'Null ouvert', base: 46, nul: true }, { label: 'Null ouvert Hand', base: 59, nul: true }
+];
+/** Skat-Spielwert: Grundwert mal (Spitzen + 1 + Stufen); Kontra verdoppelt, Re vervierfacht */
+export function skatValue(game: number, o: { spitzen?: number; hand?: boolean; schneider?: boolean; schneiderAn?: boolean; schwarz?: boolean; schwarzAn?: boolean; ouvert?: boolean; kontra?: 0 | 1 | 2 }): number {
+  const g = SKAT_GAMES[game]; if (!g) return 0;
+  const k = o.kontra === 2 ? 4 : o.kontra === 1 ? 2 : 1;
+  if (g.nul) return g.base * k;
+  const stufen = (o.hand ? 1 : 0) + (o.schneider || o.schwarz ? 1 : 0) + (o.schneiderAn ? 1 : 0) + (o.schwarz ? 1 : 0) + (o.schwarzAn ? 1 : 0) + (o.ouvert ? 1 : 0);
+  return g.base * (Math.max(1, o.spitzen ?? 1) + 1 + stufen) * k;
+}
+/** Skat-Wertung einer Runde: gewonnen +Wert, verloren −2×Wert; Seeger-Fabian: ±50, bei Verlust +40 (zu dritt) bzw. +30 je Gegner */
+export function skatScores(players: string[], player: string, value: number, won: boolean, seeger = false): Record<string, number> {
+  const out: Record<string, number> = Object.fromEntries(players.map(id => [id, 0]));
+  out[player] = won ? value + (seeger ? 50 : 0) : -2 * value - (seeger ? 50 : 0);
+  if (seeger && !won) for (const id of players) if (id !== player) out[id] = players.length === 3 ? 40 : 30;
+  return out;
+}
+
+/** Skyjo: wer hat die Runde beendet? */
+export const enderOf = (s: GameState, roundId: RoundRef): string | null =>
+  roundId === 'new' ? null : seated(s).find(p => fieldOf(s, roundId, p.id, 'ender') === 1)?.id ?? null;
+/** Skyjo: wurde dieser Eintrag verdoppelt? */
+export const isDoubled = (s: GameState, roundId: string, playerId: string) => {
+  const v = rawScore(s, roundId, playerId), sc = scoreOf(s, roundId, playerId);
+  return v !== null && sc !== null && sc !== v;
+};
+/** Rundenbester bei „wenig gewinnt“ (Skyjo): niedrigster Wert der vollständigen Runde */
+export const roundLow = (s: GameState, roundId: string, playerId: string) => {
+  if (!roundFull(s, roundId)) return false;
+  const v = scoreOf(s, roundId, playerId)!;
+  return seated(s).every(p => scoreOf(s, roundId, p.id)! >= v);
+};
 
 export function roundFull(s: GameState, roundId: string): boolean {
   return seated(s).every(p => scoreOf(s, roundId, p.id) !== null);
@@ -519,6 +591,23 @@ export function bidTurn(s: GameState, roundId: string): string | null {
   const players = seated(s);
   const k = inputOrder(s, roundId).find(i => fieldOf(s, roundId, players[i].id, 'bid') === null);
   return k === undefined ? null : players[k].id;
+}
+
+/** Wizard-Hausregel „Ansagen dürfen nicht aufgehen“: die Zahl, die der Letzte nicht ansagen darf (sonst null) */
+export function forbiddenBid(s: GameState, roundId: string, playerId: string): number | null {
+  if (!s.game.rules.params?.noEvenBids) return null;
+  const players = seated(s), open = players.filter(p => fieldOf(s, roundId, p.id, 'bid') === null);
+  if (open.length !== 1 || open[0].id !== playerId) return null;
+  const cards = liveRounds(s).findIndex(r => r.id === roundId) + 1;
+  const v = cards - players.reduce((a, p) => a + (fieldOf(s, roundId, p.id, 'bid') ?? 0), 0);
+  return v >= 0 && v <= cards ? v : null;
+}
+/** Scrabble am Ende: Reststeine werden abgezogen, wer zuerst fertig war, bekommt die Summe der anderen */
+export function restScores(rest: Record<string, number>, finisher: string | null): Record<string, number> {
+  const out: Record<string, number> = {};
+  const sum = Object.entries(rest).reduce((a, [id, v]) => a + (id === finisher ? 0 : v), 0);
+  for (const id of Object.keys(rest)) out[id] = id === finisher ? sum : -rest[id];
+  return out;
 }
 
 /** Zweiteilige Runde: erst alle das erste Feld (Ansagen, Meldungen), dann alle das zweite */

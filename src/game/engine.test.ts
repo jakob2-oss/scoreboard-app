@@ -6,7 +6,7 @@ import {
   anyScore, canAddRound, createGame, currentRoundIndex, defaultRef, endState, finish, liveRounds, nextStep,
   ranking, restore, roundFull, scoreOf, seated, setScore, setWin, totals, type GameState,
   addCategory, removeCategory, setPhase, phasesDone, upperSum, catTurn,
-  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss
+  loseLife, fire, lifeState, giveTokens, schockOut, tokenState, returnTokens, dealerOf, sendOut, chicLoss, setField, isDoubled, roundLow, dealScores, schafkopfValue, skatValue, skatScores, restScores, forbiddenBid
 } from './engine';
 import { gameDef } from './games';
 
@@ -223,6 +223,66 @@ describe('Kniffel, Phase 10 und Nullsumme', () => {
     for (const k of ['kniffel', 'phase10', 'schafkopf', 'doppelkopf', 'binokel']) expect(gameDef(k)?.points?.length).toBeGreaterThan(0);
     expect(gameDef('schafkopf')!.template.params?.zeroSum).toBe(true);
     expect(gameDef('binokel')!.template.end).toEqual({ type: 'none' });
+  });
+});
+
+describe('Doppelkopf und Schafkopf', () => {
+  it('verteilt den Rundenwert als Nullsumme: 2 gegen 2 je Kopf, allein dreifach, Aussetzer 0', () => {
+    expect(dealScores(['a', 'b', 'c', 'd'], ['a', 'c'], 3, true)).toEqual({ a: 3, c: 3, b: -3, d: -3 });
+    expect(dealScores(['a', 'b', 'c', 'd'], ['b'], 2, false)).toEqual({ b: -6, a: 2, c: 2, d: 2 });
+    expect(schafkopfValue(10, 10, {})).toBe(10);
+    expect(schafkopfValue(50, 10, { schneider: true, laufende: 3 })).toBe(90);
+    expect(schafkopfValue(10, 10, { schwarz: true })).toBe(30);
+  });
+});
+
+describe('Skat', () => {
+  it('Spielwert: Grundwert mal (Spitzen + Spiel + Stufen), Null fest, Kontra und Re; Wertung mit Seeger-Fabian', () => {
+    expect(skatValue(3, { spitzen: 2 })).toBe(36);                                    // Kreuz mit 2, Spiel 3
+    expect(skatValue(4, { spitzen: 1, hand: true, schneider: true })).toBe(96);       // Grand mit 1, Spiel 2, Hand 3, Schneider 4
+    expect(skatValue(0, { spitzen: 1, schwarz: true })).toBe(36);                     // Karo mit 1, Spiel 2, Schneider 3, Schwarz 4
+    expect(skatValue(7, { spitzen: 5, hand: true })).toBe(46);                        // Null ouvert: fest
+    expect(skatValue(4, { spitzen: 2, kontra: 1 })).toBe(144);
+    expect(skatScores(['a', 'b', 'c'], 'a', 36, false)).toEqual({ a: -72, b: 0, c: 0 });
+    expect(skatScores(['a', 'b', 'c'], 'a', 36, true, true)).toEqual({ a: 86, b: 0, c: 0 });
+    expect(skatScores(['a', 'b', 'c', 'd'], 'b', 24, false, true)).toEqual({ a: 30, b: -98, c: 30, d: 30 });
+  });
+});
+
+describe('Scrabble und Wizard-Hausregel', () => {
+  it('Reststeine: abgezogen, wer zuerst fertig war, bekommt die Summe', () => {
+    expect(restScores({ a: 0, b: 7, c: 4 }, 'a')).toEqual({ a: 11, b: -7, c: -4 });
+    expect(restScores({ a: 3, b: 7 }, null)).toEqual({ a: -3, b: -7 });
+  });
+  it('Ansagen dürfen nicht aufgehen: der Letzte darf die Kartenzahl nicht treffen', () => {
+    const c = testClock(), t = gameDef('wizard')!.template;
+    let s = createGame({ ...t, params: { ...t.params, noEvenBids: true } }, players('A', 'B', 'C'), c);
+    const r = liveRounds(s)[2].id;   // Runde 3: drei Karten
+    s = setField(s, r, 'p0', 'bid', 1, c); s = setField(s, r, 'p1', 'bid', 1, c);
+    const last = ['p0', 'p1', 'p2'].find(id => !['p0', 'p1'].includes(id))!;
+    expect(forbiddenBid(s, r, last)).toBe(1);
+    expect(forbiddenBid(s, r, 'p0')).toBeNull();
+    s = setField(s, r, 'p0', 'bid', 3, c);
+    expect(forbiddenBid(s, r, last)).toBeNull();   // Summe schon über der Kartenzahl
+  });
+});
+
+describe('Skyjo', () => {
+  it('wer beendet und nicht allein am wenigsten hat, zählt doppelt (nur positiv); Krone für die niedrigste Runde', () => {
+    const c = testClock();
+    let s = createGame(gameDef('skyjo')!.template, players('A', 'B', 'C'), c);
+    const r = liveRounds(s)[0].id;
+    s = setField(s, r, 'p1', 'ender', 1, c);
+    for (const [pid, v] of [['p0', 5], ['p1', 10], ['p2', 1]] as const) s = setScore(s, r, pid, v, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(20);
+    expect(isDoubled(s, r, 'p1')).toBe(true);
+    expect(roundLow(s, r, 'p2')).toBe(true);
+    s = setScore(s, r, 'p1', 0, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(0);
+    s = setScore(s, r, 'p1', -3, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(-3);   // allein am wenigsten: keine Verdopplung
+    s = setScore(s, r, 'p1', 1, c).state;
+    expect(scoreOf(s, r, 'p1')).toBe(2);    // Gleichstand mit C reicht nicht
   });
 });
 

@@ -41,7 +41,7 @@ export const GAMES: GameDef[] = [
   {
     template: {
       key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 8 },
-      params: { quick: [{ label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '×2', op: 'mul', v: 2 }] }
+      params: { block: true, ender: true, lowCrown: true, quick: [{ label: '\u22122', op: 'add', v: -2 }, { label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }] }
     },
     points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
     acc: '#5fa8d3', tint: '#e1f0fa',
@@ -66,7 +66,7 @@ GAMES.push(
   },
   {
     template: { key: 'scrabble', version: 1, name: 'Scrabble', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 4 },
-      params: { quick: [add('\u22121', -1), add('+1', 1), add('+10', 10), add('+50', 50), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }] } },
+      params: { block: true, restTiles: true, quick: [add('+1', 1), add('+10', 10), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }, add('Bingo +50', 50)] } },
     points: [['Je Zug', 'Buchstabenwerte des Worts'], ['Prämienfelder', 'doppelt oder dreifach'], ['Alle sieben Steine', '50 Punkte extra'], ['Ende', 'Reststeine werden abgezogen']],
     acc: '#3fb39b', tint: '#dcf1e7',
     text: 'Nach jedem Zug werden die <b>Buchstabenwerte des Worts</b> notiert, samt Prämienfeldern für doppelten oder dreifachen Wert. Wer alle sieben Steine auf einmal legt, bekommt <b>50 Punkte extra</b>. Am Ende zählen übrige Steine als Abzug.',
@@ -120,13 +120,13 @@ GAMES.push(
   },
   {
     template: { key: 'schafkopf', version: 1, name: 'Schafkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 4 },
-      params: { zeroSum: true, quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
+      params: { zeroSum: true, block: true, deal: 'schafkopf', tarif: [10, 50], quick: [add('\u221220', -20), add('\u221210', -10), add('+10', 10), add('+20', 20), rest] } },
     points: [['Sauspiel', 'Spielerpaar gewinnt den Tarif, die anderen zahlen'], ['Wenz und Solo', 'der Spieler kassiert von allen drei'], ['Schneider', 'und Laufende erhöhen den Tarif'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#7cb85a', tint: '#e6f0dc', text: '', example: [['+20', 'Sauspiel'], ['+10', 'Schneider'], ['+30', 'je Gewinner']]
   },
   {
     template: { key: 'doppelkopf', version: 1, name: 'Doppelkopf', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 4, max: 5 },
-      params: { zeroSum: true, quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
+      params: { zeroSum: true, block: true, deal: 'doko', quick: [add('\u22121', -1), add('+1', 1), add('+3', 3), times('×3', 3), rest] } },
     points: [['Gewinnerpartei', 'bekommt den Spielwert'], ['Verlierer', 'bekommen ihn abgezogen'], ['Ansagen', 'Re, Kontra und Absagen erhöhen den Wert'], ['Solo', 'der Solist zählt dreifach'], ['Jede Runde', 'ergibt zusammen 0']],
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },
@@ -175,7 +175,7 @@ GAMES.push({
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
 GAMES.push({
   template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
-    params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true,
+    params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true, block: true, skatCalc: true,
       quick: [{ label: 'Null 23', op: 'set', v: 23 }, { label: 'Null Hand 35', op: 'set', v: 35 }, { label: 'Null ouvert 46', op: 'set', v: 46 }, times('Verloren', -2)] } },
   points: [['Reizen', 'wer am höchsten reizt, spielt allein'], ['Spielwert', 'Grundwert mal Spitzen und Stufen'], ['Grundwerte', 'Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24'],
     ['Null', '23, Hand 35, ouvert 46, ouvert Hand 59'], ['Verloren', 'doppelter Spielwert wird abgezogen'], ['Eingepasst', 'alle passen, niemand schreibt']],

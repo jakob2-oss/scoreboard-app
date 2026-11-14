@@ -140,6 +140,12 @@ export function TableDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
 }
 
 /** Schocken: wie viele Deckel bekommt der Verlierer, und von wem (wenn die Mitte leer ist) */
+/** Würfe beim Schocken und ihr Wert in Deckeln (Schock aus extra) */
+const THROWS: [string, number, string][] = [
+  ['Schock 6', 6, 'w-schock6'], ['Schock 5', 5, 'w-schock5'], ['Schock 4', 4, 'w-schock4'], ['Schock 3', 3, 'w-schock3'],
+  ['Schock 2', 2, 'w-schock2'], ['General', 3, 'w-general'], ['Straße', 2, 'w-strasse'], ['Zahl', 1, 'w-zahl']
+];
+
 export function TokenSheet({ g, to }: { g: GameState; to: string }) {
   const ts = tokenState(g), players = seated(g), p = players.find(x => x.id === to)!;
   const givers = players.filter(x => x.id !== to && ts.hold[x.id] > 0);
@@ -155,7 +161,7 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
           <h3>{p.name} spielt zurück</h3>
           <div className="eyebrow">Noch {ts.hold[to]} Deckel</div>
           <div className="tk-keys">
-            {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={k > ts.hold[to]} onClick={() => act().tableGive(k)}>{k}</button>)}
+            {THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={k > ts.hold[to]} onClick={() => act().tableGive(k, null, label)}>{label}<b>{k}</b></button>)}
             <button className="wide" id="tk-all" onClick={() => act().tableGive('all')}>Alle</button>
           </div>
           {!!g.game.rules.params?.chic && <div className="tk-chic">
@@ -180,7 +186,7 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
             </div>
           </>}
           <div className="tk-keys">
-            {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={!ready} onClick={() => act().tableGive(k, from)}>{k}</button>)}
+            {THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={!ready} onClick={() => act().tableGive(k, from, label)}>{label}<b>{k}</b></button>)}
             <button className="wide" id="tk-schock" onClick={() => act().tableGive('schock')}>Schock aus</button>
           </div>
           {!!g.game.rules.params?.chic && <div className="tk-chic">

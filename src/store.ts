@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, forbiddenBid, restScores, enderOf, skatScores, SKAT_GAMES, dealScores, bockLeft, dealerOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | 'ender' | 'deal' | 'skat' | 'rest' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -414,6 +414,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
       toast(`Runde ${roundNumber(ng, id)} eingepasst`);
     },
+    /** Skat aus dem Rechner-Blatt: eingepasst für eine bestimmte Runde */
+    passRoundRef(ref: RoundRef) { set({ rankRef: ref }); actions.passRound(); },
     rankReset() {
       const g = state.game, ref = state.rankRef; if (!g || !ref || ref === 'new') return;
       const r = setOrder(g, ref, [], clock);
@@ -459,13 +461,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       else toast(`${p.name} hat sich rausgeschickt`);
     },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
-    tableGive(n: number | 'schock' | 'all', from: string | null = null) {
+    tableGive(n: number | 'schock' | 'all', from: string | null = null, wurf?: string) {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;
       const before = tokenState(g);
       // Chic, zweite Phase: der Angetippte spielt Deckel zurück in die Mitte
       const back = before.mode === 'return' && before.phase === 2;
-      const ng = back ? returnTokens(g, to, n === 'all' || n === 'schock' ? before.hold[to] : n, clock)
-        : n === 'schock' || n === 'all' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock);
+      const ng = back ? returnTokens(g, to, n === 'all' || n === 'schock' ? before.hold[to] : n, clock, wurf)
+        : n === 'schock' || n === 'all' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock, false, wurf);
       if (ng === g) return;
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
       const after = tokenState(ng), players = seated(ng);
@@ -519,6 +521,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const step = nextStep(g);
       if (step.kind === 'result') { set({ sheet: 'result' }); return; }
       if (isRanks(g)) { actions.openRanks(step.ref); return; }
+      if (g.game.rules.params?.skatCalc && modeOf(g.game.rules.key) === 'block') { set({ sheet: 'skat', rankRef: step.ref, pad: false, edit: null, page: -1 }); return; }
       if (g.game.rules.params?.winnerOnly) { set({ sheet: 'winner', rankRef: step.ref, pad: false, edit: null }); return; }
       // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt
       if (isBids(g) && modeOf(g.game.rules.key) === 'block' && step.ref !== 'new') {
@@ -535,6 +538,12 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         }
         set({ page: -1, pad: true, sheet: null, fromOverview: false, edit: makeEdit(g, step.ref, seated(g)[step.playerIndex].id, step.field) }); return;
       }
+      // Doppelkopf und Schafkopf im Block: ein Blatt für die ganze Runde
+      if (g.game.rules.params?.deal && modeOf(g.game.rules.key) === 'block') { set({ sheet: 'deal', rankRef: step.ref, page: -1, pad: false, edit: null }); return; }
+      // Skyjo: zuerst, wer die Runde beendet hat (für die Verdopplung)
+      if (g.game.rules.params?.ender && !enderOf(g, step.ref) && (step.ref === 'new' || seated(g).every(p => scoreOf(g, step.ref as string, p.id) === null))) {
+        set({ sheet: 'ender', rankRef: step.ref, page: -1, pad: false, edit: null }); return;
+      }
       // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
       if (blockEntry(g) && !isBids(g) && !isCats(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
         set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
@@ -546,6 +555,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     bidPick(n: number, playerId?: string) {
       const g = state.game, ref = state.bidBar; if (!g || !ref) return;
       const who = playerId ?? bidTurn(g, ref); if (!who) return;
+      if (forbiddenBid(g, ref, who) === n) return;
       haptic('tap');
       const ng = setField(g, ref, who, 'bid', n, clock);
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
@@ -561,6 +571,63 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Scrabble: Schlussrunde mit den Reststeinen; wer zuerst fertig war, bekommt die Summe der anderen */
+    setRest(rest: Record<string, number>, finisher: string | null) {
+      const g = state.game; if (!g) return;
+      const pts = restScores(rest, finisher);
+      let ng = g, id: RoundRef = 'new';
+      for (const p of seated(g)) { const r = setScore(ng, id, p.id, pts[p.id] ?? 0, clock); ng = r.state; id = r.roundId ?? id; }
+      if (id !== 'new') ng = setField(ng, id, seated(g)[0].id, 'restRound', 1, clock);
+      haptic('success');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null }); persist(ng);
+      toast('Reststeine verrechnet');
+    },
+    /** Skat: Alleinspieler, Spielart und Wert aus dem Rechner, gewonnen oder verloren */
+    setSkat(o: { player: string; game: number; value: number; won: boolean }) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref || o.value <= 0) return;
+      const pts = skatScores(seated(g).map(p => p.id), o.player, o.value, o.won, !!g.game.rules.params?.seeger);
+      let ng = g, id: RoundRef = ref;
+      for (const p of seated(g)) { const r = setScore(ng, id, p.id, pts[p.id], clock); ng = r.state; id = r.roundId ?? id; }
+      ng = setField(ng, id as string, o.player, 'decl', o.game + 1, clock);
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
+      toast(`${SKAT_GAMES[o.game].label} ${o.won ? 'gewonnen' : 'verloren'}`);
+    },
+    /** Doppelkopf und Schafkopf: Runde aus Spielern, Art, Wert und Ausgang; die App verteilt die Nullsumme */
+    setDeal(o: { declarers: string[]; kind: number; value: number; won: boolean; bockAdd?: boolean }) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref || !o.declarers.length || o.value <= 0) return;
+      const players = seated(g), index = ref === 'new' ? liveRounds(g).length : liveRounds(g).findIndex(r => r.id === ref);
+      // Fünf am Tisch: der Geber setzt aus
+      const sitOut = players.length === 5 ? dealerOf(g)?.id : undefined;
+      const active = players.filter(p => p.id !== sitOut).map(p => p.id);
+      const bock = !!g.game.rules.params?.bock && bockLeft(g, index) > 0;
+      const pts = dealScores(active, o.declarers, bock ? o.value * 2 : o.value, o.won);
+      let ng = g, id: RoundRef = ref;
+      for (const p of players) { const r = setScore(ng, id, p.id, pts[p.id] ?? 0, clock); ng = r.state; id = r.roundId ?? id; }
+      for (const p of players) {
+        ng = setField(ng, id as string, p.id, 'decl', o.declarers.includes(p.id) ? o.kind + 1 : null, clock);
+        ng = setField(ng, id as string, p.id, 'bock', bock ? 1 : null, clock);
+        ng = setField(ng, id as string, p.id, 'bockAdd', o.bockAdd && p.id === active[0] ? active.length : null, clock);
+      }
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null }); persist(ng);
+      toast(`Runde ${roundNumber(ng, id)} eingetragen`);
+    },
+    /** Skyjo: wer hat die Runde beendet; danach Punkte eintragen (im Block oder pro Spieler) */
+    setEnder(playerId: string | null) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      let ng = g, id: RoundRef = ref;
+      if (playerId) {
+        if (id === 'new') { const a = addRound(ng, clock); ng = a.state; id = a.roundId; }
+        for (const p of seated(ng)) if (fieldOf(ng, id, p.id, 'ender') !== null) ng = setField(ng, id, p.id, 'ender', null, clock);
+        ng = setField(ng, id, playerId, 'ender', 1, clock);
+        set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      }
+      haptic('tap');
+      set({ sheet: null, rankRef: null });
+      if (modeOf(ng.game.rules.key) === 'block') set({ page: -1, pad: true, fromOverview: false, edit: makeEdit(ng, id, seated(ng)[0].id) });
+      else actions.goPage(0, id);
+    },
     /** Endwertung nach Platz (Monopoly …): Antippen vergibt den nächsten freien Platz, nochmal nimmt ihn zurück */
     placeTap(playerId: string) {
       const g = state.game; if (!g) return;
@@ -744,7 +811,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner') { set({ sheet, pad: false, fireMode: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') { set({ sheet, pad: false, fireMode: false }); },
     closeSheet() { set({ sheet: null, tokenTo: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;

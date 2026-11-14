@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, roundLow, isDoubled, SKAT_GAMES, skatValue, schafkopfValue, bockLeft, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -128,6 +128,10 @@ export function GameScreen() {
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
       {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
       {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'ender' && s.rankRef && <EnderSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'deal' && s.rankRef && <DealSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'skat' && s.rankRef && <SkatSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'rest' && <RestSheet g={g} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -178,7 +182,8 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
         <tbody>
           {rounds.map((r, ri) => (<Fragment key={r.id}>
             <tr key={r.id} className={isBids(g) && ri === currentRoundIndex(g) ? 'cur' : ''}>
-              {r.cat ? <th className="cat">{r.cat.label}{r.cat.fixed ? <small>{r.cat.fixed} Punkte</small> : null}</th> : <th className="rn">{ri + 1}</th>}
+              {r.cat ? <th className="cat">{r.cat.label}{r.cat.fixed ? <small>{r.cat.fixed} Punkte</small> : null}</th>
+                : <th className="rn">{ri + 1}{players.some(p => fieldOf(g, r.id, p.id, 'bock') === 1) && <small className="bk">Bock</small>}{players.some(p => fieldOf(g, r.id, p.id, 'restRound') === 1) && <small className="rest">Rest</small>}</th>}
               {players.map(p => {
                 const v = scoreOf(g, r.id, p.id);
                 const active = !!edit && edit.ref === r.id && edit.playerId === p.id;
@@ -222,13 +227,16 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const struck = !!r.cat && v === 0;
                 const myTurn = catTurnId === p.id && v === null;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
-                // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
-                const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
+                const dk = (g.game.rules.params?.deal ?? (g.game.rules.params?.skatCalc ? 'skat' : undefined)) as string | undefined, dl = dk ? fieldOf(g, r.id, p.id, 'decl') : null;
+                // Rundensieg: Rommé 0, Skyjo niedrigste Runde, Skat der Alleinspieler bei Gewinn, Uno der Sieger
+                const won = v !== null && (zeroWins(g) ? v === 0 : g.game.rules.params?.lowCrown ? roundLow(g, r.id, p.id)
+                  : g.game.rules.params?.skatCalc ? !!dl && v > 0 : !!g.game.rules.params?.winnerOnly && v > 0);
+                const dbl = v !== null && !!g.game.rules.params?.ender && isDoubled(g, r.id, p.id);
                 // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '') + (dbl ? ' ph dbl' : '') + (dl ? ' ph decl' : '')}
                   onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
-                  {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                  {ph > 0 && <small className="phb">{ph}</small>}{dbl && <small className="phb dbl">×2</small>}{!!dl && <small className="phb dl">{DEAL_KINDS[dk!]?.[dl - 1]}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -393,6 +401,186 @@ function BinokelMark() {
       <g transform="rotate(-12 11 16)"><rect x="3" y="4" width="15" height="21" rx="3" fill="#fffaf2" /><path d="M10.5 10c2.6 2 4 3.4 4 5a2.2 2.2 0 0 1-3.6 1.6l.8 2.4h-2.4l.8-2.4A2.2 2.2 0 0 1 6.5 15c0-1.6 1.4-3 4-5z" fill="#2e2b4f" /></g>
       <g transform="rotate(10 23 15)"><rect x="15" y="3" width="15" height="21" rx="3" fill="#fffaf2" /><circle cx="22.5" cy="13.5" r="4.2" fill="#f0b13e" /><circle cx="22.5" cy="13.5" r="1.6" fill="#e0923a" /></g>
     </svg>
+  );
+}
+
+/** Doppelkopf und Schafkopf: Spielarten, wie sie im Block an der Zelle stehen */
+const DEAL_KINDS: Record<string, string[]> = { doko: ['Re', 'Solo'], schafkopf: ['Sau', 'Wenz', 'Solo'], skat: ['Karo', 'Herz', 'Pik', 'Kreuz', 'Grand', 'Null', 'Null', 'Null', 'Null'] };
+
+/** Doppelkopf und Schafkopf: ein Blatt für die ganze Runde. Die App verteilt den Wert als Nullsumme. */
+function DealSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const rules = g.game.rules, doko = rules.params?.deal === 'doko', a = act();
+  const players = seated(g), sitOut = players.length === 5 ? dealerOf(g)?.id : undefined, active = players.filter(p => p.id !== sitOut);
+  const index = roundRef === 'new' ? liveRounds(g).length : liveRounds(g).findIndex(r => r.id === roundRef);
+  const bock = !!rules.params?.bock && bockLeft(g, index) > 0;
+  const [tarifSau, tarifSolo] = (rules.params?.tarif as number[] | undefined) ?? [10, 50];
+  const [decl, setDecl] = useState<string[]>([]);
+  const [kind, setKind] = useState(0);
+  const [value, setValue] = useState(1);
+  const [won, setWon] = useState<boolean | null>(null);
+  const [schneider, setSchneider] = useState(false), [schwarz, setSchwarz] = useState(false), [lauf, setLauf] = useState(0);
+  const [bockAdd, setBockAdd] = useState(false);
+  const maxDecl = doko ? 2 : kind === 0 ? 2 : 1;
+  const tap = (id: string) => setDecl(d => d.includes(id) ? d.filter(x => x !== id) : [...d, id].slice(-maxDecl));
+  const solo = decl.length === 1;
+  const v = doko ? value : schafkopfValue(kind === 0 ? tarifSau : tarifSolo, tarifSau, { schneider, schwarz, laufende: lauf });
+  const ready = decl.length >= 1 && (doko || kind !== 0 || decl.length === 2) && won !== null;
+  const shown = bock ? v * 2 : v;
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="deal" role="dialog" aria-label={`Runde ${roundNumber(g, roundRef)}`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}{bock && <span className="deal-bock">Bock</span>}</h3>
+          {!doko && <div className="seg" role="group" aria-label="Spielart">
+            {DEAL_KINDS.schafkopf.map((k, i) => <button key={k} id={`kind-${i}`} aria-pressed={kind === i} onClick={() => { setKind(i); setDecl(d => d.slice(0, i === 0 ? 2 : 1)); }}>{['Sauspiel', 'Wenz', 'Solo'][i]}</button>)}
+          </div>}
+          <div className="eyebrow">{doko ? 'Re' : kind === 0 ? 'Spieler und Partner' : 'Wer spielt?'}</div>
+          <div className="deal-who">
+            {active.map(p => <button key={p.id} className="deal-p" aria-pressed={decl.includes(p.id)} onClick={() => tap(p.id)}><Avatar p={p} /><span>{p.name}</span></button>)}
+          </div>
+          {doko ? <div className="gebot-row deal-row">
+            <span className="lbl">Spielwert</span>
+            <button className="step" aria-label="1 weniger" onClick={() => setValue(x => Math.max(1, x - 1))}>−</button>
+            <b id="deal-value">{value}</b>
+            <button className="step" aria-label="1 mehr" onClick={() => setValue(x => x + 1)}>+</button>
+          </div> : <>
+            <div className="deal-extra">
+              <button id="x-schneider" aria-pressed={schneider || schwarz} onClick={() => setSchneider(x => !x)}>Schneider</button>
+              <button id="x-schwarz" aria-pressed={schwarz} onClick={() => setSchwarz(x => !x)}>Schwarz</button>
+            </div>
+            <div className="gebot-row deal-row">
+              <span className="lbl">Laufende</span>
+              <button className="step" aria-label="1 weniger" onClick={() => setLauf(x => Math.max(0, x - 1))}>−</button>
+              <b id="deal-lauf">{lauf}</b>
+              <button className="step" aria-label="1 mehr" onClick={() => setLauf(x => Math.min(8, x + 1))}>+</button>
+            </div>
+          </>}
+          {doko && !!rules.params?.bock && <label className="switch-row"><input type="checkbox" id="bock-add" checked={bockAdd} onChange={e => setBockAdd(e.target.checked)} /><span className="t"><b>Bock danach</b></span></label>}
+          <div className="seg" role="group" aria-label="Ausgang">
+            <button id="deal-won" aria-pressed={won === true} onClick={() => setWon(true)}>{doko ? (solo ? 'Solo gewinnt' : 'Re gewinnt') : 'Gewonnen'}</button>
+            <button id="deal-lost" aria-pressed={won === false} onClick={() => setWon(false)}>{doko ? (solo ? 'Solo verliert' : 'Kontra gewinnt') : 'Verloren'}</button>
+          </div>
+          <div className="pad-actions">
+            <button className="primary" id="deal-go" disabled={!ready} onClick={() => a.setDeal({ declarers: decl, kind: doko ? (solo ? 1 : 0) : kind, value: v, won: !!won, bockAdd })}>
+              {ready ? `${shown} ${solo && !doko ? 'je Gegner' : ''} eintragen`.replace('  ', ' ') : 'Eintragen'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Skat: Alleinspieler, Spielwert-Rechner, gewonnen oder verloren; eingepasst zählt für niemanden */
+function SkatSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const a = act(), players = seated(g), dealer = players.length === 4 ? dealerOf(g)?.id : undefined;
+  const [who, setWho] = useState<string | null>(null);
+  const [game, setGame] = useState(3);
+  const [spitzen, setSpitzen] = useState(1);
+  const [x, setX] = useState<Record<string, boolean>>({});
+  const [kontra, setKontra] = useState<0 | 1 | 2>(0);
+  const [won, setWon] = useState<boolean | null>(null);
+  const nul = !!SKAT_GAMES[game].nul, maxSp = game === 4 ? 4 : 11;
+  const value = skatValue(game, { spitzen, ...x, kontra });
+  const flip = (k: string) => setX(o => ({ ...o, [k]: !o[k] }));
+  const ready = !!who && won !== null;
+  const tog = (k: string, label: string) => <button id={`sx-${k}`} aria-pressed={!!x[k]} onClick={() => flip(k)}>{label}</button>;
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="skat" role="dialog" aria-label={`Runde ${roundNumber(g, roundRef)}`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="deal-who">
+            {players.filter(p => p.id !== dealer).map(p => <button key={p.id} className="deal-p" aria-pressed={who === p.id} onClick={() => setWho(p.id)}><Avatar p={p} /><span>{p.name}</span></button>)}
+          </div>
+          <div className="skat-games">
+            {SKAT_GAMES.map((sg, i) => <button key={sg.label} id={`sg-${i}`} aria-pressed={game === i} onClick={() => { setGame(i); setSpitzen(s0 => Math.min(s0, i === 4 ? 4 : 11)); }}>{sg.label}<b>{sg.base}</b></button>)}
+          </div>
+          {!nul && <>
+            <div className="gebot-row deal-row">
+              <span className="lbl">Spitzen</span>
+              <button className="step" aria-label="Spitzen weniger" onClick={() => setSpitzen(v => Math.max(1, v - 1))}>−</button>
+              <b id="skat-spitzen">{spitzen}</b>
+              <button className="step" aria-label="Spitzen mehr" onClick={() => setSpitzen(v => Math.min(maxSp, v + 1))}>+</button>
+            </div>
+            <div className="deal-extra skat-extra">
+              {tog('hand', 'Hand')}{tog('schneider', 'Schneider')}{tog('schneiderAn', 'Schneider angesagt')}
+              {tog('schwarz', 'Schwarz')}{tog('schwarzAn', 'Schwarz angesagt')}{tog('ouvert', 'Ouvert')}
+            </div>
+          </>}
+          <div className="seg" role="group" aria-label="Kontra">
+            {(['Ohne', 'Kontra', 'Re'] as const).map((k, i) => <button key={k} id={`kontra-${i}`} aria-pressed={kontra === i} onClick={() => setKontra(i as 0 | 1 | 2)}>{k}</button>)}
+          </div>
+          <div className="seg" role="group" aria-label="Ausgang">
+            <button id="skat-won" aria-pressed={won === true} onClick={() => setWon(true)}>Gewonnen</button>
+            <button id="skat-lost" aria-pressed={won === false} onClick={() => setWon(false)}>Verloren</button>
+          </div>
+          <div className="pad-actions">
+            <button className="secondary" id="pass-round" onClick={() => { a.closeSheet(); act().passRoundRef(roundRef); }}>Eingepasst</button>
+            <button className="primary" id="skat-go" disabled={!ready} onClick={() => a.setSkat({ player: who!, game, value, won: !!won })}>
+              {won === false ? `−${value * 2}` : value} eintragen
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Scrabble am Ende: Wert der Reststeine je Spieler; wer zuerst fertig war, bekommt die Summe der anderen */
+function RestSheet({ g }: { g: GameState }) {
+  const a = act(), players = seated(g);
+  const [rest, setRest] = useState<Record<string, number>>(Object.fromEntries(players.map(p => [p.id, 0])));
+  const [first, setFirst] = useState<string | null>(null);
+  const step = (id: string, d: number) => setRest(r => ({ ...r, [id]: Math.max(0, r[id] + d) }));
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="rest" role="dialog" aria-label="Reststeine">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Reststeine</h3>
+          <div className="rest-list">
+            {players.map(p => (
+              <div key={p.id} className="rest-row">
+                <button className="rest-first" aria-pressed={first === p.id} aria-label={`${p.name} war zuerst fertig`} onClick={() => setFirst(f => (f === p.id ? null : p.id))}><Avatar p={p} /><span>{p.name}</span></button>
+                {first === p.id ? <b className="rest-done">fertig</b> : <>
+                  <button className="step" aria-label={`${p.name} weniger`} onClick={() => step(p.id, -1)}>−</button>
+                  <b className="num" id={`rest-${p.id}`}>{rest[p.id]}</b>
+                  <button className="step" aria-label={`${p.name} mehr`} onClick={() => step(p.id, 1)}>+</button>
+                </>}
+              </div>
+            ))}
+          </div>
+          <div className="pad-actions"><button className="primary" id="rest-go" onClick={() => a.setRest(first ? { ...rest, [first]: 0 } : rest, first)}>Verrechnen</button></div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Skyjo: wer hat die Runde beendet? */
+function EnderSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="ender" role="dialog" aria-label="Wer hat beendet?">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">Wer hat beendet?</div>
+          <div className="rank-list">
+            {seated(g).map(p => <button key={p.id} className="rank-row" onClick={() => a.setEnder(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>)}
+          </div>
+          <div className="pad-actions"><button className="secondary" id="ender-skip" onClick={() => a.setEnder(null)}>Überspringen</button></div>
+        </div>
+      </div>
+    </>
   );
 }
 
