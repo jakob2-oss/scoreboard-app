@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; alle Pakete aus BACKLOG L umgesetzt; Spiel-Vorschläge M1, Strichliste M2, Otter mit Regler und Liga umgesetzt; offen: Titelseite, Stammtisch, Nachtschicht)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 14.11.2026 (alle Pakete aus BACKLOG L und M umgesetzt; Titelseite nach dem Abend mit Rivalitäten fertig; als Nächstes App-Store-Vorbereitung, sobald der Apple-Account da ist)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

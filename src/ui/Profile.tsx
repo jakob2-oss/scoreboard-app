@@ -1,6 +1,7 @@
 import { act, useApp } from '../store';
 import { useState } from 'react';
 import { TallyBalance } from './Tally';
+import { rivalries, RIVAL_MIN } from '../game/rivals';
 import { bidHits, byGame, duel, performance, filterGames, headToHead, eventIds, playerTitles, resultOf, summary, type HistGame, type TimeFilter } from '../game/stats';
 import { gameDef } from '../game/games';
 import type { Player } from '../model/types';
@@ -27,6 +28,7 @@ export function Profile() {
   const chip = (label: string, pressed: boolean, on: () => void, icon?: string) => (
     <button className="fchip" aria-pressed={pressed} onClick={on}>{icon && <span className="gi xs" style={css({ '--tc': iconFor(icon, label).tint })} dangerouslySetInnerHTML={{ __html: iconFor(icon, label).icon }} />}{label}</button>
   );
+  const rivals = rivalries(history, RIVAL_MIN, profile.id).slice(0, 3);
   const vs = profile.vs.length ? headToHead(list, [profile.id, ...profile.vs]) : null;
   const maxAhead = vs ? Math.max(1, ...Object.values(vs.ahead)) : 1;
   const hits = profile.key === 'wizard' ? bidHits(list, profile.id) : null;
@@ -82,6 +84,22 @@ export function Profile() {
                   ? <div className="tile"><small>Ansagen getroffen</small><b>{hits.rate}%</b><span>{hits.hits} von {hits.rounds}</span></div>
                   : <div className="tile"><small>Durchschnitt</small><b>{fmt(Math.round(best.reduce((x, y) => x + y, 0) / best.length))}</b><span>Punkte</span></div>}
                 <div className="tile"><small>Bestwert</small><b>{fmt(Math.max(...best))}</b><span>Punkte</span></div>
+              </div>
+            )}
+            {rivals.length > 0 && (
+              <div className="group"><div className="eyebrow">Rivalen</div>
+                <div className="list" id="rivals">
+                  {rivals.map(r => {
+                    const o = playerOf(players, r.b);
+                    return (
+                      <button key={r.b} className="row rival-row" onClick={() => a.setProfile({ vs: [r.b] })}>
+                        <Avatar p={o} />
+                        <span className="t"><b>{o.name}</b><small>{r.shared} Duelle{r.streak && r.streak.n >= 3 ? `, ${r.streak.who === profile.id ? me.name : o.name} siegt ${r.streak.n}-mal in Folge` : ''}</small></span>
+                        <span className="rival-score">{r.winsA} zu {r.winsB}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
             {others.length > 0 && (

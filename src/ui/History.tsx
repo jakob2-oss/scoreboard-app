@@ -8,6 +8,7 @@ import { TabBar } from './TabBar';
 import { useState } from 'react';
 import { dateLong, dateShort, iconFor, monthOf, playerOf } from './lookup';
 import { SeriesPicker } from './SeriesPicker';
+import { FrontStrip } from './FrontPage';
 
 /** Verlauf: alle abgeschlossenen Partien, nach Monat gruppiert */
 export function History() {
@@ -25,6 +26,7 @@ export function History() {
         <div className="gutter page-body">
           <h1 className="page-title">Verlauf</h1>
           {!history.length && <div className="card empty"><p>Noch keine Partien</p></div>}
+          <FrontStrip />
           {groups.map(gr => (
             <div className="group" key={gr.month}>
               <div className="eyebrow">{gr.month}</div>

@@ -238,7 +238,7 @@ Erstellungsmodus, fehlende Bausteine:
 ### M3 Design und Geschichte (fünf Konzepte)
 - [x] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Rote Laterne.
 - [x] Otter: kurze Sprüche bei besonderen Momenten, Regler Brav, Frech, Atzig (cool, artsy). Nebenfiguren später.
-- [ ] Titelseite: nach jedem Abend eine teilbare Klatschblatt-Titelseite aus den echten Zahlen (eigene Optik, kein echtes Logo).
-- [ ] Stammtisch: Kreidetafel, Bierdeckel, neue Siegerbänder in der Mitternacht-Variante.
-- [ ] Nachtschicht: ab 23 Uhr dunkler und größer, am nächsten Tag Kater-Report; insgesamt weniger Pastell.
-- Empfehlung: zuerst Liga und Otter mit Regler, dann Titelseite, dann Stammtisch und Nachtschicht als dunkles Thema.
+- [x] Titelseite: nach jedem Abend eine teilbare Titelseite aus den echten Zahlen, drei Seiten (Zeitung, Sport, Poster), Rivalitäten als Schlagzeilen.
+- [verworfen] Stammtisch: Kreidetafel, Bierdeckel (Jakob: zu langweilig).
+- [verworfen] Nachtschicht und Kater-Report (Jakob: zu langweilig).
+- Ideen danach: Saisonrückblick zum Durchwischen (wie ein Jahresrückblick), Abzeichen für Gewohnheiten.
