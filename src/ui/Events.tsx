@@ -31,9 +31,11 @@ export function Events() {
   const live = events.find(e => e.active);
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
+  const [kind, setKind] = useState<'serie' | 'liga' | 'turnier'>('serie');
   const start = (e: React.FormEvent) => {
     e.preventDefault();
-    if (act().startEvent(name)) { setName(''); setAdding(false); }
+    const ev = act().startEvent(name, kind);
+    if (ev) { setName(''); setAdding(false); if (kind === 'turnier') act().openSeries(ev.id); }
   };
   const others = recentEvents(events, history).filter(e => !e.active);
   return (
@@ -43,9 +45,14 @@ export function Events() {
           <h1 className="page-title">Serien</h1>
           {live && <LiveSeries ev={live} />}
           {!live || adding
-            ? <form className="ser-start" onSubmit={start}>
-              <input id="series-name" value={name} maxLength={32} autoComplete="off" placeholder="Name der Serie" onChange={e => setName(e.target.value)} />
-              <button className="primary" id="series-start" type="submit" disabled={!name.trim()}>Starten</button>
+            ? <form className="ser-start-wrap" onSubmit={start}>
+              <div className="seg" role="group" aria-label="Art">
+                {(['serie', 'liga', 'turnier'] as const).map(k => <button type="button" key={k} id={`kind-${k}`} aria-pressed={kind === k} onClick={() => setKind(k)}>{k === 'serie' ? 'Serie' : k === 'liga' ? 'Liga' : 'Turnier'}</button>)}
+              </div>
+              <div className="ser-start">
+                <input id="series-name" value={name} maxLength={32} autoComplete="off" placeholder={kind === 'turnier' ? 'Name des Turniers' : kind === 'liga' ? 'Name der Liga' : 'Name der Serie'} onChange={e => setName(e.target.value)} />
+                <button className="primary" id="series-start" type="submit" disabled={!name.trim()}>Starten</button>
+              </div>
             </form>
             : <button className="secondary ser-new" id="series-create" onClick={() => setAdding(true)}>Neue Serie</button>}
           {others.length > 0 && <div className="group">

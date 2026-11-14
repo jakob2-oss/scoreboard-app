@@ -835,3 +835,28 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .ser-table .prow.lantern small { color: var(--danger); font-weight: 600; }
 .lantern-ic { width: 14px; height: 20px; flex: none; }
 .ser-lantern { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 16px 14px; color: var(--muted); font-size: 14px; }
+
+/* Serien-Art beim Anlegen, Turnier: Einrichtung, Baum mit Runden nebeneinander, Tisch-Blatt */
+.ser-start-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.ser-start-wrap .ser-start { margin-bottom: 0; }
+.tn-setup { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+.tn-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.tn-pre { background: var(--surface); border-radius: 14px; padding: 10px 12px; box-shadow: var(--soft); font-weight: 600; font-size: 14px; }
+.tn-pre small { display: block; color: var(--muted); font-weight: 500; }
+.tn-tree { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; margin: 0 -16px 10px; padding-left: 16px; padding-right: 16px; scroll-snap-type: x proximity; }
+.tn-round { flex: 0 0 210px; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; scroll-snap-align: start; }
+.tn-round .eyebrow { margin: 0 0 2px 4px; }
+.tn-match { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 16px; background: var(--surface); box-shadow: var(--soft); text-align: left; width: 100%; }
+.tn-match.bye { opacity: .7; box-shadow: none; background: var(--fill); }
+.tn-p { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 10px; font-weight: 600; font-size: 14px; }
+.tn-p .av { width: 26px; height: 26px; font-size: 12px; }
+.tn-p .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-p.won { background: color-mix(in srgb, var(--good) 20%, var(--surface)); }
+.tn-p.out { opacity: .45; }
+.tn-go, .tn-bye { align-self: flex-end; font-size: 12px; font-weight: 700; color: var(--primary); padding: 2px 6px 0; }
+.tn-bye { color: var(--muted); }
+.tn-games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 38vh; overflow-y: auto; }
+.tn-game { display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 14px; background: var(--surface); text-align: left; font-weight: 600; font-size: 14px; }
+.tn-game .gicon, .tn-game svg { width: 34px; height: 34px; flex: none; }
+.tn-match.tn-empty { min-height: 74px; justify-content: space-around; background: transparent; box-shadow: none; border-radius: 16px; padding: 10px; gap: 8px; }
+.tn-match.tn-empty span { height: 22px; border-radius: 11px; background: var(--fill); }

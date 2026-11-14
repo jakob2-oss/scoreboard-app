@@ -120,6 +120,8 @@ export interface Game extends Base {
   /** Teampartie: Teams spielen wie Spieler (Sitzplätze verweisen auf Team-IDs); members sind echte Spieler */
   teams?: Team[];
   eventId?: string | null;
+  /** Turnier: Tisch, für den diese Partie zählt */
+  matchId?: string | null;
   place?: string | null;
   groupId?: string | null;
 }
@@ -164,6 +166,10 @@ export interface GameEvent extends Base {
   points?: number[];
   /** Banner-Motiv (Index in BANNERS); fehlt: ergibt sich aus der ID */
   banner?: number | null;
+  /** Art: Serie (einfache Tabelle), Liga (Spieltage, Bewegung, Rote Laterne) oder Turnier (K.-o.-System) */
+  kind?: 'serie' | 'liga' | 'turnier';
+  /** Turnier: Baum mit Runden und Tischen; fehlt, solange es noch nicht ausgelost ist */
+  bracket?: import('../game/bracket').Bracket | null;
 }
 
 /** Ein Strich auf einer Strichliste: für Seite 0 (a) oder 1 (b), optional mit Notiz beim Anlegen und beim Streichen */

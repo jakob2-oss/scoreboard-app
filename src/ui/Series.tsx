@@ -2,6 +2,7 @@ import { act, useApp } from '../store';
 import { DEFAULT_POINTS, dayStar, matchdays, seriesAwards, seriesGames, seriesPlaces, seriesTable, tableMoves, type SeriesRow, type SeriesSort } from '../game/stats';
 import { BANNERS, bannerOf, seriesChampScene } from './banners';
 import { GameDetail } from './History';
+import { TournamentSetup, TournamentView } from './Tournament';
 import { useState } from 'react';
 import { AWARD_ART } from './awardArt';
 import { Avatar } from './Avatar';
@@ -49,16 +50,17 @@ export function Series() {
   const champ = rows.filter((_, i) => places[i] === 1).map(r => r.playerId);
   const banner = bannerOf(ev.id, ev.banner);
   // Liga: Spieltage, Bewegung seit dem letzten Spieltag, Spieler des Spieltags, Rote Laterne für den Letzten (ab drei)
-  const days = matchdays(games), moves = tableMoves(games, pts, series.sort), star = days.length ? dayStar(games, pts) : null;
+  const kind = ev.kind ?? 'serie', liga = kind === 'liga';
+  const days = matchdays(games), moves = liga ? tableMoves(games, pts, series.sort) : {}, star = liga && days.length ? dayStar(games, pts) : null;
   const lastPl = Math.max(...places, 0), lanternIds = rows.filter((_, i) => places[i] === lastPl).map(r => r.playerId);
-  const lantern = rows.length >= 3 && lanternIds.length === 1 ? lanternIds[0] : null;
+  const lantern = liga && rows.length >= 3 && lanternIds.length === 1 ? lanternIds[0] : null;
   // Teilnehmer: alle, die in einer Partie der Serie mitgespielt haben (Reihenfolge wie die Tabelle)
   const people = rows.map(r => ({ ...playerOf(players, r.playerId), id: r.playerId }));
   return (
     <section className="screen" id="s-series">
       <div className="top gutter">
         <button className="icon-btn" onClick={a.closeSeries} aria-label="Zurück"><IconBack /></button>
-        <div className="grow"><h2>Serie</h2></div>
+        <div className="grow"><h2>{ev.kind === 'turnier' ? 'Turnier' : ev.kind === 'liga' ? 'Liga' : 'Serie'}</h2></div>
       </div>
       <div className="scroll">
         <div className="gutter pf-body">
@@ -71,13 +73,13 @@ export function Series() {
               {people.map(p => <button key={p.id} className="ser-person" onClick={() => a.openProfile(p.id)}><Avatar p={p} /><span>{p.name}</span></button>)}
             </div>}
           </div>
-          {done && champ.length > 0 && <div className="ser-champ-card">
+          {done && kind !== 'turnier' && champ.length > 0 && <div className="ser-champ-card">
             <div className="ser-trophy" dangerouslySetInnerHTML={{ __html: seriesChampScene() }} />
-            <div className="ser-champ">{names(champ)} {champ.length > 1 ? 'holen den Titel' : 'holt den Titel'}</div>
+            <div className="ser-champ">{names(champ)} {liga ? (champ.length > 1 ? 'holen den Titel' : 'holt den Titel') : (champ.length > 1 ? 'gewinnen die Serie' : 'gewinnt die Serie')}</div>
             {lantern && <div className="ser-lantern"><Lantern />Rote Laterne für {playerOf(players, lantern).name}</div>}
           </div>}
           {ev.active
-            ? <button className="secondary ser-end" id="series-end" onClick={() => a.endEvent(ev.id)}>Serie beenden</button>
+            ? <button className="secondary ser-end" id="series-end" onClick={() => a.endEvent(ev.id)}>{ev.kind === 'turnier' ? 'Turnier beenden' : ev.kind === 'liga' ? 'Liga beenden' : 'Serie beenden'}</button>
             : <button className="secondary ser-end" id="series-resume" onClick={() => a.resumeEvent(ev.id)}>{ev.endedAt ? 'Fortsetzen' : 'Starten'}</button>}
           {awards.length > 0 && <div className="group"><div className="eyebrow">Auszeichnungen</div>
             <div className="ser-awards">
@@ -91,14 +93,15 @@ export function Series() {
               ))}
             </div>
           </div>}
-          {rows.length > 0 && <>
+          {kind === 'turnier' && (ev.bracket ? <TournamentView ev={ev} /> : <TournamentSetup ev={ev} />)}
+          {kind !== 'turnier' && rows.length > 0 && <>
             {star && <div className="ser-star" id="series-star">
               <span className="ser-star-ic" aria-hidden="true" />
               <Avatar p={playerOf(players, star.playerId)} />
               <span className="t"><small>Spieler des Spieltags</small><b>{playerOf(players, star.playerId).name}</b>
                 <span>{star.points} Punkte, {star.wins} {star.wins === 1 ? 'Sieg' : 'Siege'} am {dateShort(star.day + 'T12:00:00')}</span></span>
             </div>}
-            <div className="eyebrow ser-table-h">Tabelle nach Spieltag {days.length}</div>
+            <div className="eyebrow ser-table-h">{liga ? `Tabelle nach Spieltag ${days.length}` : 'Tabelle'}</div>
             <div className="seg" role="group" aria-label="Wertung">
               <button id="sort-perf" aria-pressed={series.sort === 'perf'} onClick={() => a.setSeriesSort('perf')}>Leistung</button>
               <button id="sort-points" aria-pressed={series.sort === 'points'} onClick={() => a.setSeriesSort('points')}>Punkte</button>
@@ -131,7 +134,7 @@ export function Series() {
               </div>
             </div>
             {[...days].reverse().map((d, k) => (
-              <div key={d.day} className="group"><div className="eyebrow">Spieltag {days.length - k}, {dateShort(d.day + 'T12:00:00')}</div>
+              <div key={d.day} className="group"><div className="eyebrow">{liga ? `Spieltag ${days.length - k}, ` : ''}{dateShort(d.day + 'T12:00:00')}</div>
                 <div className="list">
                   {[...d.games].reverse().map(h => {
                     const ic = iconFor(h.key, h.name);
@@ -147,7 +150,7 @@ export function Series() {
               </div>
             ))}
           </>}
-          <div className="group"><div className="eyebrow">Platzpunkte</div>
+          {kind !== 'turnier' && <div className="group"><div className="eyebrow">Platzpunkte</div>
             <div className="card ser-points">
               {Array.from({ length: size }, (_, i) => (
                 <div key={i} className="pt-row">
@@ -159,7 +162,7 @@ export function Series() {
               ))}
               {!isDefault && <button className="text-btn pt-reset" onClick={() => a.updateEvent(ev.id, { points: [...DEFAULT_POINTS] })}>Vorschlag 3, 2, 1</button>}
             </div>
-          </div>
+          </div>}
           <div className="group"><div className="eyebrow">Banner</div>
             <div className="ser-banners">
               {BANNERS.map((b, i) => (

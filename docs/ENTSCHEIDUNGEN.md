@@ -315,3 +315,18 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   rote Linie darüber).
 - Karte „Spieler des Spieltags“: meiste Platzpunkte am letzten Spieltag, bei Gleichstand mehr Siege.
 - Ende der Serie: „Clara holt den Titel“ und „Rote Laterne für Dora“ unter dem Siegerbild.
+
+## 14.11.2026: Art der Serie: Serie, Liga, Turnier
+- Beim Anlegen „Serie“, „Liga“ oder „Turnier“ (`GameEvent.kind`). Serie: einfache Tabelle wie bisher.
+  Liga: Spieltage, Bewegung, Rote Laterne, Spieler des Spieltags, „holt den Titel“.
+- Turnier im K.-o.-System (`src/game/bracket.ts`, Baum im Event gespeichert):
+  - Format: Duelle (1 gegen 1, „Eine Partie“, „Best of 3“ oder „Best of 5“) oder Tische mit 3 bis 8 Spielern,
+    von denen 1 bis Tischgröße−1 weiterkommen (eine Partie je Tisch, am Finaltisch gewinnt einer).
+  - Paarung: „Auslosen“ (mit „Neu mischen“) oder „Von Hand“ (Reihenfolge des Antippens). Vorschau der ersten
+    Runde vor dem Start. Ungerade Zahl: Freilos.
+  - Tisch antippen: Spiel frei wählen (alle festen und eigenen Spiele, die zur Spielerzahl passen), die Partie
+    startet mit den Spielern des Tisches und zählt nach dem Beenden automatisch für den Tisch (`Game.matchId`).
+    Oder „Sieger von Hand“, wenn ohne App gespielt wurde.
+  - Nächste Runde entsteht, sobald alle Tische entschieden sind; künftige Runden stehen als leere Plätze im Baum.
+    Rundennamen: Finale, Halbfinale, Viertelfinale, Achtelfinale bzw. Finaltisch. Am Ende Siegerbild
+    „… gewinnt das Turnier“.
