@@ -165,3 +165,14 @@ export interface GameEvent extends Base {
   /** Banner-Motiv (Index in BANNERS); fehlt: ergibt sich aus der ID */
   banner?: number | null;
 }
+
+/** Ein Strich auf einer Strichliste: für Seite 0 (a) oder 1 (b), optional mit Notiz */
+export interface TallyMark { id: string; at: ISODate; side: 0 | 1; note?: string | null; deletedAt?: ISODate | null }
+/** Strichliste zwischen zwei Personen (Wetten, Bierkonto …). Ausgleichen setzt den Stand zurück, die Striche bleiben. */
+export interface Tally extends Base {
+  a: string; b: string;
+  name?: string | null;
+  marks: TallyMark[];
+  /** Zeitpunkte, an denen ausgeglichen wurde; gezählt wird nach dem letzten */
+  settled?: ISODate[];
+}

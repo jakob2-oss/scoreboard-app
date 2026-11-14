@@ -7,6 +7,7 @@ import { GameInfo } from './ui/GameInfo';
 import { History } from './ui/History';
 import { People } from './ui/People';
 import { Profile } from './ui/Profile';
+import { TallyScreen } from './ui/Tally';
 import { Series } from './ui/Series';
 import { GameScreen } from './ui/Game';
 import { Toast } from './ui/Toast';
@@ -37,6 +38,7 @@ export default function App() {
       {s.screen === 'people' && <People />}
       {s.screen === 'profile' && <Profile />}
       {s.screen === 'series' && <Series />}
+      {s.screen === 'tally' && <TallyScreen />}
       {s.screen === 'setup' && <Setup />}
       {s.screen === 'gamepage' && <GameInfo />}
       {s.screen === 'players' && <PlayerSelect />}

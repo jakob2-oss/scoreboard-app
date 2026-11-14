@@ -1,5 +1,6 @@
 import { heroSvg } from '../components/heroSvg';
 import { LiveSeries } from './Events';
+import { TallyCard } from './Tally';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { act, useApp } from '../store';
@@ -82,6 +83,7 @@ export function Home() {
                 </div>
               </div>
             )}
+            {!q.trim() && <TallyCard />}
             {q.trim() ? (
               <div className="group">
                 <div className="list" id="search-results">

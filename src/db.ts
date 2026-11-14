@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Entry, Game, GameEvent, Player, Result, Round, Template } from './model/types';
+import type { Entry, Game, GameEvent, Player, Result, Round, Tally, Template } from './model/types';
 import type { HistGame } from './game/stats';
 import type { GameState } from './game/engine';
 
@@ -12,6 +12,7 @@ export class PzDb extends Dexie {
   templates!: Table<Template, string>;
   results!: Table<Result, string>;
   events!: Table<GameEvent, string>;
+  tallies!: Table<Tally, string>;
   constructor(name = 'punktezettel') {
     super(name);
     this.version(1).stores({
@@ -26,12 +27,14 @@ export class PzDb extends Dexie {
     this.version(3).stores({ results: 'id, gameId, playerId' });
     // v4: Serien und Spieleabende
     this.version(4).stores({ events: 'id, updatedAt' });
+    // v5: Strichlisten zwischen zwei Personen
+    this.version(5).stores({ tallies: 'id, updatedAt' });
   }
 }
 
 /** Sicherung aller Daten als Datei */
 export interface Backup { app: 'punktezettel'; version: 1; exportedAt: string; tables: Record<string, Record<string, unknown>[]> }
-const TABLES = ['players', 'games', 'rounds', 'entries', 'templates', 'results', 'events'] as const;
+const TABLES = ['players', 'games', 'rounds', 'entries', 'templates', 'results', 'events', 'tallies'] as const;
 
 export interface Repo {
   exportAll(): Promise<Backup>;
@@ -58,6 +61,9 @@ export interface Repo {
   setGameEvent(gameId: string, eventId: string | null, at: string): Promise<void>;
   /** Abgeschlossene Partie löschen (als gelöscht markiert, samt Ergebnissen) */
   deleteGame(gameId: string, at: string): Promise<void>;
+  /** Strichlisten (ohne gelöschte) */
+  loadTallies?(): Promise<Tally[]>;
+  saveTally?(t: Tally): Promise<void>;
 }
 
 export function createRepo(db: PzDb): Repo {
@@ -109,6 +115,8 @@ export function createRepo(db: PzDb): Repo {
       })).filter(h => h.results.length).sort((a, b) => b.finishedAt.localeCompare(a.finishedAt));
     },
     async loadEvents() { return (await db.events.toArray()).filter(e => !e.deletedAt); },
+    async loadTallies() { return (await db.tallies.toArray()).filter(t => !t.deletedAt).sort((x, y) => y.updatedAt.localeCompare(x.updatedAt)); },
+    async saveTally(t) { await db.tallies.put(t); },
     async saveEvent(e) { await db.events.put(e); },
     async deleteGame(gameId, at) {
       await db.transaction('rw', db.games, db.results, async () => {

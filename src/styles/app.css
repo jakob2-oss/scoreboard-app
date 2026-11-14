@@ -771,3 +771,24 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .dock .chic-btn { flex: 1; font-size: 15px; }
 #s-game:has(.tbl) .dock #chic-out { background: #2f6b52; color: #e9f6ee; }
 #s-game:has(.tbl) .dock #chic-loss { background: #8a3a33; color: #fbe9e5; }
+
+/* Strichliste: zwei große Seiten zum Antippen, Striche wie auf dem Bierdeckel */
+.tally-marks { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; fill: currentColor; max-width: 100%; }
+.tally-marks svg { width: 34px; height: 30px; display: block; }
+.tally-marks.sm svg { width: 18px; height: 16px; }
+.tally-row .tally-duo { display: flex; flex: none; }
+.tally-row .tally-duo .av:last-child { margin-left: -10px; box-shadow: 0 0 0 2px var(--surface); }
+.tally-new { align-self: flex-start; margin-top: 4px; }
+#tally-sheet input { height: 48px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; }
+.tally-body { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
+.tally-lead { text-align: center; font-family: var(--f-display); font-weight: 600; font-size: 20px; margin-top: 4px; }
+.tally-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tally-side { display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 230px; padding: 16px 8px; border-radius: 24px;
+  background: color-mix(in srgb, var(--c) 22%, var(--surface)); color: var(--fg); box-shadow: var(--soft); transition: transform .1s; overflow: hidden; }
+.tally-side:active { transform: scale(.97); }
+.tally-side b { font-family: var(--f-display); font-size: 18px; font-weight: 600; }
+.tally-side .tally-n { font-family: var(--f-num); font-size: 44px; font-weight: 700; line-height: 1; }
+.tally-note { display: flex; flex-direction: column; gap: 6px; }
+.tally-note span { font-size: 13px; color: var(--muted); padding-left: 4px; }
+.tally-note input { height: 48px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; box-shadow: var(--soft); }
+.tally-hist .t b { font-weight: 500; }

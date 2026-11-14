@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import type { Category, GameEvent, Player, Result, Template } from './model/types';
+import type { Category, GameEvent, Player, Result, Tally, Template } from './model/types';
 import { haptic } from './lib/device';
 import { entryMode, setEntryMode, type EntryMode } from './lib/modes';
+import { addMark, createTally, noteLast, settle, undoMark } from './game/tally';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
@@ -13,7 +14,7 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
-export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series';
+export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series' | 'tally';
 
 /** Filter und Vergleich auf der Profilseite */
 export interface ProfileView { id: string; time: TimeFilter; key: string | null; vs: string[] }
@@ -54,6 +55,9 @@ export interface AppState {
   detail: string | null;
   /** Serien und Spieleabende */
   events: GameEvent[];
+  /** Strichlisten zwischen zwei Personen; tally: die geöffnete */
+  tallies: Tally[];
+  tally: string | null;
   /** Verlauf: Partien oder Serien */
   histTab: 'games' | 'series';
   /** Geöffnete Serie und ihre Sortierung */
@@ -81,7 +85,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false, chicMode: null, favs: [], bidBar: null,
+  tokenTo: null, fireMode: false, chicMode: null, tallies: [], tally: null, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
@@ -200,7 +204,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         players.forEach((p, i) => { if (p !== loaded[i]) repo.savePlayer(p).catch(() => undefined); });
         const soft = (x: GameState) => ({ ...x, players: x.players.map(p => ({ ...p, color: pastel(p.color) })) });
         const [g = null, ...parked] = running.map(soft);
-        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, favs: prefs.getFavs?.() ?? [] });
+        const tallies = (await repo.loadTallies?.()) ?? [];
+        set({ ready: true, players, game: g, parked, templates, history: named(history, templates), events, goneKeys, formerPlayers, tallies, favs: prefs.getFavs?.() ?? [] });
       } catch {
         set({ ready: true });
         toast('Gerätespeicher nicht verfügbar – Daten gehen beim Schließen verloren');
@@ -581,6 +586,33 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    // ---------- Strichlisten
+    /** Neue Strichliste zwischen zwei Personen, gleich geöffnet */
+    newTally(a: string, b: string, name: string | null) {
+      if (!a || !b || a === b) return;
+      const t = createTally(a, b, name, clock);
+      set({ tallies: [t, ...state.tallies], tally: t.id, screen: 'tally' });
+      repo.saveTally?.(t).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+    },
+    openTally(id: string | null) { set({ tally: id, screen: id ? 'tally' : 'home' }); },
+    /** Strichliste ändern und speichern (Strich, Notiz, Rückgängig, Ausgleichen, Löschen) */
+    tallyDo(kind: 'mark0' | 'mark1' | 'undo' | 'settle' | 'delete') {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = kind === 'mark0' ? addMark(t, 0, clock) : kind === 'mark1' ? addMark(t, 1, clock) : kind === 'undo' ? undoMark(t, clock)
+        : kind === 'settle' ? settle(t, clock) : { ...t, deletedAt: clock.now(), updatedAt: clock.now() };
+      if (nt === t) return;
+      haptic(kind === 'settle' ? 'success' : 'tap');
+      repo.saveTally?.(nt).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      if (kind === 'delete') { set({ tallies: state.tallies.filter(x => x.id !== t.id), tally: null, screen: 'home' }); toast('Strichliste gelöscht'); return; }
+      set({ tallies: [nt, ...state.tallies.filter(x => x.id !== t.id)] });
+      if (kind === 'settle') toast('Ausgeglichen');
+    },
+    tallyNote(note: string) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = noteLast(t, note, clock); if (nt === t) return;
+      repo.saveTally?.(nt).catch(() => undefined);
+      set({ tallies: state.tallies.map(x => (x.id === t.id ? nt : x)) });
+    },
     /** Scrabble: Schlussrunde mit den Reststeinen; wer zuerst fertig war, bekommt die Summe der anderen */
     setRest(rest: Record<string, number>, finisher: string | null) {
       const g = state.game; if (!g) return;
