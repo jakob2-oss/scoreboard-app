@@ -162,14 +162,14 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Wird eher auf Runden gespielt: wenigste Punkte nach den Runden gewinnt (über freies Limit Runden).
 
 ### L4 Uno
-- [ ] Klären: Bekommt wirklich nur, wer fertig ist, Punkte? (Ja, Standardregel: der Sieger bekommt die Kartenwerte der anderen.)
-- [ ] Eintragen direkt im Block, ohne Einzelseiten.
-- [ ] Geber rotiert.
+- [x] Klären: Bekommt wirklich nur, wer fertig ist, Punkte? (Ja, Standardregel: der Sieger bekommt die Kartenwerte der anderen.)
+- [x] Eintragen direkt im Block, ohne Einzelseiten.
+- [x] Geber rotiert.
 
 ### L5 Phase 10
-- [ ] Phase im Block abhaken.
-- [ ] Geschaffte Phasen grün, gescheiterte rot; Hintergrund je Phase leicht im Regenbogenverlauf.
-- [ ] Geber rotiert.
+- [x] Phase im Block abhaken.
+- [x] Geschaffte Phasen grün, gescheiterte rot; Hintergrund je Phase leicht im Regenbogenverlauf.
+- [x] Geber rotiert.
 
 ### L6 Binokel
 - [ ] Geber rotiert.
@@ -179,9 +179,9 @@ Erstellungsmodus, fehlende Bausteine:
 - [ ] Kleines Logo oben links: die beiden Karten, die zusammen „Binokel“ ergeben (wenig Platz).
 
 ### L7 Arschloch
-- [ ] Im Block Präsident (Krone) und Arschloch (passendes Icon) kennzeichnen.
-- [ ] Das Arschloch der letzten Runde gibt in der aktuellen Runde.
-- [ ] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
+- [x] Im Block Präsident (Krone) und Arschloch (passendes Icon) kennzeichnen.
+- [x] Das Arschloch der letzten Runde gibt in der aktuellen Runde.
+- [x] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
 
 ### L8 Schwimmen
 - [ ] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.

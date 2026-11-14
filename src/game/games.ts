@@ -57,7 +57,7 @@ const place = (n: number) => Array.from({ length: n }, (_, k) => ({ label: `${k 
 GAMES.push(
   {
     template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 8 },
-      params: { winnerOnly: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+      params: { winnerOnly: true, block: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
     points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
     text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
@@ -114,7 +114,7 @@ GAMES.push(
   },
   {
     template: { key: 'phase10', version: 1, name: 'Phase 10', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
-      params: { phases: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
+      params: { phases: true, block: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
     points: [['Je Runde', 'eigene Phase auslegen, dann Haken setzen'], ['Handkarten', '1 bis 9 sind 5, 10 bis 12 sind 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
     acc: '#f0b13e', tint: '#fdeccc', text: ''
   },
@@ -144,7 +144,7 @@ GAMES.push(
 GAMES.push({
   template: { key: 'arschloch', version: 1, name: 'Arschloch', scoring: 'rank', win: 'high', end: { type: 'none' }, players: { min: 3, max: 8 } },
   points: [['Jede Runde', 'wer zuerst alle Karten los ist, wird Präsident'], ['Rollen', 'Präsident, Vize, Bürger, Vize-Arschloch, Arschloch'],
-    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt dem Präsidenten seine besten Karten']],
+    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt und schenkt dem Präsidenten seine besten Karten']],
   acc: '#bba8e6', tint: '#ece6fb', text: '', example: [['+2', 'Präsident'], ['0', 'Bürger'], ['−2', 'Arschloch']],
   endOptions: [{ label: 'Offen', end: { type: 'none' } }, { label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: '20 Runden', end: { type: 'rounds', value: 20 } }]
 });
@@ -183,6 +183,6 @@ const FAMILY: Record<string, Family> = {
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
 // Geber anzeigen (Wizard zeigt ihn immer)
-for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
+for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat', 'uno', 'phase10', 'arschloch']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

@@ -231,6 +231,10 @@ export function setOrder(s: GameState, ref: RoundRef, order: string[], clock: Cl
   return { state: { ...state, game: touch(state, clock), entries }, roundId };
 }
 export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
+/** Phase 10: Farbton je Phase, ein leiser Regenbogen von Phase 1 (rot) bis Phase 10 (violett) */
+export const phaseHue = (phase: number) => Math.round(((Math.max(1, Math.min(10, phase)) - 1) * 290) / 9);
+/** Phase 10: an welcher Phase ein Spieler in einer Runde gearbeitet hat (1 bis 10) */
+export const phaseAt = (s: GameState, roundIndex: number, playerId: string) => Math.min(phasesDone(s, playerId, roundIndex) + 1, 10);
 
 /** Kniffel: erlaubte Werte einer Kategorie (ohne Streichen) oder null für freie Eingabe (Chance, eigene ohne Vorgabe) */
 export function catChoices(cat: Category | undefined): number[] | null {
@@ -492,7 +496,8 @@ export function playedRounds(s: GameState): number {
 
 /** Spiele mit Geber: Wizard und alle mit params.dealer */
 export const hasDealer = (s: GameState) => isBids(s) || !!s.game.rules.params?.dealer;
-/** Wer gibt in der laufenden Runde? Der Geber rotiert reihum, in Runde 1 gibt der erste Platz. */
+/** Wer gibt in der laufenden Runde? Der Geber rotiert reihum, in Runde 1 gibt der erste Platz.
+ *  Arschloch: Es gibt das Arschloch der Runde davor. */
 export function dealerOf(s: GameState): Player | null {
   if (!hasDealer(s)) return null;
   const players = seated(s);
@@ -500,6 +505,10 @@ export function dealerOf(s: GameState): Player | null {
   // Laufende Runde: die erste unvollständige, sonst die nächste neue
   const rounds = liveRounds(s); let i = rounds.findIndex(r => !roundFull(s, r.id));
   if (i === -1) i = rounds.length;
+  if (isRanks(s) && i > 0) {
+    const last = players.find(p => rankIn(s, rounds[i - 1].id, p.id) === players.length);
+    if (last) return last;
+  }
   return players[i % players.length];
 }
 

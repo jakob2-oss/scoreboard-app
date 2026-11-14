@@ -195,3 +195,14 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Ergebnis die gewonnenen Runden (`extra.wins`).
 - Spielende: Vorschlag 10 Runden; Regeltext „nach den Runden oder an der Grenze“.
 - Fehler behoben: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie.
+
+## 14.11.2026: Uno, Phase 10, Arschloch (Paket 3)
+- Geber jetzt auch bei Uno, Phase 10 und Arschloch. Bei Arschloch gibt das Arschloch der Runde davor
+  (Runde 1 wie üblich der erste Platz).
+- Uno im Block: „Runde n eintragen“, Sieger wählen, nur der Sieger trägt im kompakten Ziffernblock ein
+  (Knopf „Eintragen“), danach zurück. Krone über dem Rundensieger. Einzelseiten über „Manuell“.
+- Phase 10 im Block: im Ziffernblock ein Knopf „Phase n“ zum Abhaken; „Raus“ hakt die Phase gleich mit ab.
+  Jede Zelle im Farbton der Phase, an der gearbeitet wurde (leiser Regenbogen von Rot bis Violett, im Dunkeln
+  gedeckt), oben rechts die Phasennummer: grün geschafft, rot nicht geschafft.
+- Arschloch im Block: Krone für den Präsidenten, kleines Häufchen für das Arschloch; Vize und Bürger als Kürzel.
+  Spielerseite zeigt die Plätze je Runde als Kurve (oben der Präsident).

@@ -397,8 +397,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null });
       persist(ng);
-      actions.goPage(seated(ng).findIndex(p => p.id === playerId), id);
-      set({ fromOverview: true });
+      // Uno im Block: nur der Sieger trägt ein, direkt unter dem Block
+      if (blockEntry(ng) && modeOf(ng.game.rules.key) === 'block') set({ page: -1, pad: true, edit: makeEdit(ng, id, playerId), fromOverview: true });
+      else { actions.goPage(seated(ng).findIndex(p => p.id === playerId), id); set({ fromOverview: true }); }
     },
     /** Skat: alle haben gepasst, die Runde zählt für niemanden */
     passRound() {
@@ -569,7 +570,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       // Nur der Sieger zählt: nach seiner Eingabe zurück zum Überblick
       if (state.fromOverview && !isCats(g)) {
         const full = e.ref !== 'new' && roundFull(g, e.ref);
-        set({ page: -1, edit: null, fromOverview: false });
+        set({ page: -1, edit: null, fromOverview: false, pad: false });
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         return;
       }
@@ -609,7 +610,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (isCats(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return; }
       set({ pad: true, edit: makeEdit(g, ref, playerId) });
     },
-    closePad() { set({ pad: false, edit: null }); },
+    closePad() { set({ pad: false, edit: null, fromOverview: false }); },
 
     // ---------- Ziffernblock
     digit(d: number) {

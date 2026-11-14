@@ -330,7 +330,8 @@ describe('Tisch-Modus', () => {
     expect(dealerOf(s)?.name).toBe('A');
     s = play(s, liveRounds(s)[0]?.id ?? 'new', [5, 0, 10], c).s;
     expect(dealerOf(s)?.name).toBe('B');
-    expect(dealerOf(createGame(gameDef('uno')!.template, players('A', 'B'), c))).toBeNull();
+    expect(dealerOf(createGame(gameDef('uno')!.template, players('A', 'B'), c))?.name).toBe('A');
+    expect(dealerOf(createGame(gameDef('skyjo')!.template, players('A', 'B'), c))).toBeNull();
     expect(dealerOf(createGame(gameDef('wizard')!.template, players('A', 'B', 'C'), c))?.name).toBe('A');
   });
 });

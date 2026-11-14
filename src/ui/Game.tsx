@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, phaseHue, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -182,7 +182,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                   const rk2 = rankIn(g, r.id, p.id), role = rk2 === null ? null : roleOf(rk2, players.length);
                   return (
                     <td key={p.id} className={'cell rank' + (role ? ' r-' + role.short.toLowerCase() : ' empty')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
-                      {role && <>{role.short}<small>{role.points > 0 ? '+' + role.points : fmt(role.points)}</small></>}
+                      {role && <>{role.short === 'P' ? <RoleIcon kind="p" /> : role.short === 'A' ? <RoleIcon kind="a" /> : role.short}<small>{role.points > 0 ? '+' + role.points : fmt(role.points)}</small></>}
                     </td>
                   );
                 }
@@ -210,9 +210,14 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 }
                 const struck = !!r.cat && v === 0;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
-                const won = v === 0 && zeroWins(g);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}`}>
-                  {won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
+                const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
+                // Phase 10: Farbe der Phase, an der gearbeitet wurde; Nummer grün, wenn geschafft
+                const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
+                  style={ph ? css({ '--ph-h': String(phaseHue(ph)) }) : undefined}
+                  onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
+                  {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -307,7 +312,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
       {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
       {zeroSumHint(g, ref)}
       {isCats(g) && <CatList g={g} p={p} current={ref} onPick={pick} />}
-      {plainRounds(g) && <Curve g={g} p={p} />}
+      {(plainRounds(g) || isRanks(g)) && <Curve g={g} p={p} />}
       {!isResultOnly(g) && !isCats(g) && <div className="eyebrow">Verlauf</div>}
       <div className={'pp-hist' + (isResultOnly(g) || isCats(g) ? ' hide' : '')}>
         {rounds.map((r, k) => {
@@ -326,30 +331,49 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
   );
 }
 
+/** Arschloch: Krone für den Präsidenten, kleines Häufchen für das Arschloch */
+function RoleIcon({ kind }: { kind: 'p' | 'a' }) {
+  return kind === 'p'
+    ? <svg className="role-ic" viewBox="0 0 16 13" role="img" aria-label="Präsident"><path d="M1.6 11.6 1 3.2l4.1 3.4L8 1.4l2.9 5.2L15 3.2l-.6 8.4z" fill="#f0b13e" /></svg>
+    : <svg className="role-ic" viewBox="0 0 18 16" role="img" aria-label="Arschloch">
+      <path d="M2 14.6c-1.4 0-1.6-2.6.4-3h13.2c2 .4 1.8 3-.4 3z" fill="#8a5a3c" /><path d="M4 11.6c-1.2-.2-1.2-2.6.6-2.8h8.8c1.8.2 1.8 2.6.6 2.8z" fill="#a06c48" />
+      <path d="M6 8.8c-1-.3-.8-2.4.8-2.4h4.4c1.6 0 1.8 2.1.8 2.4z" fill="#8a5a3c" /><path d="M7.4 6.4C7.4 4.6 9 4 10 2.4c.6 1.6.8 3 .2 4z" fill="#a06c48" />
+      <circle cx="7.2" cy="10.2" r=".9" fill="#fffaf2" /><circle cx="10.8" cy="10.2" r=".9" fill="#fffaf2" /></svg>;
+}
+
 // ---------------------------------------------------------------- Punkteverlauf als Kurve
 
 /** Einfaches Rundenspiel: eine Zahl je Spieler und Runde */
 const plainRounds = (g: GameState) => !isBids(g) && !isCats(g) && !isRanks(g) && !isResultOnly(g) && !isSplit(g) && !hasPhases(g);
 
-/** Summe nach jeder Runde: der Spieler kräftig in seiner Farbe, die anderen leise dahinter */
+/** Verlauf je Runde: der Spieler kräftig in seiner Farbe, die anderen leise dahinter.
+ *  Punkte: Summe nach jeder Runde. Arschloch: Platz je Runde, oben der Präsident. */
 function Curve({ g, p }: { g: GameState; p: Player }) {
-  const all = runningTotals(g), mine = all[p.id];
-  if (!mine || mine.length < 3) return null;
+  const ranks = isRanks(g), n0 = seated(g).length;
+  const all: Record<string, number[]> = ranks
+    ? Object.fromEntries(seated(g).map(x => [x.id, liveRounds(g).map(r => rankIn(g, r.id, x.id)).filter((v): v is number => v !== null)]))
+    : runningTotals(g);
+  const mine = all[p.id];
+  if (!mine || mine.length < (ranks ? 2 : 3)) return null;
   const W = 320, H = 76, padL = 6, padR = 34, padT = 8, padB = 6;
-  const vals = Object.values(all).flat(), lo = Math.min(0, ...vals), hi = Math.max(1, ...vals);
+  const vals = Object.values(all).flat();
+  const lo = ranks ? 1 : Math.min(0, ...vals), hi = ranks ? n0 : Math.max(1, ...vals);
   const n = mine.length - 1;
   const x = (k: number) => padL + (k / n) * (W - padL - padR);
-  const y = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  // Plätze: 1 oben; Punkte: viel oben
+  const y = (v: number) => padT + (ranks ? (v - lo) / (hi - lo) : 1 - (v - lo) / (hi - lo)) * (H - padT - padB);
   const path = (a: number[]) => a.map((v, k) => `${k ? 'L' : 'M'}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join('');
   const last = mine[n];
+  const lab = (v: number) => (ranks ? roleOf(v, n0).short : fmt(v));
   return (
     <div className="pp-curve">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Punkteverlauf von ${p.name}: ${mine.slice(1).map(fmt).join(', ')}`}>
-        <line className="base" x1={padL} x2={W - padR} y1={y(lo)} y2={y(lo)} />
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${ranks ? 'Plätze' : 'Punkteverlauf'} von ${p.name}: ${(ranks ? mine : mine.slice(1)).map(lab).join(', ')}`}>
+        <line className="base" x1={padL} x2={W - padR} y1={y(ranks ? hi : lo)} y2={y(ranks ? hi : lo)} />
         {Object.entries(all).filter(([id]) => id !== p.id).map(([id, a]) => <path key={id} className="other" d={path(a)} />)}
         <path className="mine" d={path(mine)} style={{ stroke: p.color }} />
+        {ranks && mine.map((v, k) => <circle key={k} cx={x(k)} cy={y(v)} r="3" style={{ fill: p.color }} />)}
         <circle cx={x(n)} cy={y(last)} r="4.5" style={{ fill: p.color }} className="end" />
-        <text x={x(n) + 9} y={y(last) + 4.5} className="val">{fmt(last)}</text>
+        <text x={x(n) + 9} y={y(last) + 4.5} className="val">{lab(last)}</text>
       </svg>
     </div>
   );

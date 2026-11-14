@@ -318,10 +318,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Phase 10: Haken auf der Spielerseite
   await p.click('[data-game="phase10"]'); await shot('34-phase10'); await p.click('#quick-start');
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  await p.click('#phase-toggle'); await p.waitForTimeout(200);
-  check('Phase 10: Haken gesetzt', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
-  await shot('35-phase10-page');
+  check('Phase 10: Geber als Schild', await p.isVisible('.dealer-tag'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  check('Phase 10: im Block mit Phasen-Knopf', (await raw('#pad-phase')).endsWith('Phase 1') && (await p.getAttribute('#pad-phase', 'aria-pressed')) === 'false');
+  await p.click('#pad .pad-quick >> text="Raus"'); await p.waitForTimeout(150);
+  check('Phase 10: Raus hakt die Phase ab', (await p.getAttribute('#pad-phase', 'aria-pressed')) === 'true' && (await raw('#pad-phase')).includes('geschafft'));
+  await shot('35-phase10-pad');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150);
+  await p.click('#pad .pad-quick >> text="+25"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150);
+  await p.click('#pad .pad-quick >> text="+10"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Phase 10: geschafft grün, gescheitert rot, nächste Phase im Kopf', (await p.locator('td.cell.ph-ok').count()) === 1 && (await p.locator('td.cell.ph-no').count()) === 2 && (await raw('thead th:nth-child(2) .ph-n')) === 'Phase 2');
+  await shot('35b-phase10-block');
+  await p.click('#round-go'); await p.click('#pad-phase'); await p.waitForTimeout(150);
+  await p.click('#pad [aria-label="Ziffernblock schließen"]');
+  await p.click('#mode-switch'); await p.waitForTimeout(400);
+  check('Phase 10: Haken auch auf der Spielerseite', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
   // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
   await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
   check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));

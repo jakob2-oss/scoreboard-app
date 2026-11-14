@@ -9,7 +9,7 @@ import { entryMode } from '../lib/modes';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
+import { hasPhases, phasesDone, phaseIn, liveRounds, phaseHue, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -35,6 +35,11 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
   const v = numOf(edit.buf), cur = edit.ref === 'new' ? null : scoreOf(g, edit.ref, p.id);
   const after = totals(g)[p.id] - (cur ?? 0) + (v ?? 0);
   const a = act();
+  const solo = useApp().fromOverview;
+  // Phase 10: Haken für die Phase dieser Runde direkt im Ziffernblock
+  const ri = edit.ref === 'new' ? liveRounds(g).length : liveRounds(g).findIndex(r => r.id === edit.ref);
+  const phaseNo = hasPhases(g) ? Math.min(phasesDone(g, p.id, ri) + 1, 10) : 0;
+  const phaseOk = hasPhases(g) && edit.ref !== 'new' && phaseIn(g, edit.ref, p.id);
   const d = (n: number) => <button key={n} className="key" onClick={() => a.digit(n)}>{n}</button>;
   const q = (n: number) => <button className="key q" onClick={() => a.add(n)}>{n > 0 ? '+' + n : '−' + -n}</button>;
   // Die zwei größten Zählschritte der Vorlage
@@ -57,9 +62,17 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>
         {keys ? <>
+          {phaseNo > 0 && <button className={'pad-phase' + (phaseOk ? ' on' : '')} id="pad-phase" aria-pressed={phaseOk} onClick={() => a.togglePhase()}
+            style={{ ['--ph-h' as string]: String(phaseHue(phaseNo)) }}>
+            <span className="ph-no">{phaseNo}</span><b>{phaseOk ? `Phase ${phaseNo} geschafft` : `Phase ${phaseNo}`}</b><i className="ph-tick" aria-hidden="true" />
+          </button>}
           <div className="quick pad-quick">
             {keys.map(k => <button key={k.label} className={k.label.length > 3 ? 'wide' : ''}
-              onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : k.op === 'rest' ? a.rest() : a.setValue(k.v))}>{k.label}</button>)}
+              onClick={() => {
+                if (k.op === 'add') a.add(k.v); else if (k.op === 'mul') a.mul(k.v); else if (k.op === 'rest') a.rest(); else a.setValue(k.v);
+                // Wer bei Phase 10 raus ist, hat seine Phase geschafft
+                if (phaseNo > 0 && k.op === 'set' && k.v === 0 && !phaseOk) a.togglePhase();
+              }}>{k.label}</button>)}
           </div>
           <div className="keys">
             {d(1)}{d(2)}{d(3)}<button className="key fn" onClick={a.back} aria-label="Löschen"><IconBackspace /></button>
@@ -75,7 +88,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
         </div></>}
         <div className="pad-actions">
           {!keys && <button className="secondary" onClick={a.clear}>Leeren</button>}
-          <button className="primary" onClick={a.next}>{i < players.length - 1 ? `Weiter zu ${players[i + 1].name}` : 'Eintragen'}</button>
+          <button className="primary" onClick={a.next}>{!solo && i < players.length - 1 ? `Weiter zu ${players[i + 1].name}` : 'Eintragen'}</button>
         </div>
       </div>
     </div>

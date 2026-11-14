@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, phaseHue } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -222,6 +222,49 @@ describe('Arschloch', () => {
     expect(ex.id2).toMatchObject({ praes: 1, arsch: 1, praesStreak: 1 });
     expect(ex.id1).toMatchObject({ praes: 1, arsch: 0 });
     expect(ex.id3).toMatchObject({ praes: 0, arsch: 1 });
+  });  it('das Arschloch der letzten Runde gibt', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'arschloch')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D']) await a.addPlayer(n);
+    a.start();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo(); a.rankTap('id3'); a.rankTap('id1'); a.rankTap('id4');
+    expect(dealerOf(st.get().game!)?.id).toBe('id2');
+    a.roundGo(); a.rankTap('id2'); a.rankTap('id1'); a.rankTap('id3');
+    expect(dealerOf(st.get().game!)?.id).toBe('id4');
+  });
+});
+
+describe('Uno und Phase 10 im Block', () => {
+  const blockPrefs = () => ({ ...memPrefs(), getMode: () => 'block' as const });
+  it('Uno: Sieger wählen, nur er trägt im Block ein, dann zurück; Geber rotiert', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), blockPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'uno')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo(); expect(st.get().sheet).toBe('winner');
+    a.pickWinner('id2');
+    expect(st.get()).toMatchObject({ pad: true, page: -1, edit: { playerId: 'id2' } });
+    a.add(50); a.add(20); a.next();
+    expect(st.get()).toMatchObject({ pad: false, edit: null, fromOverview: false });
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 70, id3: 0 });
+    expect(dealerOf(st.get().game!)?.id).toBe('id2');
+  });
+  it('Phase 10: im Block eintragen und Phase abhaken', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), blockPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'phase10')!.template); a.toPlayers();
+    for (const n of ['A', 'B']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, edit: { playerId: 'id1' } });
+    a.setValue(0); a.togglePhase(); a.next();
+    a.add(25); a.next();
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(phaseIn(g, r.id, 'id1')).toBe(true);
+    expect(phaseIn(g, r.id, 'id2')).toBe(false);
+    expect(phaseAt(g, 1, 'id1')).toBe(2);
+    expect(phaseAt(g, 1, 'id2')).toBe(1);
+    expect(phaseHue(1)).toBe(0); expect(phaseHue(10)).toBe(290);
   });
 });
 
