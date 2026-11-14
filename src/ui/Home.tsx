@@ -22,7 +22,7 @@ export function names(list: string[]): string {
 
 export function Home() {
   const { game, parked, templates, events, favs } = useApp();
-  const live = events.find(e => e.active);
+  const lives = events.filter(e => e.active);
   const running = [game, ...parked].filter((x): x is NonNullable<typeof game> => !!x).sort((a, b) => b.game.updatedAt.localeCompare(a.game.updatedAt));
   const [q, setQ] = useState('');
   const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -66,7 +66,7 @@ export function Home() {
             </label>
           </div>
           <div className="home-body">
-            {live && <LiveSeries ev={live} />}
+            {lives.map((e, i) => <LiveSeries key={e.id} ev={e} first={i === 0} />)}
             {running.length > 0 && (
               <div className="group">
                 <div className="eyebrow">{running.length > 1 ? 'Laufende Partien' : 'Laufende Partie'}</div>

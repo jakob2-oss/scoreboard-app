@@ -361,6 +361,34 @@ describe('Otter im Spiel', () => {
   });
 });
 
+describe('Turnier', () => {
+  it('Duelle: auslosen, Partie für den Tisch spielen, Sieger rückt vor, von Hand entscheiden, Turniersieger', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init();
+    a.openGame(GAMES.find(g => g.template.key === 'uno')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D']) await a.addPlayer(n);
+    a.goHome();
+    const ev = a.startEvent('Pokal', 'turnier')!;
+    expect(st.get().events.find(e => e.id === ev.id)?.kind).toBe('turnier');
+    a.bracketCreate(ev.id, ['id1', 'id2', 'id3', 'id4'], { size: 2, advance: 1, bestOf: 1 });
+    const b0 = st.get().events.find(e => e.id === ev.id)!.bracket!;
+    const [m1, m2] = b0.rounds[0].matches;
+    // Duell 1 als echte Partie Skyjo
+    a.bracketPlay(ev.id, m1.id, GAMES.find(g => g.template.key === 'romme')!.template);
+    expect(st.get().game!.game.matchId).toBe(m1.id);
+    expect(seated(st.get().game!).map(p => p.id)).toEqual(['id1', 'id2']);
+    a.roundGo(); a.setValue(0); a.next(); a.add(30); a.next();
+    a.finishGame();
+    let b = st.get().events.find(e => e.id === ev.id)!.bracket!;
+    expect(b.rounds[0].matches[0].winners).toEqual(['id1']);
+    a.bracketWinners(ev.id, m2.id, ['id4']);
+    b = st.get().events.find(e => e.id === ev.id)!.bracket!;
+    expect(b.rounds[1].matches[0].players).toEqual(['id1', 'id4']);
+    a.bracketWinners(ev.id, b.rounds[1].matches[0].id, ['id4']);
+    expect(st.get().toast?.text).toBe('D gewinnt das Turnier');
+  });
+});
+
 describe('Uno und Phase 10 im Block', () => {
   const blockPrefs = () => ({ ...memPrefs(), getMode: () => 'block' as const });
   it('Uno: Sieger wählen, nur er trägt im Block ein, dann zurück; Geber rotiert', async () => {

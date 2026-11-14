@@ -9,13 +9,13 @@ import { TabBar } from './TabBar';
 import { bannerOf } from './banners';
 
 /** Laufende Serie als Karte: Name, Partien und wer führt (Startseite und Reiter Serien) */
-export function LiveSeries({ ev }: { ev: GameEvent }) {
+export function LiveSeries({ ev, first = true }: { ev: GameEvent; first?: boolean }) {
   const { history, players } = useApp();
   const games = history.filter(h => h.eventId === ev.id);
   const top = seriesTable(games, ev.points ?? DEFAULT_POINTS)[0];
   const lead = top ? playerOf(players, top.playerId) : null;
   return (
-    <button className="ser-live" id="series-live" onClick={() => act().openSeries(ev.id)}>
+    <button className="ser-live" id={first ? 'series-live' : undefined} data-series={ev.name} onClick={() => act().openSeries(ev.id)}>
       <span className="ser-bicon" dangerouslySetInnerHTML={{ __html: bannerOf(ev.id, ev.banner).svg }} />
       <span className="t"><small>Läuft</small><b>{ev.name}</b>
         <span className="sub">{games.length ? `${games.length} ${games.length === 1 ? 'Partie' : 'Partien'}${lead ? `, ${lead.name} führt` : ''}` : 'Noch keine Partien'}</span></span>
@@ -28,12 +28,14 @@ export function LiveSeries({ ev }: { ev: GameEvent }) {
 /** Reiter Serien: Spieleabende, Urlaube, Turniere. Eine läuft, die anderen sind Geschichte. */
 export function Events() {
   const { events, history, players } = useApp();
-  const live = events.find(e => e.active);
+  const lives = events.filter(e => e.active), live = lives[0];
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
+  const [kind, setKind] = useState<'serie' | 'liga' | 'turnier'>('serie');
   const start = (e: React.FormEvent) => {
     e.preventDefault();
-    if (act().startEvent(name)) { setName(''); setAdding(false); }
+    const ev = act().startEvent(name, kind);
+    if (ev) { setName(''); setAdding(false); if (kind === 'turnier') act().openSeries(ev.id); }
   };
   const others = recentEvents(events, history).filter(e => !e.active);
   return (
@@ -41,11 +43,16 @@ export function Events() {
       <div className="scroll">
         <div className="gutter page-body">
           <h1 className="page-title">Serien</h1>
-          {live && <LiveSeries ev={live} />}
+          {lives.map((e, i) => <LiveSeries key={e.id} ev={e} first={i === 0} />)}
           {!live || adding
-            ? <form className="ser-start" onSubmit={start}>
-              <input id="series-name" value={name} maxLength={32} autoComplete="off" placeholder="Name der Serie" onChange={e => setName(e.target.value)} />
-              <button className="primary" id="series-start" type="submit" disabled={!name.trim()}>Starten</button>
+            ? <form className="ser-start-wrap" onSubmit={start}>
+              <div className="seg" role="group" aria-label="Art">
+                {(['serie', 'liga', 'turnier'] as const).map(k => <button type="button" key={k} id={`kind-${k}`} aria-pressed={kind === k} onClick={() => setKind(k)}>{k === 'serie' ? 'Serie' : k === 'liga' ? 'Liga' : 'Turnier'}</button>)}
+              </div>
+              <div className="ser-start">
+                <input id="series-name" value={name} maxLength={32} autoComplete="off" placeholder={kind === 'turnier' ? 'Name des Turniers' : kind === 'liga' ? 'Name der Liga' : 'Name der Serie'} onChange={e => setName(e.target.value)} />
+                <button className="primary" id="series-start" type="submit" disabled={!name.trim()}>Starten</button>
+              </div>
             </form>
             : <button className="secondary ser-new" id="series-create" onClick={() => setAdding(true)}>Neue Serie</button>}
           {others.length > 0 && <div className="group">

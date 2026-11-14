@@ -7,7 +7,8 @@ import { loserRoom, themeRoom, trophyRoom } from './trophy';
 import { haptic, hapticOn, setHapticOn } from '../lib/device';
 import { entryMode, quipLevel, setQuipLevel } from '../lib/modes';
 import { quip, type QuipEvent } from '../game/quips';
-import { newRecords } from '../game/stats';
+import { newRecords, suggestEvent } from '../game/stats';
+import { findMatch } from '../game/bracket';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
 import { isResultOnly, unitOf, hasPhases, phasesDone, phaseIn, liveRounds, fieldsOf, fieldOf, fieldLabel, gebotOf, isNoteField, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
@@ -147,8 +148,9 @@ export function MenuSheet({ g }: { g: GameState }) {
 export function ResultSheet({ g }: { g: GameState }) {
   const { events, history } = useApp();
   const [eventId, setEventId] = useState<string | null>(() => {
-    // Laufende Serie zuerst, sonst die zuletzt gewählte
-    const live = events.find(e => e.active); if (live) return live.id;
+    // Turnier-Partie: ihr Turnier; sonst die passende laufende Serie (meiste bekannte Mitspieler), sonst die zuletzt gewählte
+    const mt = g.game.matchId ? events.find(e => e.bracket && findMatch(e.bracket, g.game.matchId!)) : undefined; if (mt) return mt.id;
+    const sug = suggestEvent(events.filter(e => e.active), history, seated(g).flatMap(p => membersOf(g, p.id))); if (sug) return sug;
     try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
   });
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;

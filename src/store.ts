@@ -3,6 +3,7 @@ import type { Category, GameEvent, Player, Result, Tally, Template } from './mod
 import { haptic } from './lib/device';
 import { entryMode, setEntryMode, quipLevel, type EntryMode, type QuipLevel } from './lib/modes';
 import { quip, type QuipEvent } from './game/quips';
+import { champion, createBracket, findMatch, recordGame, setWinners, type Bracket } from './game/bracket';
 import { addMark, createTally, noteLast, noteMark, removeMark, settle, undoMark } from './game/tally';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
@@ -59,6 +60,8 @@ export interface AppState {
   /** Strichlisten zwischen zwei Personen; tally: die geöffnete */
   tallies: Tally[];
   tally: string | null;
+  /** Turnier: Tisch, für den die nächste gestartete Partie zählt */
+  pendingMatch: { eventId: string; matchId: string } | null;
   /** Verlauf: Partien oder Serien */
   histTab: 'games' | 'series';
   /** Geöffnete Serie und ihre Sortierung */
@@ -86,7 +89,7 @@ export interface AppState {
 }
 
 const initial: AppState = {
-  tokenTo: null, fireMode: false, chicMode: null, tallies: [], tally: null, favs: [], bidBar: null,
+  tokenTo: null, fireMode: false, chicMode: null, tallies: [], tally: null, pendingMatch: null, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
   page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
@@ -366,8 +369,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         ? Array.from({ length: state.teamCount }, (_, k) => ({ members: chosen.filter(p => (state.teamOf[p.id] ?? 0) === k) })).filter(x => x.members.length)
         : null;
       if (teams && teams.length < 2) return;
-      const g = teams ? createTeamGame(t, teams, clock) : createGame(t, chosen, clock);
-      set({ bidBar: null, game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+      const g0 = teams ? createTeamGame(t, teams, clock) : createGame(t, chosen, clock);
+      // Turnier: die Partie zählt für den gewählten Tisch
+      const pm = state.pendingMatch, g = pm ? { ...g0, game: { ...g0.game, matchId: pm.matchId } } : g0;
+      set({ bidBar: null, game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, pendingMatch: null });
       persist(g);
     },
     /** Partie fortsetzen; ohne ID die aktive, sonst eine geparkte (die aktive wird dafür geparkt) */
@@ -605,6 +610,46 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    // ---------- Turnier
+    /** Turnier auslosen bzw. in der gesetzten Reihenfolge anlegen */
+    bracketCreate(eventId: string, order: string[], o: { size: number; advance: number; bestOf: number }) {
+      const e = state.events.find(x => x.id === eventId); if (!e || order.length < 2) return;
+      actions.updateEventRaw({ ...e, bracket: createBracket(order, o, clock.uid), updatedAt: clock.now() });
+      haptic('success'); toast('Turnier steht');
+    },
+    /** Partie für einen Tisch starten: Spiel wählen, Spieler sind gesetzt */
+    bracketPlay(eventId: string, matchId: string, t: Template) {
+      const e = state.events.find(x => x.id === eventId), m = e?.bracket ? findMatch(e.bracket, matchId) : undefined; if (!e || !m) return;
+      if (!e.active) actions.resumeEvent(e.id);
+      set({ template: structuredClone(t), selected: m.players.filter(id => state.players.some(p => p.id === id)), teamMode: false, teamOf: {}, pendingSave: false, pendingMatch: { eventId, matchId } });
+      actions.start();
+    },
+    /** Sieger eines Tisches von Hand (ohne App gespielt) */
+    bracketWinners(eventId: string, matchId: string, winners: string[]) {
+      const e = state.events.find(x => x.id === eventId); if (!e?.bracket) return;
+      const b = setWinners(e.bracket, matchId, winners, clock.uid); if (b === e.bracket) return;
+      actions.updateEventRaw({ ...e, bracket: b, updatedAt: clock.now() });
+      actions.bracketToast(e.bracket, b);
+    },
+    bracketRecord(eventId: string, matchId: string, h: HistGame) {
+      const e = state.events.find(x => x.id === eventId); if (!e?.bracket) return;
+      const b = recordGame(e.bracket, matchId, h.id, h.results.map(r => ({ playerId: r.playerId, place: r.place })), clock.uid);
+      if (b === e.bracket) return;
+      actions.updateEventRaw({ ...e, bracket: b, updatedAt: clock.now() });
+      actions.bracketToast(e.bracket, b);
+    },
+    bracketToast(before: Bracket, after: Bracket) {
+      const name = (id: string) => state.players.find(p => p.id === id)?.name ?? '';
+      const champ = champion(after);
+      if (champ) { toast(`${name(champ)} gewinnt das Turnier`); return; }
+      const changed = after.rounds.flatMap(r => r.matches).find(m => m.winners && !findMatch(before, m.id)?.winners);
+      if (changed?.winners) toast(`${names(changed.winners.map(name))} ${changed.winners.length > 1 ? 'kommen' : 'kommt'} weiter`);
+    },
+    /** Serie vollständig speichern (Turnierbaum) */
+    updateEventRaw(e: GameEvent) {
+      set({ events: state.events.map(x => (x.id === e.id ? e : x)) });
+      repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+    },
     // ---------- Strichlisten
     /** Neue Strichliste zwischen zwei Personen, gleich geöffnet */
     newTally(a: string, b: string, name: string | null) {
@@ -907,7 +952,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       haptic('success');
       const f0 = finish(g, clock);
-      const ev = eventId ? state.events.find(e => e.id === eventId) : undefined;
+      // Turnier-Partie gehört immer zu ihrem Turnier, egal welche Serie gerade gewählt ist
+      const byMatch = g.game.matchId ? state.events.find(e => e.bracket && findMatch(e.bracket, g.game.matchId!)) : undefined;
+      const ev = byMatch ?? (eventId ? state.events.find(e => e.id === eventId) : undefined);
       const f = ev ? { ...f0, game: { ...f0.game, eventId: ev.id } } : f0;
       persist(f);
       const t = clock.now(), rk = ranking(f);
@@ -951,6 +998,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         const h: HistGame = { id: f.game.id, key: f.game.rules.key, name: f.game.rules.name, finishedAt: t, occasion: ev?.name ?? null, eventId: ev?.id ?? null,
           results: results.map(r => ({ playerId: r.playerId, total: r.total, place: r.place, extra: r.extra })) };
         set({ history: [h, ...state.history] });
+        // Turnier: Ergebnis zählt für den Tisch, Sieger rücken vor
+        if (f.game.matchId && ev?.kind === 'turnier' && ev.bracket) actions.bracketRecord(ev.id, f.game.matchId, h);
         try { localStorage.setItem('pz:lastEvent', ev?.id ?? ''); } catch { /* egal */ }
       }
             // Freies Spiel ohne Vorlage bleibt eine Einmal-Partie (nur im Verlauf)
@@ -986,15 +1035,18 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       return e;
     },
     /** Serie starten (Spieleabend, Urlaub …): läuft, bis sie beendet wird; neue Partien gehören dazu */
-    startEvent(name: string): GameEvent | null {
-      const e = actions.createEvent(name); if (!e) return null;
+    startEvent(name: string, kind: GameEvent['kind'] = 'serie'): GameEvent | null {
+      const e0 = actions.createEvent(name); if (!e0) return null;
+      const e = { ...e0, kind };
+      if (kind !== 'serie') actions.updateEventRaw(e);
       actions.resumeEvent(e.id);
       return state.events.find(x => x.id === e.id) ?? e;
     },
-    /** Serie (wieder) laufen lassen; eine andere laufende pausiert dann */
+    /** Serie (wieder) laufen lassen; andere laufende bleiben laufen */
     resumeEvent(id: string) {
       const t = clock.now();
-      const events = state.events.map(e => (e.id === id ? { ...e, active: true, endedAt: null, updatedAt: t } : e.active ? { ...e, active: false, updatedAt: t } : e));
+      // Mehrere Serien dürfen gleichzeitig laufen; die passende wählt man beim Beenden einer Partie
+      const events = state.events.map(e => (e.id === id ? { ...e, active: true, endedAt: null, updatedAt: t } : e));
       set({ events });
       for (const e of events.filter(x => x.updatedAt === t)) repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
       try { localStorage.setItem('pz:lastEvent', id); } catch { /* egal */ }

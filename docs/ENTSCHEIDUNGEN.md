@@ -306,3 +306,34 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Strichliste, Notizen je Strich: nach jedem Tipp ein kleines Blatt „Strich für …“ mit Notiz (oder „Ohne Notiz“).
   Im Verlauf hat jeder Strich ein ✕; Streichen fragt „Warum gestrichen?“ (optional). Gestrichene Striche stehen
   durchgestrichen mit Grund unter „Gestrichen“ und zählen nicht mehr (`deleteNote` am Strich).
+
+## 14.11.2026: Liga für Serien
+- Jeder Kalendertag mit Partien ist ein Spieltag (`matchdays`). Partien der Serie nach Spieltagen gruppiert,
+  „Spieltag 2, 14. Nov.“, neueste oben.
+- Tabelle „nach Spieltag n“ mit Bewegung seit dem Spieltag davor: grünes Dreieck hoch, rotes runter, Strich
+  unverändert, „neu“ für Neue. Ab drei Spielern trägt der alleinige Letzte die „Rote Laterne“ (kleine Laterne,
+  rote Linie darüber).
+- Karte „Spieler des Spieltags“: meiste Platzpunkte am letzten Spieltag, bei Gleichstand mehr Siege.
+- Ende der Serie: „Clara holt den Titel“ und „Rote Laterne für Dora“ unter dem Siegerbild.
+
+## 14.11.2026: Art der Serie: Serie, Liga, Turnier
+- Beim Anlegen „Serie“, „Liga“ oder „Turnier“ (`GameEvent.kind`). Serie: einfache Tabelle wie bisher.
+  Liga: Spieltage, Bewegung, Rote Laterne, Spieler des Spieltags, „holt den Titel“.
+- Turnier im K.-o.-System (`src/game/bracket.ts`, Baum im Event gespeichert):
+  - Format: Duelle (1 gegen 1, „Eine Partie“, „Best of 3“ oder „Best of 5“) oder Tische mit 3 bis 8 Spielern,
+    von denen 1 bis Tischgröße−1 weiterkommen (eine Partie je Tisch, am Finaltisch gewinnt einer).
+  - Paarung: „Auslosen“ (mit „Neu mischen“) oder „Von Hand“ (Reihenfolge des Antippens). Vorschau der ersten
+    Runde vor dem Start. Ungerade Zahl: Freilos.
+  - Tisch antippen: Spiel frei wählen (alle festen und eigenen Spiele, die zur Spielerzahl passen), die Partie
+    startet mit den Spielern des Tisches und zählt nach dem Beenden automatisch für den Tisch (`Game.matchId`).
+    Oder „Sieger von Hand“, wenn ohne App gespielt wurde.
+  - Nächste Runde entsteht, sobald alle Tische entschieden sind; künftige Runden stehen als leere Plätze im Baum.
+    Rundennamen: Finale, Halbfinale, Viertelfinale, Achtelfinale bzw. Finaltisch. Am Ende Siegerbild
+    „… gewinnt das Turnier“.
+
+## 14.11.2026: Mehrere Serien gleichzeitig
+- Serien, Ligen und Turniere können parallel laufen; Starten oder Fortsetzen pausiert keine andere mehr.
+  Startseite und Reiter „Serien“ zeigen alle laufenden.
+- Beim Beenden einer Partie ist die passende Serie vorausgewählt (`suggestEvent`): Turnier-Partie immer ihr Turnier,
+  sonst die laufende Serie, in der die meisten Mitspieler schon gespielt haben, bei Gleichstand die zuletzt genutzte.
+  Änderbar mit einem Tipp, „Keine“ bleibt möglich. Eine Partie gehört weiterhin zu höchstens einer Serie.

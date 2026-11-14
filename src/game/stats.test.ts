@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, gameRecords, newRecords, playerTitles, type HistGame } from './stats';
+import { suggestEvent, matchdays, tableMoves, dayStar, bidHits, byGame, filterGames, headToHead, eventIds, seriesGames, duel, performance, seriesTable, seriesPlaces, DEFAULT_POINTS, summary, seriesAwards, gameRecords, newRecords, playerTitles, type HistGame } from './stats';
 
 const now = Date.UTC(2026, 10, 12);
 const day = 864e5;
@@ -134,6 +134,36 @@ describe('Auszeichnungen einer Serie', () => {
     ]);
   });
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
+});
+
+describe('Passende Serie', () => {
+  it('schlägt die laufende Serie mit den meisten bekannten Mitspielern vor, sonst die zuletzt genutzte', () => {
+    const g = (id: string, ev: string, at: string, ps: string[]) => ({ id, key: 'uno', name: 'Uno', finishedAt: at, eventId: ev, results: ps.map((playerId, i) => ({ playerId, place: i + 1, total: 0 })) });
+    const list = [g('1', 'liga', '2026-11-01T20:00', ['a', 'b', 'c']), g('2', 'urlaub', '2026-11-10T20:00', ['d', 'e'])];
+    const active = [{ id: 'liga', createdAt: '2026-10-01' }, { id: 'urlaub', createdAt: '2026-11-09' }];
+    expect(suggestEvent(active, list, ['a', 'b'])).toBe('liga');
+    expect(suggestEvent(active, list, ['d', 'x'])).toBe('urlaub');
+    expect(suggestEvent(active, list, ['x', 'y'])).toBe('urlaub');   // niemand bekannt: zuletzt genutzt
+    expect(suggestEvent([], list, ['a'])).toBeNull();
+  });
+});
+
+describe('Liga in Serien', () => {
+  const g = (id: string, at: string, places: [string, number][]) => ({ id, key: 'uno', name: 'Uno', finishedAt: at, results: places.map(([playerId, place]) => ({ playerId, place, total: 0 })) });
+  const list = [
+    g('1', '2026-11-01T19:00:00', [['a', 1], ['b', 2], ['c', 3]]),
+    g('2', '2026-11-01T21:00:00', [['a', 1], ['c', 2], ['b', 3]]),
+    g('3', '2026-11-08T20:00:00', [['c', 1], ['b', 2], ['a', 3]]),
+    g('4', '2026-11-08T22:00:00', [['c', 1], ['b', 2], ['d', 3]])
+  ];
+  it('Spieltage je Kalendertag, Bewegung seit dem letzten Spieltag, Spieler des Spieltags', () => {
+    expect(matchdays(list).map(d => [d.day, d.games.length])).toEqual([['2026-11-01', 2], ['2026-11-08', 2]]);
+    // Punkte 3, 2, 1: vorher a 6, c 3, b 3; jetzt c 9, a 7, b 7, d 1
+    const m = tableMoves(list, [3, 2, 1], 'points');
+    expect(m.c).toBe(1); expect(m.a).toBe(-1); expect(m.d).toBe('neu');
+    expect(dayStar(list, [3, 2, 1])).toMatchObject({ playerId: 'c', points: 6, wins: 2, index: 2 });
+    expect(tableMoves(list.slice(0, 2), [3, 2, 1], 'points')).toEqual({});
+  });
 });
 
 describe('Rommé-Rekorde', () => {
