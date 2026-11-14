@@ -3,7 +3,7 @@ import type { Category, GameEvent, Player, Result, Tally, Template } from './mod
 import { haptic } from './lib/device';
 import { entryMode, setEntryMode, quipLevel, type EntryMode, type QuipLevel } from './lib/modes';
 import { quip, type QuipEvent } from './game/quips';
-import { addMark, createTally, noteLast, settle, undoMark } from './game/tally';
+import { addMark, createTally, noteLast, noteMark, removeMark, settle, undoMark } from './game/tally';
 import { type HistGame, type SeriesSort, type TimeFilter } from './game/stats';
 import { configOf, copyAsOwn, defaultFreeConfig, makeFreeTemplate, updateFreeTemplate, type FreeConfig } from './game/templates';
 import { realClock, type Clock } from './lib/id';
@@ -615,7 +615,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     openTally(id: string | null) { set({ tally: id, screen: id ? 'tally' : 'home' }); },
     /** Strichliste ändern und speichern (Strich, Notiz, Rückgängig, Ausgleichen, Löschen) */
-    tallyDo(kind: 'mark0' | 'mark1' | 'undo' | 'settle' | 'delete') {
+    tallyDo(kind: 'mark0' | 'mark1' | 'undo' | 'settle' | 'delete'): string | undefined {
       const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
       const nt = kind === 'mark0' ? addMark(t, 0, clock) : kind === 'mark1' ? addMark(t, 1, clock) : kind === 'undo' ? undoMark(t, clock)
         : kind === 'settle' ? settle(t, clock) : { ...t, deletedAt: clock.now(), updatedAt: clock.now() };
@@ -625,12 +625,28 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (kind === 'delete') { set({ tallies: state.tallies.filter(x => x.id !== t.id), tally: null, screen: 'home' }); toast('Strichliste gelöscht'); return; }
       set({ tallies: [nt, ...state.tallies.filter(x => x.id !== t.id)] });
       if (kind === 'settle') toast('Ausgeglichen');
+      return kind === 'mark0' || kind === 'mark1' ? nt.marks[nt.marks.length - 1].id : undefined;
     },
     tallyNote(note: string) {
       const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
       const nt = noteLast(t, note, clock); if (nt === t) return;
       repo.saveTally?.(nt).catch(() => undefined);
       set({ tallies: state.tallies.map(x => (x.id === t.id ? nt : x)) });
+    },
+    /** Notiz zu einem bestimmten Strich (beim Anlegen) */
+    tallyNoteMark(markId: string, note: string) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = noteMark(t, markId, note, clock); if (nt === t) return;
+      repo.saveTally?.(nt).catch(() => undefined);
+      set({ tallies: state.tallies.map(x => (x.id === t.id ? nt : x)) });
+    },
+    /** Einen Strich streichen, mit optionalem Grund */
+    tallyRemove(markId: string, note: string | null) {
+      const t = state.tallies.find(x => x.id === state.tally); if (!t) return;
+      const nt = removeMark(t, markId, note, clock); if (nt === t) return;
+      haptic('tap');
+      repo.saveTally?.(nt).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
+      set({ tallies: [nt, ...state.tallies.filter(x => x.id !== t.id)] });
     },
     /** Scrabble: Schlussrunde mit den Reststeinen; wer zuerst fertig war, bekommt die Summe der anderen */
     setRest(rest: Record<string, number>, finisher: string | null) {

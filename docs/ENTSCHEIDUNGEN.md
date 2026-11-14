@@ -303,3 +303,6 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Meldungen. Frech und Atzig: Sprüche mit kleinem Otterkopf bei Rommé raus, Kniffel, Binokel verfehlt, Chic aus dem
   Rohr, Rausgeschickt, Schock aus, Skat verloren, Skyjo doppelt; höchstens einer je Moment. Siegerseite: Spruch
   unter dem Titel (knapp, deutlich, gewonnen oder bei Deckel-Spielen der Verlierer), stabil je Partie.
+- Strichliste, Notizen je Strich: nach jedem Tipp ein kleines Blatt „Strich für …“ mit Notiz (oder „Ohne Notiz“).
+  Im Verlauf hat jeder Strich ein ✕; Streichen fragt „Warum gestrichen?“ (optional). Gestrichene Striche stehen
+  durchgestrichen mit Grund unter „Gestrichen“ und zählen nicht mehr (`deleteNote` am Strich).

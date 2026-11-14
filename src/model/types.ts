@@ -166,8 +166,8 @@ export interface GameEvent extends Base {
   banner?: number | null;
 }
 
-/** Ein Strich auf einer Strichliste: für Seite 0 (a) oder 1 (b), optional mit Notiz */
-export interface TallyMark { id: string; at: ISODate; side: 0 | 1; note?: string | null; deletedAt?: ISODate | null }
+/** Ein Strich auf einer Strichliste: für Seite 0 (a) oder 1 (b), optional mit Notiz beim Anlegen und beim Streichen */
+export interface TallyMark { id: string; at: ISODate; side: 0 | 1; note?: string | null; deletedAt?: ISODate | null; deleteNote?: string | null }
 /** Strichliste zwischen zwei Personen (Wetten, Bierkonto …). Ausgleichen setzt den Stand zurück, die Striche bleiben. */
 export interface Tally extends Base {
   a: string; b: string;

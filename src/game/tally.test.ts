@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Clock } from '../lib/id';
-import { addMark, createTally, leadFor, liveMarks, noteLast, settle, tallyCount, undoMark } from './tally';
+import { addMark, createTally, leadFor, liveMarks, noteLast, noteMark, removeMark, settle, struckMarks, tallyCount, undoMark } from './tally';
 
 function clock(): Clock { let n = 0, t = Date.UTC(2026, 0, 1); return { uid: () => 'id' + (++n), now: () => new Date(t += 1000).toISOString() }; }
 
@@ -21,5 +21,17 @@ describe('Strichliste', () => {
     expect(t.marks).toHaveLength(3);   // nichts geht verloren
     t = addMark(t, 1, c);
     expect(tallyCount(t)).toEqual([0, 1]);
+  });
+  it('Notiz beim Anlegen und Grund beim Streichen; gestrichene bleiben sichtbar', () => {
+    const c = clock();
+    let t = createTally('a', 'b', null, c);
+    t = addMark(t, 0, c, 'Wette Kniffel');
+    const id = t.marks[0].id;
+    t = addMark(t, 1, c); t = noteMark(t, t.marks[1].id, 'Runde Bier', c);
+    expect(liveMarks(t).map(m => m.note)).toEqual(['Wette Kniffel', 'Runde Bier']);
+    t = removeMark(t, id, 'bezahlt', c);
+    expect(tallyCount(t)).toEqual([0, 1]);
+    expect(struckMarks(t)).toMatchObject([{ id, note: 'Wette Kniffel', deleteNote: 'bezahlt' }]);
+    expect(removeMark(t, id, 'nochmal', c)).toBe(t);
   });
 });

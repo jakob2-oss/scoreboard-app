@@ -803,3 +803,12 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .menu-seg { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-top: 1px solid var(--sep); }
 .menu-seg > span { font-family: var(--f-display); font-weight: 500; font-size: 17px; }
 .menu-seg .seg { flex: 1; }
+/* Strichliste: Notiz beim Anlegen und Streichen, Verlauf mit gestrichenen Strichen */
+#mark-note input { height: 50px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; box-shadow: var(--soft); }
+.tally-hist .t { display: flex; flex-direction: column; min-width: 0; }
+.tally-hist .t b.ph { color: var(--muted); font-weight: 500; }
+.tally-hist .t small { color: var(--muted); font-size: 12px; }
+.tally-hist .rm { flex: none; width: 36px; height: 36px; border-radius: 50%; color: var(--muted); background: var(--fill); }
+.tally-hist.struck { opacity: .7; }
+.tally-hist.struck s { text-decoration-thickness: 2px; }
+.tally-hist .why { color: var(--fg) !important; font-size: 14px !important; font-style: italic; }

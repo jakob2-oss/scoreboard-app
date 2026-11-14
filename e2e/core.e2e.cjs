@@ -583,15 +583,19 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tally-new'); await p.click('#tally-sheet .chip >> text=Anna'); await p.click('#tally-sheet .chip >> text=Ben'); await p.fill('#tally-name', 'Wetten');
   await p.click('#tally-start'); await p.waitForTimeout(250);
   check('Strichliste: eigene Seite mit zwei Seiten', await p.isVisible('#s-tally') && (await raw('#s-tally h2')) === 'Wetten' && (await raw('#tally-lead')) === 'Gleichstand');
-  for (let k = 0; k < 6; k++) await p.click('#tally-0');
-  await p.click('#tally-1'); await p.fill('#tally-note', 'Ben verliert die Wette'); await p.press('#tally-note', 'Enter'); await p.waitForTimeout(150);
-  check('Strichliste: Fünferbündel, Stand und Notiz', (await p.locator('#tally-0 .tally-marks svg').count()) === 2 && (await raw('#tally-lead')) === 'Anna liegt 5 vorn' && (await raw('.tally-hist')).includes('Ben verliert die Wette'));
+  for (let k = 0; k < 6; k++) { await p.click('#tally-0'); await p.click('#mark-note-skip'); }
+  await p.click('#tally-1'); check('Strichliste: Notiz beim Anlegen', await p.isVisible('#mark-note') && (await raw('#mark-note h3')) === 'Strich für Ben');
+  await p.fill('#mark-note-input', 'Ben verliert die Wette'); await p.click('#mark-note-go'); await p.waitForTimeout(150);
+  check('Strichliste: Fünferbündel, Stand und Notiz im Verlauf', (await p.locator('#tally-0 .tally-marks svg').count()) === 2 && (await raw('#tally-lead')) === 'Anna liegt 5 vorn' && (await raw('#tally-hist')).includes('Ben verliert die Wette'));
+  await p.click('#tally-hist [aria-label="Strich streichen"] >> nth=1'); await p.fill('#mark-note-input', 'war doch Ben'); await p.click('#mark-note-go'); await p.waitForTimeout(150);
+  check('Strichliste: Streichen mit Grund, bleibt sichtbar', (await raw('#tally-lead')) === 'Anna liegt 4 vorn' && (await raw('#tally-struck')).includes('war doch Ben'));
+  await p.click('#tally-0'); await p.click('#mark-note-skip');
   await shot('39a-tally');
   await p.click('[aria-label="Letzten Strich zurücknehmen"]'); await p.waitForTimeout(100);
-  check('Strichliste: Rückgängig nimmt den letzten Strich', (await raw('#tally-lead')) === 'Anna liegt 6 vorn');
+  check('Strichliste: Rückgängig nimmt den letzten Strich', (await raw('#tally-lead')) === 'Anna liegt 4 vorn');
   await p.click('#tally-settle'); await p.click('#tally-settle-yes'); await p.waitForTimeout(150);
   check('Strichliste: ausgeglichen', (await raw('#tally-lead')) === 'Gleichstand');
-  await p.click('#tally-0'); await p.click('#s-tally .dock .secondary.wide'); await p.waitForTimeout(200);
+  await p.click('#tally-0'); await p.click('#mark-note-skip'); await p.click('#s-tally .dock .secondary.wide'); await p.waitForTimeout(200);
   check('Strichliste: auf der Startseite', (await raw('.tally-row')).includes('Wetten') && (await raw('.tally-row')).includes('1 zu 0'));
   await shot('39b-tally-home');
 
