@@ -378,3 +378,5 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - „Manuell“ heißt „Pro Spieler“ (wie im Menü). Banner „Kneipe“ ohne Schriftzug.
 - Regel-Stichpunkte umformuliert (Begriff links, vollständiger Zusatz rechts). Rechenbeispiele nur noch, wo gerechnet
   wird (nicht bei Schwimmen, Schocken, Chic).
+- Strichlisten auf der Startseite als einklappbare Gruppe unter den Spielen; „Neue Strichliste“ sieht aus wie
+  „Eigenes Spiel erstellen“.

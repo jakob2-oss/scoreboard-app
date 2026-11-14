@@ -25,8 +25,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.evaluate(() => localStorage.setItem('pz:quip', 'brav'));
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('19 Einträge (17 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
-  check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('.new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
+  check('20 Einträge (17 Spiele, Schnelles Spiel, Erstellen, Neue Strichliste), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 20 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('#new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
   // Eigene Vorlage erstellen
@@ -602,6 +602,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Strichliste: ausgeglichen', (await raw('#tally-lead')) === 'Gleichstand');
   await p.click('#tally-0'); await p.click('#mark-note-skip'); await p.click('#s-tally .dock .secondary.wide'); await p.waitForTimeout(200);
   check('Strichliste: auf der Startseite', (await raw('.tally-row')).includes('Wetten') && (await raw('.tally-row')).includes('1 zu 0'));
+  check('Strichlisten unter den Spielen', await p.evaluate(() => { const g = [...document.querySelectorAll('.grp-head')].map(x => x.id); return g[g.length - 1] === 'grp-tallies'; }));
+  await p.click('#grp-tallies');
+  check('Strichlisten einklappbar', !(await p.isVisible('.tally-row')) && !(await p.isVisible('#tally-new')));
+  await p.click('#grp-tallies');
   await shot('39b-tally-home');
 
   // Serien: Statistikseite

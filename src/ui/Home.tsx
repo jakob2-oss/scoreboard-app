@@ -1,6 +1,6 @@
 import { heroSvg } from '../components/heroSvg';
 import { LiveSeries } from './Events';
-import { TallyCard } from './Tally';
+import { TallyRows } from './Tally';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { act, useApp } from '../store';
@@ -21,7 +21,7 @@ export function names(list: string[]): string {
 }
 
 export function Home() {
-  const { game, parked, templates, events, favs } = useApp();
+  const { game, parked, templates, events, favs, tallies } = useApp();
   const lives = events.filter(e => e.active);
   const running = [game, ...parked].filter((x): x is NonNullable<typeof game> => !!x).sort((a, b) => b.game.updatedAt.localeCompare(a.game.updatedAt));
   const [q, setQ] = useState('');
@@ -83,7 +83,6 @@ export function Home() {
                 </div>
               </div>
             )}
-            {!q.trim() && <TallyCard />}
             {q.trim() ? (
               <div className="group">
                 <div className="list" id="search-results">
@@ -124,6 +123,9 @@ export function Home() {
                 <span className="plus-ic" aria-hidden="true">+</span>
                 <span className="t"><b>Eigenes Spiel erstellen</b></span>
               </button>
+            </Section>
+            <Section id="tallies" title="Strichlisten" count={tallies.length} open={isOpen('tallies')} onToggle={toggle} listId="tally-list">
+              <TallyRows />
             </Section>
             </>}
             <Feedback />
