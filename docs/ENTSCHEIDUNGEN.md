@@ -344,3 +344,8 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Texte geprüft (keine Trennpunkte, Pfeile, Erklär-Hinweise); eine Meldung ohne Gedankenstrich als Trenner.
 - Alle Ansichten aller Spiele auf dem iPhone SE in Hell und Dunkel automatisch geprüft: kein Überlauf, keine
   Konsolenfehler. In langen Blättern (Skat, Schafkopf, Doppelkopf, Binokel) bleibt die Knopfleiste unten sichtbar.
+- Gesamtdurchgang Teil 2: Sicherung heißt „oina-no-Datum.json“. Export und Import auf ein leeres Gerät geprüft:
+  Spieler, Partien, Serien, Strichlisten mit Notizen und laufende Partien kommen vollständig zurück; nochmaliges
+  Einlesen meldet „Nichts Neues“. Die App bittet um dauerhaften Speicher (`navigator.storage.persist`).
+  Kommt ein Update mitten in einer Partie, öffnet die App danach wieder die Partie (Marke in sessionStorage);
+  normales Neuladen startet wie bisher auf der Startseite.

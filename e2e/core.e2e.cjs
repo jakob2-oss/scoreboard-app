@@ -717,7 +717,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Sicherung speichern und wieder einlesen
   await p.click('#tab-people');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#backup-save')]);
-  check('Sicherung als Datei', dl.suggestedFilename().startsWith('punktezettel-') && (await text('#backup-save small')).startsWith('Zuletzt am'));
+  check('Sicherung als Datei', dl.suggestedFilename().startsWith('oina-no-') && (await text('#backup-save small')).startsWith('Zuletzt am'));
   await p.setInputFiles('#backup-file', await dl.path()); await p.waitForTimeout(500);
   check('Sicherung einlesen ohne Doppelte', (await text('.toast')) === 'Nichts Neues in der Sicherung', await text('.toast'));
   await p.setInputFiles('#backup-file', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"a":1}') }); await p.waitForTimeout(400);
