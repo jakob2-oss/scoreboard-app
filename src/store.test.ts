@@ -347,6 +347,20 @@ describe('Chic am Tisch', () => {
   });
 });
 
+describe('Otter im Spiel', () => {
+  it('brav: sachliche Meldung; atzig: Spruch mit Otter', async () => {
+    for (const level of ['brav', 'atzig'] as const) {
+      const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getQuip: () => level }); const a = st.actions;
+      await a.init(); a.openGame(GAMES.find(g => g.template.key === 'chic')!.template); a.toPlayers();
+      for (const n of ['A', 'B']) await a.addPlayer(n);
+      a.start(); a.setChicMode('loss'); a.tableTap('id1');
+      const t = st.get().toast!;
+      if (level === 'brav') expect(t).toMatchObject({ text: 'A zahlt die Runde' });
+      else { expect(t.otter).toBe(true); expect(t.text).toContain('A'); }
+    }
+  });
+});
+
 describe('Uno und Phase 10 im Block', () => {
   const blockPrefs = () => ({ ...memPrefs(), getMode: () => 'block' as const });
   it('Uno: Sieger wählen, nur er trägt im Block ein, dann zurück; Geber rotiert', async () => {

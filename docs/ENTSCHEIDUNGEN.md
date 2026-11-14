@@ -291,3 +291,15 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Chic am Tisch: Antippen eines Platzes gibt genau einen Deckel (erste Phase aus der Mitte, zweite Phase zurück in
   die Mitte), ohne Blatt und ohne Zahlen. „Rausgeschickt“ (grün) und „Aus dem Rohr“ (rot) stehen unten in der Leiste;
   wie bei Feuer in Schwimmen erst den Knopf, dann den Spieler antippen.
+
+## 14.11.2026: Strichliste und frecher Otter
+- Strichliste (`src/game/tally.ts`, Tabelle `tallies`, DB v5, auch in der Sicherung): zwei Personen, optional ein Name.
+  Eigene Seite mit zwei großen Flächen, ein Tipp ein Strich, Fünferbündel wie auf dem Bierdeckel, Stand oben
+  („Anna liegt 5 vorn“). Notiz zum letzten Strich, Liste der Notizen, Rückgängig, Ausgleichen (setzt auf null,
+  die Striche bleiben im Datensatz), Löschen. Karte „Strichlisten“ auf der Startseite unter den laufenden Partien,
+  im Profil die Bilanz. Für die spätere Synchronisierung: IDs, Zeitstempel, Löschmarken.
+- Otter (`src/game/quips.ts`): Regler im Menü der Partie, „Brav“, „Frech“, „Atzig“; Standard „Frech“.
+  Atzig heißt cool und artsy, nie verletzend. Brav: freundlicher Satz auf der Siegerseite, im Spiel die sachlichen
+  Meldungen. Frech und Atzig: Sprüche mit kleinem Otterkopf bei Rommé raus, Kniffel, Binokel verfehlt, Chic aus dem
+  Rohr, Rausgeschickt, Schock aus, Skat verloren, Skyjo doppelt; höchstens einer je Moment. Siegerseite: Spruch
+  unter dem Titel (knapp, deutlich, gewonnen oder bei Deckel-Spielen der Verlierer), stabil je Partie.

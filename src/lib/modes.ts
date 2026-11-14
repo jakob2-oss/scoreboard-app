@@ -12,3 +12,12 @@ export function setEntryMode(key: string, mode: EntryMode) {
 }
 /** Spiele mit eigener Oberfläche (nur dort gibt es die Wahl) */
 export const hasBlockMode = (key: string, scoring: string) => scoring === 'bids' || key === 'wizard';
+
+/** Wie frech der Otter kommentiert: brav (nur freundlich auf der Siegerseite), frech, atzig (cool und artsy) */
+export type QuipLevel = 'brav' | 'frech' | 'atzig';
+export function quipLevel(): QuipLevel {
+  try { const v = localStorage.getItem('pz:quip'); return v === 'brav' || v === 'atzig' ? v : 'frech'; } catch { return 'frech'; }
+}
+export function setQuipLevel(v: QuipLevel) {
+  try { localStorage.setItem('pz:quip', v); } catch { /* privater Modus */ }
+}

@@ -21,6 +21,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const typeNum = async n => { for (const d of String(n)) await p.click(`.pp-keys .key >> text="${d}"`); };
 
   await p.goto(URL); await p.waitForSelector('.wordmark');
+  // Der Klicktest prüft die sachlichen Meldungen; die Otter-Sprüche werden weiter unten gezielt geprüft
+  await p.evaluate(() => localStorage.setItem('pz:quip', 'brav'));
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
   check('19 Einträge (17 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
@@ -562,6 +564,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#chic-loss'); await seat(1).click(); await p.waitForTimeout(200);
   check('Chic: aus dem Rohr zahlt, Spiel läuft weiter', (await raw('.toast')).includes('zahlt die Runde') && (await p.locator('.tb-chic').count()) === 1);
   await shot('37h-chic-tisch');
+  // Otter: Regler im Menü, frecher Spruch statt sachlicher Meldung
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#quip-frech'); await p.mouse.click(195, 160); await p.waitForTimeout(200);
+  await p.click('#chic-loss'); await seat(2).click(); await p.waitForTimeout(200);
+  check('Otter: frecher Spruch mit Otterkopf', await p.isVisible('.toast.otter .otter-ic') && !(await raw('.toast')).endsWith('zahlt die Runde'));
+  await shot('37i-otter-toast');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#quip-brav'); await p.mouse.click(195, 160); await p.waitForTimeout(200);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   // Schwimmen: nur der Erste darf schwimmen
   await p.click('[data-game="schwimmen"]');

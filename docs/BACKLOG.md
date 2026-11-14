@@ -232,12 +232,12 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Wizard: Hausregel „Ansagen dürfen nicht aufgehen“ als Schalter.
 
 ### M2 Strichliste (L14)
-- [ ] Liste zwischen zwei Personen, Strich je Tipp in Fünferbündeln, Notiz je Strich, Ausgleichen mit Verlauf.
-- [ ] Ort: Karte „Strichlisten“ auf der Startseite unter „Laufende Partien“, Bilanz im Profil. Später erstes geteiltes Ding mit der Synchronisierung.
+- [x] Liste zwischen zwei Personen, Strich je Tipp in Fünferbündeln, Notiz je Strich, Ausgleichen mit Verlauf.
+- [x] Ort: Karte „Strichlisten“ auf der Startseite unter „Laufende Partien“, Bilanz im Profil. Später erstes geteiltes Ding mit der Synchronisierung.
 
 ### M3 Design und Geschichte (fünf Konzepte)
 - [ ] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Absteiger.
-- [ ] Otter-Gang: kurze freche Sprüche bei besonderen Momenten, Frechheitsregler Brav, Frech, Ätzend.
+- [x] Otter: kurze Sprüche bei besonderen Momenten, Regler Brav, Frech, Atzig (cool, artsy). Nebenfiguren später.
 - [ ] Titelseite: nach jedem Abend eine teilbare Klatschblatt-Titelseite aus den echten Zahlen (eigene Optik, kein echtes Logo).
 - [ ] Stammtisch: Kreidetafel, Bierdeckel, neue Siegerbänder in der Mitternacht-Variante.
 - [ ] Nachtschicht: ab 23 Uhr dunkler und größer, am nächsten Tag Kater-Report; insgesamt weniger Pastell.

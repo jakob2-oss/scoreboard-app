@@ -777,7 +777,7 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .tally-marks svg { width: 34px; height: 30px; display: block; }
 .tally-marks.sm svg { width: 18px; height: 16px; }
 .tally-row .tally-duo { display: flex; flex: none; }
-.tally-row .tally-duo .av:last-child { margin-left: -10px; box-shadow: 0 0 0 2px var(--surface); }
+.tally-row .tally-duo .av:last-child { margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); }
 .tally-new { align-self: flex-start; margin-top: 4px; }
 #tally-sheet input { height: 48px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; }
 .tally-body { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
@@ -792,3 +792,14 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .tally-note span { font-size: 13px; color: var(--muted); padding-left: 4px; }
 .tally-note input { height: 48px; border-radius: 14px; border: 0; background: var(--surface); color: var(--fg); padding: 0 14px; font: inherit; font-size: 16px; box-shadow: var(--soft); }
 .tally-hist .t b { font-weight: 500; }
+
+/* Otter-Sprüche: kleiner Otterkopf vor dem Text, auf der Siegerseite und als Meldung im Spiel */
+.otter-ic { flex: none; display: inline-block; width: 26px; height: 26px; border-radius: 50%; vertical-align: middle;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='8' cy='9' r='5' fill='%2374503a'/%3E%3Ccircle cx='32' cy='9' r='5' fill='%2374503a'/%3E%3Cellipse cx='20' cy='21' rx='17' ry='15' fill='%238f6447'/%3E%3Cellipse cx='20' cy='26' rx='11' ry='8' fill='%23e9cfae'/%3E%3Cpath d='M10 18q3-4 6 0' stroke='%23271d18' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Cpath d='M24 18q3-4 6 0' stroke='%23271d18' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='20' cy='23' rx='4' ry='3' fill='%233a2a22'/%3E%3Cpath d='M16 28q4 3 8 0' stroke='%234a2f25' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") center / cover; }
+.v-quip { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px auto 10px; max-width: 34ch; text-align: left;
+  font-family: var(--f-display); font-size: 16px; font-weight: 500; color: var(--muted); }
+.v-quip.q-atzig { font-style: italic; color: var(--fg); letter-spacing: .01em; }
+.toast.otter { display: flex; align-items: center; gap: 8px; max-width: min(340px, calc(100vw - 32px)); white-space: normal; text-align: left; line-height: 1.25; padding-left: 8px; }
+.menu-seg { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-top: 1px solid var(--sep); }
+.menu-seg > span { font-family: var(--f-display); font-weight: 500; font-size: 17px; }
+.menu-seg .seg { flex: 1; }

@@ -7,9 +7,9 @@ export function Toast() {
   useEffect(() => {
     if (!toast) return;
     setShown(toast.n);
-    const t = setTimeout(() => setShown(null), 1800);
+    const t = setTimeout(() => setShown(null), toast.otter ? 3200 : 1800);
     return () => clearTimeout(t);
   }, [toast]);
   if (!toast || shown !== toast.n) return null;
-  return <div className="toast" role="status">{toast.text}</div>;
+  return <div className={'toast' + (toast.otter ? ' otter' : '')} role="status">{toast.otter && <span className="otter-ic" aria-hidden="true" />}{toast.text}</div>;
 }
