@@ -7,7 +7,9 @@ import { loserRoom, themeRoom, trophyRoom } from './trophy';
 import { haptic, hapticOn, setHapticOn } from '../lib/device';
 import { entryMode, quipLevel, setQuipLevel } from '../lib/modes';
 import { quip, type QuipEvent } from '../game/quips';
-import { newRecords, suggestEvent } from '../game/stats';
+import { newRecords, suggestEvent, type HistGame } from '../game/stats';
+import { newsWeight, rivalNews } from '../game/rivals';
+import { rivalStory } from '../game/frontpage';
 import { findMatch } from '../game/bracket';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
@@ -146,7 +148,7 @@ export function MenuSheet({ g }: { g: GameState }) {
 // ---------------------------------------------------------------- Ergebnis
 
 export function ResultSheet({ g }: { g: GameState }) {
-  const { events, history } = useApp();
+  const { events, history, players } = useApp();
   const [eventId, setEventId] = useState<string | null>(() => {
     // Turnier-Partie: ihr Turnier; sonst die passende laufende Serie (meiste bekannte Mitspieler), sonst die zuletzt gewählte
     const mt = g.game.matchId ? events.find(e => e.bracket && findMatch(e.bracket, g.game.matchId!)) : undefined; if (mt) return mt.id;
@@ -164,10 +166,14 @@ export function ResultSheet({ g }: { g: GameState }) {
     : isResultOnly(g) ? themeRoom(base === 'siedler' ? 'insel' : base === 'monopoly' ? 'geld' : 'buehne') : trophyRoom(icon);
   const stats = started ? highlights(g) : [];
   // Neue Rekorde: diese Partie gegen den Verlauf desselben Spiels
-  const fresh = started ? newRecords(history.filter(h => h.key === rules.key), {
+  const cur: HistGame = {
     id: g.game.id, key: rules.key, name: rules.name, finishedAt: new Date().toISOString(),
     results: rk.flatMap(x => membersOf(g, x.player.id).map(pid => ({ playerId: pid, total: x.total, place: x.place, extra: { rn: playedRounds(g), ...(zeroWins(g) ? { wins: roundWins(g, x.player.id) } : {}) } })))
-  }, recordOpts(rules)) : [];
+  };
+  const fresh = started ? newRecords(history.filter(h => h.key === rules.key), cur, recordOpts(rules)) : [];
+  // Rivalität: was diese Partie im Dauerduell verändert (spannendste Nachricht)
+  const rn = started ? rivalNews(history, [cur]).sort((x, y) => newsWeight(y) - newsWeight(x))[0] : undefined;
+  const rivalLine = rn ? rivalStory(rn, id => players.find(p => p.id === id)?.name ?? '?', 'brav').text : null;
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
   // Tisch-Modus: Leben bzw. verlorene Hälften statt Punkte; bei Schocken zählt, wer verliert
@@ -209,6 +215,7 @@ export function ResultSheet({ g }: { g: GameState }) {
               </div>
             ))}
           </div>
+          {rivalLine && <p className="v-rival" id="v-rival"><small>Dauerduell</small>{rivalLine}</p>}
           {fresh.length > 0 && <div className="v-records"><RecordCards list={fresh} fresh /></div>}
           {stats.length > 0 && (
             <div className="v-stats">

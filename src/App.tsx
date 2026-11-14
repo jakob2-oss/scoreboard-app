@@ -14,6 +14,7 @@ import { Toast } from './ui/Toast';
 import { registerFormer, registerLooks } from './ui/lookup';
 import { Backdrop } from './ui/Backdrop';
 import { Events } from './ui/Events';
+import { FrontView } from './ui/FrontPage';
 
 export default function App() {
   const s = useApp();
@@ -39,6 +40,7 @@ export default function App() {
       {s.screen === 'profile' && <Profile />}
       {s.screen === 'series' && <Series />}
       {s.screen === 'tally' && <TallyScreen />}
+      {s.front && <FrontView />}
       {s.screen === 'setup' && <Setup />}
       {s.screen === 'gamepage' && <GameInfo />}
       {s.screen === 'players' && <PlayerSelect />}

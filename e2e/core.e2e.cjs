@@ -714,6 +714,20 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('bleibt nach Neuladen gelöscht', (await p.locator('.hist-row').count()) === nHist - 1);
   await p.click('#tab-home');
 
+  // Titelseite des Abends: aus dem Verlauf, drei Seiten
+  await p.click('#tab-home');
+  check('keine Schlagzeile auf der Startseite', !(await p.isVisible('#front-teaser')));
+  await p.click('#tab-history');
+  check('Titelseiten im Verlauf', (await p.locator('#front-strip .front-mini').count()) >= 1);
+  await p.click('#front-strip .front-mini');
+  check('Titelseite offen als Bild', await p.isVisible('#front-page svg'));
+  for (const v of ['sport', 'poster', 'zeitung']) { await p.click(`[data-variant=${v}]`); check(`Seite ${v}`, (await p.getAttribute(`[data-variant=${v}]`, 'aria-pressed')) === 'true' && await p.isVisible('#front-page svg')); }
+  const head = await p.textContent('#front-page svg');
+  check('Titelseite ohne Sternchen und Platzhalter', !/[*{}]|undefined|NaN/.test(head), head);
+  await shot('front-page');
+  await p.click('.front-top .icon-btn');
+  await p.click('#tab-home');
+
   // Sicherung speichern und wieder einlesen
   await p.click('#tab-people');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#backup-save')]);

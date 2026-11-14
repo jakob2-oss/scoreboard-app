@@ -55,6 +55,8 @@ export interface AppState {
   profile: ProfileView | null;
   /** Geöffnete Partie im Verlauf */
   detail: string | null;
+  /** Geöffnete Titelseite: Tag des Abends (eveningOf) */
+  front: string | null;
   /** Serien und Spieleabende */
   events: GameEvent[];
   /** Strichlisten zwischen zwei Personen; tally: die geöffnete */
@@ -91,7 +93,7 @@ export interface AppState {
 const initial: AppState = {
   tokenTo: null, fireMode: false, chicMode: null, tallies: [], tally: null, pendingMatch: null, favs: [], bidBar: null,
   ready: false, screen: 'home', players: [], template: null, pendingSave: false, templates: [], setup: defaultFreeConfig(), selected: [], game: null, undo: [],
-  page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null,
+  page: -1, edit: null, pad: false, sheet: null, toast: null, history: [], profile: null, detail: null, front: null,
   events: [], histTab: 'games', series: null, editKey: null, setupTemplate: false, setupEditing: false, goneKeys: [], fromOverview: false, parked: [], teamMode: false, teamOf: {}, teamCount: 2, rankRef: null, formerPlayers: []
 };
 
@@ -1094,6 +1096,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     setSeriesSort(sort: SeriesSort) { if (state.series) set({ series: { ...state.series, sort } }); },
     closeSeries() { set({ screen: 'events', series: null }); },
     openDetail(id: string | null) { set({ detail: id }); },
+    /** Titelseite eines Abends öffnen oder schließen */
+    openFront(day: string | null) { set({ front: day }); },
     /** Revanche: dasselbe Spiel mit denselben Spielern */
     rematch(gameId: string) {
       const h = state.history.find(x => x.id === gameId); if (!h) return;

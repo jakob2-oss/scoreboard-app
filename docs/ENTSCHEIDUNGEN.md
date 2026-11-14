@@ -349,3 +349,21 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Einlesen meldet „Nichts Neues“. Die App bittet um dauerhaften Speicher (`navigator.storage.persist`).
   Kommt ein Update mitten in einer Partie, öffnet die App danach wieder die Partie (Marke in sessionStorage);
   normales Neuladen startet wie bisher auf der Startseite.
+
+## 14.11.2026: Titelseite nach dem Abend und Rivalitäten
+- Ein Abend sind alle Partien eines Tages; was bis 6 Uhr früh endet, zählt zum Vortag (`eveningOf`).
+- Rivalität: zwei Spieler mit mindestens 5 gemeinsamen Partien. Das Duell einer Partie gewinnt, wer besser platziert ist;
+  Gleichstand zählt für niemanden. Nachrichten: Serie (ab 3 in Folge), Revanche (beendet eine Serie ab 3), Führung,
+  Ausgleich, Jubiläum (25., 50., 100. Duell). Logik in `src/game/rivals.ts`.
+- Titelseite (`src/game/frontpage.ts`): die spannendste Geschichte wird Schlagzeile (Tabellenspitze in der Liga,
+  alle Partien gewonnen, Revanche, Machtwechsel, Serie, Durststrecke beendet, letzte Plätze in Folge, sonst Sieger des
+  Abends). Zwei Kurzmeldungen, Rote Laterne. Ton nach der Frech-Stufe.
+- Drei Seiten zur Wahl: Zeitung (Standard), Sport (Standard bei Liga-Abenden, mit Tabelle und Bewegung), Poster
+  (Standard bei „atzig“). Gezeichnet als SVG 9:16; „Teilen“ erzeugt ein PNG 1080 × 1920 mit eingebetteter Jost.
+- Zu sehen im Verlauf als Reihe „Titelseiten“, nicht auf der Startseite (Jakob).
+- Viele Schlagzeilen auch für die ersten Abende ohne Vorgeschichte: Premiere, Krimi (knappe Partie), klare Sache,
+  Unentschieden, jeder gewinnt einmal, Neu dabei, erster Sieg überhaupt, Lauf (drei Siege am Stück), Doppelpack,
+  Rote Laterne in allen Partien, Marathon (ab 6 Partien), Querbeet (ab 3 Spielen), nach Mitternacht, Liga-Auftakt.
+  Jede Geschichte hat je Frech-Stufe mehrere Fassungen; die Wahl ist je Abend fest, damit die Seite gleich bleibt.
+  Profil zeigt die drei häufigsten Rivalen mit Stand; die Siegerseite einer Partie zeigt, was sie im Dauerduell ändert.
+- Stammtisch, Nachtschicht und Kater-Report verworfen.
