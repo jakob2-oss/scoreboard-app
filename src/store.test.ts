@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -14,6 +14,7 @@ function testClock(): Clock {
   return { uid: () => 'id' + (++n), now: () => new Date(t += 1000).toISOString() };
 }
 /** Speicher im Arbeitsspeicher, merkt sich den zuletzt gespeicherten Stand */
+const nextStepKind = (g: Parameters<typeof nextStep>[0]) => nextStep(g).kind;
 function memPrefs(): Prefs { let last: string[] = []; return { getLast: () => last, setLast: ids => { last = ids; } }; }
 function memRepo() {
   const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
@@ -751,6 +752,20 @@ describe('Weitere Spiele', () => {
     a.roundGo(); a.setValue(10); a.next(); a.add(2); a.add(2); a.add(1); a.next(); a.digit(7); a.next();
     expect(totals(st.get().game!)).toEqual({ id1: 10, id2: 5, id3: 7 });
     expect(ranking(st.get().game!)[0].player.name).toBe('A');
+  });
+  it('Monopoly: Plätze per Antippen, der letzte ergibt sich, nochmal tippen nimmt zurück', async () => {
+    const { st, a } = await play('monopoly', ['A', 'B', 'C', 'D']);
+    const r = () => liveRounds(st.get().game!)[0].id, pl = (id: string) => scoreOf(st.get().game!, r(), id);
+    a.placeTap('id2'); a.placeTap('id4');
+    expect([pl('id1'), pl('id2'), pl('id3'), pl('id4')]).toEqual([null, 1, null, 2]);
+    a.placeTap('id1');
+    expect([pl('id1'), pl('id3')]).toEqual([3, 4]);
+    expect(nextStepKind(st.get().game!)).toBe('result');
+    a.placeTap('id4');
+    expect([pl('id1'), pl('id2'), pl('id3'), pl('id4')]).toEqual([2, 1, 3, null]);
+    a.undo();
+    expect(pl('id4')).toBe(2);
+    expect(ranking(st.get().game!)[0].player.name).toBe('B');
   });
   it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
     const u = await play('uno', ['A', 'B'], { type: 'target', value: 500 });

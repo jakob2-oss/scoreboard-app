@@ -81,7 +81,7 @@ export function GameScreen() {
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>
 
-      {isTable(g) ? <TableView g={g} /> : <div className="sheet-wrap pp-mode">
+      {isTable(g) ? <TableView g={g} /> : isResultOnly(g) ? <ResultBoard g={g} edit={s.pad ? s.edit : null} /> : <div className="sheet-wrap pp-mode">
         <div className="pp-tabs gutter" role="tablist">
           <button className="pp-tab" role="tab" aria-label="Überblick" aria-current={s.page === -1} onClick={() => act().goPage(-1)}><IconGrid /></button>
           {players.map((p, i) => (
@@ -100,7 +100,7 @@ export function GameScreen() {
         </div>
       </div>}
 
-      {end && !s.pad && !isTable(g) && (
+      {end && !s.pad && !isTable(g) && !isResultOnly(g) && (
         <div className="banner gutter">
           <div className="grow"><b>{end.done ? 'Spielende erreicht' : 'Fast geschafft'}</b><br /><span>{end.text}</span></div>
           {end.done && <button onClick={() => act().openSheet('result')}>Ergebnis</button>}
@@ -278,7 +278,9 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
       {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
-      {step.kind === 'result'
+      {isResultOnly(g)
+        ? <button className="primary" id="evaluate" disabled={step.kind !== 'result'} onClick={() => act().openSheet('result')}>Auswerten</button>
+        : step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
         : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
@@ -342,6 +344,45 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
       </div>
     </>
+  );
+}
+
+/** Endwertung ohne Zettel (Siedler, Monopoly, eigene): Treppchen und Rangliste wachsen beim Eintragen */
+function ResultBoard({ g, edit }: { g: GameState; edit: Edit | null }) {
+  const players = seated(g), r = liveRounds(g)[0], byPlace = unitOf(g) === 'Platz', high = g.game.rules.win === 'high';
+  const vals = players.map(p => ({ p, v: r ? scoreOf(g, r.id, p.id) : null }));
+  const better = (a: number, b: number) => (high ? b - a : a - b);
+  const ranked = vals.filter(x => x.v !== null).sort((a, b) => better(a.v!, b.v!));
+  const placeOf = (v: number) => 1 + ranked.filter(x => better(x.v!, v) < 0).length;
+  // Während des Eintippens bleibt die Reihenfolge stehen, danach sortiert sich die Liste
+  const rows = edit ? vals : [...ranked, ...vals.filter(x => x.v === null)];
+  const top = ranked.filter(x => placeOf(x.v!) <= 3).slice(0, 3);
+  const podium = [top[1], top[0], top[2]];
+  const tap = (pid: string) => (byPlace ? act().placeTap(pid) : r && act().openPad(r.id, pid));
+  return (
+    <div className="scroll res-scroll"><div className="gutter res-board">
+      <div className="res-podium" aria-hidden="true">
+        {podium.map((x, k) => (
+          <div key={k} className={'rp rp' + [2, 1, 3][k] + (x ? '' : ' empty')}>
+            {x ? <Avatar p={x.p} /> : <span className="av ghost" />}
+            <span className="rp-block" style={x ? css({ '--c': x.p.color }) : undefined}><b>{[2, 1, 3][k]}</b></span>
+          </div>
+        ))}
+      </div>
+      <div className="eyebrow">{unitOf(g)}</div>
+      <div className="res-list">
+        {rows.map(({ p, v }) => {
+          const active = !!edit && edit.playerId === p.id;
+          return (
+            <button key={p.id} className={'res-row' + (v === null ? ' open' : '') + (active ? ' active' : '')} data-player={p.name} onClick={() => tap(p.id)}>
+              <span className="res-pl">{v === null ? '' : placeOf(v)}</span>
+              <Avatar p={p} /><span className="nm">{p.name}</span>
+              <span className={'res-v' + (v === null ? ' ph' : '')}>{v === null ? (byPlace ? '' : '–') : byPlace ? `${v}. Platz` : fmt(v)}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div></div>
   );
 }
 

@@ -74,7 +74,7 @@ GAMES.push(
   },
   {
     template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
-      params: { resultOnly: true, unit: 'Siegpunkte', notes: ['Längste Straße', 'Rittermacht'], quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
+      params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
     points: [['Am Ende', 'Siegpunkte je Spieler'], ['Gewinner', 'die meisten Siegpunkte']],
     acc: '#f0b13e', tint: '#fbecc9', group: 'result',
     text: 'Am Ende trägt jeder seine <b>Siegpunkte</b> ein.'

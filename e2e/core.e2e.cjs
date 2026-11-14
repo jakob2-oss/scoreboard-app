@@ -266,15 +266,18 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Nur Ergebnis: Monopoly mit Platzierung
   for (const k of ['uno', 'scrabble', 'siedler']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
   await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
-  check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
+  check('Monopoly: Endwertung ohne Zettel, Auswerten noch aus', await p.isVisible('.res-board') && !(await p.isVisible('table.grid')) && await p.isDisabled('#evaluate'));
   check('Monopoly: kein Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
-  await shot('21-monopoly-page');
-  for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
-  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8') && (await raw('.dock .primary')) === 'Ergebnis');
+  await p.click('.res-row[data-player="Ben"]'); await p.waitForTimeout(200);
+  check('Monopoly: erster Tipp ist Platz 1, Treppchen wächst', (await raw('.res-row[data-player="Ben"] .res-v')) === '1. Platz' && (await p.locator('.res-podium .rp:not(.empty)').count()) === 1);
+  await shot('21-monopoly-entry');
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(300);
+  check('Monopoly: letzter Platz ergibt sich, Rangliste sortiert', (await p.locator('.res-row .nm').allTextContents()).join() === 'Ben,Anna,Clara' && !(await p.isDisabled('#evaluate')));
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(200);
+  check('Monopoly: nochmal tippen nimmt den Platz zurück', (await p.locator('.res-row.open').count()) === 1 && (await raw('.res-row[data-player="Clara"] .res-v')) === '2. Platz');
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(300);
   await shot('22-monopoly-ov');
-  await p.click('.dock .primary');
+  await p.click('#evaluate');
   check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
   check('Siegerseite: Treppchen und Kennzahlen', (await p.locator('.v-podium .v-step').count()) === 3 && (await raw('.v-hero')).includes('GEWONNEN'));
   await shot('22b-victory');

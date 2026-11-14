@@ -3,13 +3,13 @@ import { act, useApp, type Edit } from '../store';
 import { SeriesPicker } from './SeriesPicker';
 import { GAME_ART, ownArt } from './art';
 import { highlights } from '../game/highlights';
-import { loserRoom, trophyRoom } from './trophy';
+import { loserRoom, themeRoom, trophyRoom } from './trophy';
 import { haptic, hapticOn, setHapticOn } from '../lib/device';
 import { entryMode } from '../lib/modes';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { hasPhases, phasesDone, phaseIn, liveRounds, fieldsOf, fieldOf, fieldLabel, gebotOf, isNoteField, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
+import { isResultOnly, unitOf, hasPhases, phasesDone, phaseIn, liveRounds, fieldsOf, fieldOf, fieldLabel, gebotOf, isNoteField, anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
@@ -63,7 +63,7 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; k
       <div className="sheet-body">
         <div className="pad-head">
           <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
-          <div className="who"><b>{p.name}</b><small>{liveRounds(g).find(r => r.id === edit.ref)?.cat?.label ?? (fs ? `${fieldLabel(g, edit.field!)} in Runde ${roundNumber(g, edit.ref)}` : `Runde ${roundNumber(g, edit.ref)}`)}</small></div>
+          <div className="who"><b>{p.name}</b><small>{liveRounds(g).find(r => r.id === edit.ref)?.cat?.label ?? (fs ? `${fieldLabel(g, edit.field!)} in Runde ${roundNumber(g, edit.ref)}` : isResultOnly(g) ? unitOf(g) : `Runde ${roundNumber(g, edit.ref)}`)}</small></div>
           {keys && display}
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>
@@ -150,7 +150,10 @@ export function ResultSheet({ g }: { g: GameState }) {
   const winners = rk.filter(x => x.place === 1);
   const icon = GAME_ART[rules.key]?.icon ?? ownArt(rules.key, rules.name, rules.params).icon;
   // Deckel-Spiele (Schocken, Chic): es zählt, wer verliert, also der traurige Otter mit dem Deckelstapel
-  const scene = isTokens(g) && tokenState(g).loser ? loserRoom(icon, 'deckel') : trophyRoom(icon);
+  // Ergebnisspiele: eigene Szenen (Siedler auf der Insel, Monopoly im Geldregen, eigene auf der Bühne)
+  const base = rules.params?.base ?? rules.key;
+  const scene = isTokens(g) && tokenState(g).loser ? loserRoom(icon, 'deckel')
+    : isResultOnly(g) ? themeRoom(base === 'siedler' ? 'insel' : base === 'monopoly' ? 'geld' : 'buehne') : trophyRoom(icon);
   const stats = started ? highlights(g) : [];
   // Neue Rekorde: diese Partie gegen den Verlauf desselben Spiels
   const fresh = started ? newRecords(history.filter(h => h.key === rules.key), {

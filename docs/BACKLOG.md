@@ -194,11 +194,11 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Bonus: anzeigen, wie viele bis 63 fehlen, abgegrenzt, ohne Text.
 
 ### L10 Ergebnisspiele (Siedler, Monopoly, eigene „nur am Ende“)
-- [ ] Kein Zettel: eine Eingabe, daraus direkt Podest und Rangliste, darunter Statistik und Rekorde.
-- [ ] Siedler: Notizfelder Längste Straße und Rittermacht entfallen; Seite und Siegerseite kreativer.
-- [ ] Monopoly: dasselbe, eigenes Artwork.
-- [ ] Eigene Ergebnisspiele: freies Artwork, für alle Spiele möglichst einfach.
-- [ ] Fehler: Siedler-Seite hing nach der Partie.
+- [x] Kein Zettel: eine Eingabe, daraus direkt Podest und Rangliste, darunter Statistik und Rekorde.
+- [x] Siedler: Notizfelder Längste Straße und Rittermacht entfallen; Seite und Siegerseite kreativer.
+- [x] Monopoly: dasselbe, eigenes Artwork.
+- [x] Eigene Ergebnisspiele: freies Artwork, für alle Spiele möglichst einfach.
+- [x] Fehler: Siedler-Seite hing nach der Partie.
 
 ### L11 Freie Erstellung, Chic
 - [ ] Zwei Knöpfe je Person:

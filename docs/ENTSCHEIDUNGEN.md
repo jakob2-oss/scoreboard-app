@@ -229,3 +229,15 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   ist der Rundenbeste grün.
 - Geber rotiert. In der Ecke des Blocks ein kleines Logo: Schippen-Ober und Schellen-Unter.
 - Ohne Gebot (und auf den Einzelseiten) bleiben die bisherigen Tasten „Abgehen ×−1“ und „Verfehlt ×−2“.
+
+## 14.11.2026: Ergebnisspiele ohne Zettel (Paket 6)
+- Siedler, Monopoly und eigene Endwertungen haben keinen Block und keine Einzelseiten mehr. Die Partie zeigt ein
+  kleines Treppchen und darunter die Rangliste; beides wächst beim Eintragen.
+- Punkte (Siedler): Zeile antippen öffnet den kompakten Ziffernblock mit den Siedler-Tasten, Spieler für Spieler.
+  Plätze (Monopoly, eigene nach Platz): antippen in der Reihenfolge des Ausscheidens bzw. Ankommens, der letzte
+  Platz ergibt sich von selbst, nochmal tippen nimmt den Platz zurück.
+- „Auswerten“ führt direkt zur Siegerseite mit Treppchen, Rangliste, Kennzahlen und Rekorden.
+- Eigene Siegerszenen: Siedler auf einer Insel aus Feldern mit Meer, Monopoly im Geldregen auf dem Spielbrett,
+  eigene Ergebnisspiele auf einer Bühne mit Treppchen. So bekommt jedes eigene Ergebnisspiel ohne Zutun ein Bild.
+- Siedler ohne die Notizfelder „Längste Straße“ und „Rittermacht“. Die gemeldete hängende Seite ließ sich nicht
+  nachstellen; wahrscheinlich war es der Sprung zwischen Notizfeld und Punktefeld, der mit der neuen Eingabe entfällt.

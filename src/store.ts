@@ -547,6 +547,28 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Endwertung nach Platz (Monopoly …): Antippen vergibt den nächsten freien Platz, nochmal nimmt ihn zurück */
+    placeTap(playerId: string) {
+      const g = state.game; if (!g) return;
+      const ref = liveRounds(g)[0]?.id ?? 'new';
+      const players = seated(g);
+      const placed = players.filter(p => p.id !== playerId && ref !== 'new' && scoreOf(g, ref, p.id) !== null)
+        .sort((a, b) => scoreOf(g, ref, a.id)! - scoreOf(g, ref, b.id)!).map(p => p.id);
+      const had = ref !== 'new' && scoreOf(g, ref, playerId) !== null;
+      const order = had ? placed : [...placed, playerId];
+      // Letzter Platz ergibt sich von selbst
+      const rest = players.filter(p => !order.includes(p.id));
+      if (!had && rest.length === 1) order.push(rest[0].id);
+      let ng = g, id: RoundRef = ref;
+      for (const p of players) {
+        const k = order.indexOf(p.id), want = k < 0 ? null : k + 1;
+        if ((id === 'new' ? null : scoreOf(ng, id, p.id)) === want) continue;
+        if (want === null && id === 'new') continue;
+        const r = setScore(ng, id, p.id, want, clock); ng = r.state; id = r.roundId ?? id;
+      }
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
     /** Binokel: wer spielt, mit welchem Gebot; danach Meldungen im Block. Ohne Angabe geht es gleich weiter. */
     setBidder(playerId: string | null, gebot: number | null) {
       const g = state.game, ref = state.rankRef; if (!g || !ref) return;

@@ -419,7 +419,7 @@ export function endState(s: GameState): EndState | null {
   }
   if (end.type === 'rounds') {
     const done = rounds.length >= end.value && rounds.slice(0, end.value).every(r => roundFull(s, r.id));
-    return done ? { done: true, text: `${end.value} Runden gespielt` } : null;
+    return done ? { done: true, text: `${end.value} ${end.value === 1 ? 'Runde' : 'Runden'} gespielt` } : null;
   }
   if (end.type === 'target') {
     const t = totals(s);
