@@ -1,14 +1,14 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
-  anyScore, catTurn, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, dealerOf, halfLabel, isTable, isLives, tableRounds, tokenState, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import type { Player, QuickKey } from '../model/types';
 import { Avatar } from './Avatar';
-import { Crown, IconBack, IconBackspace, IconDots, IconGrid, IconUndo } from './icons';
+import { Crown, IconBack, IconBackspace, IconClose, IconDots, IconGrid, IconUndo } from './icons';
 import { MenuSheet, PadSheet, ResultSheet } from './Sheets';
 import { keepAwake } from '../lib/device';
 import { TableDock, TableView, TokenSheet } from './Table';
@@ -28,19 +28,6 @@ export function quickKeys(g: GameState): QuickKey[] {
   if (p?.zeroSum && !keys.some(k => k.op === 'rest')) keys = [...keys, { label: 'Ausgleich', op: 'rest', v: 0 }];
   if (p?.keys?.length) keys = [...keys, ...p.keys];
   return keys;
-}
-
-function subtitle(g: GameState): string {
-  const end = g.game.rules.end, n = currentRoundIndex(g) + 1;
-  if (isLives(g)) return `Runde ${tableRounds(g).length + 1}`;
-  if (isTable(g)) { const t = tokenState(g); return halfLabel(t.need, t.half); }
-  if (isCats(g)) return `Zug von ${seated(g)[catTurn(g)].name}`;
-  if (isResultOnly(g)) return 'Endstand';
-  // Wizard im Block: Runde, Karten und Geber stehen im Block selbst; der Geber sonst als Schild über seiner Spalte
-  if (isBids(g) && entryMode(g.game.rules.key) === 'block') return '';
-  if (end.type === 'rounds') return `Runde ${n} von ${end.value}`;
-  if (end.type === 'target') return `Runde ${n}, Ziel ${end.value}`;
-  return `Runde ${n}`;
 }
 
 export function GameScreen() {
@@ -89,12 +76,12 @@ export function GameScreen() {
     <section className={'screen' + (s.pad ? ' pad-open' : '') + (wizBlock ? ' wz' : '') + (wizBlock && s.bidBar ? ' bidding' : '')} id="s-game" ref={screenRef} style={accentStyle(g.game.rules.key)}>
       <div className="top gutter">
         <button className="icon-btn" onClick={() => act().goHome()} aria-label="Zum Start"><IconBack /></button>
-        <div className="grow"><h2>{g.game.rules.name}</h2>{subtitle(g) && <div className="sub">{subtitle(g)}</div>}</div>
+        <div className="grow"><h2>{g.game.rules.name}</h2></div>
         <button className="text-btn" onClick={() => act().openSheet('result')}>Beenden</button>
         <button className="icon-btn" onClick={() => act().openSheet('menu')} aria-label="Menü"><IconDots /></button>
       </div>
 
-      {isTable(g) ? <TableView g={g} /> : <div className="sheet-wrap pp-mode">
+      {isTable(g) ? <TableView g={g} /> : isResultOnly(g) ? <ResultBoard g={g} edit={s.pad ? s.edit : null} /> : <div className="sheet-wrap pp-mode">
         <div className="pp-tabs gutter" role="tablist">
           <button className="pp-tab" role="tab" aria-label="Überblick" aria-current={s.page === -1} onClick={() => act().goPage(-1)}><IconGrid /></button>
           {players.map((p, i) => (
@@ -113,7 +100,7 @@ export function GameScreen() {
         </div>
       </div>}
 
-      {end && !s.pad && !isTable(g) && (
+      {end && !s.pad && !isTable(g) && !isResultOnly(g) && (
         <div className="banner gutter">
           <div className="grow"><b>{end.done ? 'Spielende erreicht' : 'Fast geschafft'}</b><br /><span>{end.text}</span></div>
           {end.done && <button onClick={() => act().openSheet('result')}>Ergebnis</button>}
@@ -123,7 +110,7 @@ export function GameScreen() {
       {!s.pad && (
         <div className="dock gutter">
           {isTable(g) ? <TableDock g={g} canUndo={s.undo.length > 0} />
-            : s.bidBar && s.page < 0 ? <BidBar g={g} roundId={s.bidBar} />
+            : wizBlock && s.bidBar && s.page < 0 ? <BidBar g={g} roundId={s.bidBar} />
             : s.page < 0 || isRanks(g) ? <OverviewDock g={g} canUndo={s.undo.length > 0} />
             : s.edit && (isCats(g) && s.edit.ref !== 'new' && catChoices(g.rounds.find(r => r.id === s.edit!.ref)?.cat)
               ? <CatPicker g={g} edit={s.edit} canUndo={s.undo.length > 0} />
@@ -131,7 +118,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} />}
+      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={isCats(g) ? catKeys(g, s.edit.ref) : isSplit(g) ? splitPadKeys(g, s.edit) : g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
@@ -139,6 +126,8 @@ export function GameScreen() {
       {s.sheet === 'ranks' && s.rankRef && <RankSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
+      {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
+      {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -162,6 +151,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   const lead = started ? rk.filter(x => x.place === 1).map(x => x.player.id) : [];
   const end = g.game.rules.end, dealer = dealerOf(g);
   const blockMode = isBids(g) && entryMode(g.game.rules.key) === 'block', bar = useApp().bidBar;
+  // Kniffel: Spalte dessen, der dran ist, leise hervorheben
+  const catStep = isCats(g) ? nextStep(g) : null;
+  const catTurnId = catStep && catStep.kind !== 'result' ? players[catStep.playerIndex].id : null;
   // Während der Ansagen: die Zelle dessen, der dran ist, in den sichtbaren Bereich holen
   const turnId = bar ? bidTurn(g, bar) : null;
   useEffect(() => {
@@ -174,10 +166,10 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
   }, [bar, turnId]);
   return (
     <>
-      <table className="grid" ref={tableRef}>
+      <table className={'grid' + (isCats(g) ? ' cats' : '')} ref={tableRef}>
         <thead>
           <tr>
-            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : '#'}</th>
+            <th className="corner">{blockMode ? <MiniHand cards={handCards(g)} /> : (g.game.rules.params?.base ?? g.game.rules.key) === 'binokel' ? <BinokelMark /> : '#'}</th>
             {players.map((p, i) => (
               <th key={p.id} onClick={() => act().goPage(i)}><div className="pn"><Avatar p={p} /><span>{p.name}</span>{hasPhases(g) && <small className="ph-n">Phase {Math.min(phasesDone(g, p.id) + 1, 10)}</small>}{dealer?.id === p.id && <i className="dealer-tag" role="img" aria-label={`${p.name} gibt`} />}</div></th>
             ))}
@@ -195,7 +187,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                   const rk2 = rankIn(g, r.id, p.id), role = rk2 === null ? null : roleOf(rk2, players.length);
                   return (
                     <td key={p.id} className={'cell rank' + (role ? ' r-' + role.short.toLowerCase() : ' empty')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
-                      {role && <>{role.short}<small>{role.points > 0 ? '+' + role.points : fmt(role.points)}</small></>}
+                      {role && <>{role.short === 'P' ? <RoleIcon kind="p" /> : role.short === 'A' ? <RoleIcon kind="a" /> : role.short}<small>{role.points > 0 ? '+' + role.points : fmt(role.points)}</small></>}
                     </td>
                   );
                 }
@@ -214,23 +206,38 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                       </td>
                     );
                   }
+                  // Binokel: Spielmacher mit Gebot in der Ecke; abgegangen und verfehlt markiert; sonst Rundenbester grün
+                  const bid = wiz ? null : gebotOf(g, r.id), out = wiz ? 0 : outOf(g, r.id, p.id);
+                  const best = !wiz && v !== null && roundFull(g, r.id) && !players.some(x => outOf(g, r.id, x.id) === 1) && out === 0
+                    && players.every(x => (scoreOf(g, r.id, x.id) ?? 0) <= v) && v > 0;
                   return (
-                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}`}>
+                    <td key={p.id} className={'cell ' + (has ? 'pend' : 'empty') + (v !== null && v < 0 ? ' neg' : '') + (active ? ' active' : '') + (out === 1 ? ' out1' : out === 2 ? ' out2' : '') + (best ? ' best' : '')}
+                      onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, Runde ${ri + 1}${bid?.playerId === p.id ? `, spielt mit ${bid.gebot}` : ''}${out === 1 ? ', abgegangen' : out === 2 ? ', verfehlt' : ''}`}>
+                      {bid?.playerId === p.id && <small className="gb">{bid.gebot}</small>}
                       {v === null ? (wiz || b === null ? '' : fmt(b)) : (wiz && v > 0 ? '+' : '') + fmt(v)}
                       {has && (wiz ? <small>{b ?? '–'}/{t2 ?? '–'}</small> : v !== null && <small>{fmt(b ?? 0)} + {fmt(t2!)}</small>)}
                     </td>
                   );
                 }
                 const struck = !!r.cat && v === 0;
+                const myTurn = catTurnId === p.id && v === null;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}`}>
-                  {v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                // Rundensieg: Rommé schreibt 0, bei Uno zählt nur der Sieger
+                const won = v !== null && (zeroWins(g) ? v === 0 : !!g.game.rules.params?.winnerOnly && v > 0);
+                // Phase 10: geschafft grün hinterlegt; Nummer der Phase, an der gearbeitet wurde
+                const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '')}
+                  onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
+                  {ph > 0 && <small className="phb">{ph}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
-              <tr className="calc"><th className="cat">Summe oben</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.sum}/{g.game.rules.params!.bonus!.at}</td>; })}</tr>
-              <tr className="calc"><th className="cat">Bonus</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.bonus ? '+' + u.bonus : '–'}</td>; })}</tr>
+              <tr className="calc"><th className="cat">Summe oben</th>{players.map(p => { const u = upperSum(g, p.id); return <td key={p.id} className={u.bonus ? 'hit' : ''}>{u.sum}</td>; })}</tr>
+              <tr className="calc bonus"><th className="cat">Bonus</th>{players.map(p => <td key={p.id}><BonusMark g={g} pid={p.id} /></td>)}</tr>
             </>)}
+            {r.cat && r.cat.section !== 'up' && ri === rounds.length - 1 && rounds.some(x => x.cat?.section === 'up') && (
+              <tr className="calc"><th className="cat">Summe unten</th>{players.map(p => <td key={p.id}>{lowerSum(g, p.id)}</td>)}</tr>
+            )}
           </Fragment>))}
           {!isBids(g) && !isResultOnly(g) && canAddRound(g) && rounds.length > 0 && roundFull(g, rounds[rounds.length - 1].id) && (
             <tr className="new-row">
@@ -270,8 +277,10 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
-      {isBids(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
-      {step.kind === 'result'
+      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
+      {isResultOnly(g)
+        ? <button className="primary" id="evaluate" disabled={step.kind !== 'result'} onClick={() => act().openSheet('result')}>Auswerten</button>
+        : step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
         : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
     </>
@@ -319,6 +328,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
       {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
       {zeroSumHint(g, ref)}
       {isCats(g) && <CatList g={g} p={p} current={ref} onPick={pick} />}
+      {(plainRounds(g) || isRanks(g)) && <Curve g={g} p={p} />}
       {!isResultOnly(g) && !isCats(g) && <div className="eyebrow">Verlauf</div>}
       <div className={'pp-hist' + (isResultOnly(g) || isCats(g) ? ' hide' : '')}>
         {rounds.map((r, k) => {
@@ -334,6 +344,187 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
       </div>
     </>
+  );
+}
+
+/** Endwertung ohne Zettel (Siedler, Monopoly, eigene): Treppchen und Rangliste wachsen beim Eintragen */
+function ResultBoard({ g, edit }: { g: GameState; edit: Edit | null }) {
+  const players = seated(g), r = liveRounds(g)[0], byPlace = unitOf(g) === 'Platz', high = g.game.rules.win === 'high';
+  const vals = players.map(p => ({ p, v: r ? scoreOf(g, r.id, p.id) : null }));
+  const better = (a: number, b: number) => (high ? b - a : a - b);
+  const ranked = vals.filter(x => x.v !== null).sort((a, b) => better(a.v!, b.v!));
+  const placeOf = (v: number) => 1 + ranked.filter(x => better(x.v!, v) < 0).length;
+  // Während des Eintippens bleibt die Reihenfolge stehen, danach sortiert sich die Liste
+  const rows = edit ? vals : [...ranked, ...vals.filter(x => x.v === null)];
+  const top = ranked.filter(x => placeOf(x.v!) <= 3).slice(0, 3);
+  const podium = [top[1], top[0], top[2]];
+  const tap = (pid: string) => (byPlace ? act().placeTap(pid) : r && act().openPad(r.id, pid));
+  return (
+    <div className="scroll res-scroll"><div className="gutter res-board">
+      <div className="res-podium" aria-hidden="true">
+        {podium.map((x, k) => (
+          <div key={k} className={'rp rp' + [2, 1, 3][k] + (x ? '' : ' empty')}>
+            {x ? <Avatar p={x.p} /> : <span className="av ghost" />}
+            <span className="rp-block" style={x ? css({ '--c': x.p.color }) : undefined}><b>{[2, 1, 3][k]}</b></span>
+          </div>
+        ))}
+      </div>
+      <div className="eyebrow">{unitOf(g)}</div>
+      <div className="res-list">
+        {rows.map(({ p, v }) => {
+          const active = !!edit && edit.playerId === p.id;
+          return (
+            <button key={p.id} className={'res-row' + (v === null ? ' open' : '') + (active ? ' active' : '')} data-player={p.name} onClick={() => tap(p.id)}>
+              <span className="res-pl">{v === null ? '' : placeOf(v)}</span>
+              <Avatar p={p} /><span className="nm">{p.name}</span>
+              <span className={'res-v' + (v === null ? ' ph' : '')}>{v === null ? (byPlace ? '' : '–') : byPlace ? `${v}. Platz` : fmt(v)}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div></div>
+  );
+}
+
+/** Binokel: die beiden Karten, die zusammen den Binokel ergeben (Schippen-Ober und Schellen-Unter) */
+function BinokelMark() {
+  return (
+    <svg className="bino-mark" viewBox="0 0 34 30" role="img" aria-label="Binokel">
+      <g transform="rotate(-12 11 16)"><rect x="3" y="4" width="15" height="21" rx="3" fill="#fffaf2" /><path d="M10.5 10c2.6 2 4 3.4 4 5a2.2 2.2 0 0 1-3.6 1.6l.8 2.4h-2.4l.8-2.4A2.2 2.2 0 0 1 6.5 15c0-1.6 1.4-3 4-5z" fill="#2e2b4f" /></g>
+      <g transform="rotate(10 23 15)"><rect x="15" y="3" width="15" height="21" rx="3" fill="#fffaf2" /><circle cx="22.5" cy="13.5" r="4.2" fill="#f0b13e" /><circle cx="22.5" cy="13.5" r="1.6" fill="#e0923a" /></g>
+    </svg>
+  );
+}
+
+/** Binokel: wer spielt, und optional das Gebot (in Zehnern) */
+function BidderSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
+  const [who, setWho] = useState<string | null>(null);
+  const [bid, setBid] = useState(seated(g).length === 3 ? 200 : 150);
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="bidder" role="dialog" aria-label="Wer spielt?">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Runde {roundNumber(g, roundRef)}</h3>
+          <div className="eyebrow">Wer spielt?</div>
+          <div className="rank-list">
+            {seated(g).map(p => (
+              <button key={p.id} className="rank-row" aria-pressed={who === p.id} onClick={() => setWho(p.id)}><Avatar p={p} /><span className="nm">{p.name}</span></button>
+            ))}
+          </div>
+          {who && <div className="gebot-row">
+            <span className="lbl">Gebot</span>
+            <button className="step" aria-label="10 weniger" onClick={() => setBid(b => Math.max(10, b - 10))}>−</button>
+            <b id="gebot-val">{bid}</b>
+            <button className="step" aria-label="10 mehr" onClick={() => setBid(b => b + 10)}>+</button>
+          </div>}
+          <div className="pad-actions">
+            <button className="secondary" id="bidder-skip" onClick={() => a.setBidder(null, null)}>Ohne Gebot</button>
+            <button className="primary" id="bidder-go" disabled={!who} onClick={() => a.setBidder(who, bid)}>Meldungen</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Binokel im Ziffernblock: Schnelltasten des Feldes; mit Gebot ersetzen eigene Knöpfe das Mal −1 und Mal −2 */
+function splitPadKeys(g: GameState, e: Edit): QuickKey[] {
+  const f = fieldsOf(g)!.find(x => x.key === e.field), keys = f?.quick ?? [];
+  return gebotOf(g, e.ref) ? keys.filter(k => k.op !== 'mul') : keys;
+}
+
+/** Kniffel-Bonus: erreicht „+35“, sonst ein kleiner Kuchen mit dem Fortschritt und wie viel noch fehlt */
+function BonusMark({ g, pid }: { g: GameState; pid: string }) {
+  const b = g.game.rules.params!.bonus!, u = upperSum(g, pid);
+  if (u.bonus) return <span className="bon hit">+{u.bonus}</span>;
+  const f = Math.min(1, u.sum / b.at), a = f * 2 * Math.PI, R = 7;
+  const d = f >= 1 ? '' : `M8 8V${8 - R}A${R} ${R} 0 ${a > Math.PI ? 1 : 0} 1 ${(8 + R * Math.sin(a)).toFixed(2)} ${(8 - R * Math.cos(a)).toFixed(2)}Z`;
+  return (
+    <span className="bon miss" aria-label={`Noch ${b.at - u.sum} bis zum Bonus`}>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r={R} className="pie-bg" />{f > 0 && <path d={d} className="pie" />}</svg>
+      {b.at - u.sum}
+    </span>
+  );
+}
+
+/** Kniffel im Block: Werte der Kategorie direkt über dem Block wählen */
+function CatPickSheet({ g, edit }: { g: GameState; edit: Edit }) {
+  const r = liveRounds(g).find(x => x.id === edit.ref), cat = r?.cat;
+  const p = seated(g).find(x => x.id === edit.playerId)!;
+  const choices = catChoices(cat) ?? [], cur = edit.ref === 'new' ? null : scoreOf(g, edit.ref, p.id);
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closePad()} />
+      <div className="bsheet" id="cat-pick" role="dialog" aria-label={`${p.name}: ${cat?.label}`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <div className="pad-head">
+            <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
+            <div className="who"><b>{cat?.label}</b><small>{p.name}</small></div>
+            <button className="icon-btn" onClick={a.closePad} aria-label="Schließen"><IconClose /></button>
+          </div>
+          <div className={'cp-grid' + (choices.length > 6 ? ' many' : '')}>
+            {choices.map(v => <button key={v} aria-pressed={cur === v} onClick={() => a.pick(v)}>{v}</button>)}
+          </div>
+          <div className="pad-actions">
+            {cur !== null && <button className="secondary" id="cat-clear" onClick={() => { a.clear(); a.next(); }}>Leeren</button>}
+            <button className="cp-strike" id="cat-strike" aria-pressed={cur === 0} onClick={() => a.pick(0)}>Streichen</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Arschloch: Krone für den Präsidenten, kleines Häufchen für das Arschloch */
+function RoleIcon({ kind }: { kind: 'p' | 'a' }) {
+  return kind === 'p'
+    ? <svg className="role-ic" viewBox="0 0 16 13" role="img" aria-label="Präsident"><path d="M1.6 11.6 1 3.2l4.1 3.4L8 1.4l2.9 5.2L15 3.2l-.6 8.4z" fill="#f0b13e" /></svg>
+    : <svg className="role-ic" viewBox="0 0 18 16" role="img" aria-label="Arschloch">
+      <path d="M2 14.6c-1.4 0-1.6-2.6.4-3h13.2c2 .4 1.8 3-.4 3z" fill="#8a5a3c" /><path d="M4 11.6c-1.2-.2-1.2-2.6.6-2.8h8.8c1.8.2 1.8 2.6.6 2.8z" fill="#a06c48" />
+      <path d="M6 8.8c-1-.3-.8-2.4.8-2.4h4.4c1.6 0 1.8 2.1.8 2.4z" fill="#8a5a3c" /><path d="M7.4 6.4C7.4 4.6 9 4 10 2.4c.6 1.6.8 3 .2 4z" fill="#a06c48" />
+      <circle cx="7.2" cy="10.2" r=".9" fill="#fffaf2" /><circle cx="10.8" cy="10.2" r=".9" fill="#fffaf2" /></svg>;
+}
+
+// ---------------------------------------------------------------- Punkteverlauf als Kurve
+
+/** Einfaches Rundenspiel: eine Zahl je Spieler und Runde */
+const plainRounds = (g: GameState) => !isBids(g) && !isCats(g) && !isRanks(g) && !isResultOnly(g) && !isSplit(g) && !hasPhases(g);
+
+/** Verlauf je Runde: der Spieler kräftig in seiner Farbe, die anderen leise dahinter.
+ *  Punkte: Summe nach jeder Runde. Arschloch: Platz je Runde, oben der Präsident. */
+function Curve({ g, p }: { g: GameState; p: Player }) {
+  const ranks = isRanks(g), n0 = seated(g).length;
+  const all: Record<string, number[]> = ranks
+    ? Object.fromEntries(seated(g).map(x => [x.id, liveRounds(g).map(r => rankIn(g, r.id, x.id)).filter((v): v is number => v !== null)]))
+    : runningTotals(g);
+  const mine = all[p.id];
+  if (!mine || mine.length < (ranks ? 2 : 3)) return null;
+  const W = 320, H = 76, padL = 6, padR = 34, padT = 8, padB = 6;
+  const vals = Object.values(all).flat();
+  const lo = ranks ? 1 : Math.min(0, ...vals), hi = ranks ? n0 : Math.max(1, ...vals);
+  const n = mine.length - 1;
+  const x = (k: number) => padL + (k / n) * (W - padL - padR);
+  // Plätze: 1 oben; Punkte: viel oben
+  const y = (v: number) => padT + (ranks ? (v - lo) / (hi - lo) : 1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  const path = (a: number[]) => a.map((v, k) => `${k ? 'L' : 'M'}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join('');
+  const last = mine[n];
+  const lab = (v: number) => (ranks ? roleOf(v, n0).short : fmt(v));
+  return (
+    <div className="pp-curve">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${ranks ? 'Plätze' : 'Punkteverlauf'} von ${p.name}: ${(ranks ? mine : mine.slice(1)).map(lab).join(', ')}`}>
+        <line className="base" x1={padL} x2={W - padR} y1={y(ranks ? hi : lo)} y2={y(ranks ? hi : lo)} />
+        {Object.entries(all).filter(([id]) => id !== p.id).map(([id, a]) => <path key={id} className="other" d={path(a)} />)}
+        <path className="mine" d={path(mine)} style={{ stroke: p.color }} />
+        {ranks && mine.map((v, k) => <circle key={k} cx={x(k)} cy={y(v)} r="3" style={{ fill: p.color }} />)}
+        <circle cx={x(n)} cy={y(last)} r="4.5" style={{ fill: p.color }} className="end" />
+        <text x={x(n) + 9} y={y(last) + 4.5} className="val">{lab(last)}</text>
+      </svg>
+    </div>
   );
 }
 

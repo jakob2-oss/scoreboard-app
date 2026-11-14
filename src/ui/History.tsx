@@ -1,4 +1,5 @@
 import { act, useApp } from '../store';
+import type { HistGame } from '../game/stats';
 import { fmt } from '../lib/color';
 import { Avatar } from './Avatar';
 import { GameIcon } from './GamePage';
@@ -44,34 +45,40 @@ export function History() {
         </div>
       </div>
       <TabBar active="history" />
-      {open && (
+      {open && <GameDetail h={open} />}
+    </section>
+  );
+}
+
+/** Eine abgeschlossene Partie: Datum, Serie, Löschen, Plätze (aus dem Verlauf und aus einer Serie) */
+export function GameDetail({ h: open, onClose }: { h: HistGame; onClose?: () => void }) {
+  const { players } = useApp();
+  return (
         <>
-          <div className="scrim" onClick={() => act().openDetail(null)} />
-          <div className="bsheet" role="dialog" aria-label="Partie">
-            <div className="grab" />
-            <div className="sheet-body">
-              <div className="eyebrow">{dateLong(open.finishedAt)}{open.occasion ? `, ${open.occasion}` : ''}</div>
-              <h3>{open.name}</h3>
-              <div className="field"><label>Serie</label>
-                <SeriesPicker value={open.eventId ?? null} onChange={id => act().setGameEvent(open.id, id)} />
-              </div>
-              <DeleteGame id={open.id} />
-              <div className="podium">
-                {open.results.map(r => {
-                  const p = playerOf(players, r.playerId);
-                  return (
-                    <button key={r.playerId} className={'prow' + (r.place === 1 ? ' win' : '')} onClick={() => act().openProfile(r.playerId)}>
-                      <span className="place">{r.place}</span><Avatar p={p} /><span className="nm">{p.name}</span>
-                      {r.place === 1 && <Crown />}<span className="pts">{fmt(r.total)}</span>
-                    </button>
-                  );
-                })}
-              </div>
+        <div className="scrim" onClick={() => (onClose ? onClose() : act().openDetail(null))} />
+        <div className="bsheet" role="dialog" aria-label="Partie">
+          <div className="grab" />
+          <div className="sheet-body">
+            <div className="eyebrow">{dateLong(open.finishedAt)}{open.occasion ? `, ${open.occasion}` : ''}</div>
+            <h3>{open.name}</h3>
+            <div className="field"><label>Serie</label>
+              <SeriesPicker value={open.eventId ?? null} onChange={id => act().setGameEvent(open.id, id)} />
+            </div>
+            <DeleteGame id={open.id} />
+            <div className="podium">
+              {open.results.map(r => {
+                const p = playerOf(players, r.playerId);
+                return (
+                  <button key={r.playerId} className={'prow' + (r.place === 1 ? ' win' : '')} onClick={() => act().openProfile(r.playerId)}>
+                    <span className="place">{r.place}</span><Avatar p={p} /><span className="nm">{p.name}</span>
+                    {r.place === 1 && <Crown />}<span className="pts">{fmt(r.total)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </>
-      )}
-    </section>
+        </div>
+      </>
   );
 }
 

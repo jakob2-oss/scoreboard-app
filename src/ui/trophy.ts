@@ -16,7 +16,7 @@ const nest = (icon: string, x: number, y: number, s: number) =>
 const SAD_EYE = `<ellipse cx="-17.5" cy="-6" rx="6" ry="5" fill="#271d18"/><path d="M-25-7.5C-23-14-12-14-10-9.5L-11-6C-15-10-21-10-25-7.5z" fill="#8f6447"/><circle cx="-15.5" cy="-6" r="1.4" fill="#fff" opacity=".7"/><rect x="-27" y="-18" width="15" height="3.2" rx="1.6" fill="#5e3f2d" transform="rotate(-16 -19 -16)"/>`;
 
 /** Otter: fröhlich mit Krone und Pokal, oder traurig mit eigenem Gegenstand in den Pfoten (prop, Ursprung bei den Pfoten) */
-function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
+export function otter(o: { sad?: boolean; prop?: string; tear?: boolean; shades?: boolean; hat?: 'crown' | 'cap' | 'none' } = {}) {
   // Ursprung: Mitte zwischen den Füßen; Kopf bei y = -142. Licht kommt von links oben (Lampe).
   const mirror = (part: string) => `${part}<g transform="scale(-1 1)">${part}</g>`;
   const eye = `<path d="M-25-7C-22-15-13-15-10-7C-12.5-10.5-22.5-10.5-25-7z" fill="${C.eye}"/>`;
@@ -40,6 +40,8 @@ function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
       ${mirror(`<circle cx="-16" cy="8" r="12.5" fill="${C.muzzle}"/>`)}
       ${mirror(dots)}
       ${o.sad ? mirror(SAD_EYE) : mirror(eye)}
+      ${o.shades ? `<path d="M-30-14h24c1 9-3 14-11 14s-13-5-13-14zM6-14h24c0 9-5 14-13 14S5-5 6-14z" fill="#1d1a2e"/><rect x="-7" y="-13" width="14" height="3" rx="1.5" fill="#1d1a2e"/>
+        <path d="M-26-11h7l-6 8z" fill="#fff" opacity=".35"/><path d="M10-11h7l-6 8z" fill="#fff" opacity=".35"/>` : ''}
       ${mirror(`<ellipse cx="-27" cy="1" rx="5" ry="3" fill="#e9a58b" opacity=".35"/>`)}
       <path d="M-9-4C-9-10 9-10 9-4 9 1 4 4 0 4S-9 1-9-4z" fill="${C.nose}"/>
       <ellipse cx="-3" cy="-6" rx="3" ry="1.5" fill="#fff" opacity=".45"/>
@@ -47,7 +49,9 @@ function otter(o: { sad?: boolean; prop?: string; tear?: boolean } = {}) {
       ${o.sad ? `<path d="M-9 19C-6 13 6 13 9 19 5 16.5-5 16.5-9 19z" fill="#4a2f25"/>${o.tear ? `<path d="M-19 4c2 4 4 7 4 9a4 4 0 0 1-8 0c0-2 2-5 4-9z" fill="#97c4e3" class="vo-tear"/>` : ''}`
         : `<path d="M-13 9C-9 23 9 23 13 9 7 12.5-7 12.5-13 9z" fill="#4a2f25"/><ellipse cx="0" cy="16.5" rx="5.5" ry="3" fill="#e98a86"/>`}
       ${mirror(whisker.replace(/x="22"/g, 'x="-42"').replace(/rotate\((-?\d+) 22/g, (_m, a) => `rotate(${-Number(a)} -22`))}
-      ${o.sad ? '' : `<g transform="translate(0 -34) rotate(-6)">
+      ${o.hat === 'cap' ? `<g transform="translate(2 -22) rotate(-8)"><path d="M-34 6C-34-16-18-30 2-30S36-16 36 6z" fill="#d9634a"/><path d="M-6 6h56c4 0 4 7 0 7H-6z" fill="#b5452f"/>
+        <circle cx="2" cy="-30" r="4" fill="#b5452f"/><path d="M-20-6c4-10 12-16 22-17" stroke="#fff" stroke-width="3" fill="none" opacity=".35" stroke-linecap="round"/></g>` : ''}
+      ${o.sad || o.hat === 'cap' || o.hat === 'none' ? '' : `<g transform="translate(0 -34) rotate(-6)">
         <path d="M-27 10l-5-26 15 12 17-22 17 22 15-12-5 26z" fill="${C.gold}"/>
         <path d="M0-26l17 22 15-12-3 14c-8 2-20-2-29-24z" fill="${C.goldDark}" opacity=".35"/>
         <rect x="-28" y="5" width="56" height="11" rx="4" fill="${C.goldDark}"/>
@@ -141,4 +145,61 @@ function room(icon: string, ribbon: string, figure: string, party: boolean, extr
     </g>
     ${party ? `<g>${confetti}</g>` : '<rect x="-10" y="-10" width="410" height="320" fill="#2a2350" opacity=".18"/>'}
   </svg>`;
+}
+
+// ---------------------------------------------------------------- Ergebnisspiele: eigene Siegerszenen
+
+export type WinTheme = 'insel' | 'geld' | 'buehne';
+
+/** Siegerszene im Freien bzw. auf der Bühne: Siedler (Insel aus Feldern), Monopoly (Geldregen), eigene Spiele (Treppchen) */
+export function themeRoom(theme: WinTheme, ribbon = 'GEWONNEN'): string {
+  const ribbonSvg = `<g transform="translate(195 252)">
+      <path d="M-112-4h22v26h-22l8-13z" fill="#d9cdb8"/><path d="M112-4h-22v26h22l-8-13z" fill="#d9cdb8"/>
+      <rect x="-96" y="-10" width="192" height="28" rx="4" fill="${C.paper}"/>
+      <text y="9" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="15" letter-spacing="3" fill="${C.ink}">${ribbon}</text>
+    </g>`;
+  const fall = (shape: (c: string, k: number) => string, cols: string[], n = 14) => Array.from({ length: n }, (_, k) => {
+    const x = 16 + ((k * 61) % 360);
+    return `<g transform="translate(${x} 0)"><g class="vc-fall" style="animation-duration:${10 + (k % 5) * 1.7}s;animation-delay:${-k * 1.4}s">${shape(cols[k % cols.length], k)}</g></g>`;
+  }).join('');
+  let bg = '', fg = '', drop = '';
+  if (theme === 'insel') {
+    // Meer, eine Insel aus Sechseck-Feldern, Siedlungen, Straße und ein Schaf
+    const hex = (x: number, y: number, c: string) => `<path transform="translate(${x} ${y})" d="M0-26 22.5-13v26L0 26-22.5 13v-26z" fill="${c}"/>`;
+    const house = (x: number, y: number, c: string) => `<g transform="translate(${x} ${y})"><path d="M-8 0v-10l8-7 8 7V0z" fill="${c}"/><rect x="-2.5" y="-6" width="5" height="6" fill="#00000030"/></g>`;
+    bg = `<rect width="390" height="300" fill="#bfe3ec"/><rect y="150" width="390" height="150" fill="#7fc3d6"/>
+      ${[[40, 176], [300, 206], [120, 236], [350, 168]].map(([x, y]) => `<path d="M${x} ${y}q10-6 20 0q10 6 20 0" stroke="#e8f6fa" stroke-width="3" fill="none" opacity=".7"/>`).join('')}
+      <circle cx="320" cy="58" r="26" fill="#f6d27a"/><circle cx="62" cy="64" r="14" fill="#fff" opacity=".8"/><circle cx="80" cy="58" r="18" fill="#fff" opacity=".8"/><circle cx="98" cy="66" r="12" fill="#fff" opacity=".8"/>
+      <g transform="translate(0 4)">
+        ${hex(150, 196, '#e9c46a')}${hex(195, 196, '#86b86a')}${hex(240, 196, '#c98b5a')}
+        ${hex(127, 235, '#9ccf7a')}${hex(172, 235, '#d9d3c4')}${hex(217, 235, '#6f9e58')}${hex(262, 235, '#e9c46a')}
+        ${hex(105, 196, '#c98b5a')}${hex(285, 196, '#9ccf7a')}
+        <rect x="140" y="176" width="34" height="5" rx="2.5" fill="#d9634a" transform="rotate(-30 157 178)"/>
+        ${house(112, 186, '#d9634a')}${house(290, 188, '#97c4e3')}${house(244, 226, '#f2cf86')}
+        <g transform="translate(140 228)"><ellipse rx="10" ry="7" fill="#fff"/><circle cx="9" cy="-2" r="4" fill="#3a2a22"/><rect x="-6" y="5" width="2" height="5" fill="#3a2a22"/><rect x="3" y="5" width="2" height="5" fill="#3a2a22"/></g>
+      </g>`;
+    drop = fall((c, k) => k % 3 ? `<rect x="-2" y="-5" width="4" height="10" rx="1.5" fill="${c}"/>` : `<circle r="3.5" fill="${c}"/>`, CONF);
+  } else if (theme === 'geld') {
+    // Grünes Spielbrett, Felderrand, Häuschen und Hotel, Geldscheine regnen
+    bg = `<rect width="390" height="300" fill="#cfe8d6"/>
+      ${Array.from({ length: 10 }, (_, k) => `<rect x="${k * 40 - 5}" y="262" width="38" height="40" fill="${k % 2 ? '#f6efe2' : '#efe6d4'}"/><rect x="${k * 40 - 5}" y="262" width="38" height="8" fill="${['#d9634a', '#f2cf86', '#97c4e3', '#86cbb8', '#bba8e6'][k % 5]}"/>`).join('')}
+      <circle cx="70" cy="70" r="46" fill="#b9dcc3"/><circle cx="330" cy="110" r="64" fill="#b9dcc3"/>
+      <g transform="translate(70 230)"><path d="M-14 0v-16l14-12 14 12V0z" fill="#86cbb8"/></g>
+      <g transform="translate(320 232)"><rect x="-22" y="-30" width="44" height="30" rx="3" fill="#d9634a"/><rect x="-26" y="-36" width="52" height="8" rx="3" fill="#b5452f"/></g>
+      <g transform="translate(345 70) rotate(14)"><rect x="-26" y="-14" width="52" height="28" rx="4" fill="#fff8e6"/><text y="6" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="14" fill="#5b4636">FREI</text></g>`;
+    drop = fall((_, k) => k % 4 === 0 ? `<circle r="6" fill="#f0c35a"/><circle r="3.5" fill="#d29d3a"/>` : `<g transform="rotate(${(k * 37) % 60 - 30})"><rect x="-11" y="-6" width="22" height="12" rx="2" fill="#9fd3a8"/><circle r="3.6" fill="#6fae7c"/></g>`, ['#9fd3a8'], 16);
+  } else {
+    // Bühne mit Vorhang, Spot und Treppchen hinter dem Otter
+    bg = `<rect width="390" height="300" fill="#3b3570"/>
+      <path d="M0 0h70c-6 90 2 180 14 262H0z" fill="#c2453f"/><path d="M390 0h-70c6 90-2 180-14 262h84z" fill="#c2453f"/>
+      <path d="M0 0h390v26c-60 12-130 12-195 0S60 38 0 26z" fill="#a8362f"/>
+      <path d="M150 0h90l70 262H80z" fill="#fff4cc" opacity=".14"/>
+      <rect y="258" width="390" height="42" fill="#5a3f6f"/>
+      <g transform="translate(195 258)"><rect x="-110" y="-46" width="62" height="46" rx="5" fill="#97c4e3"/><rect x="-46" y="-70" width="92" height="70" rx="5" fill="#f2cf86"/><rect x="48" y="-34" width="62" height="34" rx="5" fill="#f3a98f"/>
+        <text x="-79" y="-16" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="20" fill="#2e2b4f">2</text><text x="79" y="-10" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="20" fill="#2e2b4f">3</text></g>`;
+    drop = fall((c, k) => k % 3 ? `<rect x="-2" y="-5" width="4" height="10" rx="1.5" fill="${c}"/>` : `<circle r="3.5" fill="${c}"/>`, CONF);
+  }
+  const lift = theme === 'buehne' ? 190 : 260;
+  fg = `<ellipse cx="195" cy="${lift + 2}" rx="56" ry="6" fill="#000" opacity=".14"/><g transform="translate(195 ${lift})${theme === 'buehne' ? ' scale(.8)' : ''}">${otter()}</g>`;
+  return `<svg class="scene" viewBox="0 0 390 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${bg}${fg}${ribbonSvg}<g>${drop}</g></svg>`;
 }

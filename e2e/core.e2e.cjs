@@ -23,7 +23,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('18 Einträge (16 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 18 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('19 Einträge (17 Spiele, Schnelles Spiel, Erstellen), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('.new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
@@ -181,7 +181,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.switch-row >> text=Als Vorlage speichern');   // diesmal als Vorlage speichern
   await p.click('#setup-next'); await p.click('#start-btn');
   check('10 Runden angelegt', (await p.locator('tbody tr').count()) === 10);
-  check('Untertitel „Runde 1 von 10“', (await raw('.top .sub')) === 'Runde 1 von 10');
+  check('kein Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
   await p.click('.dock .primary'); await p.waitForTimeout(500);
   check('eigene Schnelltasten', (await text('.pp-panel .quick')) === '−20 −10 −2 +2 +10 +20');
   await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+2"');
@@ -209,15 +209,27 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('[data-game="romme"]');
   check('Rommé-Spielseite', await p.isVisible('#s-gamepage .rule-card'));
   await shot('08-romme');
-  await p.click('.seg >> text=Bei 1000');
+  check('Spielende standardmäßig offen', (await p.getAttribute('#end-none', 'aria-pressed')) === 'true');
+  await p.click('#end-target'); await p.fill('#end-value', '1000');
   check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
   await p.click('#quick-start');
-  check('Untertitel mit Ziel 1000, Geber als Schild', (await raw('.top .sub')) === 'Runde 1, Ziel 1000' && await p.isVisible('.dealer-tag'));
-  await p.click('.dock .primary'); await p.waitForTimeout(500);
-  await p.click('.pp-panel .quick >> text="Raus"'); await p.click('.pp-keys .go'); await p.waitForTimeout(500);
-  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-panel .quick >> text="+5"'); await p.click('.pp-panel .quick >> text="×2"');
-  check('Rommé: (20 + 5) × 2 = 50', (await text('section[aria-label="Ben"] .pp-entry .val')) === '50');
+  check('kein Untertitel, Geber als Schild', (await p.locator('#s-game .top .sub').count()) === 0 && await p.isVisible('.dealer-tag'));
+  check('Rommé: Umschalter „Manuell“ im Block', (await raw('#mode-switch')) === 'Manuell');
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  check('Rommé: Ziffernblock direkt im Block, mit Rommé-Tasten', await p.isVisible('#pad .pad-quick') && (await raw('#pad .who b')) === 'Anna');
+  await p.click('#pad .pad-quick >> text="Raus"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+20"'); await p.click('#pad .pad-quick >> text="+5"'); await p.click('#pad .pad-quick >> text="×2"');
+  check('Rommé: (20 + 5) × 2 = 50', (await raw('#pad .pad-display .val')) === '50' && (await raw('#pad .who b')) === 'Ben');
   await shot('09-romme-play');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+10"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Rommé: Runde im Block eingetragen, Krone für die 0', !(await p.isVisible('#pad')) && (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '105010' && (await p.locator('td.cell.won .crown').count()) === 1);
+  await shot('09b-romme-block');
+  await p.click('#mode-switch'); await p.waitForTimeout(500);
+  check('Rommé: Manuell öffnet die Spielerseite', (await page()) === 0 && await p.isVisible('.pp-panel'));
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(300);
+  await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
+  check('Rommé: über das Menü zurück im Block', (await raw('#mode-switch')) === 'Manuell');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row[data-own]').count()) === 2);
   await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
@@ -254,15 +266,18 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Nur Ergebnis: Monopoly mit Platzierung
   for (const k of ['uno', 'scrabble', 'siedler']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('20-' + k); await p.click('.tpl-back'); }
   await p.click('[data-game="monopoly"]'); await shot('20-monopoly'); await p.click('#quick-start');
-  check('Monopoly: Knopf „Ergebnis eintragen“', (await raw('#round-go')).startsWith('Ergebnis eintragen'));
-  check('Monopoly: Untertitel „Endstand“', (await raw('.top .sub')) === 'Endstand');
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  check('Monopoly: Feld heißt „Platz“, kein Verlauf', (await text('section[aria-label="Anna"] .pp-entry .lbl')) === 'Platz' && !(await p.isVisible('section[aria-label="Anna"] .pp-hist')));
-  await shot('21-monopoly-page');
-  for (const v of ['2.', '1.', '3.']) { await p.click(`.pp-panel .quick >> text="${v}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(500); }
-  check('Monopoly: Ben führt, Ergebnis-Knopf', (await p.getAttribute('tfoot td.lead', 'style') || '').includes('#86cbb8') && (await raw('.dock .primary')) === 'Ergebnis');
+  check('Monopoly: Endwertung ohne Zettel, Auswerten noch aus', await p.isVisible('.res-board') && !(await p.isVisible('table.grid')) && await p.isDisabled('#evaluate'));
+  check('Monopoly: kein Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
+  await p.click('.res-row[data-player="Ben"]'); await p.waitForTimeout(200);
+  check('Monopoly: erster Tipp ist Platz 1, Treppchen wächst', (await raw('.res-row[data-player="Ben"] .res-v')) === '1. Platz' && (await p.locator('.res-podium .rp:not(.empty)').count()) === 1);
+  await shot('21-monopoly-entry');
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(300);
+  check('Monopoly: letzter Platz ergibt sich, Rangliste sortiert', (await p.locator('.res-row .nm').allTextContents()).join() === 'Ben,Anna,Clara' && !(await p.isDisabled('#evaluate')));
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(200);
+  check('Monopoly: nochmal tippen nimmt den Platz zurück', (await p.locator('.res-row.open').count()) === 1 && (await raw('.res-row[data-player="Clara"] .res-v')) === '2. Platz');
+  await p.click('.res-row[data-player="Anna"]'); await p.waitForTimeout(300);
   await shot('22-monopoly-ov');
-  await p.click('.dock .primary');
+  await p.click('#evaluate');
   check('Monopoly: Ben gewinnt', (await text('.bsheet h3')) === 'Ben gewinnt');
   check('Siegerseite: Treppchen und Kennzahlen', (await p.locator('.v-podium .v-step').count()) === 3 && (await raw('.v-hero')).includes('GEWONNEN'));
   await shot('22b-victory');
@@ -270,7 +285,8 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Kniffel: Kategorien, Bonuszeilen, Kategorien verwalten
   await p.click('[data-game="kniffel"]'); await shot('30-kniffel'); await p.click('#quick-start');
-  check('Kniffel: 13 Kategorien + 2 Rechenzeilen', (await p.locator('tbody tr').count()) === 15, String(await p.locator('tbody tr').count()));
+  check('Kniffel: 13 Kategorien + 3 Rechenzeilen (oben, Bonus, unten)', (await p.locator('tbody tr').count()) === 16, String(await p.locator('tbody tr').count()));
+  check('Kniffel: Bonus zeigt, wie viel bis 63 fehlt', (await raw('tr.bonus td >> nth=0')) === '63');
   check('Kniffel: Zug von Anna', (await raw('#round-go')).includes('Anna'));
   await p.click('#round-go'); await p.waitForTimeout(500);
   await shot('31-kniffel-page');
@@ -283,14 +299,17 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#cat-strike'); await p.waitForTimeout(500);
   await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
   check('Kniffel: gestrichenes Feld markiert', (await p.locator('td.struck').count()) === 1);
+  const turnName = (await raw('#round-go')).replace('Zug von ', '');
+  check('Kniffel: Spalte dessen, der dran ist, getönt', (await p.locator('td.myturn').count()) > 0 && (await p.locator(`td.myturn[aria-label^="${turnName},"]`).count()) === (await p.locator('td.myturn').count()), turnName);
   await p.click('td[aria-label="Clara, Kniffel"]'); await p.waitForTimeout(400);
-  check('Kniffel: Feld im Überblick öffnet Auswahl', (await p.locator('.cp-grid button').count()) === 1);
-  await p.click('.cp-grid button'); await p.waitForTimeout(500);
-  check('Kniffel: danach zurück im Überblick', (await page()) === -1 && (await text('td[aria-label="Clara, Kniffel"]')) === '50');
+  check('Kniffel: Feld im Block öffnet Auswahl direkt im Block', await p.isVisible('#cat-pick') && (await p.locator('#cat-pick .cp-grid button').count()) === 1 && (await page()) === -1);
+  await shot('31c-kniffel-pick');
+  await p.click('#cat-pick .cp-grid button'); await p.waitForTimeout(500);
+  check('Kniffel: eingetragen, Auswahl zu', !(await p.isVisible('#cat-pick')) && (await text('td[aria-label="Clara, Kniffel"]')) === '50' && (await raw('tr.calc >> text=Summe unten')).length > 0);
   await p.click('td[aria-label="Clara, Chance"]'); await p.waitForTimeout(400);
-  check('Kniffel: Chance mit Zahlenfeld', await p.isVisible('.pp-keys'));
-  await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(300);
-  await shot('31c-kniffel-ov');
+  check('Kniffel: Chance mit Zahlenfeld im Block', await p.isVisible('#pad.compact') && (await raw('#pad .who small')) === 'Chance');
+  await p.click('#pad [aria-label="Ziffernblock schließen"]'); await p.waitForTimeout(300);
+  await shot('31d-kniffel-ov');
   await p.goto(URL); await p.waitForTimeout(600);
   await p.click('.resume'); await p.waitForTimeout(300);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('#open-cats');
@@ -306,10 +325,21 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Phase 10: Haken auf der Spielerseite
   await p.click('[data-game="phase10"]'); await shot('34-phase10'); await p.click('#quick-start');
-  await p.click('#round-go'); await p.waitForTimeout(500);
-  await p.click('#phase-toggle'); await p.waitForTimeout(200);
-  check('Phase 10: Haken gesetzt', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
-  await shot('35-phase10-page');
+  check('Phase 10: Geber als Schild', await p.isVisible('.dealer-tag'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  check('Phase 10: im Block mit Phasen-Knopf', (await raw('#pad-phase')).endsWith('Phase 1') && (await p.getAttribute('#pad-phase', 'aria-pressed')) === 'false');
+  await p.click('#pad .pad-quick >> text="Raus"'); await p.waitForTimeout(150);
+  check('Phase 10: Raus hakt die Phase ab', (await p.getAttribute('#pad-phase', 'aria-pressed')) === 'true' && (await raw('#pad-phase')).includes('geschafft'));
+  await shot('35-phase10-pad');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150);
+  await p.click('#pad .pad-quick >> text="+25"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150);
+  await p.click('#pad .pad-quick >> text="+10"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Phase 10: geschafft grün, gescheitert rot, nächste Phase im Kopf', (await p.locator('td.cell.ph-ok').count()) === 1 && (await p.locator('td.cell.ph-no').count()) === 2 && (await raw('thead th:nth-child(2) .ph-n')) === 'Phase 2');
+  await shot('35b-phase10-block');
+  await p.click('#round-go'); await p.click('#pad-phase'); await p.waitForTimeout(150);
+  await p.click('#pad [aria-label="Ziffernblock schließen"]');
+  await p.click('#mode-switch'); await p.waitForTimeout(400);
+  check('Phase 10: Haken auch auf der Spielerseite', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
   // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
   await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
   check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));
@@ -328,16 +358,27 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Binokel: erst Meldungen, dann Stiche
   await p.click('[data-game="binokel"]'); await p.click('#quick-start');
   check('Binokel: Knopf „Meldungen Runde 1“', (await raw('#round-go')).startsWith('Meldungen Runde 1'));
-  await p.click('#round-go'); await p.waitForTimeout(400);
-  check('Binokel: Feld Meldung aktiv', (await p.getAttribute('section[aria-label="Anna"] .wz-f[data-field="meld"]', 'aria-pressed')) === 'true');
-  await p.click('.pp-panel .quick >> text="+40"'); await shot('44-binokel-meld');
-  await p.click('.pp-keys .go'); await p.waitForTimeout(300);
-  await p.click('.pp-panel .quick >> text="+20"'); await p.click('.pp-keys .go'); await p.waitForTimeout(300);
-  await p.click('.pp-keys .go'); await p.waitForTimeout(400);
+  check('Binokel: Logo in der Ecke, Geber', await p.isVisible('.corner .bino-mark') && await p.isVisible('.dealer-tag'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  check('Binokel: zuerst „Wer spielt?“', await p.isVisible('#bidder') && (await p.isDisabled('#bidder-go')));
+  await p.click('#bidder .rank-row >> text=Ben'); await p.click('#bidder [aria-label="10 mehr"]');
+  check('Binokel: Gebot 210 bei drei Spielern', (await raw('#gebot-val')) === '210');
+  await shot('44-binokel-bidder');
+  await p.click('#bidder-go'); await p.waitForTimeout(300);
+  check('Binokel: Meldungen im Block, ab Anna', await p.isVisible('#pad.compact') && (await raw('#pad .who b')) === 'Anna' && (await raw('#pad .who small')) === 'Meldung in Runde 1');
+  await p.click('#pad .pad-quick >> text="+40"'); await shot('44b-binokel-meld');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  check('Binokel: Spielmacher sieht Gebot, Abgehen und Verfehlt', (await raw('#pad .pad-out')).includes('210') && await p.isVisible('#out-2'));
+  await p.click('#pad .pad-quick >> text="+20"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
   check('Binokel: weiter mit „Stiche Runde 1“', (await raw('#round-go')).startsWith('Stiche Runde 1'));
-  await p.click('#round-go'); await p.waitForTimeout(400);
-  for (const k of ['+50', '+20', '+10']) { await p.click(`.pp-panel .quick >> text="${k}"`); await p.click('.pp-keys .go'); await p.waitForTimeout(300); }
-  check('Binokel: Runde 90, 40, 10', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '190\n40+5040\n20+2010\n0+10'.replace(/\s/g, ''), await text('tbody tr:nth-child(1)'));
+  await p.click('#round-go'); await p.waitForTimeout(300);
+  await p.click('#pad .pad-quick >> text="+50"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+20"'); await p.waitForTimeout(100);
+  check('Binokel: unter dem Gebot wird Verfehlt vorgeschlagen', (await p.getAttribute('#out-2', 'class')) === 'suggest');
+  await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
+  await p.click('#pad .pad-quick >> text="+10"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Binokel: Runde 90, 40, 10; Bester grün, Gebot beim Spielmacher', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '19040+502104020+20100+10'.replace(/\s/g, '') && (await p.locator('td.cell.best').count()) === 1, await text('tbody tr:nth-child(1)'));
   await shot('45-binokel-ov');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
@@ -346,6 +387,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.fill('#add-name', 'Dora'); await p.press('#add-name', 'Enter');
   await p.click('#team-mode'); await p.waitForTimeout(100);
   check('Teams: zwei Teams vorgeschlagen', (await raw('#start-btn')) === 'Los mit 2 Teams' && (await p.locator('.team-chip').count()) === 4);
+  await p.click('#add-team'); await p.waitForTimeout(100);
+  check('Teams: drittes Team, reihum verteilt', (await raw('#team-n')) === '3 Teams' && (await raw('#start-btn')) === 'Los mit 3 Teams');
+  await p.click('#team-less'); await p.waitForTimeout(100);
+  check('Teams: zurück auf zwei', (await raw('#start-btn')) === 'Los mit 2 Teams' && await p.isDisabled('#team-less'));
   await shot('36a-teams');
   await p.click('#start-btn'); await p.waitForTimeout(300);
   check('Teams: Zettel mit Teamspalten', (await raw('.grid thead')).includes('&'));
@@ -372,7 +417,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Skat: Geber, Alleinspieler, eingepasst, verloren zählt doppelt; Rekorde und neuer Rekord
   await p.click('[data-game="skat"]'); await shot('36g-skat'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && !(await raw('#s-game .sub')).includes('gibt'));
+  check('Skat: Geber als Schild über der Spalte', await p.isVisible('.dealer-tag') && (await p.locator('#s-game .top .sub').count()) === 0);
   const dealer1 = await p.locator('th:has(.dealer-tag) .pn > span:not(.av)').textContent();
   await p.click('#round-go'); await p.waitForTimeout(150);
   check('Skat: Wer spielt?', (await raw('.bsheet .eyebrow')) === 'Wer spielt?' && await p.isVisible('#pass-round'));
@@ -437,7 +482,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Startseite: Gruppen nach Spielart, aufklappbar, Favoriten oben
-  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('2'));
+  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('3'));
   await p.click('#grp-karten'); await p.waitForTimeout(100);
   check('Gruppe zuklappbar', !(await p.isVisible('[data-game="wizard"]')) && (await p.getAttribute('#grp-karten', 'aria-expanded')) === 'false');
   await p.reload(); await p.waitForSelector('.wordmark');
@@ -482,7 +527,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Oina no: speichern und gleich noch eine Partie mit denselben Plätzen
   const swimSeats = await seatNames();
   await p.click('#oina-no'); await p.waitForTimeout(400);
-  check('Oina no: neue Partie mit denselben Plätzen', await p.isVisible('.tbl') && (await seatNames()).join() === swimSeats.join() && (await raw('#s-game .sub')) === 'Runde 1' && (await p.locator('.tb-seat.out').count()) === 0);
+  check('Oina no: neue Partie mit denselben Plätzen', await p.isVisible('.tbl') && (await seatNames()).join() === swimSeats.join() && (await raw('.tb-phase >> nth=0')) === 'Runde 1' && (await p.locator('.tb-seat.out').count()) === 0);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   // Die gespeicherte Schwimmen-Partie wieder aus dem Verlauf nehmen, damit Serien- und Duell-Prüfungen gleich bleiben
   await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.click('#hist-delete'); await p.click('#hist-delete-yes'); await p.waitForTimeout(300);
@@ -495,20 +540,45 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tk-3'); await p.waitForTimeout(150);
   check('Schocken: Spieler hat 3, Mitte 10', (await seat(0).getAttribute('aria-label')).endsWith('3 Deckel') && (await raw('.tb-count')) === '10');
   await seat(1).click(); await p.click('#tk-schock'); await p.waitForTimeout(200);
-  check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('#s-game .sub')) === '2. Hälfte');
+  check('Schocken: Schock aus verliert die Hälfte, alles zurück in die Mitte', (await p.locator('.tb-half.lost').count()) === 1 && (await raw('.tb-count')) === '13' && (await raw('.tb-phase >> nth=0')) === '2. Hälfte');
   await shot('37f-schocken-tisch');
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+
+  // Chic: rausschicken und Chic aus dem Rohr
+  await p.click('[data-game="chic"]'); await shot('37g-chic'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  await seat(0).click(); await p.click('#tk-3'); await p.waitForTimeout(150);
+  await seat(0).click(); await p.waitForTimeout(150);
+  check('Chic: Knöpfe im Deckel-Blatt', await p.isVisible('#tk-sendout') && await p.isVisible('#tk-chicloss'));
+  await p.click('#tk-sendout'); await p.waitForTimeout(200);
+  check('Chic: rausgeschickt, Deckel zurück in die Mitte', (await seat(0).getAttribute('aria-label')).endsWith('raus') && (await raw('.tb-count')) === '13' && (await raw('.toast')).includes('rausgeschickt'));
+  await seat(1).click(); await p.click('#tk-chicloss'); await p.waitForTimeout(200);
+  check('Chic: aus dem Rohr zahlt, Spiel läuft weiter', (await raw('.toast')).includes('zahlt die Runde') && (await p.locator('.tb-chic').count()) === 1);
+  await shot('37h-chic-tisch');
+  await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  // Schwimmen: nur der Erste darf schwimmen
+  await p.click('[data-game="schwimmen"]');
+  check('Schwimmen: Einstellung „Schwimmen darf“', (await p.getAttribute('#swim-all', 'aria-pressed')) === 'true');
+  await p.click('#swim-first'); check('Schwimmen: „Nur der Erste“ gewählt', (await p.getAttribute('#swim-first', 'aria-pressed')) === 'true');
+  await p.click('.tpl-back');
 
   for (const k of ['schafkopf', 'doppelkopf', 'binokel']) { await p.click(`[data-game="${k}"]`); check(`Spielseite ${k}`, await p.isVisible('#s-gamepage .rule-card')); await shot('36-' + k); await p.click('.tpl-back'); }
 
   // Serien: Statistikseite
   await p.click('#tab-events'); await p.waitForTimeout(200);
-  check('Serie in der Liste', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026');
+  check('Serie in der Liste mit Banner und Teilnehmern', (await p.locator('.series-row').count()) === 1 && (await text('.series-row .t b')) === 'Südamerika 2026' && await p.isVisible('.series-row .ser-bicon svg') && (await p.locator('.series-row .ser-stack .av').count()) === 3);
   await shot('40-series-list');
   await p.click('.series-row'); await p.waitForTimeout(200);
   const nSer = Number((await text('.ser-hero small')).split(' ')[0]);
   check('Serie: Partien von späteren Abschlüssen vorbelegt', nSer >= 2, await text('.ser-hero small'));
   check('Serie: Tabelle mit drei Spielern', (await p.locator('.ser-table .prow').count()) === 3);
+  check('Serie: Banner oben, Teilnehmer aufgelistet', await p.isVisible('.ser-banner svg') && (await p.locator('#series-people .ser-person').count()) === 3);
+  await p.click('.ser-game >> nth=0'); await p.waitForTimeout(250);
+  check('Serie: Partie öffnet die Einzelheiten', await p.isVisible('.bsheet[aria-label="Partie"] .podium'));
+  await shot('41b-series-detail');
+  await p.mouse.click(195, 160); await p.waitForTimeout(300);
+  check('Serie: Einzelheiten wieder zu', !(await p.isVisible('.bsheet[aria-label="Partie"]')));
+  await p.click('#banner-2'); await p.waitForTimeout(150);
+  check('Serie: Banner wählbar', (await p.getAttribute('#banner-2', 'aria-pressed')) === 'true');
   check('Serie: Leistung ist Standard', (await p.getAttribute('#sort-perf', 'aria-pressed')) === 'true' && (await text('.ser-table .prow .pts >> nth=0')).endsWith('×'));
   await shot('41-series');
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('41-series-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
@@ -591,7 +661,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-setup [aria-label="Zurück"]');
   check('Eigene Endwertung steht bei den eigenen Spielen', (await raw('#my-games')).includes('Azul'));
   await p.click('.row[data-own] >> text=Azul'); await p.click('#quick-start');
-  check('Partie zeigt Endstand', (await raw('.top .sub')) === 'Endstand');
+  check('Partie ohne Untertitel', (await p.locator('#s-game .top .sub').count()) === 0);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
 
   // Partie im Verlauf löschen

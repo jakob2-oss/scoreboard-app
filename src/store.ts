@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -99,7 +99,8 @@ export const browserPrefs: Prefs = {
 };
 
 /** Teams sind möglich bei normalen Rundenspielen und Endwertungen (nicht Wizard, Kniffel, Phase 10) */
-export const canTeam = (t: Template) => t.scoring === 'rounds' && !t.params?.phases;
+/** Teams gehen bei jedem Spiel: ein Team sitzt am Tisch wie ein Spieler */
+export const canTeam = (_t: Template) => true;
 
 export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs = browserPrefs) {
   const readLast = prefs.getLast, writeLast = prefs.setLast;
@@ -151,7 +152,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     if (edit.field) {
       // Neue Runde entsteht erst mit dem ersten Wert
       const base = edit.ref === 'new' ? addRound(g, clock) : { state: g, roundId: edit.ref };
-      const ng = setField(base.state, base.roundId, edit.playerId, edit.field, value, clock);
+      let ng = setField(base.state, base.roundId, edit.playerId, edit.field, value, clock);
+      // Binokel: wer von Hand nachträgt, hebt „abgegangen“ oder „verfehlt“ wieder auf
+      if (!isNoteField(edit.field) && fieldOf(ng, base.roundId, edit.playerId, 'res') !== null) ng = setField(ng, base.roundId, edit.playerId, 'res', null, clock);
       const stored = fieldOf(ng, base.roundId, edit.playerId, edit.field);
       set({ game: ng, undo: edit.dirty ? state.undo : [...state.undo.slice(-99), g], edit: { ...edit, ref: base.roundId, dirty: true, buf: stored === null ? edit.buf : String(stored) } });
       persist(ng); return;
@@ -276,6 +279,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ teamMode: false, teamOf: {}, template: structuredClone(t), pendingSave: false, selected: readLast().filter(id => known.has(id)), screen: 'gamepage' });
     },
     setTemplateEnd(end: Template['end']) { if (state.template) set({ template: { ...state.template, end } }); },
+    /** Einstellung auf der Spielseite, z. B. bei Schwimmen „nur der Erste schwimmt“ */
+    setTemplateParam(key: string, value: unknown) { if (state.template) set({ template: { ...state.template, params: { ...state.template.params, [key]: value } } }); },
     toPlayers() { set({ screen: 'players' }); },
 
     // ---------- Spieler wählen
@@ -289,7 +294,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     /** Spieler ins nächste Team schieben */
     cycleTeam(id: string) { set({ teamOf: { ...state.teamOf, [id]: ((state.teamOf[id] ?? 0) + 1) % state.teamCount } }); },
-    addTeam() { if (state.teamCount < Math.max(2, state.selected.length)) set({ teamCount: state.teamCount + 1 }); },
+    /** Team dazu oder weg; die Spieler werden reihum neu verteilt */
+    setTeamCount(k: number) {
+      const count = Math.max(2, Math.min(k, Math.max(2, state.selected.length)));
+      set({ teamCount: count, teamOf: Object.fromEntries(state.selected.map((id, i) => [id, i % count])) });
+    },
+    addTeam() { actions.setTeamCount(state.teamCount + 1); },
+    removeTeam() { actions.setTeamCount(state.teamCount - 1); },
     /** Reihenfolge am Tisch ändern (Drag-and-drop) */
     moveSelected(from: number, to: number) {
       const sel = [...state.selected];
@@ -299,7 +310,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
     toggleSelect(id: string) {
       const sel = state.selected.includes(id) ? state.selected.filter(x => x !== id) : [...state.selected, id];
-      set({ selected: sel, teamOf: state.teamMode && !state.teamOf[id] && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
+      set({ selected: sel, teamOf: state.teamMode && state.teamOf[id] === undefined && sel.includes(id) ? { ...state.teamOf, [id]: smallestTeam(sel) } : state.teamOf });
     },
     async addPlayer(rawName: string) {
       const name = rawName.trim().slice(0, 18);
@@ -331,7 +342,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         : null;
       if (teams && teams.length < 2) return;
       const g = teams ? createTeamGame(t, teams, clock) : createGame(t, chosen, clock);
-      set({ game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+      set({ bidBar: null, game: g, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null });
       persist(g);
     },
     /** Partie fortsetzen; ohne ID die aktive, sonst eine geparkte (die aktive wird dafür geparkt) */
@@ -339,9 +350,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       if (id && state.game?.game.id !== id) {
         const target = state.parked.find(x => x.game.id === id); if (!target) return;
         const parked = [...(state.game ? [state.game] : []), ...state.parked.filter(x => x !== target)];
-        set({ game: target, parked, undo: [] });
+        set({ bidBar: null, game: target, parked, undo: [] });
       }
-      if (state.game) set({ screen: 'game', page: -1, edit: null, pad: false, sheet: null });
+      if (state.game) set({ bidBar: null, screen: 'game', page: -1, edit: null, pad: false, sheet: null });
     },
 
     // ---------- Navigation in der Partie
@@ -390,8 +401,9 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, rankRef: null });
       persist(ng);
-      actions.goPage(seated(ng).findIndex(p => p.id === playerId), id);
-      set({ fromOverview: true });
+      // Uno im Block: nur der Sieger trägt ein, direkt unter dem Block
+      if (blockEntry(ng) && modeOf(ng.game.rules.key) === 'block') set({ page: -1, pad: true, edit: makeEdit(ng, id, playerId), fromOverview: true });
+      else { actions.goPage(seated(ng).findIndex(p => p.id === playerId), id); set({ fromOverview: true }); }
     },
     /** Skat: alle haben gepasst, die Runde zählt für niemanden */
     passRound() {
@@ -434,6 +446,18 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       else if (ls.out[playerId] !== null) toast(`${p.name} ist raus`);
     },
     setFireMode(on: boolean) { set({ fireMode: on }); },
+    /** Chic: der Angetippte schickt sich raus (positiv) oder würfelt Chic aus dem Rohr (verliert sofort) */
+    tableChic(kind: 'out' | 'loss') {
+      const g = state.game, to = state.tokenTo; if (!g || !to) return;
+      const ng = kind === 'out' ? sendOut(g, to, clock) : chicLoss(g, to, clock);
+      if (ng === g) return;
+      haptic(kind === 'out' ? 'success' : 'tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
+      const p = seated(ng).find(x => x.id === to)!, ts = tokenState(ng);
+      if (kind === 'loss') toast(`${p.name} zahlt die Runde`);
+      else if (ts.loser) toast(`${p.name} ist raus, ${seated(ng).find(x => x.id === ts.loser)!.name} verliert`);
+      else toast(`${p.name} hat sich rausgeschickt`);
+    },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
     tableGive(n: number | 'schock' | 'all', from: string | null = null) {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;
@@ -502,6 +526,19 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         else set({ sheet: 'tricks', rankRef: step.ref, bidBar: null, page: -1, pad: false, edit: null });
         return;
       }
+      // Binokel im Block: erst „Wer spielt?“ mit Gebot, dann Meldungen und Stiche im Ziffernblock unter dem Block
+      if (isSplit(g) && blockEntry(g) && modeOf(g.game.rules.key) === 'block' && step.field) {
+        const fs = fieldsOf(g)!;
+        const untouched = step.ref === 'new' || seated(g).every(p => fieldOf(g, step.ref as string, p.id, fs[0].key) === null);
+        if (g.game.rules.params?.bidder && step.field === fs[0].key && untouched && !gebotOf(g, step.ref)) {
+          set({ sheet: 'bidder', rankRef: step.ref, page: -1, pad: false, edit: null }); return;
+        }
+        set({ page: -1, pad: true, sheet: null, fromOverview: false, edit: makeEdit(g, step.ref, seated(g)[step.playerIndex].id, step.field) }); return;
+      }
+      // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
+      if (blockEntry(g) && !isBids(g) && !isCats(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
+        set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
+      }
       actions.goPage(step.playerIndex, step.ref, step.field);
     },
     // ---------- Wizard im Block
@@ -524,6 +561,54 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Endwertung nach Platz (Monopoly …): Antippen vergibt den nächsten freien Platz, nochmal nimmt ihn zurück */
+    placeTap(playerId: string) {
+      const g = state.game; if (!g) return;
+      const ref = liveRounds(g)[0]?.id ?? 'new';
+      const players = seated(g);
+      const placed = players.filter(p => p.id !== playerId && ref !== 'new' && scoreOf(g, ref, p.id) !== null)
+        .sort((a, b) => scoreOf(g, ref, a.id)! - scoreOf(g, ref, b.id)!).map(p => p.id);
+      const had = ref !== 'new' && scoreOf(g, ref, playerId) !== null;
+      const order = had ? placed : [...placed, playerId];
+      // Letzter Platz ergibt sich von selbst
+      const rest = players.filter(p => !order.includes(p.id));
+      if (!had && rest.length === 1) order.push(rest[0].id);
+      let ng = g, id: RoundRef = ref;
+      for (const p of players) {
+        const k = order.indexOf(p.id), want = k < 0 ? null : k + 1;
+        if ((id === 'new' ? null : scoreOf(ng, id, p.id)) === want) continue;
+        if (want === null && id === 'new') continue;
+        const r = setScore(ng, id, p.id, want, clock); ng = r.state; id = r.roundId ?? id;
+      }
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+    },
+    /** Binokel: wer spielt, mit welchem Gebot; danach Meldungen im Block. Ohne Angabe geht es gleich weiter. */
+    setBidder(playerId: string | null, gebot: number | null) {
+      const g = state.game, ref = state.rankRef; if (!g || !ref) return;
+      let ng = g, id: RoundRef = ref;
+      if (playerId && gebot && gebot > 0) {
+        if (id === 'new') { const a = addRound(ng, clock); ng = a.state; id = a.roundId; }
+        for (const p of seated(ng)) if (fieldOf(ng, id, p.id, 'gebot') !== null) ng = setField(ng, id, p.id, 'gebot', null, clock);
+        ng = setField(ng, id, playerId, 'gebot', gebot, clock);
+        set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
+      }
+      haptic('tap');
+      const fs = fieldsOf(ng)!;
+      set({ sheet: null, rankRef: null, page: -1, pad: true, fromOverview: false, edit: makeEdit(ng, id, seated(ng)[0].id, fs[0].key) });
+    },
+    /** Binokel: Spielmacher geht ab (Gebot einfach negativ) oder verfehlt (doppelt); die Meldung zählt dann nicht */
+    binokelOut(k: 1 | 2) {
+      const g = state.game, e = state.edit; if (!g || !e || e.ref === 'new') return;
+      const b = gebotOf(g, e.ref); if (!b || b.playerId !== e.playerId) return;
+      const fs = fieldsOf(g)!;
+      let ng = setField(g, e.ref, e.playerId, fs[0].key, 0, clock);
+      ng = setField(ng, e.ref, e.playerId, fs[1].key, -k * b.gebot, clock);
+      ng = setField(ng, e.ref, e.playerId, 'res', k, clock);
+      haptic('tap');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], edit: { ...makeEdit(ng, e.ref, e.playerId, e.field), dirty: true } }); persist(ng);
+      actions.next();
+    },
     /** Stiche aller auf einmal eintragen */
     tricksCommit(ref: string, tricks: Record<string, number>) {
       const g = state.game; if (!g) return;
@@ -543,7 +628,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Eingabe je Spiel: ausführlich im Block oder einfach pro Spieler (gemerkt je Spiel) */
     setEntryMode(key: string, mode: EntryMode) {
       prefs.setMode?.(key, mode);
-      set({ bidBar: null, sheet: null });
+      set({ bidBar: null, sheet: null, pad: false, edit: null });
       toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen pro Spieler');
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
@@ -558,23 +643,32 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       // Nur der Sieger zählt: nach seiner Eingabe zurück zum Überblick
       if (state.fromOverview && !isCats(g)) {
         const full = e.ref !== 'new' && roundFull(g, e.ref);
-        set({ page: -1, edit: null, fromOverview: false });
+        set({ page: -1, edit: null, fromOverview: false, pad: false });
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         return;
       }
       const players = seated(g), i = players.findIndex(p => p.id === e.playerId);
       if (e.field && e.ref !== 'new') {
         const order = inputOrder(g, e.ref), pos = order.indexOf(i);
-        if (pos < order.length - 1) { actions.goPage(order[pos + 1], e.ref, e.field); return; }
+        if (pos < order.length - 1) {
+          if (state.pad) set({ edit: makeEdit(g, e.ref, players[order[pos + 1]].id, e.field) });
+          else actions.goPage(order[pos + 1], e.ref, e.field);
+          return;
+        }
         const fs = fieldsOf(g)!, full = roundFull(g, e.ref), firstDone = bidPhase(g, e.ref) === fs[1].key;
-        set({ page: -1, edit: null });
+        set({ page: -1, edit: null, pad: false });
         if (full) toast(`Runde ${roundNumber(g, e.ref)} komplett`);
         else if (e.field === fs[0].key && firstDone) toast(`${fieldLabel(g, fs[0].key, true)} komplett`);
         return;
       }
       // Kniffel: jeder trägt in ein Feld seiner Wahl ein, dann ist der Nächste dran
-      if (isCats(g) && !state.pad) {
-        if (state.fromOverview) { set({ page: -1, edit: null, fromOverview: false }); return; }
+      if (isCats(g) && (!state.pad || state.fromOverview)) {
+        if (state.fromOverview) {
+          const turn = actions.catDone(e);
+          set({ page: -1, edit: null, fromOverview: false, pad: false, sheet: null });
+          if (turn) toast(turn);
+          return;
+        }
         if (i < players.length - 1) { actions.goPage(i + 1); return; }
         set({ page: -1, edit: null }); toast('Zug fertig'); return;
       }
@@ -593,12 +687,31 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     openPad(ref: string, playerId: string) {
       const g = state.game; if (!g) return;
       if (isRanks(g)) { actions.openRanks(ref); return; }
-      if (hasFields(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return; }
+      if (hasFields(g)) {
+        if (isSplit(g) && blockEntry(g) && modeOf(g.game.rules.key) === 'block') { set({ pad: true, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true }); return; }
+        actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); return;
+      }
       // Kniffel: Auswahl auf der Spielerseite, danach zurück zum Überblick
-      if (isCats(g)) { actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return; }
+      if (isCats(g)) {
+        // Im Block: Auswahl der Werte direkt über dem Block; freie Felder (Chance) mit dem Ziffernblock
+        if (blockEntry(g) && modeOf(g.game.rules.key) === 'block') {
+          const cat = liveRounds(g).find(r => r.id === ref)?.cat;
+          if (catChoices(cat)) set({ sheet: 'catpick', pad: false, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true });
+          else set({ sheet: null, pad: true, page: -1, edit: makeEdit(g, ref, playerId), fromOverview: true });
+          return;
+        }
+        actions.goPage(seated(g).findIndex(p => p.id === playerId), ref); set({ fromOverview: true }); return;
+      }
       set({ pad: true, edit: makeEdit(g, ref, playerId) });
     },
-    closePad() { set({ pad: false, edit: null }); },
+    closePad() { set({ pad: false, edit: null, fromOverview: false, sheet: state.sheet === 'catpick' ? null : state.sheet }); },
+    /** Kniffel im Block: nach einem Eintrag sagen, wer dran ist (nur wenn der Zug gewechselt hat) */
+    catDone(e: Edit): string | null {
+      const g = state.game; if (!g || !e.dirty) return null;
+      const st = nextStep(g); if (st.kind === 'result') return null;
+      const who = seated(g)[st.playerIndex];
+      return who.id !== e.playerId ? `${who.name} ist dran` : null;
+    },
 
     // ---------- Ziffernblock
     digit(d: number) {
@@ -678,6 +791,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
             extra = { ...extra, rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
           }
+          // Rommé: gewonnene Runden (0 geschrieben) für die Siegquote
+          if (zeroWins(f)) extra = { ...extra, wins: roundWins(f, x.player.id) };
           // Rundenzahl für Rekorde (längste Partie); bei reinen Endwertungen ohne Bedeutung
           if (rn) extra = { ...extra, rn };
           return membersOf(f, x.player.id).map(pid => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: pid, total: x.total, place: x.place, ...(extra ? { extra: { ...extra, ...(isTeamGame(f) ? { team: 1 } : {}) } } : isTeamGame(f) ? { extra: { team: 1 } } : {}) }));
@@ -690,7 +805,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       }
             // Freies Spiel ohne Vorlage bleibt eine Einmal-Partie (nur im Verlauf)
       const auto = false;
-      set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
+      set({ bidBar: null, game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       toast(auto ? 'Partie und Vorlage gespeichert' : 'Partie gespeichert');
     },
     /** Oina no: Partie speichern und gleich noch eine mit denselben Regeln, Spielern und Plätzen */
@@ -703,7 +818,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         ? createTeamGame(rules, order.map(tp => ({ members: (teams.find(t => t.id === tp.id)?.members ?? []).map(person).filter((p): p is Player => !!p) })), clock)
         : createGame(rules, order.map(p => person(p.id)).filter((p): p is Player => !!p), clock);
       if (seated(ng).length < Math.max(1, rules.players.min)) return;
-      set({ game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
+      set({ bidBar: null, game: ng, undo: [], screen: 'game', page: -1, edit: null, pad: false, sheet: null, fireMode: false, tokenTo: null });
       persist(ng);
       toast('Oina no! Neue Partie läuft');
     },
@@ -741,7 +856,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ events: state.events.map(x => (x.id === id ? e : x)) });
       repo.saveEvent(e).catch(() => toast('Speichern auf dem Gerät nicht möglich'));
     },
-    updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points'>>) {
+    updateEvent(id: string, patch: Partial<Pick<GameEvent, 'name' | 'points' | 'banner'>>) {
       const old = state.events.find(e => e.id === id); if (!old) return;
       if (patch.name !== undefined && !patch.name.trim()) return;
       const e = { ...old, ...patch, updatedAt: clock.now() };
@@ -778,7 +893,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const g = state.game; if (!g) return;
       const t = clock.now();
       persist({ ...g, game: { ...g.game, status: 'abandoned', updatedAt: t, deletedAt: t } });
-      set({ game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
+      set({ bidBar: null, game: null, undo: [], sheet: null, screen: 'home', page: -1, edit: null });
       if (!quiet || anyScore(g)) toast('Partie verworfen');
     },
     /** Kurze Meldung (z. B. aus der Oberfläche) */

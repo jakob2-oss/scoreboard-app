@@ -229,8 +229,8 @@ export function Setup() {
             <label>Spielende</label>
             <div className="seg">
               <button aria-pressed={endKind === 'none'} onClick={() => setEnd('none')}>Offen</button>
-              <button aria-pressed={endKind === 'target'} onClick={() => setEnd('target')}>Zielpunkte</button>
               <button aria-pressed={endKind === 'rounds'} onClick={() => setEnd('rounds')}>Runden</button>
+              <button aria-pressed={endKind === 'target'} onClick={() => setEnd('target')}>Punkte</button>
             </div>
             {endKind !== 'none' && (
               <input id="setup-end" inputMode="numeric" pattern="[0-9]*" aria-label={endKind === 'target' ? 'Zielpunkte' : 'Anzahl Runden'}

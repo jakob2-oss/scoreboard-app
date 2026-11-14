@@ -306,7 +306,10 @@ input:focus-visible, textarea:focus-visible { outline: none; background: var(--f
 /* ---------- Teams ---------- */
 .team-chip { flex: none; min-height: 30px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: #2e2b4f; }
 .team-opts { display: flex; flex-direction: column; gap: 6px; }
-.team-opts .text-btn { align-self: flex-start; }
+.team-count { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: var(--r); padding: 8px 10px; box-shadow: var(--soft); }
+.team-count b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.team-count .step { width: 40px; height: 40px; border-radius: 50%; background: var(--fill); font-size: 22px; font-weight: 500; color: var(--text); display: grid; place-items: center; }
+.team-count .step:disabled { opacity: .35; }
 
 /* ---------- Arschloch: Rollen ---------- */
 td.cell.rank { font-family: var(--f-display); font-size: 18px; font-weight: 700; }
@@ -451,7 +454,7 @@ td.cell.rank small { display: block; font-size: 11px; font-weight: 600; opacity:
 @keyframes hb-b { to { transform: translate(-16px, 12px) rotate(-14deg) scale(.94); } }
 @keyframes hb-c { to { transform: translate(40px, 14px) scale(1.2); } }
 .hb-card .wordmark { position: absolute; left: 22px; top: 58px; margin: 0; padding: 0; align-items: flex-start; font-size: 38px; }
-.hb-theme { position: absolute; left: 12px; top: 10px; width: 38px; height: 38px; background: transparent; box-shadow: none; color: var(--muted); }
+.hb-theme { position: absolute; z-index: 2; right: 10px; top: 8px; width: 38px; height: 38px; border-radius: 50%; background: var(--surface); box-shadow: var(--soft); color: var(--muted); }
 .hb-ill { position: absolute; right: -22px; top: 4px; width: 236px; }
 .hb-ill .hero-ill { width: 100%; height: auto; display: block; }
 .hb-ill .hero-blob { display: none; }
@@ -526,9 +529,11 @@ table.grid { border-spacing: 5px; }
 .grid td.cell:has(small) { height: 44px; }
 .grid td.cell small { font-size: 10.5px; line-height: 1.1; }
 .grid td.cell.empty::after { width: 6px; height: 6px; }
-.grid tfoot .tt { border-radius: 14px; padding: 5px 4px 6px; }
-.grid tfoot .tot { font-size: 22px; line-height: 1.05; }
-.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 10px; }
+/* Summen im selben Maß wie die Kacheln darüber */
+.grid tfoot th { font-size: 16px; }
+.grid tfoot .tt { border-radius: 12px; padding: 4px 4px 5px; min-height: 44px; justify-content: center; }
+.grid tfoot .tot { font-size: 19px; line-height: 1.05; }
+.grid tfoot .meta, .grid tfoot td.lead .meta { font-size: 9.5px; margin-top: 1px; }
 td.cell.wzc .bidn { font-size: 19px; }
 /* Neuer Rekord auf der Siegerseite: dieselben Karten, mit warmem Akzent */
 .v-records { margin: 4px 0 12px; }
@@ -580,3 +585,134 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .wz-sum { display: flex; justify-content: space-between; align-items: center; background: var(--fill); border-radius: 16px; padding: 12px 14px; margin: 6px 0 4px; font-weight: 600; }
 .wz-sum .ok { color: #6fbf73; } .wz-sum .warn { color: #e0a940; }
 .dock .mode-btn { padding: 0 14px; font-size: 15px; }
+/* Spielende: Limit als kurze Zeile „Bei 500 Punkten“ */
+.end-limit { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-weight: 500; color: var(--muted); }
+.end-limit input { width: 96px; flex: none; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Rommé im Block: Schnelltasten des Spiels über dem Ziffernblock, Krone bei Rundensieg */
+#pad .pad-quick { margin: 4px -2px 10px; }
+#pad .pad-quick button { flex: 1 1 0; min-width: 0; border: 0; background: var(--fill); box-shadow: none; }
+#pad .pad-quick button.wide { flex: 1.4 1 0; }
+/* Kompakter Ziffernblock im Block: Name und Wert in einer Zeile, damit die Zeile darüber sichtbar bleibt */
+#pad.compact .sheet-body { gap: 8px; }
+#pad.compact .pad-head .pad-display { padding: 4px 12px; gap: 12px; }
+#pad.compact .pad-display .val { font-size: 30px; min-width: 2ch; text-align: right; }
+#pad.compact .pad-display .after b { font-size: 15px; }
+#pad.compact .pad-quick { margin: 0 -2px; }
+#pad.compact .pad-quick button { min-height: 38px; }
+#pad.compact .keys { gap: 6px; }
+#pad.compact .key { min-height: 44px; font-size: 23px; }
+#pad.compact .pad-actions .primary { min-height: 50px; }
+.grid td.cell.won { position: relative; color: var(--fg); }
+.grid td.cell.won .crown { position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 12px; height: 10px; }
+.grid td.cell.won { padding-top: 8px; }
+
+/* Punkteverlauf auf der Spielerseite */
+.pp-curve { margin: 2px 0 8px; }
+.pp-curve svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pp-curve path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.pp-curve .other { stroke: var(--muted); stroke-width: 1.5; opacity: .3; }
+.pp-curve .mine { stroke-width: 2.5; }
+.pp-curve .base { stroke: var(--sep); stroke-width: 1; }
+.pp-curve .end { stroke: var(--bg); stroke-width: 2; }
+.pp-curve .val { font-family: var(--f-num); font-weight: 600; font-size: 13px; fill: var(--fg); }
+.dock:has(.mode-btn) .primary { white-space: nowrap; letter-spacing: .05em; font-size: 15px; padding-inline: 12px; }
+
+/* Phase 10 im Block: geschafft grün hinterlegt, sonst normale Kachel; Phasennummer leise oben rechts */
+:root { --ph-mix: 22%; }
+:root[data-theme="dark"] { --ph-mix: 40%; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ph-mix: 40%; } }
+.grid td.cell.ph { position: relative; }
+.grid td.cell.ph-ok { background: color-mix(in srgb, var(--good) var(--ph-mix), var(--surface)); }
+.grid td.cell.ph .phb { position: absolute; top: 3px; right: 6px; font-size: 10px; line-height: 1; font-weight: 600; color: var(--muted); }
+#pad .pad-phase { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 46px; padding: 0 12px 0 8px; border-radius: 999px; border: 0;
+  background: var(--fill); color: var(--fg); font-family: var(--f-display); font-size: 16px; text-align: left; }
+#pad .pad-phase.on { background: color-mix(in srgb, var(--good) var(--ph-mix), var(--surface)); }
+#pad .pad-phase b { flex: 1; font-weight: 600; }
+#pad .pad-phase .ph-no { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-family: var(--f-num); font-weight: 700; }
+#pad .pad-phase .ph-tick { width: 26px; height: 26px; border-radius: 50%; background: var(--surface); position: relative; }
+#pad .pad-phase.on .ph-tick { background: var(--good); }
+#pad .pad-phase.on .ph-tick::after { content: ""; position: absolute; left: 9px; top: 5px; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+
+/* Arschloch im Block: Krone für den Präsidenten, Häufchen für das Arschloch */
+.grid td.cell.rank .role-ic { display: block; width: 24px; height: 21px; margin: 0 auto; }
+
+/* Kniffel im Block: Gestrichenes grau, Spalte dessen, der dran ist, leise getönt; Σ bündig zu den Kategorien */
+.grid td.cell.struck { background: var(--fill); box-shadow: none; color: var(--muted); opacity: .75; }
+.grid td.cell.myturn { background: color-mix(in srgb, var(--primary) 9%, var(--surface)); }
+.grid.cats tfoot th { text-align: left; font-family: var(--f-display); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+.grid tr.calc.bonus td { vertical-align: middle; }
+.bon { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px; border-radius: 999px; font-family: var(--f-num); font-size: 13px; font-weight: 600; }
+.bon.hit { color: var(--good); padding-left: 9px; }
+.bon.miss { background: var(--fill); color: var(--muted); }
+.bon svg { width: 14px; height: 14px; display: block; }
+.bon .pie-bg { fill: var(--surface); }
+.bon .pie { fill: var(--muted); }
+#cat-pick .cp-grid button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+#cat-pick .cp-strike { flex: 1; min-height: 50px; border-radius: 999px; background: var(--fill); color: var(--muted); font-family: var(--f-display); font-weight: 600; font-size: 16px; }
+#cat-pick .cp-strike[aria-pressed="true"] { background: var(--muted); color: var(--bg); }
+
+/* Binokel: Logo in der Ecke, Gebot und Ausgang im Block, Spielmacher-Knöpfe im Ziffernblock */
+.grid .corner .bino-mark { width: 34px; height: 30px; display: block; margin: 0 auto; }
+.grid td.cell.out1 { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); }
+.grid td.cell.out2 { background: color-mix(in srgb, var(--danger) 30%, var(--surface)); }
+.grid td.cell.best { background: color-mix(in srgb, var(--good) var(--ph-mix, 22%), var(--surface)); }
+.grid td.cell .gb { position: absolute; top: 3px; right: 6px; font-size: 10px; line-height: 1; font-weight: 700; color: var(--muted); }
+.grid td.cell:has(.gb) { position: relative; }
+#bidder .rank-row[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); }
+#bidder .gebot-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: var(--r); padding: 8px 10px 8px 16px; box-shadow: var(--soft); }
+#bidder .gebot-row .lbl { flex: 1; font-family: var(--f-display); font-weight: 500; color: var(--muted); }
+#bidder .gebot-row b { min-width: 3ch; text-align: center; font-family: var(--f-num); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#bidder .gebot-row .step { width: 42px; height: 42px; border-radius: 50%; background: var(--fill); font-size: 22px; color: var(--fg); }
+#pad .pad-out { display: flex; gap: 8px; align-items: stretch; }
+#pad .pad-out .gebot { display: grid; place-items: center; padding: 0 12px; border-radius: 14px; background: var(--fill); font-family: var(--f-num); font-weight: 700; font-size: 17px; line-height: 1.05; }
+#pad .pad-out .gebot small { font-family: var(--f-body); font-size: 10px; font-weight: 600; color: var(--muted); }
+#pad .pad-out button { flex: 1; min-height: 44px; border-radius: 999px; background: color-mix(in srgb, var(--danger) 12%, var(--surface)); color: var(--fg); font-family: var(--f-display); font-weight: 500; font-size: 15px; }
+#pad .pad-out button b { font-family: var(--f-num); font-weight: 700; margin-left: 4px; }
+#pad .pad-out button.suggest { background: var(--danger); color: #fff; }
+
+/* Endwertung ohne Zettel: kleines Treppchen über der Rangliste, beides wächst beim Eintragen */
+.res-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.res-board { padding-top: 6px; padding-bottom: 16px; }
+.res-podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; margin: 4px auto 18px; max-width: 300px; }
+.res-podium .rp { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.res-podium .rp .av { width: 38px; height: 38px; font-size: 16px; transition: transform .3s; }
+.res-podium .rp .av.ghost { background: var(--fill); border-radius: 50%; display: block; }
+.res-podium .rp-block { width: 100%; display: grid; place-items: start center; padding-top: 6px; border-radius: 14px 14px 6px 6px;
+  background: var(--c, var(--fill)); font-family: var(--f-num); font-size: 20px; color: #2e2b4f; transition: height .35s cubic-bezier(.2, .9, .3, 1.2); }
+.res-podium .rp.empty .rp-block { color: var(--muted); }
+.res-podium .rp1 .rp-block { height: 74px; }
+.res-podium .rp2 .rp-block { height: 52px; }
+.res-podium .rp3 .rp-block { height: 38px; }
+.res-list { display: flex; flex-direction: column; gap: 8px; }
+.res-row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 16px 8px 10px; border-radius: 18px; background: var(--surface); box-shadow: var(--soft); text-align: left; width: 100%; }
+.res-row.open { background: var(--fill); box-shadow: none; }
+.res-row.active { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); }
+.res-row .res-pl { width: 26px; text-align: center; font-family: var(--f-num); font-weight: 700; font-size: 17px; color: var(--muted); }
+.res-row .nm { flex: 1; font-weight: 600; font-size: 17px; }
+.res-row .res-v { font-family: var(--f-num); font-weight: 600; font-size: 22px; }
+.res-row .res-v.ph { color: var(--faint); }
+
+/* Chic: rausschicken und Chic aus dem Rohr im Deckel-Blatt; „zahlt“ am Platz */
+.tk-chic { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tk-chic button { min-height: 50px; border-radius: 999px; font-family: var(--f-display); font-weight: 600; font-size: 15px; }
+#tk-sendout { background: color-mix(in srgb, var(--good) 22%, var(--surface)); color: var(--fg); }
+#tk-chicloss { background: color-mix(in srgb, var(--danger) 18%, var(--surface)); color: var(--fg); }
+.tb-chic { display: block; font-size: 10.5px; font-weight: 700; color: #d9634a; letter-spacing: .02em; }
+
+/* Serien: Banner oben, Teilnehmer, Siegerbild darunter, Banner-Wahl, Banner als Icon in der Liste */
+.ser-banner { margin: 2px 0 12px; border-radius: 22px; overflow: hidden; aspect-ratio: 390 / 150; }
+.ser-banner svg, .ser-bthumb svg, .ser-bicon svg { display: block; width: 100%; height: 100%; }
+.ser-people { display: flex; flex-wrap: wrap; gap: 6px 8px; justify-content: center; margin-top: 12px; }
+.ser-person { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 4px; border-radius: 999px; background: var(--surface); box-shadow: var(--soft); font-weight: 600; font-size: 14px; }
+.ser-person .av { width: 26px; height: 26px; font-size: 12px; }
+.ser-champ-card { margin: 4px 0 16px; border-radius: 22px; overflow: hidden; background: var(--surface); box-shadow: var(--soft); }
+.ser-champ-card .ser-trophy { margin: 0; border-radius: 0; }
+.ser-champ-card .ser-champ { padding: 12px 16px 14px; text-align: center; font-family: var(--f-display); font-weight: 600; font-size: 19px; }
+.ser-banners { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.ser-bthumb { aspect-ratio: 390 / 150; border-radius: 10px; overflow: hidden; padding: 0; opacity: .55; transition: opacity .15s, transform .15s; }
+.ser-bthumb[aria-pressed="true"] { opacity: 1; transform: scale(1.06); }
+.ser-bicon { flex: none; width: 58px; height: 42px; border-radius: 12px; overflow: hidden; }
+.ser-bicon svg { width: 100%; height: 100%; }
+.ser-stack .av { width: 26px; height: 26px; font-size: 12px; }
+.ser-game { text-align: left; width: 100%; }

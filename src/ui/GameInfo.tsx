@@ -3,7 +3,16 @@ import { act, useApp } from '../store';
 import { gameDef } from '../game/games';
 import { GamePage } from './GamePage';
 import { GameRecords } from './Records';
+import { EndPicker } from './EndPicker';
+import type { End, Template } from '../model/types';
 import { GAME_ART } from './art';
+
+/** Vorschlagswert für das Limit aus den bekannten Varianten des Spiels */
+const limitOf = (opts: { end: End }[] | undefined, k: 'rounds' | 'target') => {
+  const e = opts?.find(o => o.end.type === k)?.end;
+  return e && 'value' in e ? e.value : undefined;
+};
+const endEditable = (t: Template) => (t.scoring === 'rounds' || t.scoring === 'rank') && !t.params?.phases && !t.params?.resultOnly;
 
 /** Spielseite eines festen Spiels: Szene, Regeln als Fließtext mit Beispiel, Optionen, Start */
 export function GameInfo() {
@@ -32,16 +41,15 @@ export function GameInfo() {
           ))}
         </div>}
       </div>
-      {def.endOptions && (
-        <div className="field">
-          <label>Spielende</label>
-          <div className="seg">
-            {def.endOptions.map(o => (
-              <button key={o.label} aria-pressed={JSON.stringify(o.end) === JSON.stringify(template.end)} onClick={() => a.setTemplateEnd(o.end)}>{o.label}</button>
-            ))}
-          </div>
+      {endEditable(template) && <EndPicker end={template.end} onChange={e => a.setTemplateEnd(e)} pointsOk={template.scoring !== 'rank'}
+        rounds={limitOf(def.endOptions, 'rounds')} points={limitOf(def.endOptions, 'target')} />}
+      {template.scoring === 'lives' && template.params?.swim !== false && <div className="field">
+        <label>Schwimmen darf</label>
+        <div className="seg">
+          <button id="swim-all" aria-pressed={!template.params?.swimFirst} onClick={() => a.setTemplateParam('swimFirst', undefined)}>Jeder</button>
+          <button id="swim-first" aria-pressed={!!template.params?.swimFirst} onClick={() => a.setTemplateParam('swimFirst', true)}>Nur der Erste</button>
         </div>
-      )}
+      </div>}
       <GameRecords tpl={template} />
       <div className="menu-list own-actions">
         <button id="customize" onClick={() => a.customizeGame(def.template)}>Als eigenes Spiel anpassen</button>

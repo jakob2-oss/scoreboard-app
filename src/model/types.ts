@@ -94,6 +94,10 @@ export interface TemplateParams {
   phases?: boolean;
   /** Nullsummenspiel (Schafkopf, Doppelkopf): Rundensumme muss 0 ergeben */
   zeroSum?: boolean;
+  /** Rundensieg ist, wer 0 schreibt (Rommé: wer zuerst ablegt) */
+  zeroWins?: boolean;
+  /** Eigens gestaltete Eingabe direkt im Block (Standard), Einzelseiten als Alternative */
+  block?: boolean;
   /** Was eingetragen wird, z. B. „Siegpunkte“ oder „Platz“ */
   unit?: string;
   [key: string]: unknown;
@@ -158,4 +162,6 @@ export interface GameEvent extends Base {
   endedAt?: ISODate | null;
   /** Platzpunkte je Platz (Index 0 = Platz 1); fehlt: Vorschlag 3, 2, 1 */
   points?: number[];
+  /** Banner-Motiv (Index in BANNERS); fehlt: ergibt sich aus der ID */
+  banner?: number | null;
 }

@@ -29,18 +29,18 @@ export const GAMES: GameDef[] = [
   },
   {
     template: {
-      key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'target', value: 500 }, players: { min: 2, max: 6 },
-      params: { quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
+      key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
+      params: { zeroWins: true, block: true, quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
     },
-    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'an der Grenze, wenigste Punkte gewinnen']],
+    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'nach den Runden oder an der Grenze, wenigste Punkte gewinnen']],
     acc: '#ef7a5c', tint: '#fde6df',
-    text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Erreicht jemand die Grenze, ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Nach den vereinbarten Runden oder an der Grenze ist Schluss, die <b>wenigsten Punkte gewinnen</b>.',
     example: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']],
-    endOptions: [{ label: 'Bei 500', end: { type: 'target', value: 500 } }, { label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Offen', end: { type: 'none' } }]
+    endOptions: [{ label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: 'Bei 500', end: { type: 'target', value: 500 } }, { label: 'Offen', end: { type: 'none' } }]
   },
   {
     template: {
-      key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'target', value: 100 }, players: { min: 2, max: 8 },
+      key: 'skyjo', version: 1, name: 'Skyjo', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 8 },
       params: { quick: [{ label: '\u22121', op: 'add', v: -1 }, { label: '+1', op: 'add', v: 1 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '×2', op: 'mul', v: 2 }] }
     },
     points: [['Kartenwerte', 'von −2 bis 12'], ['Beendet', 'und nicht niedrigster: doppelt'], ['Ende', 'bei 100, wenigste Punkte gewinnen']],
@@ -56,8 +56,8 @@ const place = (n: number) => Array.from({ length: n }, (_, k) => ({ label: `${k 
 
 GAMES.push(
   {
-    template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'target', value: 500 }, players: { min: 2, max: 8 },
-      params: { winnerOnly: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
+    template: { key: 'uno', version: 1, name: 'Uno', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 8 },
+      params: { winnerOnly: true, block: true, quick: [add('+5', 5), add('+10', 10), add('+20', 20), add('+50', 50)] } },
     points: [['Rundensieger', 'bekommt die Karten der anderen'], ['Zahlen', 'zählen ihren Wert'], ['Aktionskarten', '20, schwarze Karten 50'], ['Ziel', '500 Punkte']],
     acc: '#ef7a5c', tint: '#fde2dc',
     text: 'Wer seine letzte Karte ablegt, <b>gewinnt die Runde</b> und bekommt die Kartenwerte aller anderen gutgeschrieben: Zahlen zählen ihren Wert, Aktionskarten <b>20</b>, schwarze Karten <b>50</b>. Wer zuerst <b>500 Punkte</b> hat, gewinnt.',
@@ -74,7 +74,7 @@ GAMES.push(
   },
   {
     template: { key: 'siedler', version: 1, name: 'Siedler', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 2, max: 6 },
-      params: { resultOnly: true, unit: 'Siegpunkte', notes: ['Längste Straße', 'Rittermacht'], quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
+      params: { resultOnly: true, unit: 'Siegpunkte', quick: [add('\u22121', -1), add('+1', 1), add('+2', 2), { label: '10', op: 'set', v: 10 }] } },
     points: [['Am Ende', 'Siegpunkte je Spieler'], ['Gewinner', 'die meisten Siegpunkte']],
     acc: '#f0b13e', tint: '#fbecc9', group: 'result',
     text: 'Am Ende trägt jeder seine <b>Siegpunkte</b> ein.'
@@ -103,7 +103,7 @@ const rest = { label: 'Ausgleich', op: 'rest' as const, v: 0 };
 GAMES.push(
   {
     template: { key: 'kniffel', version: 1, name: 'Kniffel', scoring: 'categories', win: 'high', end: { type: 'categories' }, players: { min: 1, max: 8 },
-      params: { bonus: { at: 63, value: 35 }, categories: [
+      params: { block: true, bonus: { at: 63, value: 35 }, categories: [
         { label: 'Einser', section: 'up', quick: mult(1) }, { label: 'Zweier', section: 'up', quick: mult(2) }, { label: 'Dreier', section: 'up', quick: mult(3) },
         { label: 'Vierer', section: 'up', quick: mult(4) }, { label: 'Fünfer', section: 'up', quick: mult(5) }, { label: 'Sechser', section: 'up', quick: mult(6) },
         { label: 'Dreierpasch', section: 'low', range: [5, 30] }, { label: 'Viererpasch', section: 'low', range: [5, 30] }, { label: 'Full House', section: 'low', fixed: 25 },
@@ -114,7 +114,7 @@ GAMES.push(
   },
   {
     template: { key: 'phase10', version: 1, name: 'Phase 10', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
-      params: { phases: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
+      params: { phases: true, block: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
     points: [['Je Runde', 'eigene Phase auslegen, dann Haken setzen'], ['Handkarten', '1 bis 9 sind 5, 10 bis 12 sind 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
     acc: '#f0b13e', tint: '#fdeccc', text: ''
   },
@@ -131,8 +131,8 @@ GAMES.push(
     acc: '#9a7ad6', tint: '#e7e4f7', text: '', example: [['2', 'Spielwert'], ['×3', 'Solo'], ['+6', 'Solist']]
   },
   {
-    template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'target', value: 1000 }, players: { min: 3, max: 4 },
-      params: { split: [
+    template: { key: 'binokel', version: 1, name: 'Binokel', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
+      params: { block: true, bidder: true, split: [
         { key: 'meld', label: 'Meldung', phase: 'Meldungen', quick: [add('+20', 20), add('+40', 40), add('+60', 60), add('+100', 100), add('+150', 150)] },
         { key: 'play', label: 'Stiche', phase: 'Stiche', quick: [add('+10', 10), add('+20', 20), add('+50', 50), times('Abgehen', -1), times('Verfehlt', -2)] }] } },
     points: [['Reizen', 'das höchste Gebot macht den Spieler'], ['Meldung', 'zuerst, vor dem Ausspielen'], ['Stiche', 'kommen nach dem Spiel dazu'], ['Abgehen', 'vor dem Spiel aufgeben: Gebot einfach negativ'], ['Gebot verfehlt', 'Meldung zählt nicht, das Gebot doppelt negativ'], ['Ziel', '1000 Punkte']],
@@ -144,7 +144,7 @@ GAMES.push(
 GAMES.push({
   template: { key: 'arschloch', version: 1, name: 'Arschloch', scoring: 'rank', win: 'high', end: { type: 'none' }, players: { min: 3, max: 8 } },
   points: [['Jede Runde', 'wer zuerst alle Karten los ist, wird Präsident'], ['Rollen', 'Präsident, Vize, Bürger, Vize-Arschloch, Arschloch'],
-    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt dem Präsidenten seine besten Karten']],
+    ['Punkte', '+2, +1, 0, −1, −2'], ['Nächste Runde', 'das Arschloch gibt und schenkt dem Präsidenten seine besten Karten']],
   acc: '#bba8e6', tint: '#ece6fb', text: '', example: [['+2', 'Präsident'], ['0', 'Bürger'], ['−2', 'Arschloch']],
   endOptions: [{ label: 'Offen', end: { type: 'none' } }, { label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: '20 Runden', end: { type: 'rounds', value: 20 } }]
 });
@@ -163,9 +163,18 @@ GAMES.push({
   acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['2', 'Hälften'], ['1', 'Finale']]
 });
 
+// Chic: wie Schocken, in der zweiten Phase gehen Deckel zurück in die Mitte; rausschicken und Chic aus dem Rohr
+GAMES.push({
+  template: { key: 'chic', version: 1, name: 'Chic', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13, phase2: 'return', chic: true } },
+  points: [['Mitte', '13 Deckel'], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'], ['Zweite Phase', 'Sieger spielen Deckel zurück, wer keine mehr hat, ist raus'],
+    ['Rausschicken', 'wer sich rausschickt, ist mit allen Deckeln raus und kann nicht mehr verlieren'], ['Chic aus dem Rohr', 'verliert sofort und zahlt die Runde, gespielt wird weiter'],
+    ['Partie', 'zwei Hälften verloren, sonst entscheidet das Finale']],
+  acc: '#d9634a', tint: '#fde6df', text: '', example: [['13', 'Deckel'], ['raus', 'rausgeschickt'], ['zahlt', 'aus dem Rohr']]
+});
+
 // Skat: Alleinspieler antippen (die anderen bekommen 0), dann Spielwert; verloren zählt doppelt negativ
 GAMES.push({
-  template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 36 }, players: { min: 3, max: 4 },
+  template: { key: 'skat', version: 1, name: 'Skat', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 3, max: 4 },
     params: { winnerOnly: true, soloPrompt: 'Wer spielt?', dealer: true,
       quick: [{ label: 'Null 23', op: 'set', v: 23 }, { label: 'Null Hand 35', op: 'set', v: 35 }, { label: 'Null ouvert 46', op: 'set', v: 46 }, times('Verloren', -2)] } },
   points: [['Reizen', 'wer am höchsten reizt, spielt allein'], ['Spielwert', 'Grundwert mal Spitzen und Stufen'], ['Grundwerte', 'Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24'],
@@ -179,10 +188,10 @@ export type Family = 'karten' | 'wuerfel' | 'brett';
 export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label: 'Kartenspiele' }, { id: 'wuerfel', label: 'Würfelspiele' }, { id: 'brett', label: 'Brett- und Legespiele' }];
 const FAMILY: Record<string, Family> = {
   wizard: 'karten', romme: 'karten', skyjo: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
-  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
+  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', chic: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
 // Geber anzeigen (Wizard zeigt ihn immer)
-for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
+for (const k of ['romme', 'schafkopf', 'doppelkopf', 'skat', 'uno', 'phase10', 'arschloch', 'binokel']) { const d = GAMES.find(x => x.template.key === k)!; d.template.params = { ...d.template.params, dealer: true }; }
 
 export const gameDef = (key: string): GameDef | undefined => GAMES.find(g => g.template.key === key);

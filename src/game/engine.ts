@@ -35,7 +35,7 @@ export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
 export const isLives = (s: GameState) => s.game.rules.scoring === 'lives';
 export const isTokens = (s: GameState) => s.game.rules.scoring === 'tokens';
 export const isTable = (s: GameState) => isLives(s) || isTokens(s);
-type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean };
+type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean; sentOut?: boolean; chicLoss?: boolean };
 const tv = (e: Entry) => e.values as TableValues;
 const roundEntries = (s: GameState, roundId: string) => s.entries.filter(e => !e.deletedAt && e.roundId === roundId);
 /** Aktionen am Tisch (Runden mit Einträgen) */
@@ -54,18 +54,24 @@ export interface LifeState {
 }
 export function lifeState(s: GameState): LifeState {
   const lives = s.game.rules.params?.lives ?? 3, swim = s.game.rules.params?.swim !== false, players = seated(s);
-  // Ohne Schwimmen ist man mit dem letzten Leben raus
-  const limit = swim ? lives : lives - 1;
+  // Nur der Erste darf schwimmen: wer danach sein letztes Leben verliert, ist sofort raus
+  const swimFirst = !!s.game.rules.params?.swimFirst;
   const loss: Record<string, number> = {}, out: Record<string, number | null> = {};
   players.forEach(p => { loss[p.id] = 0; out[p.id] = null; });
+  let swimmer: string | null = null;
   tableRounds(s).forEach((r, i) => {
     for (const e of roundEntries(s, r.id)) if (tv(e).loss && e.playerId in loss) {
-      loss[e.playerId] += tv(e).loss!;
-      if (loss[e.playerId] > limit && out[e.playerId] === null) out[e.playerId] = i;
+      const pid = e.playerId;
+      loss[pid] += tv(e).loss!;
+      if (out[pid] !== null || loss[pid] < lives) continue;
+      // Ohne Schwimmen ist man mit dem letzten Leben raus, mit Schwimmen erst danach
+      const canSwim = swim && (!swimFirst || swimmer === null || swimmer === pid);
+      if (loss[pid] === lives && canSwim) { if (swimmer === null) swimmer = pid; }
+      else out[pid] = i;
     }
   });
   const left: Record<string, number> = {}, swimming: Record<string, boolean> = {};
-  for (const p of players) { left[p.id] = Math.max(swim ? -1 : 0, lives - loss[p.id]); swimming[p.id] = swim && loss[p.id] === lives; }
+  for (const p of players) { left[p.id] = Math.max(swim ? -1 : 0, lives - loss[p.id]); swimming[p.id] = swim && loss[p.id] === lives && out[p.id] === null; }
   return { lives, swim, left, swimming, out, alive: players.filter(p => out[p.id] === null).map(p => p.id) };
 }
 /** Schwimmen: Verlierer der Runde verliert ein Leben. Mehrere auf einmal bei „Feuer“ (alle anderen). Wer raus ist, nicht mehr. */
@@ -104,14 +110,18 @@ export interface TokenState {
   out: Record<string, boolean>;
   /** Wer zwei Hälften verloren hat (Partie verloren) */
   loser: string | null;
+  /** Chic: hat sich rausgeschickt, ist für die ganze Partie raus und kann nicht mehr verlieren */
+  gone: Record<string, boolean>;
+  /** Chic: wie oft „Chic aus dem Rohr“ (sofort verloren, Runde zahlen) */
+  chic: Record<string, number>;
 }
 export function tokenState(s: GameState): TokenState {
   const total = s.game.rules.params?.tokens ?? 13, need = Math.max(1, s.game.rules.params?.halves ?? 2), players = seated(s);
   const hold: Record<string, number> = {}, halves: Record<string, number> = {}, schock: Record<string, number> = {}, taken: Record<string, number> = {};
   players.forEach(p => { hold[p.id] = 0; halves[p.id] = 0; schock[p.id] = 0; taken[p.id] = 0; });
   const mode = s.game.rules.params?.phase2 === 'return' ? 'return' : 'pass';
-  const out: Record<string, boolean> = {};
-  players.forEach(p => { out[p.id] = false; });
+  const out: Record<string, boolean> = {}, gone: Record<string, boolean> = {}, chic: Record<string, number> = {};
+  players.forEach(p => { out[p.id] = false; gone[p.id] = false; chic[p.id] = 0; });
   let half = 1, phase: 1 | 2 = 1, maxTake = { n: 0, who: [] as string[] };
   for (const r of tableRounds(s)) {
     let lost: string | null = null;
@@ -126,15 +136,19 @@ export function tokenState(s: GameState): TokenState {
       if (v.give) hold[e.playerId] -= v.give;
       if (v.schock) schock[e.playerId]++;
       if (v.halfLost) lost = e.playerId;
+      if (v.sentOut) { gone[e.playerId] = true; out[e.playerId] = true; }
+      if (v.chicLoss) chic[e.playerId]++;
     }
-    if (lost) { halves[lost]++; half++; phase = 1; players.forEach(p => { hold[p.id] = 0; out[p.id] = false; }); continue; }
+    if (lost) { halves[lost]++; half++; phase = 1; players.forEach(p => { hold[p.id] = 0; out[p.id] = gone[p.id]; }); continue; }
     // Mitte leer: zweite Phase. Bei Chic ist raus, wer dann (oder später) keine Deckel hat
     if (phase === 1 && players.reduce((x, p) => x + hold[p.id], 0) === total) phase = 2;
     if (phase === 2 && mode === 'return') players.forEach(p => { if (hold[p.id] === 0) out[p.id] = true; });
   }
   const middle = total - players.reduce((x, p) => x + hold[p.id], 0);
-  const loser = players.find(p => halves[p.id] >= need)?.id ?? null;
-  return { total, need, mode, phase, out, half, middle, hold, halves, maxTake, schock, taken, loser };
+  // Verloren hat, wer genug Hälften verloren hat; haben sich alle anderen rausgeschickt, der letzte Übrige
+  const active = players.filter(p => !gone[p.id]);
+  const loser = players.find(p => halves[p.id] >= need)?.id ?? (players.length > 1 && active.length === 1 ? active[0].id : null);
+  return { total, need, mode, phase, out, half, middle, hold, halves, maxTake, schock, taken, loser, gone, chic };
 }
 /**
  * Schocken: Deckel an den Verlierer der Runde. Solange die Mitte nicht leer ist, kommen sie aus der Mitte,
@@ -142,7 +156,7 @@ export function tokenState(s: GameState): TokenState {
  */
 export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false): GameState {
   const st = tokenState(s);
-  if (st.loser || (st.mode === 'return' && st.phase === 2)) return s;
+  if (st.loser || st.gone[to] || (st.mode === 'return' && st.phase === 2)) return s;
   const giver = st.middle > 0 ? null : from;
   if (st.middle === 0 && (!giver || giver === to)) return s;
   const amount = Math.max(0, Math.min(n, giver ? st.hold[giver] : st.middle));
@@ -171,6 +185,28 @@ export function returnTokens(s: GameState, from: string, n: number, clock: Clock
   const entries = [e(from, { give: amount })];
   if (holders.length === 1) entries.push(e(holders[0].id, { halfLost: true }));
   return { ...a.state, entries: [...a.state.entries, ...entries] };
+}
+
+/** Chic: sich rausschicken. Eigene Deckel gehen zurück in die Mitte, man ist für die Partie raus und verliert nicht mehr. */
+export function sendOut(s: GameState, playerId: string, clock: Clock): GameState {
+  const st = tokenState(s);
+  if (st.loser || st.gone[playerId]) return s;
+  const a = addRound(s, clock), t = clock.now();
+  const e = (pid: string, values: TableValues): Entry => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: pid, values: values as never });
+  const entries = [e(playerId, { ...(st.hold[playerId] ? { give: st.hold[playerId] } : {}), sentOut: true })];
+  // Zweite Phase bei Chic: hat danach nur noch einer Deckel, verliert er die Hälfte
+  if (st.mode === 'return' && st.phase === 2) {
+    const holders = seated(s).filter(p => p.id !== playerId && st.hold[p.id] > 0);
+    if (holders.length === 1) entries.push(e(holders[0].id, { halfLost: true }));
+  }
+  return { ...a.state, entries: [...a.state.entries, ...entries] };
+}
+/** Chic aus dem Rohr: verliert sofort (zahlt eine Runde), das Spiel geht weiter */
+export function chicLoss(s: GameState, playerId: string, clock: Clock): GameState {
+  const st = tokenState(s);
+  if (st.loser || st.gone[playerId]) return s;
+  const a = addRound(s, clock), t = clock.now();
+  return { ...a.state, entries: [...a.state.entries, { id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId, values: { chicLoss: true } as never }] };
 }
 
 /** Sitzplatz verschieben: Spieler an Position from rückt auf Position to, die anderen rücken nach */
@@ -231,6 +267,8 @@ export function setOrder(s: GameState, ref: RoundRef, order: string[], clock: Cl
   return { state: { ...state, game: touch(state, clock), entries }, roundId };
 }
 export const hasPhases = (s: GameState) => !!s.game.rules.params?.phases;
+/** Phase 10: an welcher Phase ein Spieler in einer Runde gearbeitet hat (1 bis 10) */
+export const phaseAt = (s: GameState, roundIndex: number, playerId: string) => Math.min(phasesDone(s, playerId, roundIndex) + 1, 10);
 
 /** Kniffel: erlaubte Werte einer Kategorie (ohne Streichen) oder null für freie Eingabe (Chance, eigene ohne Vorgabe) */
 export function catChoices(cat: Category | undefined): number[] | null {
@@ -248,6 +286,11 @@ export function upperSum(s: GameState, playerId: string): { sum: number; bonus: 
   const b = s.game.rules.params?.bonus;
   const sum = liveRounds(s).filter(r => r.cat?.section === 'up').reduce((a, r) => a + (scoreOf(s, r.id, playerId) ?? 0), 0);
   return { sum, bonus: b && sum >= b.at ? b.value : 0 };
+}
+
+/** Kniffel: Summe der unteren Hälfte (alles außer oben) */
+export function lowerSum(s: GameState, playerId: string): number {
+  return liveRounds(s).filter(r => r.cat && r.cat.section !== 'up').reduce((a, r) => a + (scoreOf(s, r.id, playerId) ?? 0), 0);
 }
 
 /** Phase 10: Anzahl geschaffter Phasen (optional nur Runden vor einem Index) */
@@ -280,6 +323,21 @@ export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
 /** Feldname einer zweiteiligen Runde: Wizard 'bid' und 'tricks', sonst aus der Vorlage (z. B. Binokel 'meld', 'play') */
 export type BidField = string;
 export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
+/** Spiel mit eigens gestalteter Eingabe im Block (Wizard, Rommé …); die Einzelseiten bleiben wählbar */
+export const blockEntry = (s: GameState) => isBids(s) || !!s.game.rules.params?.block;
+/** Rommé: Rundensieg ist eine 0 */
+export const zeroWins = (s: GameState) => !!s.game.rules.params?.zeroWins;
+/** Anzahl gewonnener Runden (0 geschrieben) */
+export const roundWins = (s: GameState, pid: string) => liveRounds(s).filter(r => scoreOf(s, r.id, pid) === 0).length;
+/** Verlauf der Summe nach jeder vollständigen Runde, je Spieler */
+export function runningTotals(s: GameState): Record<string, number[]> {
+  const players = seated(s), out: Record<string, number[]> = Object.fromEntries(players.map(p => [p.id, [0]]));
+  for (const r of liveRounds(s)) {
+    if (!roundFull(s, r.id)) continue;
+    for (const p of players) { const a = out[p.id]; a.push(a[a.length - 1] + (scoreOf(s, r.id, p.id) ?? 0)); }
+  }
+  return out;
+}
 const WIZARD_FIELDS: SplitField[] = [{ key: 'bid', label: 'Ansage', phase: 'Ansagen' }, { key: 'tricks', label: 'Stiche', phase: 'Stiche' }];
 /** Felder einer zweiteiligen Runde oder null */
 export function fieldsOf(s: GameState): SplitField[] | null {
@@ -290,6 +348,18 @@ export function fieldsOf(s: GameState): SplitField[] | null {
 export const hasFields = (s: GameState) => !!fieldsOf(s);
 /** Zweiteilig, aber nicht Wizard (Rundenwert ist die Summe der Felder) */
 export const isSplit = (s: GameState) => !isBids(s) && hasFields(s);
+
+/** Binokel: wer spielt in dieser Runde und mit welchem Gebot (optional erfasst) */
+export function gebotOf(s: GameState, roundId: RoundRef): { playerId: string; gebot: number } | null {
+  if (roundId === 'new') return null;
+  for (const p of seated(s)) { const g = fieldOf(s, roundId, p.id, 'gebot'); if (g !== null && g > 0) return { playerId: p.id, gebot: g }; }
+  return null;
+}
+/** Binokel: Ausgang für den Spielmacher: 1 abgegangen (Gebot einfach negativ), 2 verfehlt (doppelt negativ), 0 sonst */
+export const outOf = (s: GameState, roundId: string, playerId: string): 0 | 1 | 2 => {
+  const v = fieldOf(s, roundId, playerId, 'res');
+  return v === 1 || v === 2 ? v : 0;
+};
 
 /** Wert eines Feldes (Ansage, Stiche, Meldung …) eines Spielers in einer Runde */
 export function fieldOf(s: GameState, roundId: string, playerId: string, field: BidField): number | null {
@@ -331,7 +401,8 @@ export function totals(s: GameState): Record<string, number> {
   const t: Record<string, number> = {};
   // Tisch-Modus: Leben übrig (Schwimmen) bzw. verlorene Hälften (Schocken)
   if (isLives(s)) { const ls = lifeState(s); for (const p of seated(s)) t[p.id] = Math.max(0, ls.left[p.id]); return t; }
-  if (isTokens(s)) { const ts = tokenState(s); for (const p of seated(s)) t[p.id] = ts.halves[p.id]; return t; }
+  // Chic aus dem Rohr zählt wie die Partie verloren (beide stehen am Ende hinten)
+  if (isTokens(s)) { const ts = tokenState(s); for (const p of seated(s)) t[p.id] = ts.chic[p.id] ? Math.max(ts.need, ts.halves[p.id]) : ts.halves[p.id]; return t; }
   const rounds = liveRounds(s);
   for (const p of seated(s)) t[p.id] = rounds.reduce((sum, r) => sum + (scoreOf(s, r.id, p.id) ?? 0), 0) + (isCats(s) ? upperSum(s, p.id).bonus : 0);
   return t;
@@ -385,7 +456,7 @@ export function endState(s: GameState): EndState | null {
   }
   if (end.type === 'rounds') {
     const done = rounds.length >= end.value && rounds.slice(0, end.value).every(r => roundFull(s, r.id));
-    return done ? { done: true, text: `${end.value} Runden gespielt` } : null;
+    return done ? { done: true, text: `${end.value} ${end.value === 1 ? 'Runde' : 'Runden'} gespielt` } : null;
   }
   if (end.type === 'target') {
     const t = totals(s);
@@ -477,7 +548,8 @@ export function playedRounds(s: GameState): number {
 
 /** Spiele mit Geber: Wizard und alle mit params.dealer */
 export const hasDealer = (s: GameState) => isBids(s) || !!s.game.rules.params?.dealer;
-/** Wer gibt in der laufenden Runde? Der Geber rotiert reihum, in Runde 1 gibt der erste Platz. */
+/** Wer gibt in der laufenden Runde? Der Geber rotiert reihum, in Runde 1 gibt der erste Platz.
+ *  Arschloch: Es gibt das Arschloch der Runde davor. */
 export function dealerOf(s: GameState): Player | null {
   if (!hasDealer(s)) return null;
   const players = seated(s);
@@ -485,6 +557,10 @@ export function dealerOf(s: GameState): Player | null {
   // Laufende Runde: die erste unvollständige, sonst die nächste neue
   const rounds = liveRounds(s); let i = rounds.findIndex(r => !roundFull(s, r.id));
   if (i === -1) i = rounds.length;
+  if (isRanks(s) && i > 0) {
+    const last = players.find(p => rankIn(s, rounds[i - 1].id, p.id) === players.length);
+    if (last) return last;
+  }
   return players[i % players.length];
 }
 

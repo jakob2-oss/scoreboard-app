@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 12.11.2026 (bis PR #9 gemergt)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 13.11.2026 (großes Feedback in Arbeit, siehe BACKLOG L; alle Pakete aus BACKLOG L umgesetzt; Vorschläge zu den übrigen Spielen, Strichliste und Design-Konzepte in BACKLOG M, warten auf Entscheidung)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

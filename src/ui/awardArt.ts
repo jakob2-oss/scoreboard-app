@@ -21,3 +21,7 @@ AWARD_ART.margin = `<svg viewBox="0 0 64 64"><path d="M6 52l18-26 10 12 8-10 16 
 AWARD_ART.long = `<svg viewBox="0 0 64 64"><rect x="16" y="8" width="32" height="6" rx="3" fill="#bba8e6"/><rect x="16" y="50" width="32" height="6" rx="3" fill="#bba8e6"/>
   <path d="M20 14h24c0 10-8 14-8 18s8 8 8 18H20c0-10 8-14 8-18s-8-8-8-18z" fill="#ece6fb"/><path d="M26 44c2-3 4-4 6-4s4 1 6 4l2 6H24z" fill="#f2cf86"/><path d="M27 20h10c-1 4-3 6-5 7-2-1-4-3-5-7z" fill="#f2cf86"/></svg>`;
 AWARD_ART.short = `<svg viewBox="0 0 64 64"><path d="M36 6L14 36h14l-4 22 26-32H36z" fill="#f2cf86"/><path d="M36 6l-8 20h8z" fill="#fffaf2" opacity=".5"/></svg>`;
+
+// Rommé: niedriger Schnitt (fallende Säulen, kleine Null), Siegquote (Krone über einem Kreisanteil)
+AWARD_ART.avg = `<svg viewBox="0 0 64 64"><rect x="10" y="18" width="12" height="36" rx="4" fill="#bba8e6"/><rect x="26" y="30" width="12" height="24" rx="4" fill="#97c4e3"/><rect x="42" y="42" width="12" height="12" rx="4" fill="#86cbb8"/><circle cx="48" cy="26" r="7" fill="none" stroke="#ef7a5c" stroke-width="4"/></svg>`;
+AWARD_ART.rate = `<svg viewBox="0 0 64 64"><circle cx="32" cy="38" r="18" fill="#ece6fb"/><path d="M32 38V20a18 18 0 0 1 17 24z" fill="#86cbb8"/><path d="M18 14l5 6 9-10 9 10 5-6-2 10H20z" fill="#f2cf86"/></svg>`;

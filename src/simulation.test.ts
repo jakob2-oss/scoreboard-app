@@ -195,7 +195,7 @@ describe('Testspiele: Varianten', () => {
   it('Rommé in Teams: 4 Partien', async () => { await series(GAMES.find(g => g.template.key === 'romme')!.template, 4, 7, { teams: true }); });
   it('Rommé bis 500: endet von selbst', async () => {
     const r = rng(3), mem = memRepo(), st = createStore(mem.repo, clock(), prefs), a = st.actions;
-    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.toPlayers();
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.setTemplateEnd({ type: 'target', value: 500 }); a.toPlayers();
     for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
     a.start();
     const g = playOut(st, r, 200);

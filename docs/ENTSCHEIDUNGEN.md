@@ -169,3 +169,97 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   (mit Zusatzzeile 44 px), kompakter Kopf und Summen.
 - Manuelle Eingabe jederzeit mit einem Tipp: „Manuell“ in der unteren Leiste, in der Ansage-Leiste und im Stiche-Blatt;
   zurück mit „Im Block“. Es geht direkt dort weiter, wo man gerade ist.
+
+## 13.11.2026: Allgemeines aus dem großen Feedback (Paket 1)
+- Kein Untertitel mehr in der Partie, bei keinem Spiel. Runde, Hälfte und Zug stehen in den Ansichten selbst.
+- Spielende: „Offen“ ist bei allen festen Spielen Standard (auch Rommé, Skyjo, Uno, Binokel, Skat). Auf der
+  Spielseite „Offen / Runden / Punkte“, das Limit frei eintragbar („Bei 500 Punkten“). Vorschlagswerte aus den
+  bekannten Varianten des Spiels. Arschloch nur Runden; Wizard, Kniffel, Phase 10, Tischspiele und Ergebnisspiele
+  ohne Wahl. Eigene Spiele: dieselbe Reihenfolge „Offen / Runden / Punkte“.
+- Teams bei jedem Spiel. Anzahl der Teams mit − und +; die Spieler werden dabei reihum neu verteilt
+  (bei 6 Spielern und 3 Teams: 1, 2, 3, 1, 2, 3), einzelne Spieler wechseln wie bisher per Team-Knopf.
+- Summen unten im selben Maß wie die Kacheln (44 px hoch, Zahl 19 px, Rundung 12 px).
+- Hell/Dunkel-Schalter oben rechts im Banner, als kleiner runder Knopf.
+
+## 14.11.2026: Rommé (Paket 2)
+- Eingabe im Block ist Standard (`params.block`): „Runde n eintragen“ öffnet einen kompakten Ziffernblock unter
+  dem Block, Spieler für Spieler. Name, Wert und Summe stehen in einer Zeile, darunter die Rommé-Tasten (Raus, +5,
+  +10, +20, ×2). Einzelseiten bleiben über „Manuell“ und im Menü wählbar, gemerkt je Spiel. Gilt allgemein für
+  jedes Spiel mit `params.block`, so lassen sich weitere Spiele umstellen.
+- Rundensieg ist die 0 (`params.zeroWins`): kleine Krone über der 0 im Block.
+- Spielerseiten einfacher Rundenspiele zeigen den Punkteverlauf als Kurve: der Spieler kräftig in seiner Farbe,
+  die anderen leise dahinter, Endwert an der Linie, ohne Achsen.
+- Siegerseite: „Dickste Packung“ (meiste Strafpunkte in einer Runde), „Meiste Siege“ (Runden mit 0), Vorsprung.
+- Rekorde: „Niedrigster Schnitt“ je Runde statt niedrigster Punktzahl, „Höchste Siegquote“ (Anteil Runden mit 0);
+  beide erst ab 7 Runden in einer Partie. Größter Vorsprung und Längste Partie bleiben. Dafür speichert jedes
+  Ergebnis die gewonnenen Runden (`extra.wins`).
+- Spielende: Vorschlag 10 Runden; Regeltext „nach den Runden oder an der Grenze“.
+- Fehler behoben: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie.
+
+## 14.11.2026: Uno, Phase 10, Arschloch (Paket 3)
+- Geber jetzt auch bei Uno, Phase 10 und Arschloch. Bei Arschloch gibt das Arschloch der Runde davor
+  (Runde 1 wie üblich der erste Platz).
+- Uno im Block: „Runde n eintragen“, Sieger wählen, nur der Sieger trägt im kompakten Ziffernblock ein
+  (Knopf „Eintragen“), danach zurück. Krone über dem Rundensieger. Einzelseiten über „Manuell“.
+- Phase 10 im Block: im Ziffernblock ein Knopf „Phase n“ zum Abhaken; „Raus“ hakt die Phase gleich mit ab.
+  Geschaffte Phase: Zelle grün hinterlegt, sonst normale Kachel. Die Phasennummer steht leise oben rechts,
+  ohne Farbe. (Ein Regenbogen je Phase war zu viel.)
+- Arschloch im Block: Krone für den Präsidenten, kleines Häufchen für das Arschloch; Vize und Bürger als Kürzel.
+  Spielerseite zeigt die Plätze je Runde als Kurve (oben der Präsident).
+
+## 14.11.2026: Kniffel (Paket 4)
+- Eingabe im Block ist Standard: Feld antippen öffnet die Auswahl der möglichen Werte direkt über dem Block
+  (dazu Streichen und bei belegtem Feld Leeren); Chance und Felder ohne feste Werte mit dem kompakten Ziffernblock.
+  Danach meldet die App, wer dran ist. Die Spalte dessen, der dran ist, ist leise getönt.
+  Einzelseiten bleiben über „Manuell“ und „Zug von …“ erreichbar.
+- Gestrichene Felder grau hinterlegt mit Strich.
+- Rechenzeilen: „Summe oben“ (nur die Zahl), „Bonus“ und neu „Summe unten“; Σ unten ist die Gesamtsumme,
+  links bündig zu den Kategorien.
+- Bonus ohne Text: erreicht „+35“ in Grün, sonst ein kleiner Kuchen mit dem Fortschritt und der Zahl,
+  die bis 63 fehlt, als graue Kapsel abgesetzt.
+
+## 14.11.2026: Binokel (Paket 5)
+- Eingabe im Block ist Standard. „Meldungen Runde n“ fragt zuerst „Wer spielt?“ mit Gebot (Start 200 bei drei,
+  150 bei vier Spielern, in Zehnern) oder „Ohne Gebot“. Dann Meldungen Spieler für Spieler im kompakten
+  Ziffernblock, danach die Stiche. Die Punkte tragen die Spieler selbst ein.
+- Spielmacher mit Gebot: im Ziffernblock „Abgehen −Gebot“ und „Verfehlt −2× Gebot“; die Meldung zählt dann nicht
+  (gespeichert als Meldung 0, Stiche negativ, `res` 1 oder 2). Bleibt er mit Meldung und Stichen unter dem Gebot,
+  wird „Verfehlt“ rot vorgeschlagen. Wer danach von Hand nachträgt, hebt die Markierung auf.
+- Block: Gebot klein in der Ecke beim Spielmacher, abgegangen leicht rot, verfehlt kräftiger rot. Geht niemand ab,
+  ist der Rundenbeste grün.
+- Geber rotiert. In der Ecke des Blocks ein kleines Logo: Schippen-Ober und Schellen-Unter.
+- Ohne Gebot (und auf den Einzelseiten) bleiben die bisherigen Tasten „Abgehen ×−1“ und „Verfehlt ×−2“.
+
+## 14.11.2026: Ergebnisspiele ohne Zettel (Paket 6)
+- Siedler, Monopoly und eigene Endwertungen haben keinen Block und keine Einzelseiten mehr. Die Partie zeigt ein
+  kleines Treppchen und darunter die Rangliste; beides wächst beim Eintragen.
+- Punkte (Siedler): Zeile antippen öffnet den kompakten Ziffernblock mit den Siedler-Tasten, Spieler für Spieler.
+  Plätze (Monopoly, eigene nach Platz): antippen in der Reihenfolge des Ausscheidens bzw. Ankommens, der letzte
+  Platz ergibt sich von selbst, nochmal tippen nimmt den Platz zurück.
+- „Auswerten“ führt direkt zur Siegerseite mit Treppchen, Rangliste, Kennzahlen und Rekorden.
+- Eigene Siegerszenen: Siedler auf einer Insel aus Feldern mit Meer, Monopoly im Geldregen auf dem Spielbrett,
+  eigene Ergebnisspiele auf einer Bühne mit Treppchen. So bekommt jedes eigene Ergebnisspiel ohne Zutun ein Bild.
+- Siedler ohne die Notizfelder „Längste Straße“ und „Rittermacht“. Die gemeldete hängende Seite ließ sich nicht
+  nachstellen; wahrscheinlich war es der Sprung zwischen Notizfeld und Punktefeld, der mit der neuen Eingabe entfällt.
+
+## 14.11.2026: Schwimmen und Chic (Paket 7)
+- Schwimmen: auf der Spielseite „Schwimmen darf: Jeder / Nur der Erste“ (`params.swimFirst`). Bei „Nur der Erste“
+  schwimmt nur, wer zuerst sein letztes Leben verliert; alle anderen sind mit dem letzten Leben sofort raus.
+- Chic ist ein festes Spiel (bei den Würfelspielen), eigene Spiele mit „Zurück in die Mitte“ gehen weiter.
+  Im Deckel-Blatt zwei Knöpfe:
+  - „Rausgeschickt“: Deckel zurück in die Mitte, für die ganze Partie raus, bekommt keine Deckel mehr und kann
+    nicht verlieren. Bleibt nur einer übrig, verliert er. In der zweiten Phase verliert die Hälfte, wer danach
+    als Einziger noch Deckel hat.
+  - „Chic aus dem Rohr“: zahlt sofort die Runde, das Spiel läuft weiter. Am Platz steht „zahlt“. In der Wertung
+    steht er wie der Verlierer hinten, beide zählen als verloren.
+
+## 14.11.2026: Serien (Paket 8)
+- Jede Serie hat ein Banner oben (`src/ui/banners.ts`): fünf freche Motive mit dem Otter (Kneipe mit Bier und
+  Sonnenbrille, Strand mit Cocktail, Disco mit Cap und Mikro, Lagerfeuer mit Würfelbecher, Pokerabend mit Karten).
+  Ohne eigene Wahl ergibt sich das Motiv aus der Serie; wählbar unten auf der Serienseite. Eigene Bilder später.
+- Unter Name und Zeitraum stehen die Teilnehmer als Namensknöpfe (öffnen das Profil).
+- Siegerbild der Serie ist eigenes: Nacht mit Feuerwerk, Otter mit Sonnenbrille, Krone und Pokal, Schild
+  „SERIENSIEG“, als Karte unter dem Banner mit „… gewinnt die Serie“.
+- Partien der Serie lassen sich öffnen (dieselbe Ansicht wie im Verlauf: Serie ändern, löschen, Plätze).
+- Serienliste und laufende Serie zeigen das Banner als kleines Bild und die Teilnehmer.
+- Der Otter kann jetzt Sonnenbrille, Cap oder keine Krone tragen (`otter({ shades, hat })`).

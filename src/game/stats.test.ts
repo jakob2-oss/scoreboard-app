@@ -136,6 +136,24 @@ describe('Auszeichnungen einer Serie', () => {
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
 });
 
+describe('Rommé-Rekorde', () => {
+  const g = (id: string, at: string, rn: number, places: [string, number, number, number][]) => ({ id, key: 'romme', name: 'Rommé', finishedAt: at,
+    results: places.map(([playerId, place, total, wins]) => ({ playerId, place, total, extra: { rn, wins } })) });
+  it('niedrigster Schnitt und höchste Siegquote erst ab 7 Runden; Vorsprung und längste Partie bleiben', () => {
+    const list = [
+      g('1', '2026-11-01T20:00', 5, [['a', 1, 10, 4], ['b', 2, 90, 1]]),    // zu kurz für Schnitt und Quote
+      g('2', '2026-11-02T20:00', 8, [['b', 1, 60, 4], ['a', 2, 120, 2]]),
+      g('3', '2026-11-03T20:00', 10, [['a', 1, 70, 5], ['b', 2, 95, 3]])
+    ];
+    expect(gameRecords(list, { win: 'low', points: true, zeroWins: true })).toEqual([
+      { key: 'avg', label: 'Niedrigster Schnitt', n: 7, unit: 'je Runde', who: ['a'], gameId: '3' },
+      { key: 'margin', label: 'Größter Vorsprung', n: 80, unit: 'Punkte', who: ['a'], gameId: '1' },
+      { key: 'long', label: 'Längste Partie', n: 10, unit: 'Runden', who: ['a'], gameId: '3' },
+      { key: 'rate', label: 'Höchste Siegquote', n: 50, unit: '% der Runden', who: ['b'], gameId: '2' }
+    ]);
+  });
+});
+
 describe('Rekorde und Titel', () => {
   const g = (id: string, at: string, rn: number, places: [string, number, number][]) => ({ id, key: 'kniffel', name: 'Kniffel', finishedAt: at,
     results: places.map(([playerId, place, total]) => ({ playerId, place, total, extra: { rn } })) });

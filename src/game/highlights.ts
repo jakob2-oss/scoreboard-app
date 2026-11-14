@@ -1,7 +1,7 @@
 /** Die wichtigsten Kennzahlen einer Partie für die Siegerseite. Reine Funktionen, keine Oberfläche. */
 import {
   fieldOf, fieldsOf, hasPhases, isBids, isCats, isRanks, rankIn, isResultOnly, isSplit, liveRounds, noteKey, notesOf, phasesDone,
-  ranking, roundFull, scoreOf, seated, upperSum, isLives, isTokens, lifeState, tokenState, tableRounds, type GameState
+  ranking, roundFull, scoreOf, seated, upperSum, zeroWins, roundWins, isLives, isTokens, lifeState, tokenState, tableRounds, type GameState
 } from './engine';
 
 export interface Highlight {
@@ -74,7 +74,13 @@ export function highlights(s: GameState): Highlight[] {
   // Allgemein für Rundenspiele
   if (!isResultOnly(s) && !isCats(s)) {
     const cells = players.flatMap(p => rounds.map(r => ({ name: p.name, v: scoreOf(s, r.id, p.id) })).filter((x): x is { name: string; v: number } => x.v !== null));
-    if (cells.length && !isBids(s)) {
+    if (cells.length && zeroWins(s)) {
+      // Rommé: die dickste Packung (meiste Strafpunkte in einer Runde) und wer am häufigsten raus war
+      const worst = top(cells, (a, c) => a > c);
+      if (worst.v > 0) out.push({ label: 'Dickste Packung', value: fmt(worst.v), who: worst.who });
+      const wins = top(players.map(p => ({ name: p.name, v: roundWins(s, p.id) })), (a, c) => a > c);
+      if (wins.v > 0) out.push({ label: 'Meiste Siege', value: `${wins.v}×`, who: wins.who });
+    } else if (cells.length && !isBids(s)) {
       const zero = !!s.game.rules.params?.zeroSum;
       const best = top(cells, high || zero ? (a, c) => a > c : (a, c) => a < c);
       out.push({ label: zero ? 'Größter Rundengewinn' : 'Beste Runde', value: fmt(best.v), who: best.who });

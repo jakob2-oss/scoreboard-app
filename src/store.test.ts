@@ -4,7 +4,7 @@ import type { Repo } from './db';
 import type { Clock } from './lib/id';
 import type { Player } from './model/types';
 import type { GameState } from './game/engine';
-import { endState, fieldOf, liveRounds, ranking, seated, totals } from './game/engine';
+import { endState, fieldOf, liveRounds, ranking, seated, totals, dealerOf, phaseIn, phaseAt, lowerSum, gebotOf, outOf, scoreOf, nextStep } from './game/engine';
 import { TPL } from './test/fixtures';
 import { GAMES } from './game/games';
 import type { Result, Template } from './model/types';
@@ -14,6 +14,7 @@ function testClock(): Clock {
   return { uid: () => 'id' + (++n), now: () => new Date(t += 1000).toISOString() };
 }
 /** Speicher im Arbeitsspeicher, merkt sich den zuletzt gespeicherten Stand */
+const nextStepKind = (g: Parameters<typeof nextStep>[0]) => nextStep(g).kind;
 function memPrefs(): Prefs { let last: string[] = []; return { getLast: () => last, setLast: ids => { last = ids; } }; }
 function memRepo() {
   const players: Player[] = []; let saved: GameState | null = null; let saves = 0; const templates: Template[] = []; const results: Result[] = [];
@@ -222,6 +223,114 @@ describe('Arschloch', () => {
     expect(ex.id2).toMatchObject({ praes: 1, arsch: 1, praesStreak: 1 });
     expect(ex.id1).toMatchObject({ praes: 1, arsch: 0 });
     expect(ex.id3).toMatchObject({ praes: 0, arsch: 1 });
+  });  it('das Arschloch der letzten Runde gibt', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'arschloch')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D']) await a.addPlayer(n);
+    a.start();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo(); a.rankTap('id3'); a.rankTap('id1'); a.rankTap('id4');
+    expect(dealerOf(st.get().game!)?.id).toBe('id2');
+    a.roundGo(); a.rankTap('id2'); a.rankTap('id1'); a.rankTap('id3');
+    expect(dealerOf(st.get().game!)?.id).toBe('id4');
+  });
+});
+
+describe('Kniffel im Block', () => {
+  it('Feld antippen öffnet die Auswahl im Block; Chance mit Ziffernblock; danach sagt die App, wer dran ist', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'kniffel')!.template); a.toPlayers();
+    for (const n of ['A', 'B']) await a.addPlayer(n);
+    a.start();
+    const rounds = liveRounds(st.get().game!), einser = rounds[0], chance = rounds[rounds.length - 1];
+    a.openPad(einser.id, 'id1');
+    expect(st.get()).toMatchObject({ sheet: 'catpick', pad: false, page: -1, edit: { playerId: 'id1' } });
+    a.pick(3);
+    expect(st.get()).toMatchObject({ sheet: null, edit: null, fromOverview: false });
+    expect(st.get().toast?.text).toBe('B ist dran');
+    a.openPad(chance.id, 'id2');
+    expect(st.get()).toMatchObject({ sheet: null, pad: true });
+    a.digit(2); a.digit(2); a.next();
+    expect(st.get()).toMatchObject({ pad: false, edit: null });
+    expect(totals(st.get().game!)).toEqual({ id1: 3, id2: 22 });
+    expect(lowerSum(st.get().game!, 'id2')).toBe(22);
+  });
+});
+
+describe('Binokel im Block', () => {
+  async function binokel() {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' as const }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'binokel')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); return { st, a };
+  }
+  it('Wer spielt mit Gebot, dann Meldungen und Stiche im Block; Verfehlt zählt das Gebot doppelt negativ', async () => {
+    const { st, a } = await binokel();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo();
+    expect(st.get().sheet).toBe('bidder');
+    a.setBidder('id2', 250);
+    expect(st.get()).toMatchObject({ sheet: null, pad: true, edit: { playerId: 'id1', field: 'meld' } });
+    a.add(20); a.next(); a.add(100); a.next(); a.add(40); a.next();
+    expect(st.get().pad).toBe(false);
+    a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, edit: { playerId: 'id1', field: 'play' } });
+    a.add(50); a.next();
+    a.add(100); a.binokelOut(2);
+    a.add(60); a.next();
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(totals(g)).toEqual({ id1: 70, id2: -500, id3: 100 });
+    expect(gebotOf(g, r.id)).toEqual({ playerId: 'id2', gebot: 250 });
+    expect(outOf(g, r.id, 'id2')).toBe(2);
+    expect(dealerOf(g)?.id).toBe('id2');
+  });
+  it('Abgehen schon bei den Meldungen; ohne Gebot geht es direkt zu den Meldungen', async () => {
+    const { st, a } = await binokel();
+    a.roundGo(); a.setBidder('id1', 200);
+    a.binokelOut(1);
+    expect(st.get().edit).toMatchObject({ playerId: 'id2', field: 'meld' });
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(scoreOf(g, r.id, 'id1')).toBe(-200);
+    expect(outOf(g, r.id, 'id1')).toBe(1);
+    a.add(40); a.next(); a.add(20); a.next();
+    a.roundGo(); expect(st.get().edit).toMatchObject({ playerId: 'id2', field: 'play' });
+    a.add(80); a.next(); a.add(60); a.next();
+    expect(totals(st.get().game!)).toEqual({ id1: -200, id2: 120, id3: 80 });
+    a.roundGo(); expect(st.get().sheet).toBe('bidder');
+    a.setBidder(null, null);
+    expect(st.get()).toMatchObject({ sheet: null, pad: true, edit: { ref: 'new', field: 'meld' } });
+  });
+});
+
+describe('Uno und Phase 10 im Block', () => {
+  const blockPrefs = () => ({ ...memPrefs(), getMode: () => 'block' as const });
+  it('Uno: Sieger wählen, nur er trägt im Block ein, dann zurück; Geber rotiert', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), blockPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'uno')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start();
+    expect(dealerOf(st.get().game!)?.id).toBe('id1');
+    a.roundGo(); expect(st.get().sheet).toBe('winner');
+    a.pickWinner('id2');
+    expect(st.get()).toMatchObject({ pad: true, page: -1, edit: { playerId: 'id2' } });
+    a.add(50); a.add(20); a.next();
+    expect(st.get()).toMatchObject({ pad: false, edit: null, fromOverview: false });
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 70, id3: 0 });
+    expect(dealerOf(st.get().game!)?.id).toBe('id2');
+  });
+  it('Phase 10: im Block eintragen und Phase abhaken', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), blockPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'phase10')!.template); a.toPlayers();
+    for (const n of ['A', 'B']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, edit: { playerId: 'id1' } });
+    a.setValue(0); a.togglePhase(); a.next();
+    a.add(25); a.next();
+    const g = st.get().game!, r = liveRounds(g)[0];
+    expect(phaseIn(g, r.id, 'id1')).toBe(true);
+    expect(phaseIn(g, r.id, 'id2')).toBe(false);
+    expect(phaseAt(g, 1, 'id1')).toBe(2);
+    expect(phaseAt(g, 1, 'id2')).toBe(1);
   });
 });
 
@@ -293,6 +402,19 @@ describe('Teams', () => {
     expect(st.get().game).toBeNull();
     a.cycleTeam('id2'); a.addTeam(); a.start();
     expect(seated(st.get().game!).map(p => p.name)).toEqual(['A', 'B']);
+  });
+  it('mehr als zwei Teams und bei jedem Spiel, auch Kniffel', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'kniffel')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C', 'D', 'E', 'F']) await a.addPlayer(n);
+    a.setTeamMode(true); a.addTeam();
+    expect(st.get().teamCount).toBe(3);
+    expect(Object.values(st.get().teamOf)).toEqual([0, 1, 2, 0, 1, 2]);
+    a.removeTeam(); a.removeTeam();
+    expect(st.get().teamCount).toBe(2);
+    a.addTeam(); a.start();
+    expect(seated(st.get().game!).map(p => p.name)).toEqual(['A & D', 'B & E', 'C & F']);
+    expect(st.get().game!.game.rules.scoring).toBe('categories');
   });
 });
 
@@ -477,6 +599,33 @@ describe('Freies Spiel', () => {
 });
 
 describe('Feste Spiele', () => {
+  it('Rommé im Block: Runde direkt im Block eintragen, Spieler für Spieler; Umschalten auf Einzelseiten', async () => {
+    let mode = 'block';
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => mode as 'block', setMode: (_k, m) => { mode = m; } }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, page: -1, edit: { playerId: 'id1' } });
+    a.setValue(0); a.next();
+    expect(st.get().edit?.playerId).toBe('id2');
+    a.add(20); a.add(5); a.mul(2); a.next();
+    a.add(10); a.next();
+    expect(st.get().pad).toBe(false);
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 50, id3: 10 });
+    a.switchEntry('romme');
+    expect(mode).toBe('simple');
+    expect(st.get()).toMatchObject({ pad: false, page: 0 });
+  });
+  it('Wizard-Ansageleiste wandert nicht in die nächste Partie (Rommé)', async () => {
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get().bidBar).not.toBeNull();
+    a.goHome(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.start();
+    expect(st.get().game!.game.rules.key).toBe('romme');
+    expect(st.get().bidBar).toBeNull();
+  });
   it('Rommé: Raus, Schnelltasten und ×2, Ende per Option, keine eigene Vorlage', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
     await a.init();
@@ -494,7 +643,7 @@ describe('Feste Spiele', () => {
     expect(st.get().page).toBe(-1);
     a.finishGame();
     expect(mem.templates).toHaveLength(0);
-    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'target', value: 500 });
+    expect(GAMES.find(g => g.template.key === 'romme')!.template.end).toEqual({ type: 'none' });
   });
   it('startet direkt mit den letzten Spielern', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
@@ -558,9 +707,9 @@ describe('Wizard', () => {
 });
 
 describe('Weitere Spiele', () => {
-  async function play(key: string, names = ['A', 'B', 'C']) {
+  async function play(key: string, names = ['A', 'B', 'C'], end?: Template['end']) {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), memPrefs()); const a = st.actions;
-    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); a.toPlayers();
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === key)!.template); if (end) a.setTemplateEnd(end); a.toPlayers();
     for (const n of names) await a.addPlayer(n);
     a.start();
     return { st, a };
@@ -604,8 +753,22 @@ describe('Weitere Spiele', () => {
     expect(totals(st.get().game!)).toEqual({ id1: 10, id2: 5, id3: 7 });
     expect(ranking(st.get().game!)[0].player.name).toBe('A');
   });
+  it('Monopoly: Plätze per Antippen, der letzte ergibt sich, nochmal tippen nimmt zurück', async () => {
+    const { st, a } = await play('monopoly', ['A', 'B', 'C', 'D']);
+    const r = () => liveRounds(st.get().game!)[0].id, pl = (id: string) => scoreOf(st.get().game!, r(), id);
+    a.placeTap('id2'); a.placeTap('id4');
+    expect([pl('id1'), pl('id2'), pl('id3'), pl('id4')]).toEqual([null, 1, null, 2]);
+    a.placeTap('id1');
+    expect([pl('id1'), pl('id3')]).toEqual([3, 4]);
+    expect(nextStepKind(st.get().game!)).toBe('result');
+    a.placeTap('id4');
+    expect([pl('id1'), pl('id2'), pl('id3'), pl('id4')]).toEqual([2, 1, 3, null]);
+    a.undo();
+    expect(pl('id4')).toBe(2);
+    expect(ranking(st.get().game!)[0].player.name).toBe('B');
+  });
   it('Uno endet bei 500, Scrabble rechnet mit ×3', async () => {
-    const u = await play('uno', ['A', 'B']);
+    const u = await play('uno', ['A', 'B'], { type: 'target', value: 500 });
     u.a.roundGo();
     expect(u.st.get().sheet).toBe('winner');
     u.a.pickWinner('id1');

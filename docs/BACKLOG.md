@@ -139,3 +139,106 @@ Erstellungsmodus, fehlende Bausteine:
 - [x] Eigener Reiter „Serien“, Serie starten und beenden, laufende Serie auf der Startseite und beim Speichern vorgewählt.
 - [x] Abschlussseite mit Otter, Gesamtsieger und Auszeichnungen.
 - [ ] Ideen: Serien-Statistik im Profil (Seriensiege), Teilen der Abschlussseite als Bild, Serie mit festen Spielern.
+
+## L. Großes Feedback vom 13.11. (gegliedert, Reihenfolge = Umsetzung)
+
+### L1 Allgemein
+- [x] Startseite: Hell/Dunkel-Schalter nach rechts oben.
+- [x] Teams: mehr als zwei Teams einstellbar; Teams bei jedem Spiel möglich (auch Kniffel).
+- [x] Block: Summen und Platzierungen unten auf dieselbe Skala wie die Kacheln.
+- [x] Spielende: bei allen Spielen „Offen“ als Standard, dazu immer ein freies Limit (Runden oder Punkte) eingebbar.
+- [x] Untertitel (Runde …) bei allen Spielen entfernen; steht in den Ansichten selbst.
+- [ ] Standard ist überall die eigens gestaltete Eingabe im Block; Einzelerfassung ist die Alternative. (je Spiel in L3 bis L10)
+
+### L2 Wizard
+- [x] Sehr gut wie es ist. Standard: im Block eintragen, Einzelerfassung als Alternative.
+
+### L3 Rommé
+- [x] Die Ansage-Logik aus Wizard gehört hier nicht hin. Ursache: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie. Behoben, Rommé selbst kennt keine Ansagen.
+- [x] Standard: großer Block mit direkter Eingabe; Einzelseiten zeigen eine Kurve mit dem Punkteverlauf.
+- [x] Runden mit 0 im Block mit kleiner Krone (Rundensieg).
+- [x] Siegerseite: statt „Beste Runde“ „Dickste Packung“ (meiste Punkte in einer Runde) und „Meiste Siege“.
+- [x] Rekorde: niedrigster Schnitt statt Gesamtpunkte (ab 7 Runden), Größter Vorsprung, Längste Partie, Höchste Siegquote (ab 7 Runden).
+- [x] Wird eher auf Runden gespielt: wenigste Punkte nach den Runden gewinnt (über freies Limit Runden).
+
+### L4 Uno
+- [x] Klären: Bekommt wirklich nur, wer fertig ist, Punkte? (Ja, Standardregel: der Sieger bekommt die Kartenwerte der anderen.)
+- [x] Eintragen direkt im Block, ohne Einzelseiten.
+- [x] Geber rotiert.
+
+### L5 Phase 10
+- [x] Phase im Block abhaken.
+- [x] Geschaffte Phasen grün, gescheiterte rot; Hintergrund je Phase leicht im Regenbogenverlauf.
+- [x] Geber rotiert.
+
+### L6 Binokel
+- [x] Geber rotiert.
+- [x] Eingabe: Meldung, dann Stiche; einfache Korrektur bei Abgehen.
+- [x] Optional das Gebot erfassen; daraus Vorschlag für Abgehen (einfach negativ) und Verfehlt (doppelt negativ). Punkte tragen die Spieler selbst ein.
+- [x] Markierungen im Block: abgegangen (einfach), verfehlt (doppelt); geht niemand ab, Spieler mit den meisten Punkten grün.
+- [x] Kleines Logo oben links: die beiden Karten, die zusammen „Binokel“ ergeben (wenig Platz).
+
+### L7 Arschloch
+- [x] Im Block Präsident (Krone) und Arschloch (passendes Icon) kennzeichnen.
+- [x] Das Arschloch der letzten Runde gibt in der aktuellen Runde.
+- [x] Einzelseiten zeigen die Rangentwicklung über die Runden; Eintragen im Block.
+
+### L8 Schwimmen
+- [x] Zusätzliche Einstellung: wie viele schwimmen dürfen. Variante „nur der Erste schwimmt“: wer danach sein letztes Leben verliert, ist sofort raus. Auswahl z. B. Alle, Nur der Erste.
+
+### L9 Kniffel
+- [x] Einzelseiten nur noch als Alternative: im Block beim Tippen Auswahl aufklappen.
+- [x] Gestrichenes ausgrauen.
+- [x] Summe unten gesondert.
+- [x] Feld mit dem Summenzeichen bündig zu den Kategorien.
+- [x] Bonus: anzeigen, wie viele bis 63 fehlen, abgegrenzt, ohne Text.
+
+### L10 Ergebnisspiele (Siedler, Monopoly, eigene „nur am Ende“)
+- [x] Kein Zettel: eine Eingabe, daraus direkt Podest und Rangliste, darunter Statistik und Rekorde.
+- [x] Siedler: Notizfelder Längste Straße und Rittermacht entfallen; Seite und Siegerseite kreativer.
+- [x] Monopoly: dasselbe, eigenes Artwork.
+- [x] Eigene Ergebnisspiele: freies Artwork, für alle Spiele möglichst einfach.
+- [x] Fehler: Siedler-Seite hing nach der Partie.
+
+### L11 Freie Erstellung, Chic
+- [x] Zwei Knöpfe je Person:
+  - „Rausgeschickt“: scheidet positiv aus, eigene Deckel weg, kann nicht mehr verlieren, egal wie viele Deckel.
+  - „Chic aus dem Rohr“: verliert sofort und zahlt eine Runde; das Spiel läuft weiter, bis am Schluss noch jemand verliert.
+  - Am Ende also mehrere Verlierer möglich (Sofortverlierer plus Schlussverlierer); Statistik zählt beide als verloren.
+- [x] Chic als feste Vorlage; im eigenen Spiel weiter möglich.
+
+### L12 Serien
+- [x] Banner oben: zuerst 5 Platzhalter (Optik der App, frecher und verrückter, mit atzigem Otter); später eigene Bilder.
+- [x] Teilnehmer oben auflisten.
+- [x] Partien der Serie öffnen (Detailansicht).
+- [x] Siegerbild der Serie anders als bei einer Partie, weiter unten unter dem Banner.
+- [x] Serienliste: einige Teilnehmer und das Banner als Icon.
+
+### L13 Getrennt besprechen
+- [ ] Skyjo, Schafkopf, Doppelkopf, Scrabble (Eintragen auf der Hauptseite; was unterscheidet sie vom bloßen Aufschreiben?).
+
+### L14 Idee: Strichliste zwischen Personen
+- [ ] Gemeinsame Strichliste (z. B. Wettpunkte) in beide Richtungen, Strichlisten-Look, Notiz je Strich. Konzept: wo integrieren, wie weiterdenken.
+
+## M. Vorschläge vom 14.11. (Ideenbuch, noch nicht entschieden)
+
+### M1 Spiele
+- [ ] Skyjo: Eingabe im Block; „Wer hat beendet?“ antippen, die App verdoppelt, wenn er nicht allein die wenigsten Punkte hat (nur positiv); Krone für die niedrigste Runde; Ende-Vorschlag 100.
+- [ ] Schocken: im Deckel-Blatt den Wurf antippen (Schock aus, Schock 2 bis 6, General, Straße, Zahl), die App kennt die Deckelzahl.
+- [ ] Doppelkopf: Re-Partei antippen, Spielwert mit − und +, Re oder Kontra gewinnt, Solo dreifach; Bockrunden als Schalter.
+- [ ] Schafkopf: wer spielt (plus Partner beim Sauspiel), Spielart, gewonnen oder verloren; Schneider, Schwarz, Laufende; Tarife auf der Spielseite.
+- [ ] Skat: Spielwert-Rechner (Farbe/Grand/Null, Spitzen, Hand, Schneider, Schwarz, Ouvert, Kontra/Re); optional Seeger-Fabian; Ende-Vorschlag Bierlachs.
+- [ ] Scrabble: Taste Bingo +50, Reststeine am Ende, optional das Wort für Rekorde.
+- [ ] Wizard: Hausregel „Ansagen dürfen nicht aufgehen“ als Schalter.
+
+### M2 Strichliste (L14)
+- [ ] Liste zwischen zwei Personen, Strich je Tipp in Fünferbündeln, Notiz je Strich, Ausgleichen mit Verlauf.
+- [ ] Ort: Karte „Strichlisten“ auf der Startseite unter „Laufende Partien“, Bilanz im Profil. Später erstes geteiltes Ding mit der Synchronisierung.
+
+### M3 Design und Geschichte (fünf Konzepte)
+- [ ] Liga: Serien als Saison mit Spieltagen, Auf- und Abstieg, Meister und Absteiger.
+- [ ] Otter-Gang: kurze freche Sprüche bei besonderen Momenten, Frechheitsregler Brav, Frech, Ätzend.
+- [ ] Titelseite: nach jedem Abend eine teilbare Klatschblatt-Titelseite aus den echten Zahlen (eigene Optik, kein echtes Logo).
+- [ ] Stammtisch: Kreidetafel, Bierdeckel, neue Siegerbänder in der Mitternacht-Variante.
+- [ ] Nachtschicht: ab 23 Uhr dunkler und größer, am nächsten Tag Kater-Report; insgesamt weniger Pastell.
+- Empfehlung: zuerst Liga und Otter mit Regler, dann Titelseite, dann Stammtisch und Nachtschicht als dunkles Thema.
