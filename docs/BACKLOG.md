@@ -155,11 +155,11 @@ Erstellungsmodus, fehlende Bausteine:
 
 ### L3 Rommé
 - [x] Die Ansage-Logik aus Wizard gehört hier nicht hin. Ursache: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie. Behoben, Rommé selbst kennt keine Ansagen.
-- [ ] Standard: großer Block mit direkter Eingabe; Einzelseiten zeigen eine Kurve mit dem Punkteverlauf.
-- [ ] Runden mit 0 im Block mit kleiner Krone (Rundensieg).
-- [ ] Siegerseite: statt „Beste Runde“ „Dickste Packung“ (meiste Punkte in einer Runde) und „Meiste Siege“.
-- [ ] Rekorde: niedrigster Schnitt statt Gesamtpunkte (ab 7 Runden), Größter Vorsprung, Längste Partie, Höchste Siegquote (ab 7 Runden).
-- [ ] Wird eher auf Runden gespielt: wenigste Punkte nach den Runden gewinnt (über freies Limit Runden).
+- [x] Standard: großer Block mit direkter Eingabe; Einzelseiten zeigen eine Kurve mit dem Punkteverlauf.
+- [x] Runden mit 0 im Block mit kleiner Krone (Rundensieg).
+- [x] Siegerseite: statt „Beste Runde“ „Dickste Packung“ (meiste Punkte in einer Runde) und „Meiste Siege“.
+- [x] Rekorde: niedrigster Schnitt statt Gesamtpunkte (ab 7 Runden), Größter Vorsprung, Längste Partie, Höchste Siegquote (ab 7 Runden).
+- [x] Wird eher auf Runden gespielt: wenigste Punkte nach den Runden gewinnt (über freies Limit Runden).
 
 ### L4 Uno
 - [ ] Klären: Bekommt wirklich nur, wer fertig ist, Punkte? (Ja, Standardregel: der Sieger bekommt die Kartenwerte der anderen.)

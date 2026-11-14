@@ -6,7 +6,7 @@ import { nameList, playerOf } from './lookup';
 
 /** Wie Rekorde für ein Spiel gezählt werden: Punkte nur, wenn es Punkte gibt (nicht Leben, Deckel oder Platz) */
 export const recordOpts = (t: Pick<Template, 'win' | 'scoring' | 'params'>) => ({
-  win: t.win, points: t.scoring !== 'lives' && t.scoring !== 'tokens' && t.params?.unit !== 'Platz'
+  win: t.win, points: t.scoring !== 'lives' && t.scoring !== 'tokens' && t.params?.unit !== 'Platz', zeroWins: !!t.params?.zeroWins
 });
 
 /** Karten mit Abbildung, Titel, Zahl und Name (wie die Auszeichnungen der Serien) */
@@ -19,7 +19,7 @@ export function RecordCards({ list, fresh }: { list: GameRecord[]; fresh?: boole
         <div key={x.key} className={'award a-' + x.key + (fresh ? ' fresh' : '')}>
           <span className="award-ill" dangerouslySetInnerHTML={{ __html: AWARD_ART[x.key] }} />
           <small>{fresh ? 'Neuer Rekord' : x.label}</small>
-          <b>{x.n}<em>{x.unit}</em></b>
+          <b>{x.n.toLocaleString('de-DE')}<em>{x.unit}</em></b>
           <span className="award-who">{fresh ? x.label : names(x.who)}</span>
         </div>
       ))}

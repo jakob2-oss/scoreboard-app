@@ -280,6 +280,21 @@ export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
 /** Feldname einer zweiteiligen Runde: Wizard 'bid' und 'tricks', sonst aus der Vorlage (z. B. Binokel 'meld', 'play') */
 export type BidField = string;
 export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
+/** Spiel mit eigens gestalteter Eingabe im Block (Wizard, Rommé …); die Einzelseiten bleiben wählbar */
+export const blockEntry = (s: GameState) => isBids(s) || !!s.game.rules.params?.block;
+/** Rommé: Rundensieg ist eine 0 */
+export const zeroWins = (s: GameState) => !!s.game.rules.params?.zeroWins;
+/** Anzahl gewonnener Runden (0 geschrieben) */
+export const roundWins = (s: GameState, pid: string) => liveRounds(s).filter(r => scoreOf(s, r.id, pid) === 0).length;
+/** Verlauf der Summe nach jeder vollständigen Runde, je Spieler */
+export function runningTotals(s: GameState): Record<string, number[]> {
+  const players = seated(s), out: Record<string, number[]> = Object.fromEntries(players.map(p => [p.id, [0]]));
+  for (const r of liveRounds(s)) {
+    if (!roundFull(s, r.id)) continue;
+    for (const p of players) { const a = out[p.id]; a.push(a[a.length - 1] + (scoreOf(s, r.id, p.id) ?? 0)); }
+  }
+  return out;
+}
 const WIZARD_FIELDS: SplitField[] = [{ key: 'bid', label: 'Ansage', phase: 'Ansagen' }, { key: 'tricks', label: 'Stiche', phase: 'Stiche' }];
 /** Felder einer zweiteiligen Runde oder null */
 export function fieldsOf(s: GameState): SplitField[] | null {

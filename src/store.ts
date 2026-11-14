@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, blockEntry, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -509,6 +509,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
         else set({ sheet: 'tricks', rankRef: step.ref, bidBar: null, page: -1, pad: false, edit: null });
         return;
       }
+      // Rommé und Co. im Block: Ziffernblock direkt unter der Zeile, Spieler für Spieler
+      if (blockEntry(g) && !isBids(g) && !step.field && modeOf(g.game.rules.key) === 'block') {
+        set({ page: -1 }); actions.openPad(step.ref, seated(g)[step.playerIndex].id); return;
+      }
       actions.goPage(step.playerIndex, step.ref, step.field);
     },
     // ---------- Wizard im Block
@@ -550,7 +554,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     /** Eingabe je Spiel: ausführlich im Block oder einfach pro Spieler (gemerkt je Spiel) */
     setEntryMode(key: string, mode: EntryMode) {
       prefs.setMode?.(key, mode);
-      set({ bidBar: null, sheet: null });
+      set({ bidBar: null, sheet: null, pad: false, edit: null });
       toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen pro Spieler');
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
@@ -685,6 +689,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
             const rounds = liveRounds(f).filter(r => fieldOf(f, r.id, x.player.id, 'tricks') !== null);
             extra = { ...extra, rounds: rounds.length, hits: rounds.filter(r => fieldOf(f, r.id, x.player.id, 'bid') === fieldOf(f, r.id, x.player.id, 'tricks')).length };
           }
+          // Rommé: gewonnene Runden (0 geschrieben) für die Siegquote
+          if (zeroWins(f)) extra = { ...extra, wins: roundWins(f, x.player.id) };
           // Rundenzahl für Rekorde (längste Partie); bei reinen Endwertungen ohne Bedeutung
           if (rn) extra = { ...extra, rn };
           return membersOf(f, x.player.id).map(pid => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: f.game.id, playerId: pid, total: x.total, place: x.place, ...(extra ? { extra: { ...extra, ...(isTeamGame(f) ? { team: 1 } : {}) } } : isTeamGame(f) ? { extra: { team: 1 } } : {}) }));

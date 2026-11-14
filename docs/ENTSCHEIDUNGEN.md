@@ -180,3 +180,18 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   (bei 6 Spielern und 3 Teams: 1, 2, 3, 1, 2, 3), einzelne Spieler wechseln wie bisher per Team-Knopf.
 - Summen unten im selben Maß wie die Kacheln (44 px hoch, Zahl 19 px, Rundung 12 px).
 - Hell/Dunkel-Schalter oben rechts im Banner, als kleiner runder Knopf.
+
+## 14.11.2026: Rommé (Paket 2)
+- Eingabe im Block ist Standard (`params.block`): „Runde n eintragen“ öffnet einen kompakten Ziffernblock unter
+  dem Block, Spieler für Spieler. Name, Wert und Summe stehen in einer Zeile, darunter die Rommé-Tasten (Raus, +5,
+  +10, +20, ×2). Einzelseiten bleiben über „Manuell“ und im Menü wählbar, gemerkt je Spiel. Gilt allgemein für
+  jedes Spiel mit `params.block`, so lassen sich weitere Spiele umstellen.
+- Rundensieg ist die 0 (`params.zeroWins`): kleine Krone über der 0 im Block.
+- Spielerseiten einfacher Rundenspiele zeigen den Punkteverlauf als Kurve: der Spieler kräftig in seiner Farbe,
+  die anderen leise dahinter, Endwert an der Linie, ohne Achsen.
+- Siegerseite: „Dickste Packung“ (meiste Strafpunkte in einer Runde), „Meiste Siege“ (Runden mit 0), Vorsprung.
+- Rekorde: „Niedrigster Schnitt“ je Runde statt niedrigster Punktzahl, „Höchste Siegquote“ (Anteil Runden mit 0);
+  beide erst ab 7 Runden in einer Partie. Größter Vorsprung und Längste Partie bleiben. Dafür speichert jedes
+  Ergebnis die gewonnenen Runden (`extra.wins`).
+- Spielende: Vorschlag 10 Runden; Regeltext „nach den Runden oder an der Grenze“.
+- Fehler behoben: Die Ansageleiste einer Wizard-Partie blieb offen und erschien in der nächsten Partie.

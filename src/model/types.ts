@@ -94,6 +94,10 @@ export interface TemplateParams {
   phases?: boolean;
   /** Nullsummenspiel (Schafkopf, Doppelkopf): Rundensumme muss 0 ergeben */
   zeroSum?: boolean;
+  /** Rundensieg ist, wer 0 schreibt (Rommé: wer zuerst ablegt) */
+  zeroWins?: boolean;
+  /** Eigens gestaltete Eingabe direkt im Block (Standard), Einzelseiten als Alternative */
+  block?: boolean;
   /** Was eingetragen wird, z. B. „Siegpunkte“ oder „Platz“ */
   unit?: string;
   [key: string]: unknown;

@@ -30,13 +30,13 @@ export const GAMES: GameDef[] = [
   {
     template: {
       key: 'romme', version: 1, name: 'Rommé', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
-      params: { quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
+      params: { zeroWins: true, block: true, quick: [{ label: 'Raus', op: 'set', v: 0 }, { label: '+5', op: 'add', v: 5 }, { label: '+10', op: 'add', v: 10 }, { label: '+20', op: 'add', v: 20 }, { label: '×2', op: 'mul', v: 2 }] }
     },
-    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'an der Grenze, wenigste Punkte gewinnen']],
+    points: [['Raus', 'wer zuerst ablegt, schreibt 0'], ['Handkarten', 'Strafpunkte: Bild 10, Ass 11, Joker 20'], ['Hand-Rommé', 'alles zählt doppelt'], ['Ende', 'nach den Runden oder an der Grenze, wenigste Punkte gewinnen']],
     acc: '#ef7a5c', tint: '#fde6df',
-    text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Erreicht jemand die Grenze, ist Schluss und die <b>wenigsten Punkte gewinnen</b>.',
+    text: 'Wer zuerst alle Karten ablegt, schreibt eine <b>Null</b>. Alle anderen zählen ihre Handkarten als <b>Strafpunkte</b>: Bilder 10, Ass 11, Joker 20. Bei <b>Hand-Rommé</b> zählt alles doppelt. Nach den vereinbarten Runden oder an der Grenze ist Schluss, die <b>wenigsten Punkte gewinnen</b>.',
     example: [['25', 'auf der Hand'], ['×2', 'Hand-Rommé'], ['50', 'Strafpunkte']],
-    endOptions: [{ label: 'Bei 500', end: { type: 'target', value: 500 } }, { label: 'Bei 1000', end: { type: 'target', value: 1000 } }, { label: 'Offen', end: { type: 'none' } }]
+    endOptions: [{ label: '10 Runden', end: { type: 'rounds', value: 10 } }, { label: 'Bei 500', end: { type: 'target', value: 500 } }, { label: 'Offen', end: { type: 'none' } }]
   },
   {
     template: {

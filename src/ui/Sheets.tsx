@@ -9,12 +9,13 @@ import { entryMode } from '../lib/modes';
 import { newRecords } from '../game/stats';
 import { RecordCards, recordOpts } from './Records';
 import { names } from './Home';
-import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, isBids } from '../game/engine';
+import { anyScore, ranking, roundNumber, scoreOf, seated, totals, type GameState, membersOf, isLives, isTokens, tokenState, playedRounds, blockEntry, zeroWins, roundWins } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
 import { toggleTheme, useTheme } from '../useTheme';
 import { Avatar } from './Avatar';
 import { IconBackspace, IconClose } from './icons';
+import type { QuickKey } from '../model/types';
 
 const numOf = (buf: string) => (buf === '' || buf === '-' ? null : parseInt(buf, 10));
 
@@ -29,7 +30,7 @@ function Sheet({ label, children }: { label: string; children: React.ReactNode }
 
 // ---------------------------------------------------------------- Ziffernblock im Überblick (Bearbeiten einer Zelle)
 
-export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit }>(function PadSheet({ g, edit }, ref) {
+export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit; keys?: QuickKey[] }>(function PadSheet({ g, edit, keys }, ref) {
   const players = seated(g), i = players.findIndex(p => p.id === edit.playerId), p = players[i];
   const v = numOf(edit.buf), cur = edit.ref === 'new' ? null : scoreOf(g, edit.ref, p.id);
   const after = totals(g)[p.id] - (cur ?? 0) + (v ?? 0);
@@ -39,28 +40,41 @@ export const PadSheet = forwardRef<HTMLDivElement, { g: GameState; edit: Edit }>
   // Die zwei größten Zählschritte der Vorlage
   const st = [...stepsOf(g.game.rules)].sort((x, y) => x - y);
   const [s1, s2] = st.length >= 2 ? st.slice(-2) : [st[0], st[0] * 5];
+  const display = (
+    <div className="pad-display">
+      <span className={'val' + (v === null ? ' ph' : '') + (v !== null && v < 0 ? ' neg' : '')}>{v === null ? '0' : fmt(v)}</span>
+      <span className="after">{keys ? 'Summe' : 'Summe danach'}<b>{fmt(after)}</b></span>
+    </div>
+  );
   return (
-    <div className="bsheet" id="pad" role="dialog" aria-label="Punkte eingeben" ref={ref}>
+    <div className={'bsheet' + (keys ? ' compact' : '')} id="pad" role="dialog" aria-label="Punkte eingeben" ref={ref}>
       <div className="grab" />
       <div className="sheet-body">
         <div className="pad-head">
           <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
           <div className="who"><b>{p.name}</b><small>Runde {roundNumber(g, edit.ref)}</small></div>
+          {keys && display}
           <button className="icon-btn" onClick={a.closePad} aria-label="Ziffernblock schließen"><IconClose /></button>
         </div>
-        <div className="pad-display">
-          <span className={'val' + (v === null ? ' ph' : '') + (v !== null && v < 0 ? ' neg' : '')}>{v === null ? '0' : fmt(v)}</span>
-          <span className="after">Summe danach<b>{fmt(after)}</b></span>
-        </div>
-        <div className="keys">
+        {keys ? <>
+          <div className="quick pad-quick">
+            {keys.map(k => <button key={k.label} className={k.label.length > 3 ? 'wide' : ''}
+              onClick={() => (k.op === 'add' ? a.add(k.v) : k.op === 'mul' ? a.mul(k.v) : k.op === 'rest' ? a.rest() : a.setValue(k.v))}>{k.label}</button>)}
+          </div>
+          <div className="keys">
+            {d(1)}{d(2)}{d(3)}<button className="key fn" onClick={a.back} aria-label="Löschen"><IconBackspace /></button>
+            {d(4)}{d(5)}{d(6)}<button className="key fn" onClick={a.sign} aria-label="Vorzeichen">±</button>
+            {d(7)}{d(8)}{d(9)}{d(0)}
+          </div>
+        </> : <>{display}<div className="keys">
           {d(1)}{d(2)}{d(3)}{q(s1)}
           {d(4)}{d(5)}{d(6)}{q(s2)}
           {d(7)}{d(8)}{d(9)}{q(-s1)}
           <button className="key fn" onClick={a.sign} aria-label="Vorzeichen">±</button>{d(0)}
           <button className="key fn" onClick={a.back} aria-label="Löschen"><IconBackspace /></button>{q(-s2)}
-        </div>
+        </div></>}
         <div className="pad-actions">
-          <button className="secondary" onClick={a.clear}>Leeren</button>
+          {!keys && <button className="secondary" onClick={a.clear}>Leeren</button>}
           <button className="primary" onClick={a.next}>{i < players.length - 1 ? `Weiter zu ${players[i + 1].name}` : 'Eintragen'}</button>
         </div>
       </div>
@@ -86,7 +100,7 @@ export function MenuSheet({ g }: { g: GameState }) {
       </div>
       <div className="menu-list">
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
-        {isBids(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
+        {blockEntry(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
         <button id="toggle-haptic" onClick={() => { setHapticOn(!buzz); setBuzz(!buzz); if (!buzz) haptic(); }}>Vibration <small>{buzz ? 'An' : 'Aus'}</small></button>
         {g.game.rules.scoring === 'categories' && <button id="open-cats" onClick={() => act().openSheet('cats')}>Kategorien</button>}
         {g.game.rules.scoring === 'rounds' && !g.game.rules.params?.split && <button id="open-notes" onClick={() => act().openSheet('notes')}>Notizfelder <small>{g.game.rules.params?.notes?.length || ''}</small></button>}
@@ -118,7 +132,7 @@ export function ResultSheet({ g }: { g: GameState }) {
   // Neue Rekorde: diese Partie gegen den Verlauf desselben Spiels
   const fresh = started ? newRecords(history.filter(h => h.key === rules.key), {
     id: g.game.id, key: rules.key, name: rules.name, finishedAt: new Date().toISOString(),
-    results: rk.flatMap(x => membersOf(g, x.player.id).map(pid => ({ playerId: pid, total: x.total, place: x.place, extra: { rn: playedRounds(g) } })))
+    results: rk.flatMap(x => membersOf(g, x.player.id).map(pid => ({ playerId: pid, total: x.total, place: x.place, extra: { rn: playedRounds(g), ...(zeroWins(g) ? { wins: roundWins(g, x.player.id) } : {}) } })))
   }, recordOpts(rules)) : [];
   // Treppchen: Zweiter, Erster, Dritter
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);

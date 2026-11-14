@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Player } from '../model/types';
 import type { Clock } from '../lib/id';
 import { TPL } from '../test/fixtures';
-import { createGame, liveRounds, roleOf, setField, setOrder, setScore, seated, totals, type GameState } from './engine';
+import { createGame, roundWins, runningTotals, liveRounds, roleOf, setField, setOrder, setScore, seated, totals, type GameState } from './engine';
 import { gameDef } from './games';
 import { highlights } from './highlights';
 
@@ -31,6 +31,18 @@ describe('Kennzahlen der Siegerseite', () => {
     const h = highlights(s);
     expect(h[0]).toEqual({ label: 'Beste Runde', value: '0', who: 'Anna' });
     expect(h[1]).toEqual({ label: 'Vorsprung', value: '25', who: 'Anna' });
+  });
+  it('Rommé: dickste Packung, meiste Siege (Runden mit 0), Vorsprung; Verlauf und Rundensiege', () => {
+    const c = clock();
+    let s = createGame(gameDef('romme')!.template, players('Anna', 'Ben', 'Clara'), c);
+    s = round(s, [0, 45, 20], c); s = round(s, [30, 0, 15], c); s = round(s, [0, 80, 10], c);
+    expect(highlights(s)).toEqual([
+      { label: 'Dickste Packung', value: '80', who: 'Ben' },
+      { label: 'Meiste Siege', value: '2×', who: 'Anna' },
+      { label: 'Vorsprung', value: '15', who: 'Anna' }
+    ]);
+    expect(roundWins(s, 'p0')).toBe(2);
+    expect(runningTotals(s)).toEqual({ p0: [0, 0, 30, 30], p1: [0, 45, 45, 125], p2: [0, 20, 35, 45] });
   });
   it('Wizard: Ansagen getroffen', () => {
     const c = clock();

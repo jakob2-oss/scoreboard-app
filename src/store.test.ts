@@ -490,6 +490,23 @@ describe('Freies Spiel', () => {
 });
 
 describe('Feste Spiele', () => {
+  it('Rommé im Block: Runde direkt im Block eintragen, Spieler für Spieler; Umschalten auf Einzelseiten', async () => {
+    let mode = 'block';
+    const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => mode as 'block', setMode: (_k, m) => { mode = m; } }); const a = st.actions;
+    await a.init(); a.openGame(GAMES.find(g => g.template.key === 'romme')!.template); a.toPlayers();
+    for (const n of ['A', 'B', 'C']) await a.addPlayer(n);
+    a.start(); a.roundGo();
+    expect(st.get()).toMatchObject({ pad: true, page: -1, edit: { playerId: 'id1' } });
+    a.setValue(0); a.next();
+    expect(st.get().edit?.playerId).toBe('id2');
+    a.add(20); a.add(5); a.mul(2); a.next();
+    a.add(10); a.next();
+    expect(st.get().pad).toBe(false);
+    expect(totals(st.get().game!)).toEqual({ id1: 0, id2: 50, id3: 10 });
+    a.switchEntry('romme');
+    expect(mode).toBe('simple');
+    expect(st.get()).toMatchObject({ pad: false, page: 0 });
+  });
   it('Wizard-Ansageleiste wandert nicht in die nächste Partie (Rommé)', async () => {
     const mem = memRepo(); const st = createStore(mem.repo, testClock(), { ...memPrefs(), getMode: () => 'block' }); const a = st.actions;
     await a.init(); a.openGame(GAMES.find(g => g.template.key === 'wizard')!.template); a.toPlayers();

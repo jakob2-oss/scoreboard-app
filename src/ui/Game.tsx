@@ -2,7 +2,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
   anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
-  currentRoundIndex, bidTurn, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
+  currentRoundIndex, bidTurn, blockEntry, zeroWins, runningTotals, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
 import { stepsOf } from '../game/templates';
@@ -118,7 +118,7 @@ export function GameScreen() {
         </div>
       )}
 
-      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} />}
+      {s.pad && s.edit && <PadSheet ref={padRef} g={g} edit={s.edit} keys={g.game.rules.params?.quick ? quickKeys(g) : undefined} />}
       {s.sheet === 'menu' && <MenuSheet g={g} />}
       {s.sheet === 'result' && <ResultSheet g={g} />}
       {s.sheet === 'cats' && <CatSheet g={g} />}
@@ -210,8 +210,9 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 }
                 const struck = !!r.cat && v === 0;
                 const nts = notesOf(g).map(n => [n, fieldOf(g, r.id, p.id, noteKey(n))] as const).filter(([, x]) => x !== null && x !== 0);
-                return <td key={p.id} className={cls + (struck ? ' struck' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}`}>
-                  {v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                const won = v === 0 && zeroWins(g);
+                return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '')} onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}`}>
+                  {won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -257,7 +258,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
-      {isBids(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
+      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
       {step.kind === 'result'
         ? <button className="primary" onClick={() => act().openSheet('result')}>Ergebnis</button>
         : <button className="primary" id="round-go" onClick={() => act().roundGo()}>{step.field ? `${fieldLabel(g, step.field, true)} Runde ${step.roundNo}` : isCats(g) ? `Zug von ${seated(g)[step.playerIndex].name}` : isRanks(g) ? `Runde ${step.roundNo} verteilen` : isResultOnly(g) ? 'Ergebnis eintragen' : `Runde ${step.roundNo} eintragen`}</button>}
@@ -306,6 +307,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
       {hasPhases(g) && <PhaseCard g={g} p={p} roundRef={ref} active={!!edit} />}
       {zeroSumHint(g, ref)}
       {isCats(g) && <CatList g={g} p={p} current={ref} onPick={pick} />}
+      {plainRounds(g) && <Curve g={g} p={p} />}
       {!isResultOnly(g) && !isCats(g) && <div className="eyebrow">Verlauf</div>}
       <div className={'pp-hist' + (isResultOnly(g) || isCats(g) ? ' hide' : '')}>
         {rounds.map((r, k) => {
@@ -321,6 +323,35 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
         {ref === 'new' && <button aria-current="true"><small>R{rounds.length + 1}</small><b>neu</b></button>}
       </div>
     </>
+  );
+}
+
+// ---------------------------------------------------------------- Punkteverlauf als Kurve
+
+/** Einfaches Rundenspiel: eine Zahl je Spieler und Runde */
+const plainRounds = (g: GameState) => !isBids(g) && !isCats(g) && !isRanks(g) && !isResultOnly(g) && !isSplit(g) && !hasPhases(g);
+
+/** Summe nach jeder Runde: der Spieler kräftig in seiner Farbe, die anderen leise dahinter */
+function Curve({ g, p }: { g: GameState; p: Player }) {
+  const all = runningTotals(g), mine = all[p.id];
+  if (!mine || mine.length < 3) return null;
+  const W = 320, H = 76, padL = 6, padR = 34, padT = 8, padB = 6;
+  const vals = Object.values(all).flat(), lo = Math.min(0, ...vals), hi = Math.max(1, ...vals);
+  const n = mine.length - 1;
+  const x = (k: number) => padL + (k / n) * (W - padL - padR);
+  const y = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  const path = (a: number[]) => a.map((v, k) => `${k ? 'L' : 'M'}${x(k).toFixed(1)} ${y(v).toFixed(1)}`).join('');
+  const last = mine[n];
+  return (
+    <div className="pp-curve">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Punkteverlauf von ${p.name}: ${mine.slice(1).map(fmt).join(', ')}`}>
+        <line className="base" x1={padL} x2={W - padR} y1={y(lo)} y2={y(lo)} />
+        {Object.entries(all).filter(([id]) => id !== p.id).map(([id, a]) => <path key={id} className="other" d={path(a)} />)}
+        <path className="mine" d={path(mine)} style={{ stroke: p.color }} />
+        <circle cx={x(n)} cy={y(last)} r="4.5" style={{ fill: p.color }} className="end" />
+        <text x={x(n) + 9} y={y(last) + 4.5} className="val">{fmt(last)}</text>
+      </svg>
+    </div>
   );
 }
 
