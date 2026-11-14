@@ -717,3 +717,7 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .ser-stack .av { width: 26px; height: 26px; font-size: 12px; }
 .ser-game { text-align: left; width: 100%; }
 .grid td.cell.dbl .phb { color: var(--danger); font-weight: 700; }
+/* Schocken: Würfe statt Zahlen; der Deckelwert klein darunter */
+.tk-keys { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tk-keys .tk-throw { min-height: 54px; font-size: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1.1; }
+.tk-keys .tk-throw b { font-family: var(--f-num); font-size: 12px; font-weight: 600; color: var(--muted); }

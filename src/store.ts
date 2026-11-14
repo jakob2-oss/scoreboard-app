@@ -459,13 +459,13 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       else toast(`${p.name} hat sich rausgeschickt`);
     },
     /** Schocken: n Deckel an den Verlierer, aus der Mitte oder vom Sieger (from) */
-    tableGive(n: number | 'schock' | 'all', from: string | null = null) {
+    tableGive(n: number | 'schock' | 'all', from: string | null = null, wurf?: string) {
       const g = state.game, to = state.tokenTo; if (!g || !to) return;
       const before = tokenState(g);
       // Chic, zweite Phase: der Angetippte spielt Deckel zurück in die Mitte
       const back = before.mode === 'return' && before.phase === 2;
-      const ng = back ? returnTokens(g, to, n === 'all' || n === 'schock' ? before.hold[to] : n, clock)
-        : n === 'schock' || n === 'all' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock);
+      const ng = back ? returnTokens(g, to, n === 'all' || n === 'schock' ? before.hold[to] : n, clock, wurf)
+        : n === 'schock' || n === 'all' ? schockOut(g, to, clock) : giveTokens(g, to, n, from, clock, false, wurf);
       if (ng === g) return;
       set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null, tokenTo: null }); persist(ng);
       const after = tokenState(ng), players = seated(ng);

@@ -35,7 +35,7 @@ export const isCats = (s: GameState) => s.game.rules.scoring === 'categories';
 export const isLives = (s: GameState) => s.game.rules.scoring === 'lives';
 export const isTokens = (s: GameState) => s.game.rules.scoring === 'tokens';
 export const isTable = (s: GameState) => isLives(s) || isTokens(s);
-type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean; sentOut?: boolean; chicLoss?: boolean };
+type TableValues = { loss?: number; take?: number; give?: number; halfLost?: boolean; schock?: boolean; sentOut?: boolean; chicLoss?: boolean; wurf?: string };
 const tv = (e: Entry) => e.values as TableValues;
 const roundEntries = (s: GameState, roundId: string) => s.entries.filter(e => !e.deletedAt && e.roundId === roundId);
 /** Aktionen am Tisch (Runden mit Einträgen) */
@@ -154,7 +154,7 @@ export function tokenState(s: GameState): TokenState {
  * Schocken: Deckel an den Verlierer der Runde. Solange die Mitte nicht leer ist, kommen sie aus der Mitte,
  * danach vom Gewinner (from). Wer alle Deckel hat, verliert die Hälfte; alles geht zurück in die Mitte.
  */
-export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false): GameState {
+export function giveTokens(s: GameState, to: string, n: number, from: string | null, clock: Clock, schock = false, wurf?: string): GameState {
   const st = tokenState(s);
   if (st.loser || st.gone[to] || (st.mode === 'return' && st.phase === 2)) return s;
   const giver = st.middle > 0 ? null : from;
@@ -165,7 +165,7 @@ export function giveTokens(s: GameState, to: string, n: number, from: string | n
   const after = st.hold[to] + amount, middleAfter = giver ? st.middle : st.middle - amount;
   const halfLost = middleAfter === 0 && after === st.total;
   const entries: Entry[] = [{ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: to,
-    values: { take: amount, ...(schock ? { schock: true } : {}), ...(halfLost ? { halfLost: true } : {}) } as never }];
+    values: { take: amount, ...(schock ? { schock: true } : {}), ...(wurf ? { wurf } : {}), ...(halfLost ? { halfLost: true } : {}) } as never }];
   if (giver) entries.push({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId: giver, values: { give: amount } as never });
   return { ...a.state, entries: [...a.state.entries, ...entries] };
 }
@@ -174,7 +174,7 @@ export function giveTokens(s: GameState, to: string, n: number, from: string | n
  * Chic, zweite Phase: der Sieger der Runde spielt Deckel zurück in die Mitte. Wer keine mehr hat, ist raus;
  * wer als Letzter noch Deckel hat, verliert die Hälfte.
  */
-export function returnTokens(s: GameState, from: string, n: number, clock: Clock): GameState {
+export function returnTokens(s: GameState, from: string, n: number, clock: Clock, wurf?: string): GameState {
   const st = tokenState(s);
   if (st.loser || st.mode !== 'return' || st.phase !== 2 || st.out[from]) return s;
   const amount = Math.max(0, Math.min(n, st.hold[from]));
@@ -182,7 +182,7 @@ export function returnTokens(s: GameState, from: string, n: number, clock: Clock
   const a = addRound(s, clock), t = clock.now();
   const e = (playerId: string, values: TableValues): Entry => ({ id: clock.uid(), createdAt: t, updatedAt: t, gameId: s.game.id, roundId: a.roundId, playerId, values: values as never });
   const holders = seated(s).filter(p => (p.id === from ? st.hold[p.id] - amount : st.hold[p.id]) > 0);
-  const entries = [e(from, { give: amount })];
+  const entries = [e(from, { give: amount, ...(wurf ? { wurf } : {}) })];
   if (holders.length === 1) entries.push(e(holders[0].id, { halfLost: true }));
   return { ...a.state, entries: [...a.state.entries, ...entries] };
 }
