@@ -66,7 +66,7 @@ GAMES.push(
   },
   {
     template: { key: 'scrabble', version: 1, name: 'Scrabble', scoring: 'rounds', win: 'high', end: { type: 'none' }, players: { min: 2, max: 4 },
-      params: { quick: [add('\u22121', -1), add('+1', 1), add('+10', 10), add('+50', 50), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }] } },
+      params: { block: true, restTiles: true, quick: [add('+1', 1), add('+10', 10), { label: '×2', op: 'mul', v: 2 }, { label: '×3', op: 'mul', v: 3 }, add('Bingo +50', 50)] } },
     points: [['Je Zug', 'Buchstabenwerte des Worts'], ['Prämienfelder', 'doppelt oder dreifach'], ['Alle sieben Steine', '50 Punkte extra'], ['Ende', 'Reststeine werden abgezogen']],
     acc: '#3fb39b', tint: '#dcf1e7',
     text: 'Nach jedem Zug werden die <b>Buchstabenwerte des Worts</b> notiert, samt Prämienfeldern für doppelten oder dreifachen Wert. Wer alle sieben Steine auf einmal legt, bekommt <b>50 Punkte extra</b>. Am Ende zählen übrige Steine als Abzug.',

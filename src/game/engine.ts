@@ -593,6 +593,23 @@ export function bidTurn(s: GameState, roundId: string): string | null {
   return k === undefined ? null : players[k].id;
 }
 
+/** Wizard-Hausregel „Ansagen dürfen nicht aufgehen“: die Zahl, die der Letzte nicht ansagen darf (sonst null) */
+export function forbiddenBid(s: GameState, roundId: string, playerId: string): number | null {
+  if (!s.game.rules.params?.noEvenBids) return null;
+  const players = seated(s), open = players.filter(p => fieldOf(s, roundId, p.id, 'bid') === null);
+  if (open.length !== 1 || open[0].id !== playerId) return null;
+  const cards = liveRounds(s).findIndex(r => r.id === roundId) + 1;
+  const v = cards - players.reduce((a, p) => a + (fieldOf(s, roundId, p.id, 'bid') ?? 0), 0);
+  return v >= 0 && v <= cards ? v : null;
+}
+/** Scrabble am Ende: Reststeine werden abgezogen, wer zuerst fertig war, bekommt die Summe der anderen */
+export function restScores(rest: Record<string, number>, finisher: string | null): Record<string, number> {
+  const out: Record<string, number> = {};
+  const sum = Object.entries(rest).reduce((a, [id, v]) => a + (id === finisher ? 0 : v), 0);
+  for (const id of Object.keys(rest)) out[id] = id === finisher ? sum : -rest[id];
+  return out;
+}
+
 /** Zweiteilige Runde: erst alle das erste Feld (Ansagen, Meldungen), dann alle das zweite */
 export function bidPhase(s: GameState, roundId: RoundRef): BidField {
   const [a, b] = fieldsOf(s) ?? WIZARD_FIELDS;

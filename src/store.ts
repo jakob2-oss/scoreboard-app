@@ -8,7 +8,7 @@ import { realClock, type Clock } from './lib/id';
 import { gameDef } from './game/games';
 import { PLAYER_COLORS, pastel } from './lib/color';
 import {
-  isRanks, rankIn, setOrder, enderOf, skatScores, SKAT_GAMES, dealScores, bockLeft, dealerOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
+  isRanks, rankIn, setOrder, forbiddenBid, restScores, enderOf, skatScores, SKAT_GAMES, dealScores, bockLeft, dealerOf, sendOut, chicLoss, blockEntry, catChoices, gebotOf, zeroWins, roundWins, playedRounds, bidTurn, isTable, halfLabel, isLives, loseLife, fire, giveTokens, schockOut, returnTokens, tokenState, lifeState, moveSeat, createTeamGame, membersOf, playsIn, isTeamGame, notesOf, noteKey, isNoteField, setNotes, upperSum, bidPhase, fieldsOf, hasFields, isSplit, fieldLabel, restOf, addRound, addCategory, isCats, phaseIn, removeCategory, setPhase, anyScore, ranking, createGame, isResultOnly, fieldOf, inputOrder, isBids, setField, defaultRef, finish, liveRounds, nextStep, restore, roundFull, roundNumber, scoreOf, seated, setScore, setWin,
   type BidField, type GameState, type RoundRef
 } from './game/engine';
 import type { Repo } from './db';
@@ -37,7 +37,7 @@ export interface AppState {
   page: number;
   edit: Edit | null;
   pad: boolean;
-  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | 'ender' | 'deal' | 'skat' | null;
+  sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'tokens' | 'tricks' | 'catpick' | 'bidder' | 'ender' | 'deal' | 'skat' | 'rest' | null;
   /** Tisch-Modus: Wer bekommt Deckel (Schocken), Feuer-Auswahl aktiv (Schwimmen) */
   tokenTo: string | null;
   fireMode: boolean;
@@ -555,6 +555,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     bidPick(n: number, playerId?: string) {
       const g = state.game, ref = state.bidBar; if (!g || !ref) return;
       const who = playerId ?? bidTurn(g, ref); if (!who) return;
+      if (forbiddenBid(g, ref, who) === n) return;
       haptic('tap');
       const ng = setField(g, ref, who, 'bid', n, clock);
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
@@ -570,6 +571,17 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       set({ game: ng, undo: [...state.undo.slice(-99), g] }); persist(ng);
     },
     closeBidBar() { set({ bidBar: null }); },
+    /** Scrabble: Schlussrunde mit den Reststeinen; wer zuerst fertig war, bekommt die Summe der anderen */
+    setRest(rest: Record<string, number>, finisher: string | null) {
+      const g = state.game; if (!g) return;
+      const pts = restScores(rest, finisher);
+      let ng = g, id: RoundRef = 'new';
+      for (const p of seated(g)) { const r = setScore(ng, id, p.id, pts[p.id] ?? 0, clock); ng = r.state; id = r.roundId ?? id; }
+      if (id !== 'new') ng = setField(ng, id, seated(g)[0].id, 'restRound', 1, clock);
+      haptic('success');
+      set({ game: ng, undo: [...state.undo.slice(-99), g], sheet: null }); persist(ng);
+      toast('Reststeine verrechnet');
+    },
     /** Skat: Alleinspieler, Spielart und Wert aus dem Rechner, gewonnen oder verloren */
     setSkat(o: { player: string; game: number; value: number; won: boolean }) {
       const g = state.game, ref = state.rankRef; if (!g || !ref || o.value <= 0) return;
@@ -799,7 +811,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner') { set({ sheet, pad: false, fireMode: false }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') { set({ sheet, pad: false, fireMode: false }); },
     closeSheet() { set({ sheet: null, tokenTo: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;

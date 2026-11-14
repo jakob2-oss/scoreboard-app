@@ -67,6 +67,10 @@ export function GameInfo() {
           })}
         </div>
       </div>}
+      {template.scoring === 'bids' && <label className="switch-row">
+        <input type="checkbox" id="noeven-on" checked={!!template.params?.noEvenBids} onChange={e => a.setTemplateParam('noEvenBids', e.target.checked || undefined)} />
+        <span className="t"><b>Ansagen dürfen nicht aufgehen</b></span>
+      </label>}
       {!!template.params?.skatCalc && <label className="switch-row">
         <input type="checkbox" id="seeger-on" checked={!!template.params?.seeger} onChange={e => a.setTemplateParam('seeger', e.target.checked || undefined)} />
         <span className="t"><b>Seeger-Fabian</b></span>

@@ -131,6 +131,7 @@ export function GameScreen() {
       {s.sheet === 'ender' && s.rankRef && <EnderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'deal' && s.rankRef && <DealSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'skat' && s.rankRef && <SkatSheet g={g} roundRef={s.rankRef} />}
+      {s.sheet === 'rest' && <RestSheet g={g} />}
       {s.sheet === 'tricks' && s.rankRef && s.rankRef !== 'new' && <TricksSheet key={s.rankRef} g={g} roundId={s.rankRef} />}
     </section>
   );
@@ -182,7 +183,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
           {rounds.map((r, ri) => (<Fragment key={r.id}>
             <tr key={r.id} className={isBids(g) && ri === currentRoundIndex(g) ? 'cur' : ''}>
               {r.cat ? <th className="cat">{r.cat.label}{r.cat.fixed ? <small>{r.cat.fixed} Punkte</small> : null}</th>
-                : <th className="rn">{ri + 1}{players.some(p => fieldOf(g, r.id, p.id, 'bock') === 1) && <small className="bk">Bock</small>}</th>}
+                : <th className="rn">{ri + 1}{players.some(p => fieldOf(g, r.id, p.id, 'bock') === 1) && <small className="bk">Bock</small>}{players.some(p => fieldOf(g, r.id, p.id, 'restRound') === 1) && <small className="rest">Rest</small>}</th>}
               {players.map(p => {
                 const v = scoreOf(g, r.id, p.id);
                 const active = !!edit && edit.ref === r.id && edit.playerId === p.id;
@@ -524,6 +525,38 @@ function SkatSheet({ g, roundRef }: { g: GameState; roundRef: RoundRef }) {
               {won === false ? `−${value * 2}` : value} eintragen
             </button>
           </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Scrabble am Ende: Wert der Reststeine je Spieler; wer zuerst fertig war, bekommt die Summe der anderen */
+function RestSheet({ g }: { g: GameState }) {
+  const a = act(), players = seated(g);
+  const [rest, setRest] = useState<Record<string, number>>(Object.fromEntries(players.map(p => [p.id, 0])));
+  const [first, setFirst] = useState<string | null>(null);
+  const step = (id: string, d: number) => setRest(r => ({ ...r, [id]: Math.max(0, r[id] + d) }));
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="rest" role="dialog" aria-label="Reststeine">
+        <div className="grab" />
+        <div className="sheet-body">
+          <h3>Reststeine</h3>
+          <div className="rest-list">
+            {players.map(p => (
+              <div key={p.id} className="rest-row">
+                <button className="rest-first" aria-pressed={first === p.id} aria-label={`${p.name} war zuerst fertig`} onClick={() => setFirst(f => (f === p.id ? null : p.id))}><Avatar p={p} /><span>{p.name}</span></button>
+                {first === p.id ? <b className="rest-done">fertig</b> : <>
+                  <button className="step" aria-label={`${p.name} weniger`} onClick={() => step(p.id, -1)}>−</button>
+                  <b className="num" id={`rest-${p.id}`}>{rest[p.id]}</b>
+                  <button className="step" aria-label={`${p.name} mehr`} onClick={() => step(p.id, 1)}>+</button>
+                </>}
+              </div>
+            ))}
+          </div>
+          <div className="pad-actions"><button className="primary" id="rest-go" onClick={() => a.setRest(first ? { ...rest, [first]: 0 } : rest, first)}>Verrechnen</button></div>
         </div>
       </div>
     </>

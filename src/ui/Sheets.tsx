@@ -125,6 +125,7 @@ export function MenuSheet({ g }: { g: GameState }) {
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
         {blockEntry(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
         <button id="toggle-haptic" onClick={() => { setHapticOn(!buzz); setBuzz(!buzz); if (!buzz) haptic(); }}>Vibration <small>{buzz ? 'An' : 'Aus'}</small></button>
+        {!!g.game.rules.params?.restTiles && <button id="open-rest" onClick={() => act().openSheet('rest')}>Reststeine verrechnen</button>}
         {g.game.rules.scoring === 'categories' && <button id="open-cats" onClick={() => act().openSheet('cats')}>Kategorien</button>}
         {g.game.rules.scoring === 'rounds' && !g.game.rules.params?.split && <button id="open-notes" onClick={() => act().openSheet('notes')}>Notizfelder <small>{g.game.rules.params?.notes?.length || ''}</small></button>}
         <button onClick={() => act().openSheet('result')}>Beenden und speichern</button>
