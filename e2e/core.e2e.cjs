@@ -473,7 +473,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.waitForSelector('.tbl');
   const chicSeat = i => p.locator('.tb-seat').nth(i);
   check('Chic: erste Phase aus der Mitte', (await raw('.tb-phase text >> nth=0')) === 'Aus der Mitte');
-  await chicSeat(0).click(); await p.click('#w-schock4'); await chicSeat(1).click(); await p.click('#w-strasse'); await p.waitForTimeout(200);
+  await chicSeat(0).click(); await p.click('#tk-4'); await chicSeat(1).click(); await p.click('#tk-2'); await p.waitForTimeout(200);
   const nChic = await p.locator('.tb-seat').count();
   check('Chic: Mitte leer, ohne Deckel raus', (await raw('.tb-phase text >> nth=0')) === 'Zurückspielen' && (await p.locator('.tb-seat.out').count()) === nChic - 2);
   await shot('37h-chic-phase2');
@@ -553,7 +553,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
   // Chic: rausschicken und Chic aus dem Rohr
   await p.click('[data-game="chic"]'); await shot('37g-chic'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  await seat(0).click(); await p.click('#w-general'); await p.waitForTimeout(150);
+  await seat(0).click(); await p.click('#tk-3'); await p.waitForTimeout(150);
   await seat(0).click(); await p.waitForTimeout(150);
   check('Chic: Knöpfe im Deckel-Blatt', await p.isVisible('#tk-sendout') && await p.isVisible('#tk-chicloss'));
   await p.click('#tk-sendout'); await p.waitForTimeout(200);

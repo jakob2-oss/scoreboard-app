@@ -312,7 +312,7 @@ describe('Tisch-Modus', () => {
     ts = tokenState(s);
     expect(ts.chic.p1).toBe(1); expect(ts.loser).toBeNull();
     // B steht wie ein Verlierer hinten, A (rausgeschickt) nicht
-    expect(totals(s)).toEqual({ p0: 0, p1: 2, p2: 0 });
+    expect(totals(s)).toEqual({ p0: 0, p1: 1, p2: 0 });
     s = sendOut(s, 'p2', c);
     expect(tokenState(s).loser).toBe('p1');
     expect(endState(s)?.done).toBe(true);

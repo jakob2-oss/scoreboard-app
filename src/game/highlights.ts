@@ -118,7 +118,7 @@ function tableHighlights(s: GameState): Highlight[] {
     const sch = players.filter(p => ts.schock[p.id] > 0);
     if (sch.length) out.push({ label: 'Schock aus kassiert', value: `${sch.reduce((a, p) => a + ts.schock[p.id], 0)}×`, who: names(sch.map(p => p.name)) });
     const lost = players.filter(p => ts.halves[p.id] > 0);
-    if (lost.length) out.push({ label: 'Hälften verloren', value: String(lost.reduce((a, p) => a + ts.halves[p.id], 0)), who: names(lost.map(p => p.name)) });
+    if (lost.length && ts.need > 1) out.push({ label: 'Hälften verloren', value: String(lost.reduce((a, p) => a + ts.halves[p.id], 0)), who: names(lost.map(p => p.name)) });
   }
   out.push({ label: 'Runden', value: String(n) });
   return out.slice(0, 3);

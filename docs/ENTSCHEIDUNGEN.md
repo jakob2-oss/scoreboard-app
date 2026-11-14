@@ -282,3 +282,9 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Scrabble: Eingabe im Block, Taste „Bingo +50“, im Menü „Reststeine verrechnen“ (wer zuerst fertig war, bekommt die
   Summe der anderen). Das Wort zur Zelle ist nicht umgesetzt (Tippen am Tisch kostet zu viel).
 - Wizard: Schalter „Ansagen dürfen nicht aufgehen“; beim Letzten ist die passende Zahl gesperrt.
+
+## 14.11.2026: Chic ohne Schocken-Reste
+- Chic hat keine Hälften und kein Finale: eine Runde, wer am Ende als Einziger noch Deckel hat, zahlt (`halves: 1`).
+- Kein „Schock aus“ und keine Schocken-Würfe: im Deckel-Blatt die Deckelzahl 1 bis 6 direkt (gilt für alle Spiele
+  mit „Zurück in die Mitte“). Unten keine Hälften-Leiste, auf der Siegerseite „zahlt“ statt „1 Hälfte“,
+  rausgeschickte Spieler stehen als „raus“ auf dem Treppchen. Band „ALLE DECKEL“ und die übrigen Kennzahlen bleiben.

@@ -128,13 +128,13 @@ export function TableDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   };
   return (
     <>{undo}
-      <div className="tb-halfs" role="list">
+      {ts.need > 1 && <div className="tb-halfs" role="list">
         {halfRange(ts.need, ts.half).map(h => {
           const who = loserOf(h), cur = ts.half === h;
           return <span key={h} role="listitem" className={'tb-half' + (cur ? ' cur' : '') + (who ? ' lost' : '')}>
             {who ? <Avatar p={who} /> : null}{halfLabel(ts.need, h)}</span>;
         })}
-      </div>
+      </div>}
     </>
   );
 }
@@ -151,6 +151,7 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
   const givers = players.filter(x => x.id !== to && ts.hold[x.id] > 0);
   const [from, setFrom] = useState<string | null>(givers.length === 1 ? givers[0].id : null);
   const fromMiddle = ts.middle > 0, ready = fromMiddle || !!from;
+  const chic = ts.mode === 'return';
   // Chic, zweite Phase: der Angetippte spielt eigene Deckel zurück in die Mitte
   if (ts.mode === 'return' && ts.phase === 2) return (
     <>
@@ -161,7 +162,7 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
           <h3>{p.name} spielt zurück</h3>
           <div className="eyebrow">Noch {ts.hold[to]} Deckel</div>
           <div className="tk-keys">
-            {THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={k > ts.hold[to]} onClick={() => act().tableGive(k, null, label)}>{label}<b>{k}</b></button>)}
+            {[1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={k > ts.hold[to]} onClick={() => act().tableGive(k)}>{k}</button>)}
             <button className="wide" id="tk-all" onClick={() => act().tableGive('all')}>Alle</button>
           </div>
           {!!g.game.rules.params?.chic && <div className="tk-chic">
@@ -186,8 +187,10 @@ export function TokenSheet({ g, to }: { g: GameState; to: string }) {
             </div>
           </>}
           <div className="tk-keys">
-            {THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={!ready} onClick={() => act().tableGive(k, from, label)}>{label}<b>{k}</b></button>)}
-            <button className="wide" id="tk-schock" onClick={() => act().tableGive('schock')}>Schock aus</button>
+            {/* Schocken: Würfe mit ihrem Deckelwert; Chic (zurück in die Mitte): Deckelzahl direkt, ohne Schock aus */}
+            {chic ? [1, 2, 3, 4, 5, 6].map(k => <button key={k} id={`tk-${k}`} disabled={!ready} onClick={() => act().tableGive(k, from)}>{k}</button>)
+              : THROWS.map(([label, k, id]) => <button key={id} id={id} className="tk-throw" disabled={!ready} onClick={() => act().tableGive(k, from, label)}>{label}<b>{k}</b></button>)}
+            {!chic && <button className="wide" id="tk-schock" onClick={() => act().tableGive('schock')}>Schock aus</button>}
           </div>
           {!!g.game.rules.params?.chic && <div className="tk-chic">
             <button id="tk-sendout" onClick={() => act().tableChic('out')}>Rausgeschickt</button>

@@ -165,7 +165,8 @@ export function ResultSheet({ g }: { g: GameState }) {
   const podium = [rk[1], rk[0], rk[2]].filter((x): x is typeof rk[number] => !!x);
   // Tisch-Modus: Leben bzw. verlorene Hälften statt Punkte; bei Schocken zählt, wer verliert
   const ts = isTokens(g) ? tokenState(g) : null;
-  const pts = (v: number, id: string) => (isLives(g) ? `${v} Leben` : ts ? (v ? `${v} ${v === 1 ? 'Hälfte' : 'Hälften'}` : `${ts.taken[id]} Deckel`) : fmt(v));
+  // Ohne Hälften (Chic): wer verloren oder aus dem Rohr gewürfelt hat, „zahlt“, die anderen zeigen ihre Deckel
+  const pts = (v: number, id: string) => (isLives(g) ? `${v} Leben` : ts ? (v ? (ts.need === 1 ? 'zahlt' : `${v} ${v === 1 ? 'Hälfte' : 'Hälften'}`) : ts.gone[id] ? 'raus' : `${ts.taken[id]} Deckel`) : fmt(v));
   const loser = ts ? seated(g).find(p => p.id === ts.loser) : undefined;
   return (
     <>
