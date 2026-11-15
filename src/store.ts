@@ -572,7 +572,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     roundGo() {
       const g = state.game; if (!g) return;
       const step = nextStep(g);
-      if (step.kind === 'result') { set({ sheet: 'result' }); return; }
+      if (step.kind === 'result') { set({ sheet: 'result', ...(state.toast?.otter ? { toast: null } : {}) }); return; }
       if (isRanks(g)) { actions.openRanks(step.ref); return; }
       if (g.game.rules.params?.skatCalc && modeOf(g.game.rules.key) === 'block') { set({ sheet: 'skat', rankRef: step.ref, pad: false, edit: null, page: -1 }); return; }
       if (g.game.rules.params?.winnerOnly) { set({ sheet: 'winner', rankRef: step.ref, pad: false, edit: null }); return; }
@@ -953,7 +953,10 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     },
 
     // ---------- Menü & Ergebnis
-    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') { set({ sheet, pad: false, fireMode: false, chicMode: null }); },
+    openSheet(sheet: 'menu' | 'result' | 'cats' | 'notes' | 'ranks' | 'winner' | 'rest') {
+      // Auf der Siegerseite spricht der Otter selbst; ein noch sichtbarer Spruch der letzten Runde verschwindet
+      set({ sheet, pad: false, fireMode: false, chicMode: null, ...(sheet === 'result' && state.toast?.otter ? { toast: null } : {}) });
+    },
     closeSheet() { set({ sheet: null, tokenTo: null }); },
     setWin(win: 'high' | 'low') {
       const g = state.game; if (!g || g.game.rules.win === win) return;

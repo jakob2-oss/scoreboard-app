@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 15.11.2026 (Titelseite mit Rivalitäten gemergt; Textdurchgang gegen KI-Artefakte und einklappbare Strichlisten in PR #28; als Nächstes App-Store-Vorbereitung, sobald der Apple-Account da ist)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 15.11.2026 (Textdurchgang und Strichlisten gemergt; als Nächstes App-Store-Vorbereitung, sobald der Apple-Account da ist)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
