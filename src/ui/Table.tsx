@@ -26,7 +26,8 @@ export function TableView({ g }: { g: GameState }) {
   // Phase in der Mitte: bei Chic auch, ob aus der Mitte genommen oder zurückgespielt wird
   const step = ts && ts.mode === 'return' ? (ts.phase === 1 ? 'Aus der Mitte' : 'Zurückspielen') : null;
   const phase = lives ? `Runde ${rounds + 1}` : step ? (ts!.need > 1 ? `${halfLabel(ts!.need, ts!.half)}, ${step}` : step) : halfLabel(ts!.need, ts!.half);
-  const phaseText = done ? 'Spielende' : phase, pillW = phaseText.length * 9.2 + 28;
+  // Die Hälften stehen bei Schocken schon in der Leiste unten, auf dem Tisch nur Runde, Phase oder Spielende
+  const phaseText = done ? 'Spielende' : lives || step ? phase : '', pillW = phaseText.length * 9.2 + 28;
   const middle = lives ? middleCards(rounds) : stack(ts!.middle);
 
   const stage = useRef<HTMLDivElement>(null);
@@ -71,7 +72,7 @@ export function TableView({ g }: { g: GameState }) {
         <svg className="tbl-art" viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true">
           <g dangerouslySetInnerHTML={{ __html: scene }} />
           <g key={lives ? rounds : ts!.middle} className="tb-mid-art" dangerouslySetInnerHTML={{ __html: middle }} />
-          {[0, 180].map(r => (
+          {phaseText && [0, 180].map(r => (
             <g key={r} transform={`rotate(${r} ${TABLE.cx} ${TABLE.cy})`} className="tb-phase">
               <rect x={TABLE.cx - pillW / 2} y={TABLE.cy + 54} width={pillW} height="22" rx="11" fill="#1c1611" opacity=".55" />
               <text x={TABLE.cx} y={TABLE.cy + 69.5} textAnchor="middle">{phaseText}</text>

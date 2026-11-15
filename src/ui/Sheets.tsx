@@ -128,7 +128,7 @@ export function MenuSheet({ g }: { g: GameState }) {
       </div>
       <div className="menu-list">
         <button onClick={toggleTheme}>Design <small>{theme === 'dark' ? 'Dunkel' : 'Hell'}</small></button>
-        {blockEntry(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Pro Spieler'}</small></button>}
+        {blockEntry(g) && <button id="toggle-mode" onClick={() => act().setEntryMode(g.game.rules.key, entryMode(g.game.rules.key) === 'block' ? 'simple' : 'block')}>Eintragen <small>{entryMode(g.game.rules.key) === 'block' ? 'Im Block' : 'Einzeln'}</small></button>}
         <button id="toggle-haptic" onClick={() => { setHapticOn(!buzz); setBuzz(!buzz); if (!buzz) haptic(); }}>Vibration <small>{buzz ? 'An' : 'Aus'}</small></button>
         <div className="menu-seg"><span>Otter</span><div className="seg" role="group" aria-label="Otter">
           {(['brav', 'frech', 'atzig'] as const).map(l => <button key={l} id={`quip-${l}`} aria-pressed={otter === l} onClick={() => { setQuipLevel(l); setOtter(l); }}>{l === 'brav' ? 'Brav' : l === 'frech' ? 'Frech' : 'Atzig'}</button>)}

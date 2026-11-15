@@ -234,13 +234,13 @@ export function seriesAwards(list: HistGame[]): Award[] {
   };
   const out: Award[] = [];
   const wins = best(id => games.filter(g => isWin(g, id)).length, 1);
-  if (wins) out.push({ key: 'siege', label: 'Meiste Siege', n: wins.v, unit: wins.v === 1 ? 'Sieg' : 'Siege', who: wins.who });
+  if (wins) out.push({ key: 'siege', label: 'Meiste Siege', n: wins.v, unit: '', who: wins.who });
   const streak = best(id => { let c = 0, m = 0; for (const g of games) { const r = resultOf(g, id); if (!r) continue; c = r.place === 1 ? c + 1 : 0; m = Math.max(m, c); } return m; }, 2);
-  if (streak) out.push({ key: 'serie', label: 'Siegesserie', n: streak.v, unit: 'in Folge', who: streak.who });
+  if (streak) out.push({ key: 'serie', label: 'Siege in Folge', n: streak.v, unit: '', who: streak.who });
   const kinds = best(id => new Set(games.filter(g => isWin(g, id)).map(g => g.key)).size, 2);
   if (kinds) out.push({ key: 'allround', label: 'Allrounder', n: kinds.v, unit: 'Spiele', who: kinds.who });
   const last = best(id => games.filter(g => { const r = resultOf(g, id); return !!r && r.place === Math.max(...g.results.map(x => x.place)) && r.place > 1; }).length, 1);
-  if (last) out.push({ key: 'pech', label: 'Pechvogel', n: last.v, unit: '× Letzter', who: last.who });
+  if (last) out.push({ key: 'pech', label: 'Pechvogel', n: last.v, unit: last.v === 1 ? 'letzter Platz' : 'letzte Plätze', who: last.who });
   return out;
 }
 
@@ -291,7 +291,7 @@ export function gameRecords(list: HistGame[], opts: RecordOpts): GameRecord[] {
   }
   if (opts.points && !opts.zeroWins) {
     const top = pick(g => { const w = g.results.find(r => r.place === 1); return w ? w.total : null; }, opts.win === 'high' ? (a, b) => a > b : (a, b) => a < b);
-    if (top && (opts.win === 'low' || top.n > 0)) out.push({ key: 'best', label: opts.win === 'high' ? 'Höchste Punktzahl' : 'Niedrigste Punktzahl', n: top.n, unit: 'Punkte', who: winners(top.g), gameId: top.g.id });
+    if (top && (opts.win === 'low' || top.n > 0)) out.push({ key: 'best', label: opts.win === 'high' ? 'Höchste Punktzahl' : 'Niedrigste Punktzahl', n: top.n, unit: '', who: winners(top.g), gameId: top.g.id });
   }
   if (opts.points) {
     const gap = pick(g => { const s = [...g.results].sort((a, b) => a.place - b.place); const w = s[0], r2 = s.find(r => r.place > w.place); return r2 ? Math.abs(w.total - r2.total) : null; }, (a, b) => a > b);
@@ -302,7 +302,7 @@ export function gameRecords(list: HistGame[], opts: RecordOpts): GameRecord[] {
   if (long) out.push({ key: 'long', label: 'Längste Partie', n: long.n, unit: long.n === 1 ? 'Runde' : 'Runden', who: winners(long.g), gameId: long.g.id });
   if (opts.zeroWins) {
     const rate = pickResult((r, rn) => (r.extra?.wins === undefined ? null : Math.round((Number(r.extra.wins) / rn) * 100)), (a, b) => a > b);
-    if (rate && rate.n > 0) out.push({ key: 'rate', label: 'Höchste Siegquote', n: rate.n, unit: '% der Runden', who: rate.who, gameId: rate.g.id });
+    if (rate && rate.n > 0) out.push({ key: 'rate', label: 'Höchste Siegquote', n: rate.n, unit: '%', who: rate.who, gameId: rate.g.id });
   }
   if (!opts.points) {
     const short = pick(rn, (a, b) => a < b);

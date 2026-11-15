@@ -25,27 +25,28 @@ export function TallyMarks({ n, small }: { n: number; small?: boolean }) {
 }
 
 /** Karte auf der Startseite: offene Strichlisten, ein Tipp öffnet */
-export function TallyCard() {
+/** Startseite: Strichlisten als Zeilen, darunter „Neue Strichliste“ im Stil von „Eigenes Spiel erstellen“ */
+export function TallyRows() {
   const { tallies, players } = useApp();
   const [adding, setAdding] = useState(false);
   return (
-    <div className="group">
-      <div className="eyebrow">Strichlisten</div>
-      {tallies.length > 0 && <div className="list">
-        {tallies.map(t => {
-          const [a, b] = tallyCount(t), pa = playerOf(players, t.a), pb = playerOf(players, t.b);
-          return (
-            <button key={t.id} className="row tally-row" onClick={() => act().openTally(t.id)}>
-              <span className="tally-duo"><Avatar p={pa} /><Avatar p={pb} /></span>
-              <span className="t"><b>{t.name || `${pa.name} und ${pb.name}`}</b><small className="num">{a} zu {b}</small></span>
-              <Chevron />
-            </button>
-          );
-        })}
-      </div>}
-      <button className="text-btn tally-new" id="tally-new" onClick={() => setAdding(true)}>Neue Strichliste</button>
+    <>
+      {tallies.map(t => {
+        const [a, b] = tallyCount(t), pa = playerOf(players, t.a), pb = playerOf(players, t.b);
+        return (
+          <button key={t.id} className="row tally-row" onClick={() => act().openTally(t.id)}>
+            <span className="tally-duo"><Avatar p={pa} /><Avatar p={pb} /></span>
+            <span className="t"><b>{t.name || `${pa.name} und ${pb.name}`}</b><small className="num">{a} zu {b}</small></span>
+            <Chevron />
+          </button>
+        );
+      })}
+      <button className="row tpl new-own" id="tally-new" onClick={() => setAdding(true)}>
+        <span className="plus-ic" aria-hidden="true">+</span>
+        <span className="t"><b>Neue Strichliste</b></span>
+      </button>
       {adding && <NewTally onClose={() => setAdding(false)} />}
-    </div>
+    </>
   );
 }
 

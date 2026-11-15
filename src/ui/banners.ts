@@ -26,7 +26,9 @@ export const BANNERS: { name: string; svg: string }[] = [
     name: 'Kneipe',
     svg: `<rect width="${W}" height="${H}" fill="#2a2350"/>${stars(14, '#5b5490')}
       <g transform="translate(104 54) rotate(-4)"><rect x="-90" y="-26" width="180" height="52" rx="12" fill="#3a3170"/>
-        <text y="9" text-anchor="middle" font-family="Jost, sans-serif" font-weight="700" font-size="24" letter-spacing="2" fill="#ff8f7a">OINA NO?</text></g>
+        <circle cx="34" cy="2" r="11" fill="#ff8f7a"/><circle cx="34" cy="2" r="6" fill="#3a3170"/><rect x="-30" y="-12" width="58" height="30" rx="6" fill="#ff8f7a"/>
+        <circle cx="-22" cy="-13" r="9" fill="#fff3e3"/><circle cx="-6" cy="-16" r="10" fill="#fff3e3"/><circle cx="12" cy="-13" r="9" fill="#fff3e3"/>
+        <circle cx="-62" cy="0" r="5" fill="#f2cf86"/><circle cx="66" cy="-10" r="4" fill="#86cbb8"/><circle cx="62" cy="12" r="3" fill="#f2cf86"/></g>
       <circle cx="40" cy="120" r="14" fill="#f2cf86"/><circle cx="40" cy="120" r="9" fill="#d9634a"/><circle cx="64" cy="128" r="12" fill="#f3a98f"/>
       <rect y="132" width="${W}" height="18" fill="#7e5136"/><rect y="128" width="${W}" height="6" fill="#94613f"/>
       ${fig(282, 178, .62, { shades: true, hat: 'none', prop: PROP.mug })}`

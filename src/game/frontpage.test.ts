@@ -97,13 +97,13 @@ describe('Titelseite', () => {
     // Lauf: drei Siege hintereinander, aber nicht alle
     expect(kinds([g(at(14, 19), ['b', 'a']), g(at(14, 20), ['a', 'b']), g(at(14, 21), ['a', 'b']), g(at(14, 22), ['a', 'b'])])).toContain('hattrick');
   });
-  it('frühe Abende: viele verschiedene Schlagzeilen', () => {
-    const heads = new Set<string>();
-    for (let d = 1; d <= 20; d++) {
-      const day = `2026-11-${String(d).padStart(2, '0')}`;
-      const fp = frontPage([g(at(d, 20), ['a', 'b', 'c']), g(at(d, 21), ['a', 'c', 'b'])], day, { level: 'frech', names })!;
-      heads.add(fp.lead.headline);
+  it('Abende hintereinander: keine gleiche Schlagzeile zweimal in Folge', () => {
+    const hist: HistGame[] = [], heads: string[] = [];
+    for (let d = 1; d <= 12; d++) {
+      hist.push(g(at(d, 20), ['a', 'b', 'c']), g(at(d, 21), ['a', 'c', 'b']));
+      heads.push(frontPage(hist, `2026-11-${String(d).padStart(2, '0')}`, { level: 'frech', names })!.lead.headline);
     }
-    expect(heads.size).toBeGreaterThanOrEqual(3);
+    expect(new Set(heads).size).toBeGreaterThanOrEqual(6);
+    heads.slice(1).forEach((h, i) => expect(h).not.toBe(heads[i]));
   });
 });

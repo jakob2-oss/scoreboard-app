@@ -19,6 +19,10 @@ Gespräche hinaus gelten muss. Details stehen in `docs/`.
 - Keine Pfeile „→“ in Knöpfen, keine Funkel-Sterne als Deko, keine Etiketten wie „Beispiel“.
 - Leere Zustände knapp benennen („Noch niemand ausgewählt“), nicht erklären, was zu tun ist.
 - Keine Sätze, die den Nutzen der App erklären („damit die Partie in eure Bilanz einfließt“).
+- Echtes, gesprochenes Deutsch statt Übersetzungen oder Anglizismen („Plot-Twist“, „on fire“, „Underdog-Energie“).
+- Jede Information nur an einer Stelle: keine Einheit, die das Etikett schon nennt („Meiste Siege: 12“, nicht „12 Siege“),
+  keine Untertitel oder Banner, die Name, Datum oder Stand wiederholen.
+- Regel-Stichpunkte: links ein Begriff, rechts ein vollständiger Zusatz, kein auf beide Seiten verteilter Satz.
 
 ## Design
 Festgeschrieben in `docs/DESIGN.md`: Hell „Papier & Indigo“, Dunkel „Mitternacht“, Schrift Jost,

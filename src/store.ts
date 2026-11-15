@@ -629,7 +629,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     bracketCreate(eventId: string, order: string[], o: { size: number; advance: number; bestOf: number }) {
       const e = state.events.find(x => x.id === eventId); if (!e || order.length < 2) return;
       actions.updateEventRaw({ ...e, bracket: createBracket(order, o, clock.uid), updatedAt: clock.now() });
-      haptic('success'); toast('Turnier steht');
+      haptic('success'); toast('Turnier gestartet');
     },
     /** Partie für einen Tisch starten: Spiel wählen, Spieler sind gesetzt */
     bracketPlay(eventId: string, matchId: string, t: Template) {

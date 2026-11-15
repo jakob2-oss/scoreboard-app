@@ -285,7 +285,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
-      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Manuell' : 'Im Block'}</button>}
+      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Einzeln' : 'Im Block'}</button>}
       {isResultOnly(g)
         ? <button className="primary" id="evaluate" disabled={step.kind !== 'result'} onClick={() => act().openSheet('result')}>Auswerten</button>
         : step.kind === 'result'
@@ -303,7 +303,7 @@ function PlayerPage({ g, p, i, edit }: { g: GameState; p: Player; i: number; edi
   const noteOn = isNoteField(edit?.field);
   const value = edit && !noteOn ? numOf(edit.buf) : ref === 'new' ? null : scoreOf(g, ref, p.id);
   const end = g.game.rules.end;
-  let place = started ? `${x.place}. Platz` : 'Noch keine Punkte';
+  let place = started ? `${x.place}. Platz` : '';
   if (started && end.type === 'target') place += t[p.id] >= end.value ? (g.game.rules.win === 'high' ? ', Ziel erreicht' : ', Grenze erreicht') : `, noch ${end.value - t[p.id]} bis ${end.value}`;
   const rounds = liveRounds(g);
   const pick = (r: RoundRef) => (edit ? act().selectRef(r) : act().goPage(i, r));

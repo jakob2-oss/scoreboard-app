@@ -127,10 +127,10 @@ describe('Auszeichnungen einer Serie', () => {
       g('3', 'uno', '2026-11-01T22:00', [['b', 1], ['a', 2], ['c', 3]])
     ];
     expect(seriesAwards(list)).toEqual([
-      { key: 'siege', label: 'Meiste Siege', n: 2, unit: 'Siege', who: ['a'] },
-      { key: 'serie', label: 'Siegesserie', n: 2, unit: 'in Folge', who: ['a'] },
+      { key: 'siege', label: 'Meiste Siege', n: 2, unit: '', who: ['a'] },
+      { key: 'serie', label: 'Siege in Folge', n: 2, unit: '', who: ['a'] },
       { key: 'allround', label: 'Allrounder', n: 2, unit: 'Spiele', who: ['a'] },
-      { key: 'pech', label: 'Pechvogel', n: 2, unit: '× Letzter', who: ['c'] }
+      { key: 'pech', label: 'Pechvogel', n: 2, unit: 'letzte Plätze', who: ['c'] }
     ]);
   });
   it('ohne Partien keine Auszeichnungen', () => { expect(seriesAwards([])).toEqual([]); });
@@ -179,7 +179,7 @@ describe('Rommé-Rekorde', () => {
       { key: 'avg', label: 'Niedrigster Schnitt', n: 7, unit: 'je Runde', who: ['a'], gameId: '3' },
       { key: 'margin', label: 'Größter Vorsprung', n: 80, unit: 'Punkte', who: ['a'], gameId: '1' },
       { key: 'long', label: 'Längste Partie', n: 10, unit: 'Runden', who: ['a'], gameId: '3' },
-      { key: 'rate', label: 'Höchste Siegquote', n: 50, unit: '% der Runden', who: ['b'], gameId: '2' }
+      { key: 'rate', label: 'Höchste Siegquote', n: 50, unit: '%', who: ['b'], gameId: '2' }
     ]);
   });
 });
@@ -194,7 +194,7 @@ describe('Rekorde und Titel', () => {
   ];
   it('höchste Punktzahl, größter Vorsprung, längste Partie', () => {
     expect(gameRecords(list, { win: 'high', points: true })).toEqual([
-      { key: 'best', label: 'Höchste Punktzahl', n: 310, unit: 'Punkte', who: ['b'], gameId: '2' },
+      { key: 'best', label: 'Höchste Punktzahl', n: 310, unit: '', who: ['b'], gameId: '2' },
       { key: 'margin', label: 'Größter Vorsprung', n: 130, unit: 'Punkte', who: ['b'], gameId: '2' },
       { key: 'long', label: 'Längste Partie', n: 15, unit: 'Runden', who: ['b'], gameId: '2' }
     ]);
