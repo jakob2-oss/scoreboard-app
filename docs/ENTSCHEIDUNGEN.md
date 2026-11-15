@@ -375,8 +375,12 @@ Statistik, Rekorde und Verlauf bleiben gleich.
 - Doppelte Angaben entfernt: „Noch keine Punkte“ neben „Punkte 0“, Serie im Kopf der Partie und im Feld darunter,
   Einheiten bei Rekorden und Auszeichnungen („Meiste Siege 12 Siege“), Hälfte auf dem Schocken-Tisch und in der Leiste,
   „3 Spieler“ unter Partien eines Spieltags, „Mitte leer“ bei eigenen Chic-Spielen.
-- „Manuell“ heißt „Pro Spieler“ (wie im Menü). Banner „Kneipe“ ohne Schriftzug.
+- „Manuell“ heißt „Einzeln“ (wie im Menü). Banner „Kneipe“ ohne Schriftzug.
 - Regel-Stichpunkte umformuliert (Begriff links, vollständiger Zusatz rechts). Rechenbeispiele nur noch, wo gerechnet
   wird (nicht bei Schwimmen, Schocken, Chic).
 - Strichlisten auf der Startseite als einklappbare Gruppe unter den Spielen; „Neue Strichliste“ sieht aus wie
   „Eigenes Spiel erstellen“.
+- Textdurchgang Teil 2 (Schnelles Spiel, eigenes Spiel, Strichliste, Turnier, Siegerseite, Serienabschluss):
+  „Zählschritte (bis zu 3)“ ohne Klammer, Meldung „Turnier gestartet“ statt „Turnier steht“.
+  Der Umschalter heißt kurz „Einzeln“ (Menü: „Eintragen: Im Block / Einzeln“). Auf dem iPhone SE passt die
+  Knopfleiste mit Umschalter wieder in eine Zeile.

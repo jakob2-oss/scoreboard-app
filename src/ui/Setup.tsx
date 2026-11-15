@@ -238,7 +238,7 @@ export function Setup() {
             )}
           </div>
           {!rank && <div className="field">
-            <label>Zählschritte (bis zu {MAX_STEPS})</label>
+            <label>Zählschritte</label>
             <div className="chips step-chips">
               {[...new Set([...STEP_CHOICES, ...setup.steps])].sort((x, y) => x - y).map(n => (
                 <button key={n} className="chip" aria-pressed={setup.steps.includes(n)} onClick={() => toggleStep(n)}>{n}</button>

@@ -285,7 +285,7 @@ function OverviewDock({ g, canUndo }: { g: GameState; canUndo: boolean }) {
   return (
     <>
       <button className="secondary" disabled={!canUndo} onClick={() => act().undo()} aria-label="Rückgängig"><IconUndo /></button>
-      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Pro Spieler' : 'Im Block'}</button>}
+      {blockEntry(g) && step.kind !== 'result' && <button className="secondary mode-btn" id="mode-switch" onClick={() => act().switchEntry(g.game.rules.key)}>{entryMode(g.game.rules.key) === 'block' ? 'Einzeln' : 'Im Block'}</button>}
       {isResultOnly(g)
         ? <button className="primary" id="evaluate" disabled={step.kind !== 'result'} onClick={() => act().openSheet('result')}>Auswerten</button>
         : step.kind === 'result'

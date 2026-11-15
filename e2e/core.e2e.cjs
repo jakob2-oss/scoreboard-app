@@ -216,7 +216,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Direktstart mit letzten Spielern', (await raw('#quick-start')) === 'Los mit 3 Spielern');
   await p.click('#quick-start');
   check('kein Untertitel, Geber als Schild', (await p.locator('#s-game .top .sub').count()) === 0 && await p.isVisible('.dealer-tag'));
-  check('Rommé: Umschalter „Pro Spieler“ im Block', (await raw('#mode-switch')) === 'Pro Spieler');
+  check('Rommé: Umschalter „Einzeln“ im Block', (await raw('#mode-switch')) === 'Einzeln');
   await p.click('#round-go'); await p.waitForTimeout(300);
   check('Rommé: Ziffernblock direkt im Block, mit Rommé-Tasten', await p.isVisible('#pad .pad-quick') && (await raw('#pad .who b')) === 'Anna');
   await p.click('#pad .pad-quick >> text="Raus"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(200);
@@ -228,10 +228,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Rommé: Runde im Block eingetragen, Krone für die 0', !(await p.isVisible('#pad')) && (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '105010' && (await p.locator('td.cell.won .crown').count()) === 1);
   await shot('09b-romme-block');
   await p.click('#mode-switch'); await p.waitForTimeout(500);
-  check('Rommé: Pro Spieler öffnet die Spielerseite', (await page()) === 0 && await p.isVisible('.pp-panel'));
+  check('Rommé: Einzeln öffnet die Spielerseite', (await page()) === 0 && await p.isVisible('.pp-panel'));
   await p.click('#s-game [aria-label="Menü"]'); await p.click('#toggle-mode'); await p.waitForTimeout(300);
   await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
-  check('Rommé: über das Menü zurück im Block', (await raw('#mode-switch')) === 'Pro Spieler');
+  check('Rommé: über das Menü zurück im Block', (await raw('#mode-switch')) === 'Einzeln');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row[data-own]').count()) === 2);
   await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
@@ -257,7 +257,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Wizard: weiter mit Ansagen Runde 2, Kartensymbol mit 2', (await raw('#round-go')).startsWith('Ansagen Runde 2') && (await raw('.wz-mini b')) === '2');
   await shot('14-wizard-ov');
   await p.click('#mode-switch'); await p.waitForTimeout(400);
-  check('Wizard: „Pro Spieler“ geht direkt zur Eingabe pro Spieler', (await page()) >= 0 && await p.isVisible('.pp-keys'));
+  check('Wizard: „Einzeln“ geht direkt zur Eingabe pro Spieler', (await page()) >= 0 && await p.isVisible('.pp-keys'));
   await p.click('.pp-tab >> nth=0'); await p.waitForTimeout(300);
   check('Wizard: zurück „Im Block“ sichtbar', (await raw('#mode-switch')) === 'Im Block');
   await p.click('#mode-switch'); await p.waitForTimeout(300);
