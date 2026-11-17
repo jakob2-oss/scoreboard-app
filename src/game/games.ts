@@ -158,7 +158,7 @@ GAMES.push({
 });
 GAMES.push({
   template: { key: 'schocken', version: 1, name: 'Schocken', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13 } },
-  points: [['Mitte', '13 Deckel'], ['Verlierer', 'bekommt so viele Deckel, wie der Wurf des Siegers wert ist'], ['Leere Mitte', 'der Sieger gibt eigene Deckel ab'],
+  points: [['Verlierer', 'bekommt so viele Deckel, wie der Wurf des Siegers wert ist'], ['Leere Mitte', 'der Sieger gibt eigene Deckel ab'],
     ['Schock aus', 'alle Deckel auf einmal'], ['Hälfte', 'verliert, wer alle Deckel hat'], ['Partie', 'verliert, wer zwei Hälften verliert, sonst entscheidet das Finale']],
   acc: '#d9634a', tint: '#fde6df', text: ''
 });
@@ -166,7 +166,7 @@ GAMES.push({
 // Chic: wie Schocken, in der zweiten Phase gehen Deckel zurück in die Mitte; rausschicken und Chic aus dem Rohr
 GAMES.push({
   template: { key: 'chic', version: 1, name: 'Chic', scoring: 'tokens', win: 'low', end: { type: 'none' }, players: { min: 2, max: 10 }, params: { tokens: 13, phase2: 'return', chic: true, halves: 1 } },
-  points: [['Mitte', '13 Deckel'], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'], ['Zweite Phase', 'Sieger spielen Deckel zurück, wer keine mehr hat, ist raus'],
+  points: [['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'], ['Zweite Phase', 'Sieger spielen Deckel zurück, wer keine mehr hat, ist raus'],
     ['Rausschicken', 'wer sich rausschickt, ist mit allen Deckeln raus und kann nicht mehr verlieren'], ['Chic aus dem Rohr', 'verliert sofort und zahlt die Runde, gespielt wird weiter'],
     ['Verloren', 'wer am Ende als Einziger noch Deckel hat, zahlt']],
   acc: '#d9634a', tint: '#fde6df', text: ''

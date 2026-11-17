@@ -34,6 +34,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Einstellungen offen', await p.isVisible('#s-setup'));
   await p.fill('#setup-name', 'Testspiel');
   await shot('01b-setup');
+  check('Vorlage ohne Spielende, dafür Schnelltasten', !(await p.isVisible('#setup-end')) && (await raw('#s-setup')).includes('Schnelltasten'));
+  await p.click('#setup-save'); await p.waitForTimeout(300);
+  check('Spielende auf der Seite des eigenen Spiels', await p.isVisible('#end-none') && !(await raw('.rule-points')).includes('Spielende'));
   await p.click('#setup-next');
   check('Spielerauswahl offen', await p.isVisible('#s-players'));
   check('Start ohne Spieler gesperrt', await p.isDisabled('#start-btn'));
@@ -459,18 +462,22 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#phase-swim'); await shot('37g-setup-phasen'); await p.click('#kind-tokens'); await p.click('#setup-save'); await p.waitForTimeout(300);
   await p.goto(URL); await p.waitForSelector('.wordmark');
   await p.click('.row[data-own] >> text=Meiern'); await p.waitForTimeout(200);
-  check('Eigenes Tisch-Spiel: Phasen in den Regeln', (await raw('.rule-points')).includes('wer die erste Hälfte verliert'), await raw('.rule-points'));
+  check('Eigenes Tisch-Spiel: Phasen in den Regeln', (await raw('.rule-points')).includes('wer den ersten Durchgang verliert'), await raw('.rule-points'));
   await p.click('#tpl-edit'); await p.waitForTimeout(200);
   await p.click('#phase-halves-3'); await p.click('#setup-save'); await p.waitForTimeout(300);
-  check('Eigenes Tisch-Spiel: Phasen bearbeitet', (await raw('.rule-points')).includes('wer 3 Hälften verliert'), await raw('.rule-points'));
+  check('Eigenes Tisch-Spiel: Phasen bearbeitet', (await raw('.rule-points')).includes('wer 3 Durchgänge verliert'), await raw('.rule-points'));
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(300);
   check('Eigenes Tisch-Spiel wieder gelöscht', !(await raw('#s-home')).includes('Meiern'));
 
   // Chic: eigenes Deckel-Spiel, zweite Phase zurück in die Mitte
-  await p.click('#new-own'); await p.fill('#setup-name', 'Chic'); await p.click('#kind-tokens'); await p.fill('#table-start', '6');
+  await p.click('#new-own'); await p.fill('#setup-name', 'Chic'); await p.click('#kind-tokens');
+  check('Vorlage ohne Zahl der Deckel', !(await p.isVisible('#table-start')));
   await p.click('#phase2-return'); await p.click('#phase-halves-1'); await p.click('#setup-save'); await p.waitForTimeout(300);
   await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('.row[data-own] >> text=Chic'); await p.waitForTimeout(200);
   check('Chic: Regeln mit zwei Phasen', (await raw('.rule-points')).includes('zurück in die Mitte'), await raw('.rule-points'));
+  for (let k = 0; k < 7; k++) await p.click('[aria-label="Deckel in der Mitte weniger"]');
+  check('Chic: Deckel je Partie einstellbar', (await text('#play-tokens')) === '6');
+  await shot('37h-own-tokens');
   if (await p.isVisible('#quick-start')) await p.click('#quick-start'); else { await p.click('#setup-next'); await p.click('#start-btn'); }
   await p.waitForSelector('.tbl');
   const chicSeat = i => p.locator('.tb-seat').nth(i);

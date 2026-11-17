@@ -386,3 +386,8 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Knopfleiste mit Umschalter wieder in eine Zeile.
 - Siegerseite: ein noch sichtbarer Otter-Spruch der letzten Runde verschwindet beim Öffnen. Turnierbaum: zwei Runden
   passen nebeneinander auf den Bildschirm, ab drei Runden wird seitlich gewischt.
+- Spielende, Leben und Deckel gehören zur Partie, nicht zur Vorlage: einstellbar auf der Spielseite (feste und eigene
+  Spiele, nicht Wizard, Kniffel, Phase 10). Eigene Spiele merken sich den zuletzt gespielten Wert. Der Editor eigener
+  Spiele fragt nur noch Regeln ab und führt nach „Speichern“ auf die Spielseite. Die Regelkarte nennt diese Werte nicht.
+- Deckel-Spiele im Editor: „Phasen: Verteilen / Verteilen & zurück“ und „Verloren nach Durchgängen“ statt „Wenn die
+  Mitte leer ist“ und „Hälften“ (Schocken selbst behält die Hälfte). „Zählschritte“ heißen „Schnelltasten“.
