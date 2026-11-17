@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 17.11.2026 (Spielende, Leben und Deckel je Partie, Editor eigener Spiele klarer benannt; offen: Live-Regelkarte im Editor, App-Store-Vorbereitung)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 17.11.2026 (Spielende, Leben und Deckel je Partie, Zurück merkt sich den Weg, Verwerfen beim Beenden; offen: Live-Regelkarte bei Deckel- und Leben-Spielen, App-Store-Vorbereitung)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)

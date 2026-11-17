@@ -923,3 +923,19 @@ describe('Verlauf und Statistik', () => {
     expect(st.get().profile).toBeNull();
   });
 });
+
+describe('Zurück', () => {
+  it('führt zur Seite, von der man gekommen ist, Reiter fangen neu an', async () => {
+    const { st, a } = await setup();
+    const id = st.get().players[0].id;
+    a.goHome(); a.openGame(TPL.free);
+    expect(a.goBack()).toBe(true);
+    expect(st.get().screen).toBe('home');
+    a.openTab('people'); a.openProfile(id); a.openGame(TPL.free);
+    a.goBack(); expect(st.get()).toMatchObject({ screen: 'profile', profile: { id } });
+    a.goBack(); expect(st.get().screen).toBe('people');
+    a.openProfile(id); a.openTab('history');
+    expect(a.goBack(() => a.openTab('home'))).toBe(false);
+    expect(st.get().screen).toBe('home');
+  });
+});

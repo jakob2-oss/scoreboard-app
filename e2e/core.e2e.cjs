@@ -155,7 +155,14 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Direktvergleich zeigt gemeinsame Partie', (await text('.duel-head small')) === '1 gemeinsame Partie');
   check('Direktvergleich: Leistung und Revanche', (await raw('.duel-row .eyebrow >> nth=0')) === 'Leistung' && await p.isVisible('.rematch'));
   await shot('31-profile'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('31-profile-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
-  await p.click('[aria-label="Zurück"]');
+  await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(200);
+  check('Zurück führt in den Verlauf mit offener Partie', await p.isVisible('#s-history') && await p.isVisible('.bsheet .prow'));
+  await p.click('.bsheet .prow >> nth=0'); await p.waitForTimeout(200);
+  await p.goBack(); await p.waitForTimeout(300);
+  check('Browser-Zurück ebenso', await p.isVisible('#s-history') && await p.isVisible('.bsheet .prow'));
+  await p.goBack(); await p.waitForTimeout(300);
+  check('noch einmal zurück: Partie zu', await p.isVisible('#s-history') && !(await p.isVisible('.bsheet .prow')));
+  await p.click('#tab-people'); await p.waitForTimeout(200);
   check('Spielerliste mit drei Spielern', (await p.locator('.person-row').count()) === 3);
   await shot('32-people');
   await p.click('#tab-home');
@@ -363,7 +370,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Phase 10 fortgesetzt mit Haken', (await raw('#s-game')).includes('Phase 10') && (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed').catch(() => null)) !== null);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
   check('verwerfen betrifft nur die geöffnete Partie', (await p.locator('.resume').count()) === 1 && (await text('.resume')).includes('Skyjo'));
-  await p.click('.resume'); await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
+  await p.click('.resume'); await p.click('#s-game .text-btn'); await p.waitForTimeout(200); await p.locator('#v-discard').scrollIntoViewIfNeeded(); await shot('35c0-result'); await p.click('#v-discard');
+  check('Beenden: Verwerfen fragt nach', await p.isVisible('#v-discard-yes'));
+  await shot('35c-result-discard');
+  await p.click('#v-discard-yes'); await p.waitForTimeout(300);
 
   // Binokel: erst Meldungen, dann Stiche
   await p.click('[data-game="binokel"]'); await p.click('#quick-start');
@@ -657,7 +667,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('42c-series-done'); await p.evaluate(() => document.querySelector('.ser-awards').scrollIntoView({ block: 'center' })); await shot('42d-series-awards'); await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42d-series-awards-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; document.querySelector('#s-series .scroll').scrollTo(0, 0); });
   await p.evaluate(() => { document.documentElement.dataset.theme = 'light'; }); await shot('42c-series-done-light'); await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   await p.click('[aria-label="Zurück"]'); await p.waitForTimeout(100);
-  check('zurück in der Serienliste', await p.isVisible('.series-row') && !(await p.isVisible('#series-live')));
+  check('zurück auf die Startseite, von der die Serie geöffnet wurde', await p.isVisible('#s-home') && !(await p.isVisible('#series-live')));
   await p.click('#tab-history'); await p.click('.hist-row >> nth=0'); await p.waitForTimeout(200);
   check('Detail zeigt die Serie', (await text('.bsheet .ser-chips .fchip[aria-pressed="true"]')) === 'Südamerika 2026');
   await p.click('.bsheet .ser-chips .fchip >> nth=0'); await p.waitForTimeout(100);
@@ -699,7 +709,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.fill('#setup-name', 'Skyjo Hausregel'); await p.click('#setup-save'); await p.waitForTimeout(200);
   check('Kopie behält Bild und Regeln des Originals', (await text('#s-setup .rule-points')).includes('Kartenwerte'));
   await shot('45c-copy');
-  await p.click('#s-setup [aria-label="Zurück"]');
+  await p.click('#s-setup [aria-label="Zurück"]'); await p.waitForTimeout(150);
+  check('zurück zur Seite des Originals', await p.isVisible('#s-gamepage'));
+  await p.click('#s-gamepage [aria-label="Zurück"]'); await p.waitForTimeout(150);
   check('Kopie steht bei den Kartenspielen, Original unverändert', (await raw('#grp-karten + .list')).includes('Skyjo Hausregel') && (await raw('[data-game="skyjo"]')).includes('Skyjo'));
   await p.click('.row[data-own] >> text=Skyjo Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
 

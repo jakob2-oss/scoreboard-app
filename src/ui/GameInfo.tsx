@@ -23,7 +23,7 @@ export function GameInfo() {
   const n = selected.filter(id => players.some(p => p.id === id)).length;
   const ready = n >= template.players.min && n <= template.players.max;
   return (
-    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goHome()} fav={{ on: favs.includes(template.key), toggle: () => a.toggleFav(template.key) }}
+    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goBack(a.goHome)} fav={{ on: favs.includes(template.key), toggle: () => a.toggleFav(template.key) }}
       dock={ready
         ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
         : <button className="primary" id="to-players" onClick={() => a.toPlayers()}>Spieler wählen</button>}>

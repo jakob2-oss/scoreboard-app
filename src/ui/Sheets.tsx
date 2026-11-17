@@ -155,6 +155,7 @@ export function ResultSheet({ g }: { g: GameState }) {
     const sug = suggestEvent(events.filter(e => e.active), history, seated(g).flatMap(p => membersOf(g, p.id))); if (sug) return sug;
     try { const id = localStorage.getItem('pz:lastEvent'); return id && events.some(e => e.id === id) ? id : null; } catch { return null; }
   });
+  const [discard, setDiscard] = useState(false);
   const rk = ranking(g), started = anyScore(g), rules = g.game.rules;
   useEffect(() => { if (started) haptic('success'); }, []);
   const winners = rk.filter(x => x.place === 1);
@@ -230,6 +231,11 @@ export function ResultSheet({ g }: { g: GameState }) {
           {started && <button className="again" id="oina-no" onClick={() => act().oinaNo(eventId)}>
             <svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(-14 50 52)"><rect x="25" y="28" width="50" height="50" rx="13" fill="#c9bda5"/><rect x="25" y="23" width="50" height="50" rx="13" fill="#f3ead6"/><circle cx="50" cy="48" r="8" fill="#ef7a5c"/></g></svg>
             Oina no?</button>}
+          <div className="menu-list v-discard">
+            {!discard
+              ? <button className="warn" id="v-discard" onClick={() => setDiscard(true)}>Partie verwerfen</button>
+              : <div className="confirm-row"><button className="no" onClick={() => setDiscard(false)}>Abbrechen</button><button className="yes" id="v-discard-yes" onClick={() => act().discardGame()}>Wirklich verwerfen</button></div>}
+          </div>
         </div>
       </div>
     </>

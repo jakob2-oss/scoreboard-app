@@ -45,7 +45,7 @@ export function PlayerSelect() {
   return (
     <section className="screen" id="s-players">
       <div className="top gutter">
-        <button className="icon-btn" onClick={() => act().playersBack()} aria-label="Zurück"><IconBack /></button>
+        <button className="icon-btn" onClick={() => act().goBack(act().playersBack)} aria-label="Zurück"><IconBack /></button>
         <div className="grow"><h2>Wer spielt mit?</h2><div className="sub">{template.name}</div></div>
       </div>
       <div className="scroll">
@@ -96,7 +96,7 @@ export function PlayerSelect() {
             </div>
           )}
           <form className="add-row" onSubmit={submit}>
-            <input id="add-name" value={name} onChange={e => setName(e.target.value)} placeholder="Neuer Name" autoComplete="off" maxLength={18} aria-label="Neuer Spielername" />
+            <input id="add-name" value={name} onChange={e => setName(e.target.value)} placeholder="Neuer Spieler" autoComplete="off" maxLength={18} aria-label="Neuer Spielername" />
             <button type="submit">Hinzufügen</button>
           </form>
         </div>

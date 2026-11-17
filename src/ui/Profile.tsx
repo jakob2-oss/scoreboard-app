@@ -38,7 +38,7 @@ export function Profile() {
   return (
     <section className="screen" id="s-profile">
       <div className="top gutter">
-        <button className="icon-btn" onClick={() => a.openTab('people')} aria-label="Zurück"><IconBack /></button>
+        <button className="icon-btn" onClick={() => a.goBack(() => a.openTab('people'))} aria-label="Zurück"><IconBack /></button>
         <div className="grow"><h2>Profil</h2></div>
       </div>
       <div className="scroll">

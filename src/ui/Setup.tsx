@@ -85,7 +85,7 @@ export function Setup() {
     const n = selected.filter(id => players.some(p => p.id === id)).length;
     const ready = n >= own.players.min && n <= own.players.max;
     return (
-      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goHome()} fav={{ on: favs.includes(own.key), toggle: () => a.toggleFav(own.key) }}
+      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goBack(a.goHome)} fav={{ on: favs.includes(own.key), toggle: () => a.toggleFav(own.key) }}
         dock={ready
           ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
           : <button className="primary" id="setup-next" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
@@ -138,7 +138,7 @@ export function Setup() {
   const kindEditable = !own || (['rounds', 'rank', 'lives', 'tokens'].includes(own.scoring) && !own.params?.phases);
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || 'Eigenes Spiel') : 'Schnelles Spiel';
   return (
-    <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
+    <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? a.goBack(() => setEditing(false)) : a.goBack(a.goHome))}
       dock={<>
         {own && <button className="primary" id="setup-save" disabled={!valid} onClick={() => { a.saveSetupHome(); setEditing(false); }}>Speichern</button>}
         {!own && setupTemplate && <button className="primary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}

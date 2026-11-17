@@ -96,7 +96,7 @@ export function TallyScreen() {
   return (
     <section className="screen" id="s-tally">
       <div className="top gutter">
-        <button className="icon-btn" onClick={() => a.openTally(null)} aria-label="Zurück"><IconBack /></button>
+        <button className="icon-btn" onClick={() => a.goBack(() => a.openTally(null))} aria-label="Zurück"><IconBack /></button>
         <div className="grow"><h2>{t.name || 'Strichliste'}</h2></div>
       </div>
       <div className="scroll">
