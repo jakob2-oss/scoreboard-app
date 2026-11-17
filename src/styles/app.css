@@ -843,8 +843,8 @@ td.cell.wzc.turn { box-shadow: inset 0 0 0 2px var(--acc-l); background: color-m
 .tn-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .tn-pre { background: var(--surface); border-radius: 14px; padding: 10px 12px; box-shadow: var(--soft); font-weight: 600; font-size: 14px; }
 .tn-pre small { display: block; color: var(--muted); font-weight: 500; }
-.tn-tree { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; margin: 0 -16px 10px; padding-left: 16px; padding-right: 16px; scroll-snap-type: x proximity; }
-.tn-round { flex: 0 0 210px; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; scroll-snap-align: start; }
+.tn-tree { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; margin: 0 -16px 10px; padding-left: 16px; padding-right: 16px; scroll-snap-type: x proximity; scroll-padding-inline: 16px; }
+.tn-round { flex: 0 0 min(210px, calc((100vw - 44px) / 2)); display: flex; flex-direction: column; justify-content: space-around; gap: 10px; scroll-snap-align: start; }
 .tn-round .eyebrow { margin: 0 0 2px 4px; }
 .tn-match { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 16px; background: var(--surface); box-shadow: var(--soft); text-align: left; width: 100%; }
 .tn-match.bye { opacity: .7; box-shadow: none; background: var(--fill); }

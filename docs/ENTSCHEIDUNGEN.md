@@ -384,3 +384,5 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   „Zählschritte (bis zu 3)“ ohne Klammer, Meldung „Turnier gestartet“ statt „Turnier steht“.
   Der Umschalter heißt kurz „Einzeln“ (Menü: „Eintragen: Im Block / Einzeln“). Auf dem iPhone SE passt die
   Knopfleiste mit Umschalter wieder in eine Zeile.
+- Siegerseite: ein noch sichtbarer Otter-Spruch der letzten Runde verschwindet beim Öffnen. Turnierbaum: zwei Runden
+  passen nebeneinander auf den Bildschirm, ab drei Runden wird seitlich gewischt.
