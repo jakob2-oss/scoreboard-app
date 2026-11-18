@@ -310,7 +310,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('31b-kniffel-pasch');
   await p.click('#cat-strike'); await p.waitForTimeout(500);
   await p.click('.pp-tab[aria-label="Überblick"]'); await p.waitForTimeout(400);
-  check('Kniffel: gestrichenes Feld markiert', (await p.locator('td.struck').count()) === 1);
+  check('Kniffel: gestrichenes Feld als Strich, offene Felder leer', (await p.locator('td.struck .strike-mark').count()) === 1 && (await p.locator('.grid.cats td.cell.empty').first().textContent()) === '');
   const turnName = (await raw('#round-go')).replace('Zug von ', '');
   check('Kniffel: Spalte dessen, der dran ist, getönt', (await p.locator('td.myturn').count()) > 0 && (await p.locator(`td.myturn[aria-label^="${turnName},"]`).count()) === (await p.locator('td.myturn').count()), turnName);
   await p.click('td[aria-label="Clara, Kniffel"]'); await p.waitForTimeout(400);
@@ -467,6 +467,10 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   // Eigenes Tisch-Spiel mit Phasen anlegen und bearbeiten
   await p.click('#new-own'); await p.fill('#setup-name', 'Meiern'); await p.click('#kind-tokens'); await p.click('#phase-halves-1');
   check('Erstellen: Phasen für Deckel', (await p.getAttribute('#phase-halves-1', 'aria-pressed')) === 'true' && !(await p.isVisible('#phase-swim')));
+  check('Regelkarte im Editor ändert sich sofort', (await raw('#setup-rules')).includes('wer den ersten Durchgang verliert'), await raw('#setup-rules'));
+  await p.click('#phase2-return');
+  check('… auch bei den Phasen', (await raw('#setup-rules')).includes('wer zuletzt noch Deckel hat'), await raw('#setup-rules'));
+  await p.click('#phase2-pass');
   await p.click('#kind-lives');
   check('Erstellen: Schwimmen als Phase schaltbar', await p.isChecked('#phase-swim'));
   await p.click('#phase-swim'); await shot('37g-setup-phasen'); await p.click('#kind-tokens'); await p.click('#setup-save'); await p.waitForTimeout(300);

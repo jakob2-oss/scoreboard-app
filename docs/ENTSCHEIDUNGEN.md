@@ -395,3 +395,7 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   linken Rand führen zur Seite, von der man gekommen ist, z. B. vom Profil zurück in den Verlauf mit offener Partie.
   Reiter, Startseite und Partie fangen den Weg neu an. Logik im Store (`goBack`), Verlauf und Geste in `src/lib/backnav.ts`.
 - Beenden-Fenster: „Partie verwerfen“ mit Nachfrage, wie im Menü. Eingabefeld für neue Spieler heißt „Neuer Spieler“.
+- Editor (eigenes Spiel, Schnelles Spiel): oben die Regelkarte wie auf der Spielseite, live aus den Einstellungen;
+  sie bleibt beim Scrollen stehen (auf kleinen Bildschirmen nicht).
+- Kniffel: offene Felder sind leer (ohne Punkt), gestrichene zeigen einen kräftigen Strich auf normalem Feld,
+  nicht mehr ausgegraut.

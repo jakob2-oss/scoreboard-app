@@ -236,7 +236,7 @@ function Board({ g, edit }: { g: GameState; edit: Edit | null }) {
                 const ph = hasPhases(g) && v !== null ? phaseAt(g, ri, p.id) : 0, phOk = ph > 0 && phaseIn(g, r.id, p.id);
                 return <td key={p.id} className={cls + (struck ? ' struck' : '') + (won ? ' won' : '') + (myTurn ? ' myturn' : '') + (ph ? ' ph' + (phOk ? ' ph-ok' : ' ph-no') : '') + (dbl ? ' ph dbl' : '') + (dl ? ' ph decl' : '')}
                   onClick={() => act().openPad(r.id, p.id)} aria-label={`${p.name}, ${r.cat ? r.cat.label : 'Runde ' + (ri + 1)}${won ? ', Rundensieg' : ''}${ph ? `, Phase ${ph} ${phOk ? 'geschafft' : 'nicht geschafft'}` : ''}`}>
-                  {ph > 0 && <small className="phb">{ph}</small>}{dbl && <small className="phb dbl">×2</small>}{!!dl && <small className="phb dl">{DEAL_KINDS[dk!]?.[dl - 1]}</small>}{won && <Crown />}{v === null ? '' : struck ? '–' : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
+                  {ph > 0 && <small className="phb">{ph}</small>}{dbl && <small className="phb dbl">×2</small>}{!!dl && <small className="phb dl">{DEAL_KINDS[dk!]?.[dl - 1]}</small>}{won && <Crown />}{v === null ? '' : struck ? <i className="strike-mark" role="img" aria-label="gestrichen" /> : fmt(v)}{nts.length > 0 && <small className="nt">{nts.map(([n, x]) => `${n} ${fmt(x!)}`).join(', ')}</small>}</td>;
               })}
             </tr>
             {r.cat?.section === 'up' && rounds[ri + 1]?.cat?.section !== 'up' && g.game.rules.params?.bonus && (<>
@@ -855,7 +855,7 @@ function CatList({ g, p, current, onPick }: { g: GameState; p: Player; current: 
         return (
           <Fragment key={r.id}>
             <button className="pp-cat" aria-current={r.id === current} onClick={() => onPick(r.id)}>
-              <span>{r.cat?.label}</span><span className={'v' + (v === 0 ? ' struck' : '')}>{v === null ? '' : v === 0 ? 'gestrichen' : fmt(v)}</span>
+              <span>{r.cat?.label}</span><span className={'v' + (v === 0 ? ' struck' : '')}>{v === null ? '' : v === 0 ? <i className="strike-mark" role="img" aria-label="gestrichen" /> : fmt(v)}</span>
             </button>
             {b && r.cat?.section === 'up' && rounds[i + 1]?.cat?.section !== 'up' && (
               <div className={'pp-cat calc' + (u.bonus ? ' hit' : '')}><span>Oben {u.sum} von {b.at}</span><span>Bonus {u.bonus ? '+' + u.bonus : '–'}</span></div>

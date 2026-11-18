@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
-import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, stepsOf } from '../game/templates';
+import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, makeFreeTemplate, stepsOf, updateFreeTemplate } from '../game/templates';
 import type { End, Template } from '../model/types';
 import { GameRecords } from './Records';
 import { GamePage } from './GamePage';
@@ -10,6 +10,8 @@ import { gameDef } from '../game/games';
 import { PlayOptions } from './EndPicker';
 
 export const FREE_TINT = '#e7e4f7';
+/** Uhr für die Vorschau der Regeln (nichts wird gespeichert) */
+const DRAFT_CLOCK = { uid: () => 'vorschau', now: () => new Date().toISOString() };
 
 const PATTERN_NAMES: Record<string, string> = {
   dots: 'Punkte', checker: 'Raster', waves: 'Wellen', stripes: 'Streifen', lozenge: 'Rauten', hex: 'Waben', rays: 'Strahlen', blocks: 'Blöcke'
@@ -136,6 +138,8 @@ export function Setup() {
   const rank = !result && (setup.kind === 'rank' || tableKind);
   // Wertung nur bei normalen Rundenspielen umstellbar (Kopien von Wizard, Kniffel, Phase 10 bleiben, wie sie sind)
   const kindEditable = !own || (['rounds', 'rank', 'lives', 'tokens'].includes(own.scoring) && !own.params?.phases);
+  // Regelkarte wie auf der Spielseite, live aus den Einstellungen
+  const draft = own ? updateFreeTemplate(own, setup, DRAFT_CLOCK) : makeFreeTemplate(setup, DRAFT_CLOCK);
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || 'Eigenes Spiel') : 'Schnelles Spiel';
   return (
     <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? a.goBack(() => setEditing(false)) : a.goBack(a.goHome))}
@@ -144,6 +148,9 @@ export function Setup() {
         {!own && setupTemplate && <button className="primary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}
         {!setupTemplate && <button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>}
       </>}>
+        <div className="rule-card live" id="setup-rules" style={{ ['--acc' as string]: look.color }}>
+          <ul className="rule-points">{pointsOf(draft).map(([k, t]) => <li key={k}><b>{k}</b><span>{t}</span></li>)}</ul>
+        </div>
         <div className="setup-body">
           <div className="field">
             <label htmlFor="setup-name">Name</label>
