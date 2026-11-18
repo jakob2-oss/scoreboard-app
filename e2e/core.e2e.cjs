@@ -691,9 +691,14 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#tab-home').catch(() => undefined); await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Eigenes Spiel bearbeiten und löschen
-  await p.click('#my-games .row[data-own] >> nth=1'); await p.click('#tpl-edit'); await shot('43-own-game');
-  await p.fill('#setup-name', 'Umbenannt'); await p.click('.look-c >> nth=3'); await p.click('#s-setup .chip >> text=Wellen');
+  const accOf = () => p.evaluate(() => document.querySelector('#s-setup .rule-card').style.getPropertyValue('--acc'));
+  await p.click('#my-games .row[data-own] >> nth=1'); const acc0 = await accOf(); await p.click('#tpl-edit'); await shot('43-own-game');
+  await p.fill('#setup-name', 'Umbenannt'); await p.click(`.look-c:not([style*="${acc0}"]) >> nth=0`); await p.click('#s-setup .chip >> text=Wellen');
   await p.click('#setup-save'); await p.waitForTimeout(200);
+  const acc1 = await accOf();
+  await p.goto(URL); await p.waitForSelector('.wordmark'); await p.click('#my-games .row[data-own] >> text=Umbenannt'); await p.waitForTimeout(200);
+  check('Aussehen eines eigenen Spiels geändert und nach Neuladen noch da', acc1 !== acc0 && (await accOf()) === acc1, acc0 + ' ' + acc1);
+  await p.click('#tpl-edit'); await p.click('#setup-save'); await p.waitForTimeout(200);
   check('eigenes Spiel umbenannt, zurück auf seiner Seite', (await text('.toast')) === 'Gespeichert' && await p.isVisible('#tpl-edit'));
   await shot('43b-own-game-saved');
   await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
