@@ -137,7 +137,7 @@ export function stepsOf(t: Template): number[] {
 /** Kurze Beschreibung in ganzen Worten, z. B. „Höchste Punktzahl gewinnt, Ziel 500“ */
 export function describeTemplate(t: Template): string {
   if (t.scoring === 'lives') return `${t.params?.lives ?? 3} Leben${t.params?.swim === false ? '' : ' und Schwimmen'}, der Letzte gewinnt`;
-  if (t.scoring === 'tokens') { const h = t.params?.halves ?? 2; return `${t.params?.tokens ?? 13} Deckel${t.params?.phase2 === 'return' ? ', zurück in die Mitte' : ''}, verloren nach ${h === 1 ? 'einer Hälfte' : `${h} Hälften`}`; }
+  if (t.scoring === 'tokens') { const h = t.params?.halves ?? 2; return `${t.params?.tokens ?? 13} Deckel${t.params?.phase2 === 'return' ? ', zurück in die Mitte' : ''}, verloren nach ${h === 1 ? 'einem Durchgang' : `${h} Durchgängen`}`; }
   if (t.scoring === 'rank') return 'Rang je Runde';
   const w = t.win === 'high' ? 'Höchste Punktzahl gewinnt' : 'Niedrigste Punktzahl gewinnt';
   if (t.end.type === 'target') return `${w}, Ziel ${t.end.value}`;

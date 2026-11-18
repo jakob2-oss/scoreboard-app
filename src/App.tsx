@@ -15,6 +15,7 @@ import { registerFormer, registerLooks } from './ui/lookup';
 import { Backdrop } from './ui/Backdrop';
 import { Events } from './ui/Events';
 import { FrontView } from './ui/FrontPage';
+import { setupBackNav } from './lib/backnav';
 
 export default function App() {
   const s = useApp();
@@ -23,6 +24,7 @@ export default function App() {
     // Daten dauerhaft behalten (Safari löscht sonst nach längerer Nichtnutzung)
     navigator.storage?.persist?.().catch(() => undefined);
   }, []);
+  useEffect(() => setupBackNav(), []);
   registerLooks(s.templates); registerFormer(s.formerPlayers);
   if (!s.ready) return <div className="screen" />;
   // Formen im Hintergrund passend zum Spiel (Kopien eigener Spiele nutzen das Original)

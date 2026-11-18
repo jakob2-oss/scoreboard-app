@@ -59,7 +59,7 @@ export function Series() {
   return (
     <section className="screen" id="s-series">
       <div className="top gutter">
-        <button className="icon-btn" onClick={a.closeSeries} aria-label="Zurück"><IconBack /></button>
+        <button className="icon-btn" onClick={() => a.goBack(a.closeSeries)} aria-label="Zurück"><IconBack /></button>
         <div className="grow"><h2>{ev.kind === 'turnier' ? 'Turnier' : ev.kind === 'liga' ? 'Liga' : 'Serie'}</h2></div>
       </div>
       <div className="scroll">

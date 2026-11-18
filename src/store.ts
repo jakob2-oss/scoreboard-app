@@ -16,6 +16,18 @@ import {
 } from './game/engine';
 import type { Repo } from './db';
 
+/** Was eine Seite ausmacht (für Zurück) */
+const NAV_KEYS = ['screen', 'detail', 'front', 'profile', 'series', 'tally', 'histTab', 'editKey', 'setupTemplate', 'setupEditing', 'template'] as const;
+type View = Pick<AppState, typeof NAV_KEYS[number]>;
+const viewOf = (s: View): View => ({ screen: s.screen, detail: s.detail, front: s.front, profile: s.profile, series: s.series, tally: s.tally, histTab: s.histTab,
+  editKey: s.editKey, setupTemplate: s.setupTemplate, setupEditing: s.setupEditing, template: s.template });
+const sigOf = (s: View) => JSON.stringify([s.screen, s.detail, s.front, s.profile?.id, s.series?.id, s.tally, s.histTab, s.editKey, s.setupEditing,
+  s.screen === 'gamepage' || s.screen === 'players' ? s.template?.key : null]);
+/** Startseite und Reiter: hier beginnt der Weg neu */
+const ROOTS: string[] = ['home', 'history', 'events', 'people'];
+/** Browser-Verlauf und Wischgeste hören hier mit (src/lib/backnav.ts) */
+const navEvent = (kind: 'push' | 'pop') => { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('oina:nav', { detail: kind })); };
+
 export type Screen = 'home' | 'history' | 'events' | 'people' | 'profile' | 'setup' | 'gamepage' | 'players' | 'game' | 'series' | 'tally';
 
 /** Filter und Vergleich auf der Profilseite */
@@ -121,12 +133,31 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   const modeOf = (key: string): EntryMode => prefs.getMode?.(key) ?? 'simple';
   let state = initial;
   const listeners = new Set<() => void>();
+  // ---------- Zurück: Seiten, von denen man gekommen ist (Zurück-Knopf, Wischgeste, Browser-Zurück)
+  let stack: View[] = [], restoring = false;
   const set = (patch: Partial<AppState>) => {
-    state = { ...state, ...patch }; listeners.forEach(l => l());
+    const before = state;
+    state = { ...state, ...patch };
+    if (!restoring && NAV_KEYS.some(k => k in patch)) track(before);
+    listeners.forEach(l => l());
     // Ansicht für ein Neuladen merken (nur in diesem Tab)
     if (patch.screen) { try { sessionStorage.setItem('pz:screen', patch.screen); } catch { /* egal */ } }
   };
   const get = () => state;
+  /** Neue Seite: die alte merken. Startseite, Reiter und Partie fangen von vorn an; zurück zur gemerkten Seite nimmt sie vom Stapel. */
+  function track(before: AppState) {
+    const was = sigOf(before), now = sigOf(state); if (was === now) return;
+    const root = state.screen === 'game' || (ROOTS.includes(state.screen) && !state.detail && !state.front && state.screen !== before.screen);
+    if (root) { stack = []; return; }
+    if (stack.length && sigOf(stack[stack.length - 1]) === now) { stack.pop(); navEvent('pop'); return; }
+    stack.push(viewOf(before)); if (stack.length > 40) stack.shift();
+    navEvent('push');
+  }
+  /** Gemerkte Seite gibt es noch (Partie läuft, Spieler, Serie, Strichliste, Partie im Verlauf nicht gelöscht) */
+  const usable = (v: View) => (v.screen !== 'game' || !!state.game)
+    && (!v.profile || [...state.players, ...state.formerPlayers].some(p => p.id === v.profile!.id))
+    && (!v.series || state.events.some(e => e.id === v.series!.id)) && (!v.tally || state.tallies.some(t => t.id === v.tally))
+    && (!v.detail || state.history.some(h => h.id === v.detail)) && (!v.editKey || state.templates.some(t => t.key === v.editKey));
   let toastN = 0;
   const toast = (text: string) => set({ toast: { text, n: ++toastN } });
   /** Otter-Spruch zu einem Moment; brav: die sachliche Meldung (oder nichts) */
@@ -205,6 +236,16 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
   };
 
   const actions = {
+    /** Eine Seite zurück, dorthin, woher man gekommen ist; sonst `fallback` (der feste Weg zurück) */
+    goBack(fallback?: () => void): boolean {
+      while (stack.length) {
+        const v = stack.pop()!; if (!usable(v)) continue;
+        restoring = true; set({ ...v, pad: false, sheet: null }); restoring = false;
+        navEvent('pop'); return true;
+      }
+      fallback?.(); return false;
+    },
+    canGoBack() { return stack.some(usable); },
     async init() {
       try {
         const [loaded, running, templates, hist0, ev0] = await Promise.all([repo.loadPlayers(), repo.loadRunningGames(), repo.loadTemplates(), repo.loadHistory(), repo.loadEvents()]);
@@ -274,6 +315,8 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
       const t = makeFreeTemplate(state.setup, clock);
       saveTemplate(t);
       actions.editTemplate(t);
+      // Der Editor des neuen Spiels ist erledigt: zurück führt dorthin, woher man ihn geöffnet hat
+      stack = stack.filter(v => !(v.screen === 'setup' && !v.editKey));
       toast('Gespeichert');
     },
     /** Änderungen am eigenen Spiel speichern; laufende und beendete Partien behalten ihre Regeln */
@@ -834,7 +877,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     setEntryMode(key: string, mode: EntryMode) {
       prefs.setMode?.(key, mode);
       set({ bidBar: null, sheet: null, pad: false, edit: null });
-      toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen pro Spieler');
+      toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen einzeln');
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
     next() {

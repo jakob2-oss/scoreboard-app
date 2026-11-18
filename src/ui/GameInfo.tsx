@@ -3,8 +3,8 @@ import { act, useApp } from '../store';
 import { gameDef } from '../game/games';
 import { GamePage } from './GamePage';
 import { GameRecords } from './Records';
-import { EndPicker } from './EndPicker';
-import type { End, Template } from '../model/types';
+import { PlayOptions } from './EndPicker';
+import type { End } from '../model/types';
 import { GAME_ART } from './art';
 
 /** Vorschlagswert für das Limit aus den bekannten Varianten des Spiels */
@@ -12,7 +12,6 @@ const limitOf = (opts: { end: End }[] | undefined, k: 'rounds' | 'target') => {
   const e = opts?.find(o => o.end.type === k)?.end;
   return e && 'value' in e ? e.value : undefined;
 };
-const endEditable = (t: Template) => (t.scoring === 'rounds' || t.scoring === 'rank') && !t.params?.phases && !t.params?.resultOnly;
 
 /** Spielseite eines festen Spiels: Szene, Regeln als Fließtext mit Beispiel, Optionen, Start */
 export function GameInfo() {
@@ -24,7 +23,7 @@ export function GameInfo() {
   const n = selected.filter(id => players.some(p => p.id === id)).length;
   const ready = n >= template.players.min && n <= template.players.max;
   return (
-    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goHome()} fav={{ on: favs.includes(template.key), toggle: () => a.toggleFav(template.key) }}
+    <GamePage id="s-gamepage" scene={art.scene} icon={art.icon} tint={def.tint} title={template.name} onBack={() => a.goBack(a.goHome)} fav={{ on: favs.includes(template.key), toggle: () => a.toggleFav(template.key) }}
       dock={ready
         ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
         : <button className="primary" id="to-players" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
@@ -41,8 +40,8 @@ export function GameInfo() {
           ))}
         </div>}
       </div>
-      {endEditable(template) && <EndPicker end={template.end} onChange={e => a.setTemplateEnd(e)} pointsOk={template.scoring !== 'rank'}
-        rounds={limitOf(def.endOptions, 'rounds')} points={limitOf(def.endOptions, 'target')} />}
+      <PlayOptions t={template} onEnd={e => a.setTemplateEnd(e)} onParam={(k, v) => a.setTemplateParam(k, v)}
+        rounds={limitOf(def.endOptions, 'rounds')} points={limitOf(def.endOptions, 'target') ?? 100} />
       {template.scoring === 'lives' && template.params?.swim !== false && <div className="field">
         <label>Schwimmen darf</label>
         <div className="seg">

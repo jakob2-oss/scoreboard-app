@@ -386,3 +386,18 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Knopfleiste mit Umschalter wieder in eine Zeile.
 - Siegerseite: ein noch sichtbarer Otter-Spruch der letzten Runde verschwindet beim Öffnen. Turnierbaum: zwei Runden
   passen nebeneinander auf den Bildschirm, ab drei Runden wird seitlich gewischt.
+- Spielende, Leben und Deckel gehören zur Partie, nicht zur Vorlage: einstellbar auf der Spielseite (feste und eigene
+  Spiele, nicht Wizard, Kniffel, Phase 10). Eigene Spiele merken sich den zuletzt gespielten Wert. Der Editor eigener
+  Spiele fragt nur noch Regeln ab und führt nach „Speichern“ auf die Spielseite. Die Regelkarte nennt diese Werte nicht.
+- Deckel-Spiele im Editor: „Phasen: Verteilen / Verteilen & zurück“ und „Verloren nach Durchgängen“ statt „Wenn die
+  Mitte leer ist“ und „Hälften“ (Schocken selbst behält die Hälfte). „Zählschritte“ heißen „Schnelltasten“.
+- Zurück merkt sich den Weg: jeder Zurück-Knopf, das Browser-Zurück und (als installierte App) eine Wischgeste vom
+  linken Rand führen zur Seite, von der man gekommen ist, z. B. vom Profil zurück in den Verlauf mit offener Partie.
+  Reiter, Startseite und Partie fangen den Weg neu an. Logik im Store (`goBack`), Verlauf und Geste in `src/lib/backnav.ts`.
+- Beenden-Fenster: „Partie verwerfen“ mit Nachfrage, wie im Menü. Eingabefeld für neue Spieler heißt „Neuer Spieler“.
+- Editor (eigenes Spiel, Schnelles Spiel): oben die Regelkarte wie auf der Spielseite, live aus den Einstellungen;
+  sie bleibt beim Scrollen stehen (auf kleinen Bildschirmen nicht).
+- Kniffel: offene Felder sind leer (ohne Punkt), gestrichene zeigen einen kräftigen Strich auf normalem Feld,
+  nicht mehr ausgegraut.
+- Skyjo steht nicht mehr zur Wahl (ein normaler Block reicht). Regeln und Bild bleiben im Code, damit alte Partien,
+  Statistik und eigene Kopien weiter funktionieren.

@@ -19,7 +19,7 @@ export function People() {
         <div className="gutter page-body">
           <h1 className="page-title">Spieler</h1>
           <form className="add-row people-add" onSubmit={e => { e.preventDefault(); act().addPlayer(name, false); setName(''); (document.activeElement as HTMLElement | null)?.blur(); }}>
-            <input id="people-name" value={name} onChange={e => setName(e.target.value)} placeholder="Neuer Name" autoComplete="off" maxLength={18} aria-label="Neuer Spielername" />
+            <input id="people-name" value={name} onChange={e => setName(e.target.value)} placeholder="Neuer Spieler" autoComplete="off" maxLength={18} aria-label="Neuer Spielername" />
             <button type="submit" id="people-add" disabled={!name.trim()}>Hinzufügen</button>
           </form>
           {!players.length && <div className="card empty"><p>Noch keine Spieler</p></div>}

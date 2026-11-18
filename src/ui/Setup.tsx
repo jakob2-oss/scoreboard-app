@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { act, useApp } from '../store';
-import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, stepsOf } from '../game/templates';
+import { MAX_KEYS, MAX_STEPS, STEP_CHOICES, TABLE_START, fallbackName, isTableKind, makeFreeTemplate, stepsOf, updateFreeTemplate } from '../game/templates';
 import type { End, Template } from '../model/types';
 import { GameRecords } from './Records';
 import { GamePage } from './GamePage';
 import { FREE_ICON, FREE_SCENE, LOOK_COLORS, LOOK_PATTERNS, ownArt, lookOf } from './art';
 import { names } from './Home';
 import { gameDef } from '../game/games';
+import { PlayOptions } from './EndPicker';
 
 export const FREE_TINT = '#e7e4f7';
+/** Uhr für die Vorschau der Regeln (nichts wird gespeichert) */
+const DRAFT_CLOCK = { uid: () => 'vorschau', now: () => new Date().toISOString() };
 
 const PATTERN_NAMES: Record<string, string> = {
   dots: 'Punkte', checker: 'Raster', waves: 'Wellen', stripes: 'Streifen', lozenge: 'Rauten', hex: 'Waben', rays: 'Strahlen', blocks: 'Blöcke'
@@ -18,14 +21,15 @@ const PATTERN_NAMES: Record<string, string> = {
 function pointsOf(t: Template): [string, string][] {
   // Kopie eines festen Spiels: dessen Regeln, dazu eigene Notizfelder
   // Tisch-Modus: Regeln aus den eigenen Phasen (auch bei Kopien von Schwimmen und Schocken)
-  if (t.scoring === 'lives') return [['Am Tisch', `${t.params?.lives ?? 3} Leben je Spieler`], ['Phasen', t.params?.swim === false ? 'ohne Leben ist man raus' : 'ohne Leben schwimmt man, danach raus'], ['Gewinner', 'wer als Letzter übrig bleibt']];
+  // Anzahl der Leben und Deckel sowie das Spielende stehen darunter zum Einstellen, nicht in den Regeln
+  if (t.scoring === 'lives') return [['Ohne Leben', t.params?.swim === false ? 'ist man raus' : 'schwimmt man, danach ist man raus'], ['Gewinner', 'wer als Letzter übrig bleibt']];
   if (t.scoring === 'tokens') {
     const h = t.params?.halves ?? 2;
-    if (t.params?.phase2 === 'return') return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Erste Phase', 'Verlierer nehmen Deckel aus der Mitte'],
-      ['Zweite Phase', 'Sieger spielen Deckel zurück in die Mitte, ohne Deckel ist man raus'],
-      ['Verlierer', `wer zuletzt Deckel hat${h > 1 ? `, verloren nach ${h} Hälften` : ''}`]];
-    return [['Am Tisch', `${t.params?.tokens ?? 13} Deckel in der Mitte`], ['Hälfte', 'verliert, wer alle Deckel hat'],
-      ['Verlierer', h === 1 ? 'wer die erste Hälfte verliert' : `wer ${h} Hälften verliert${h === 2 ? ', sonst entscheidet das Finale' : ''}`]];
+    if (t.params?.phase2 === 'return') return [['Verteilen', 'Verlierer nehmen Deckel aus der Mitte'],
+      ['Zurück', 'Sieger spielen Deckel zurück in die Mitte, ohne Deckel ist man raus'],
+      ...(h > 1 ? [['Durchgang', 'verliert, wer zuletzt noch Deckel hat'], ['Verlierer', `wer ${h} Durchgänge verliert`]] as [string, string][] : [['Verlierer', 'wer zuletzt noch Deckel hat']] as [string, string][])];
+    return [['Durchgang', 'verliert, wer alle Deckel hat'],
+      ['Verlierer', h === 1 ? 'wer den ersten Durchgang verliert' : `wer ${h} Durchgänge verliert${h === 2 ? ', sonst entscheidet das Finale' : ''}`]];
   }
   const base = t.params?.base ? gameDef(t.params.base) : undefined;
   if (base?.points) return [...base.points, ...(t.params?.notes?.length ? [['Notizfelder', names(t.params.notes)] as [string, string]] : [])];
@@ -35,11 +39,9 @@ function pointsOf(t: Template): [string, string][] {
     if (t.params.notes?.length) p.push(['Zusatzfelder', names(t.params.notes)]);
     return p;
   }
-  const end = t.end.type === 'target' ? `bei ${t.end.value} Punkten` : t.end.type === 'rounds' ? `nach ${t.end.value} Runden` : 'offen';
   const p: [string, string][] = [
     ['Gewinner', t.win === 'high' ? 'höchste Punktzahl' : 'niedrigste Punktzahl'],
-    ['Spielende', end],
-    ['Zählschritte', names(stepsOf(t).map(String))]
+    ['Schnelltasten', names(stepsOf(t).map(String))]
   ];
   if (t.scoring === 'rank') p.splice(0, 1, ['Wertung', 'Rang je Runde, Präsident bis Arschloch']);
 
@@ -55,7 +57,7 @@ function pointsOf(t: Template): [string, string][] {
  * (Ansicht mit Regeln, Bearbeiten, Löschen).
  */
 export function Setup() {
-  const { setup, editKey, templates, setupTemplate, selected, players, favs } = useApp();
+  const { setup, editKey, templates, setupTemplate, selected, players, favs, template } = useApp();
   const a = act();
   const own = editKey ? templates.find(t => t.key === editKey) : undefined;
   const editing = useApp().setupEditing, setEditing = (on: boolean) => act().setSetupEditing(on);
@@ -85,13 +87,14 @@ export function Setup() {
     const n = selected.filter(id => players.some(p => p.id === id)).length;
     const ready = n >= own.players.min && n <= own.players.max;
     return (
-      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goHome()} fav={{ on: favs.includes(own.key), toggle: () => a.toggleFav(own.key) }}
+      <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={own.name} onBack={() => a.goBack(a.goHome)} fav={{ on: favs.includes(own.key), toggle: () => a.toggleFav(own.key) }}
         dock={ready
           ? <><button className="secondary" onClick={() => a.toPlayers()}>Spieler</button><button className="primary" id="quick-start" onClick={() => a.start()}>Los mit {n} Spielern</button></>
           : <button className="primary" id="setup-next" onClick={() => a.toPlayers()}>Spieler wählen</button>}>
         <div className="rule-card" style={{ ['--acc' as string]: lookOf(own.key, own.params?.look).color }}>
           <ul className="rule-points">{pointsOf(own).map(([k, t]) => <li key={k}><b>{k}</b><span>{t}</span></li>)}</ul>
         </div>
+        {template && <PlayOptions t={template} onEnd={e => a.setTemplateEnd(e)} onParam={(k, v) => a.setTemplateParam(k, v)} />}
         <GameRecords tpl={own} />
         <div className="menu-list own-actions">
           <button id="tpl-edit" onClick={() => setEditing(true)}>Bearbeiten</button>
@@ -135,14 +138,19 @@ export function Setup() {
   const rank = !result && (setup.kind === 'rank' || tableKind);
   // Wertung nur bei normalen Rundenspielen umstellbar (Kopien von Wizard, Kniffel, Phase 10 bleiben, wie sie sind)
   const kindEditable = !own || (['rounds', 'rank', 'lives', 'tokens'].includes(own.scoring) && !own.params?.phases);
+  // Regelkarte wie auf der Spielseite, live aus den Einstellungen
+  const draft = own ? updateFreeTemplate(own, setup, DRAFT_CLOCK) : makeFreeTemplate(setup, DRAFT_CLOCK);
   const title = own ? own.name : setupTemplate ? (setup.name.trim() || 'Eigenes Spiel') : 'Schnelles Spiel';
   return (
-    <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? setEditing(false) : a.goHome())}
+    <GamePage id="s-setup" scene={scene} icon={icon} tint={tint} title={title} onBack={() => (own ? a.goBack(() => setEditing(false)) : a.goBack(a.goHome))}
       dock={<>
-        {own && <button className="secondary" id="setup-save" disabled={!valid} onClick={() => { a.saveSetupHome(); setEditing(false); }}>Speichern</button>}
-        {!own && setupTemplate && <button className="secondary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}
-        <button className="primary" id="setup-next" disabled={!valid || (setupTemplate && !own && !setup.name.trim())} onClick={() => { keepLook(); a.setupNext(); }}>Spieler wählen</button>
+        {own && <button className="primary" id="setup-save" disabled={!valid} onClick={() => { a.saveSetupHome(); setEditing(false); }}>Speichern</button>}
+        {!own && setupTemplate && <button className="primary" id="setup-save" disabled={!valid || !setup.name.trim()} onClick={() => { keepLook(); a.saveNewTemplate(); }}>Speichern</button>}
+        {!setupTemplate && <button className="primary" id="setup-next" disabled={!valid} onClick={() => a.setupNext()}>Spieler wählen</button>}
       </>}>
+        <div className="rule-card live" id="setup-rules" style={{ ['--acc' as string]: look.color }}>
+          <ul className="rule-points">{pointsOf(draft).map(([k, t]) => <li key={k}><b>{k}</b><span>{t}</span></li>)}</ul>
+        </div>
         <div className="setup-body">
           <div className="field">
             <label htmlFor="setup-name">Name</label>
@@ -196,7 +204,7 @@ export function Setup() {
               </div>}
             </div>
           )}
-          {tableKind && <div className="field">
+          {tableKind && !setupTemplate && <div className="field">
             <label htmlFor="table-start">{setup.kind === 'lives' ? 'Leben je Spieler' : 'Deckel in der Mitte'}</label>
             <input id="table-start" inputMode="numeric" pattern="[0-9]*" value={setup.start || TABLE_START[setup.kind as 'lives' | 'tokens']}
               onChange={e => a.updateSetup({ start: Math.min(99, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0) })} />
@@ -206,16 +214,16 @@ export function Setup() {
             <span className="t"><b>Schwimmen nach dem letzten Leben</b></span>
           </label>}
           {tableKind && setup.kind === 'tokens' && <div className="field">
-            <label>Wenn die Mitte leer ist</label>
+            <label>Phasen</label>
             <div className="seg">
-              <button id="phase2-pass" aria-pressed={setup.phase2 !== 'return'} onClick={() => a.updateSetup({ phase2: 'pass' })}>Weitergeben</button>
-              <button id="phase2-return" aria-pressed={setup.phase2 === 'return'} onClick={() => a.updateSetup({ phase2: 'return' })}>Zurück in die Mitte</button>
+              <button id="phase2-pass" aria-pressed={setup.phase2 !== 'return'} onClick={() => a.updateSetup({ phase2: 'pass' })}>Verteilen</button>
+              <button id="phase2-return" aria-pressed={setup.phase2 === 'return'} onClick={() => a.updateSetup({ phase2: 'return' })}>Verteilen & zurück</button>
             </div>
           </div>}
           {tableKind && setup.kind === 'tokens' && <div className="field">
-            <label>Verloren nach</label>
+            <label>Verloren nach Durchgängen</label>
             <div className="seg">
-              {[1, 2, 3].map(h => <button key={h} id={`phase-halves-${h}`} aria-pressed={setup.halves === h} onClick={() => a.updateSetup({ halves: h })}>{h === 1 ? 'Einer Hälfte' : `${h} Hälften`}</button>)}
+              {[1, 2, 3].map(h => <button key={h} id={`phase-halves-${h}`} aria-pressed={setup.halves === h} onClick={() => a.updateSetup({ halves: h })}>{h}</button>)}
             </div>
           </div>}
           {!(result && setup.unit === 'Platz') && !rank && <div className="field">
@@ -225,7 +233,7 @@ export function Setup() {
               <button aria-pressed={setup.win === 'low'} onClick={() => a.updateSetup({ win: 'low' })}>Niedrigste Punktzahl</button>
             </div>
           </div>}
-          {!result && !tableKind && <><div className="field">
+          {!result && !tableKind && <>{!setupTemplate && <div className="field">
             <label>Spielende</label>
             <div className="seg">
               <button aria-pressed={endKind === 'none'} onClick={() => setEnd('none')}>Offen</button>
@@ -236,16 +244,16 @@ export function Setup() {
               <input id="setup-end" inputMode="numeric" pattern="[0-9]*" aria-label={endKind === 'target' ? 'Zielpunkte' : 'Anzahl Runden'}
                 value={endValue || ''} onChange={e => setEnd(endKind, parseInt(e.target.value.replace(/\D/g, ''), 10) || 0)} />
             )}
-          </div>
+          </div>}
           {!rank && <div className="field">
-            <label>Zählschritte</label>
+            <label>Schnelltasten</label>
             <div className="chips step-chips">
               {[...new Set([...STEP_CHOICES, ...setup.steps])].sort((x, y) => x - y).map(n => (
                 <button key={n} className="chip" aria-pressed={setup.steps.includes(n)} onClick={() => toggleStep(n)}>{n}</button>
               ))}
             </div>
             <form className="add-row own-step" onSubmit={addOwn}>
-              <input id="own-step" inputMode="numeric" pattern="[0-9]*" placeholder="Eigener Wert" aria-label="Eigener Zählschritt"
+              <input id="own-step" inputMode="numeric" pattern="[0-9]*" placeholder="Eigener Wert" aria-label="Eigene Schnelltaste"
                 value={ownStep} onChange={e => setOwnStep(e.target.value.replace(/\D/g, '').slice(0, 4))} />
               <button type="submit" disabled={!ownStep || setup.steps.length >= MAX_STEPS}>Hinzufügen</button>
             </form>
