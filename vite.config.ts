@@ -2,18 +2,22 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// GitHub Pages liefert die App unter /scoreboard-app/ aus.
-const base = '/scoreboard-app/';
+// GitHub Pages liefert die App unter /scoreboard-app/ aus. Die iPhone-App (`--mode app`) lädt aus dem App-Paket:
+// relative Pfade, kein Service Worker, eigener Ausgabeordner für Capacitor.
 
 import pkg from './package.json' with { type: 'json' };
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const app = mode === 'app', base = app ? './' : '/scoreboard-app/';
+  return {
   base,
+  build: { outDir: app ? 'dist-app' : 'dist' },
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      disable: app,
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Oina no?',
@@ -33,15 +37,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Schriften von Google Fonts nach dem ersten Laden offline verfügbar halten
-        runtimeCaching: [{
-          urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
-          handler: 'CacheFirst',
-          options: { cacheName: 'fonts', expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } }
-        }]
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}']
       }
     })
   ],
   test: { environment: 'node' }
+  };
 });

@@ -5,6 +5,11 @@ import { appRepo } from './db';
 import { createStore, setAppStore } from './store';
 import { applyStoredTheme } from './useTheme';
 import { registerSW } from 'virtual:pwa-register';
+// Schrift Jost liegt in der App (kein Google Fonts: offline und ohne Verbindung zu Dritten)
+import '@fontsource/jost/latin-400.css';
+import '@fontsource/jost/latin-500.css';
+import '@fontsource/jost/latin-600.css';
+import '@fontsource/jost/latin-700.css';
 import './styles/tokens.css';
 import './styles/proto.css';
 import './styles/app.css';

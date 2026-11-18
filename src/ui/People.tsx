@@ -1,3 +1,4 @@
+import { shareFile } from '../lib/native';
 import { useRef, useState } from 'react';
 import { act, useApp } from '../store';
 import { dateLong } from './lookup';
@@ -51,10 +52,8 @@ function Backup() {
   const save = async () => {
     const text = await act().exportData();
     const name = `oina-no-${new Date().toISOString().slice(0, 10)}.json`;
-    const f = new File([text], name, { type: 'application/json' });
     try {
-      if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: 'Oina no?' });
-      else { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+      await shareFile(new Blob([text], { type: 'application/json' }), name, 'Oina no?');
       const t = new Date().toISOString();
       try { localStorage.setItem(LAST, t); } catch { /* egal */ }
       setLast(t);

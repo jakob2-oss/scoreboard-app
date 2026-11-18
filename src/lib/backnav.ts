@@ -1,10 +1,11 @@
 /**
  * Zurück wie in einer App: der Browser-Verlauf (Zurück-Taste, Wischen in Safari) und, als installierte App
- * auf dem iPhone, eine Wischgeste vom linken Rand führen zur Seite, von der man gekommen ist.
+ * auf dem iPhone und als App aus dem App Store, eine Wischgeste vom linken Rand führen zur Seite, von der man gekommen ist.
  */
 import { act } from '../store';
+import { isNative } from './native';
 
-const standalone = () => window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+const standalone = () => isNative() || window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 export function setupBackNav(): () => void {
   // Browser-Verlauf: jede gemerkte Seite bekommt einen Eintrag; Zurück im Browser nimmt sie wieder vom Stapel
