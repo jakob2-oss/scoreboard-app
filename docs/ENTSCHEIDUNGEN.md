@@ -399,3 +399,5 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   sie bleibt beim Scrollen stehen (auf kleinen Bildschirmen nicht).
 - Kniffel: offene Felder sind leer (ohne Punkt), gestrichene zeigen einen kräftigen Strich auf normalem Feld,
   nicht mehr ausgegraut.
+- Skyjo steht nicht mehr zur Wahl (ein normaler Block reicht). Regeln und Bild bleiben im Code, damit alte Partien,
+  Statistik und eigene Kopien weiter funktionieren.

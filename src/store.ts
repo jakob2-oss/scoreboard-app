@@ -877,7 +877,7 @@ export function createStore(repo: Repo, clock: Clock = realClock, prefs: Prefs =
     setEntryMode(key: string, mode: EntryMode) {
       prefs.setMode?.(key, mode);
       set({ bidBar: null, sheet: null, pad: false, edit: null });
-      toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen pro Spieler');
+      toast(mode === 'block' ? 'Eintragen im Block' : 'Eintragen einzeln');
     },
     /** Weiter: nächster Spieler derselben Runde, nach dem letzten zurück zum Überblick. */
     next() {

@@ -186,8 +186,9 @@ GAMES.push({
 /** Spielarten für die Startseite, in dieser Reihenfolge */
 export type Family = 'karten' | 'wuerfel' | 'brett';
 export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label: 'Kartenspiele' }, { id: 'wuerfel', label: 'Würfelspiele' }, { id: 'brett', label: 'Brett- und Legespiele' }];
+// Skyjo steht nicht mehr zur Wahl (ein normaler Block reicht); die Regeln bleiben für alte Partien und Kopien
 const FAMILY: Record<string, Family> = {
-  wizard: 'karten', romme: 'karten', skyjo: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
+  wizard: 'karten', romme: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
   arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', chic: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];

@@ -25,7 +25,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.evaluate(() => localStorage.setItem('pz:quip', 'brav'));
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('20 Einträge (17 Spiele, Schnelles Spiel, Erstellen, Neue Strichliste), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 20 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('19 Einträge (16 Spiele, Schnelles Spiel, Erstellen, Neue Strichliste), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('#new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
@@ -244,7 +244,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   check('Rommé: über das Menü zurück im Block', (await raw('#mode-switch')) === 'Einzeln');
   await p.click('#s-game .text-btn'); await p.click('.bsheet .primary'); await p.waitForTimeout(300);
   check('festes Spiel erzeugt keine eigene Vorlage', (await p.locator('#my-games .row[data-own]').count()) === 2);
-  await p.click('[data-game="skyjo"]'); await shot('10-skyjo'); await p.click('.tpl-back');
+  check('Skyjo steht nicht mehr zur Wahl', (await p.locator('[data-game="skyjo"]').count()) === 0);
 
   // Wizard im Block: Ansagen unten in der Leiste, Stiche auf eigenem Blatt; einfache Eingabe im Menü
   await p.click('[data-game="wizard"]'); await shot('11-wizard'); await p.click('#quick-start');
@@ -352,15 +352,11 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#pad [aria-label="Ziffernblock schließen"]');
   await p.click('#mode-switch'); await p.waitForTimeout(400);
   check('Phase 10: Haken auch auf der Spielerseite', (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed')) === 'true');
-  // Mehrere Partien gleichzeitig: Phase 10 parken, Skyjo starten, zurück zu Phase 10
-  await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="skyjo"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
-  check('zweite Partie startet ohne Nachfrage', (await raw('.top h2, .top b')).includes('Skyjo') || (await raw('#s-game')).includes('Skyjo'));
-  await p.click('#round-go'); await p.waitForTimeout(200);
-  check('Skyjo: zuerst „Wer hat beendet?“', await p.isVisible('#ender'));
-  await p.click('#ender .rank-row >> text=Ben'); await p.waitForTimeout(200);
-  for (const v of ['+5', '+10', '+1']) { await p.click(`#pad .pad-quick >> text="${v}"`); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150); }
-  check('Skyjo: Ben beendet, nicht niedrigster: doppelt, Krone für Anna', (await text('tbody tr:nth-child(1)')).replace(/\s/g, '') === '15×2201' && (await p.locator('td.cell.won').count()) === 1);
-  await shot('35a-skyjo');
+  // Mehrere Partien gleichzeitig: Phase 10 parken, Uno starten, zurück zu Phase 10
+  await p.click('#s-game [aria-label="Zum Start"]'); await p.click('[data-game="uno"]'); await p.click('#quick-start'); await p.waitForTimeout(300);
+  check('zweite Partie startet ohne Nachfrage', (await raw('#s-game')).includes('Uno'));
+  await p.click('tbody tr:nth-child(1) td.cell >> nth=0'); await p.waitForTimeout(150); await p.click('#pad .key >> text="7"'); await p.click('#pad .pad-actions .primary'); await p.waitForTimeout(150);
+  await shot('35a-uno');
   await p.click('#s-game [aria-label="Zum Start"]'); await p.waitForTimeout(200);
   check('zwei laufende Partien auf der Startseite', (await p.locator('.resume').count()) === 2 && (await raw('#s-home')).includes('Laufende Partien'));
   await shot('35b-two-running');
@@ -369,7 +365,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('.resume >> text=Phase 10'); await p.waitForTimeout(300);
   check('Phase 10 fortgesetzt mit Haken', (await raw('#s-game')).includes('Phase 10') && (await p.getAttribute('section[aria-label="Anna"] #phase-toggle', 'aria-pressed').catch(() => null)) !== null);
   await p.click('#s-game [aria-label="Menü"]'); await p.click('.menu-list .warn'); await p.click('.confirm-row .yes'); await p.waitForTimeout(300);
-  check('verwerfen betrifft nur die geöffnete Partie', (await p.locator('.resume').count()) === 1 && (await text('.resume')).includes('Skyjo'));
+  check('verwerfen betrifft nur die geöffnete Partie', (await p.locator('.resume').count()) === 1 && (await text('.resume')).includes('Uno'));
   await p.click('.resume'); await p.click('#s-game .text-btn'); await p.waitForTimeout(200); await p.locator('#v-discard').scrollIntoViewIfNeeded(); await shot('35c0-result'); await p.click('#v-discard');
   check('Beenden: Verwerfen fragt nach', await p.isVisible('#v-discard-yes'));
   await shot('35c-result-discard');
@@ -713,16 +709,16 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await shot('45b-search');
   await p.fill('#game-search', '');
   // Festes Spiel als eigenes Spiel anpassen
-  await p.click('[data-game="skyjo"]'); await p.click('#customize'); await p.waitForTimeout(200);
-  check('Anpassen öffnet die Bearbeitung der Kopie', (await p.inputValue('#setup-name')) === 'Skyjo eigen' && (await text('.toast')) === 'Als eigenes Spiel gespeichert');
-  await p.fill('#setup-name', 'Skyjo Hausregel'); await p.click('#setup-save'); await p.waitForTimeout(200);
-  check('Kopie behält Bild und Regeln des Originals', (await text('#s-setup .rule-points')).includes('Kartenwerte'));
+  await p.click('[data-game="romme"]'); await p.click('#customize'); await p.waitForTimeout(200);
+  check('Anpassen öffnet die Bearbeitung der Kopie', (await p.inputValue('#setup-name')) === 'Rommé eigen' && (await text('.toast')) === 'Als eigenes Spiel gespeichert');
+  await p.fill('#setup-name', 'Rommé Hausregel'); await p.click('#setup-save'); await p.waitForTimeout(200);
+  check('Kopie behält Bild und Regeln des Originals', (await text('#s-setup .rule-points')).includes('Handkarten'));
   await shot('45c-copy');
   await p.click('#s-setup [aria-label="Zurück"]'); await p.waitForTimeout(150);
   check('zurück zur Seite des Originals', await p.isVisible('#s-gamepage'));
   await p.click('#s-gamepage [aria-label="Zurück"]'); await p.waitForTimeout(150);
-  check('Kopie steht bei den Kartenspielen, Original unverändert', (await raw('#grp-karten + .list')).includes('Skyjo Hausregel') && (await raw('[data-game="skyjo"]')).includes('Skyjo'));
-  await p.click('.row[data-own] >> text=Skyjo Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+  check('Kopie steht bei den Kartenspielen, Original unverändert', (await raw('#grp-karten + .list')).includes('Rommé Hausregel') && (await raw('[data-game="romme"]')).includes('Rommé'));
+  await p.click('.row[data-own] >> text=Rommé Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
 
   // Eigene Endwertung erstellen
   await p.click('#new-own'); await p.click('#mode-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');

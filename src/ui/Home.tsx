@@ -28,7 +28,7 @@ export function Home() {
   const norm = (x: string) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const hit = (name: string) => norm(name).includes(norm(q.trim()));
   // Favoriten oben, dann nach Spielart; eigene Spiele ohne Spielart in „Eigene Spiele“
-  const favGames = GAMES.filter(d => favs.includes(d.template.key)), favOwn = templates.filter(t => favs.includes(t.key));
+  const favGames = GAMES.filter(d => d.family && favs.includes(d.template.key)), favOwn = templates.filter(t => favs.includes(t.key));
   const ownOther = templates.filter(t => !familyOf(t));
   const [closed, setClosed] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('pz:closed') || '[]'); } catch { return []; } });
   const isOpen = (id: string) => !closed.includes(id);
