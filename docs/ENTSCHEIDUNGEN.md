@@ -401,3 +401,10 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   nicht mehr ausgegraut.
 - Skyjo steht nicht mehr zur Wahl (ein normaler Block reicht). Regeln und Bild bleiben im Code, damit alte Partien,
   Statistik und eigene Kopien weiter funktionieren.
+- App Store über Capacitor (iOS-Projekt unter `ios/`, nur iPhone, Bundle-ID `de.oinano.app`). Gebaut, signiert und
+  hochgeladen wird über GitHub Actions auf einem Mac-Runner mit App-Store-Connect-API-Schlüssel (Secrets), ohne eigenen Mac.
+  Details und Jakobs Schritte in `docs/APPSTORE.md`.
+- Schrift Jost liegt im Build (@fontsource), nicht mehr bei Google Fonts: offline sicher und ohne Verbindung zu Dritten,
+  Voraussetzung für „Keine Daten erhoben“.
+- Datenschutz- und Hilfeseite als statische Seiten auf GitHub Pages (`public/datenschutz.html`, `public/hilfe.html`),
+  Kontakt über GitHub-Projektseite und „Feedback geben“, keine persönlichen Daten im öffentlichen Repo.

@@ -1,6 +1,6 @@
 # Status
 
-Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 18.11.2026 (Spielende je Partie, Zurück mit Gedächtnis, Verwerfen beim Beenden, Live-Regelkarte im Editor, Kniffel-Striche; als Nächstes App-Store-Vorbereitung)
+Wird am Ende jeder Arbeitseinheit aktualisiert. Stand: 18.11.2026 (Version 0.10.0 live; App Store vorbereitet, es fehlen nur Jakobs Schritte mit Apple-Account, siehe docs/APPSTORE.md)
 
 ## Fertig
 - **Phase 1:** Grundgerüst, PWA, Deployment auf GitHub Pages (PR #1)
