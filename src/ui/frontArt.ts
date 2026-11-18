@@ -1,6 +1,9 @@
 // Titelseite als SVG (405 × 720, Hochformat 9:16): dieselbe Zeichnung für die Anzeige und das geteilte Bild.
 // Drei Seiten: Zeitung (Klatschblatt), Sport (Tabelle) und Poster. Flach, ohne Konturen.
 import type { FrontPage } from '../game/frontpage';
+import jost400 from '@fontsource/jost/files/jost-latin-400-normal.woff2?url';
+import jost600 from '@fontsource/jost/files/jost-latin-600-normal.woff2?url';
+import jost700 from '@fontsource/jost/files/jost-latin-700-normal.woff2?url';
 import { onColor } from '../lib/color';
 import { otter } from './trophy';
 
@@ -177,15 +180,13 @@ export function frontSvg(fp: FrontPage, v: FrontVariant, o: FrontLook): string {
 // ---------------------------------------------------------------- Als Bild teilen
 
 let fontCss: Promise<string> | null = null;
-/** Jost als eingebettete Schrift, damit das Bild auch ohne Netz-Schrift gleich aussieht (sonst Futura) */
+const FONT_FILES: [number, string][] = [[400, jost400], [600, jost600], [700, jost700]];
+/** Jost als eingebettete Schrift, damit das Bild genauso aussieht wie die App */
 function embeddedFont(): Promise<string> {
   fontCss ??= (async () => {
     try {
-      const css = await (await fetch('https://fonts.googleapis.com/css2?family=Jost:wght@400;600;700&display=swap')).text();
-      const blocks = css.split('@font-face').slice(1).filter(x => /U\+0000-00FF/.test(x));
       const out: string[] = [];
-      for (const bl of blocks) {
-        const url = /url\((https:[^)]+)\)/.exec(bl)?.[1], weight = /font-weight:\s*(\d+)/.exec(bl)?.[1]; if (!url || !weight) continue;
+      for (const [weight, url] of FONT_FILES) {
         const buf = new Uint8Array(await (await fetch(url)).arrayBuffer());
         let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
         out.push(`@font-face{font-family:Jost;font-weight:${weight};src:url(data:font/woff2;base64,${btoa(bin)}) format('woff2')}`);

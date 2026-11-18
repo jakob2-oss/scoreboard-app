@@ -1,3 +1,4 @@
+import { shareText } from '../lib/native';
 import { heroSvg } from '../components/heroSvg';
 import { LiveSeries } from './Events';
 import { TallyRows } from './Tally';
@@ -145,8 +146,7 @@ function Feedback() {
   const send = async () => {
     const body = `${text.trim()}\n\nOina no? ${__APP_VERSION__}\n${navigator.userAgent}`;
     try {
-      if (navigator.share) await navigator.share({ title: 'Feedback zu Oina no?', text: body });
-      else { await navigator.clipboard.writeText(body); act().notify('Text kopiert'); }
+      if (!(await shareText(body, 'Feedback zu Oina no?'))) { await navigator.clipboard.writeText(body); act().notify('Text kopiert'); }
       setText(''); setOpen(false);
     } catch { /* Teilen abgebrochen */ }
   };

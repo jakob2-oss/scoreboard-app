@@ -8,7 +8,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
 (async () => {
   const b = await chromium.launch();
-  const c = await b.newContext({ ...devices['iPhone 13'] }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
+  // STORE=1: Bildschirmgröße für App-Store-Bilder (6,9 Zoll, 1320 × 2868)
+  const dev = process.env.STORE ? { ...devices['iPhone 13'], viewport: { width: 440, height: 956 }, screen: { width: 440, height: 956 }, deviceScaleFactor: 3 } : devices['iPhone 13'];
+  const c = await b.newContext({ ...dev }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await c.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
@@ -17,7 +19,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const text = async sel => (await p.innerText(sel)).replace(/\s+/g, ' ').trim();
   const raw = async sel => (await p.textContent(sel)).replace(/\s+/g, ' ').trim();
   const page = () => p.evaluate(() => [...document.querySelectorAll('.pp-tab')].findIndex(t => t.getAttribute('aria-current') === 'true') - 1);
-  const shot = async n => { if (SHOTS) await p.screenshot({ path: `${SHOTS}/${n}.png` }); };
+  const shot = async n => {
+    if (!SHOTS) return;
+    // Store-Bilder: ohne Meldungen, Animationen fertig
+    if (process.env.STORE) { await p.addStyleTag({ content: '.toast{display:none!important}' }); await p.waitForTimeout(700); }
+    await p.screenshot({ path: `${SHOTS}/${n}.png` });
+  };
   const typeNum = async n => { for (const d of String(n)) await p.click(`.pp-keys .key >> text="${d}"`); };
 
   await p.goto(URL); await p.waitForSelector('.wordmark');

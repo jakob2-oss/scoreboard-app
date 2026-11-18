@@ -4,6 +4,7 @@ import { evenings, frontPage, type FrontPage as FP } from '../game/frontpage';
 import { quipLevel } from '../lib/modes';
 import { frontPng, frontSvg, type FrontLook, type FrontVariant } from './frontArt';
 import { IconClose } from './icons';
+import { shareFile } from '../lib/native';
 import { dateShort } from './lookup';
 
 /** Namen und Farben aller Spieler, auch gelöschter */
@@ -33,10 +34,7 @@ export function FrontView() {
   const share = async () => {
     setBusy(true);
     try {
-      const blob = await frontPng(svg), file = new File([blob], `oina-no-${fp.day}.png`, { type: 'image/png' });
-      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [file] })) await nav.share({ files: [file], title: plain(fp.lead.headline) });
-      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+      await shareFile(await frontPng(svg), `oina-no-${fp.day}.png`, plain(fp.lead.headline));
     } catch { /* abgebrochen */ } finally { setBusy(false); }
   };
   return (
