@@ -113,6 +113,17 @@ GAMES.push(
     acc: '#3fb39b', tint: '#dff1ee', text: '', example: [['3×', 'Vierer'], ['12', 'Punkte'], ['+35', 'ab 63 oben']]
   },
   {
+    // Qwixx: jeder kreuzt auf dem eigenen Zettel, am Ende werden nur die Kreuze je Reihe und die Fehlwürfe eingetragen
+    template: { key: 'qwixx', version: 1, name: 'Qwixx', scoring: 'rounds', win: 'high', end: { type: 'rounds', value: 1 }, players: { min: 1, max: 8 },
+      params: { resultOnly: true, unit: 'Punkte', sheet: [
+        { key: 'rot', label: 'Rot', color: '#ef7a5c', max: 12 }, { key: 'gelb', label: 'Gelb', color: '#f0b13e', max: 12 },
+        { key: 'gruen', label: 'Grün', color: '#5fbf8f', max: 12 }, { key: 'blau', label: 'Blau', color: '#6ea3e0', max: 12 },
+        { key: 'fehl', label: 'Fehlwürfe', color: '#8f8aa8', max: 4, per: -5 }] } },
+    points: [['Kreuze', 'zählen je Farbe gestaffelt: 1, 3, 6, 10 und so weiter, zwölf Kreuze bringen 78'], ['Schloss', 'zählt als Kreuz und geht erst ab fünf Kreuzen in der Reihe'],
+      ['Fehlwurf', 'kostet 5 Punkte'], ['Ende', 'beim vierten Fehlwurf oder sobald zwei Reihen geschlossen sind'], ['Sieger', 'die meisten Punkte']],
+    acc: '#ef7a5c', tint: '#fde4d6', text: '', example: [['7', 'Kreuze in Grün'], ['28', 'Punkte']]
+  },
+  {
     template: { key: 'phase10', version: 1, name: 'Phase 10', scoring: 'rounds', win: 'low', end: { type: 'none' }, players: { min: 2, max: 6 },
       params: { phases: true, block: true, quick: [setTo('Raus', 0), add('+5', 5), add('+10', 10), add('+15', 15), add('+25', 25)] } },
     points: [['Je Runde', 'eigene Phase auslegen und abhaken'], ['Handkarten', '1 bis 9 zählen 5, 10 bis 12 zählen 10, Aussetzen 15, Joker 25'], ['Sieger', 'wer zuerst Phase 10 schafft']],
@@ -189,7 +200,7 @@ export const FAMILIES: { id: Family; label: string }[] = [{ id: 'karten', label:
 // Skyjo steht nicht mehr zur Wahl (ein normaler Block reicht); die Regeln bleiben für alte Partien und Kopien
 const FAMILY: Record<string, Family> = {
   wizard: 'karten', romme: 'karten', uno: 'karten', phase10: 'karten', schafkopf: 'karten', doppelkopf: 'karten', binokel: 'karten',
-  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', schocken: 'wuerfel', chic: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
+  arschloch: 'karten', schwimmen: 'karten', skat: 'karten', kniffel: 'wuerfel', qwixx: 'wuerfel', schocken: 'wuerfel', chic: 'wuerfel', scrabble: 'brett', siedler: 'brett', monopoly: 'brett'
 };
 for (const d of GAMES) d.family = FAMILY[d.template.key];
 // Geber anzeigen (Wizard zeigt ihn immer)

@@ -1,4 +1,4 @@
-import type { Category, Entry, Game, Player, Round, SplitField, Template } from '../model/types';
+import type { Category, Entry, Game, Player, Round, SheetRow, SplitField, Template } from '../model/types';
 import type { Clock } from '../lib/id';
 import { wizardOrder, wizardRounds, wizardScore } from '../rules/wizard';
 
@@ -323,6 +323,10 @@ export const unitOf = (s: GameState) => s.game.rules.params?.unit || 'Punkte';
 /** Feldname einer zweiteiligen Runde: Wizard 'bid' und 'tricks', sonst aus der Vorlage (z. B. Binokel 'meld', 'play') */
 export type BidField = string;
 export const isBids = (s: GameState) => s.game.rules.scoring === 'bids';
+/** Wertungszettel mit Kreuzen (Qwixx) */
+export const sheetOf = (s: GameState): SheetRow[] | null => s.game.rules.params?.sheet ?? null;
+/** Punkte einer Reihe: n Kreuze ergeben 1 + 2 + … + n, Reihen mit festem Wert je Kreuz entsprechend (Fehlwurf: −5 je Kreuz) */
+export const sheetPoints = (row: SheetRow, n: number) => (row.per !== undefined ? row.per * n : (n * (n + 1)) / 2);
 /** Spiel mit eigens gestalteter Eingabe im Block (Wizard, Rommé …); die Einzelseiten bleiben wählbar */
 export const blockEntry = (s: GameState) => isBids(s) || !!s.game.rules.params?.block;
 /** Rommé: Rundensieg ist eine 0 */
@@ -378,6 +382,11 @@ export function scoreOf(s: GameState, roundId: string, playerId: string): number
   if (isBids(s)) {
     const b = fieldOf(s, roundId, playerId, 'bid'), t = fieldOf(s, roundId, playerId, 'tricks');
     return b !== null && t !== null ? wizardScore(b, t) : null;
+  }
+  const sh = sheetOf(s);
+  if (sh) {
+    const ns = sh.map(r => fieldOf(s, roundId, playerId, r.key));
+    return ns.every(n => n === null) ? null : sh.reduce((a, r, i) => a + sheetPoints(r, ns[i] ?? 0), 0);
   }
   const sp = fieldsOf(s);
   if (sp) {

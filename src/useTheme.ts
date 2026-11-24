@@ -1,8 +1,11 @@
 import { useSyncExternalStore } from 'react';
+import { nativeStatusBar } from './lib/native';
 
 type Theme = 'light' | 'dark';
 const KEY = 'pz:theme';
 const listeners = new Set<() => void>();
+// iPhone-App: Statusleiste folgt dem Design
+listeners.add(() => nativeStatusBar(current() === 'dark'));
 
 function stored(): Theme | null {
   try { const v = localStorage.getItem(KEY); return v === 'light' || v === 'dark' ? v : null; } catch { return null; }
@@ -16,6 +19,7 @@ function current(): Theme {
 export function applyStoredTheme() {
   const t = stored(); if (t) document.documentElement.dataset.theme = t;
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => listeners.forEach(l => l()));
+  nativeStatusBar(current() === 'dark');
 }
 export function toggleTheme() {
   const next: Theme = current() === 'dark' ? 'light' : 'dark';

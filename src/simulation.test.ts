@@ -11,7 +11,7 @@ import type { Player, Result, Template } from './model/types';
 import {
   catChoices, endState, fieldOf, fieldsOf, hasPhases, inputOrder, isBids, isCats, isRanks, isResultOnly, isSplit, liveRounds,
   ranking, rankIn, roundFull, roundNumber, scoreOf, seated, totals, type GameState,
-  isTable, isLives, lifeState, tokenState
+  isTable, isLives, lifeState, tokenState, sheetOf
 } from './game/engine';
 import { GAMES } from './game/games';
 import { highlights } from './game/highlights';
@@ -119,6 +119,8 @@ function playOut(st: Store, r: () => number, maxRounds: number): GameState {
       if (i === n - 1) a.rest(); else a.setValue(pickOf([-30, -20, -10, 10, 20, 30]));
       a.next(); continue;
     }
+    // Qwixx: Kreuze je Reihe und Fehlwürfe, dann der Nächste
+    if (sheetOf(g)) { for (const row of sheetOf(g)!) a.setSheet(row.key, Math.floor(r() * (row.max + 1))); a.sheetNext(); continue; }
     if (isResultOnly(g)) { a.setValue(g.game.rules.params?.unit === 'Platz' ? 1 + Math.floor(r() * n) : Math.floor(r() * 12)); a.next(); continue; }
     if (g.game.rules.params?.winnerOnly) { a.setValue(5 + Math.floor(r() * 150)); a.next(); continue; }
     a.setValue(g.game.rules.win === 'low' ? Math.floor(r() * 60) : Math.floor(r() * 80)); a.next();

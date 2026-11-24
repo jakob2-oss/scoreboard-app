@@ -425,3 +425,22 @@ describe('Tisch-Modus', () => {
     expect(dealerOf(createGame(gameDef('wizard')!.template, players('A', 'B', 'C'), c))?.name).toBe('A');
   });
 });
+
+describe('Qwixx', () => {
+  const start = () => { const c = testClock(); return { c, s: createGame(gameDef('qwixx')!.template, players('Laura', 'Max'), c) }; };
+  it('Beispiel aus der Anleitung: 4, 3, 7 und 8 Kreuze, zwei Fehlwürfe ergeben 70', () => {
+    let { s, c } = start(); const r = liveRounds(s)[0].id;
+    for (const [k, v] of [['rot', 4], ['gelb', 3], ['gruen', 7], ['blau', 8], ['fehl', 2]] as const) s = setField(s, r, 'p0', k, v, c);
+    expect(scoreOf(s, r, 'p0')).toBe(70);
+    expect(scoreOf(s, r, 'p1')).toBeNull();
+    expect(roundFull(s, r)).toBe(false);
+  });
+  it('gestaffelte Punkte bis 78, Fehlwürfe ziehen ab, ohne Kreuze zählt 0', () => {
+    let { s, c } = start(); const r = liveRounds(s)[0].id;
+    s = setField(s, r, 'p0', 'rot', 12, c); s = setField(s, r, 'p1', 'fehl', 4, c);
+    expect(scoreOf(s, r, 'p0')).toBe(78);
+    expect(scoreOf(s, r, 'p1')).toBe(-20);
+    expect(roundFull(s, r)).toBe(true);
+    expect(ranking(s)[0].player.name).toBe('Laura');
+  });
+});

@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { act, useApp, type Edit } from '../store';
 import {
-  anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
+  anyScore, hasPhases, isCats, phaseIn, phasesDone, upperSum, roundFull, canAddRound, bidPhase, isResultOnly, sheetOf, sheetPoints, unitOf, fieldOf, inputOrder, isBids, defaultRef, endState, liveRounds, nextStep, ranking, roundNumber, scoreOf, seated, totals,
   currentRoundIndex, bidTurn, roundLow, isDoubled, SKAT_GAMES, skatValue, schafkopfValue, bockLeft, blockEntry, zeroWins, runningTotals, phaseAt, lowerSum, gebotOf, outOf, dealerOf, isTable, isRanks, rankIn, roleOf, fieldsOf, fieldLabel, isSplit, catChoices, notesOf, noteKey, isNoteField, type GameState, type RoundRef
 } from '../game/engine';
 import { fmt, onColor } from '../lib/color';
@@ -127,6 +127,7 @@ export function GameScreen() {
       {s.sheet === 'winner' && s.rankRef && <WinnerSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'tokens' && s.tokenTo && <TokenSheet key={s.tokenTo} g={g} to={s.tokenTo} />}
       {s.sheet === 'catpick' && s.edit && <CatPickSheet g={g} edit={s.edit} />}
+      {s.sheet === 'xsheet' && s.edit && <XSheet g={g} edit={s.edit} />}
       {s.sheet === 'bidder' && s.rankRef && <BidderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'ender' && s.rankRef && <EnderSheet g={g} roundRef={s.rankRef} />}
       {s.sheet === 'deal' && s.rankRef && <DealSheet g={g} roundRef={s.rankRef} />}
@@ -635,6 +636,50 @@ function BonusMark({ g, pid }: { g: GameState; pid: string }) {
       <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r={R} className="pie-bg" />{f > 0 && <path d={d} className="pie" />}</svg>
       {b.at - u.sum}
     </span>
+  );
+}
+
+/** Qwixx: Kreuze je Farbe und Fehlwürfe zählen, Punkte rechnet die App */
+function XSheet({ g, edit }: { g: GameState; edit: Edit }) {
+  const rows = sheetOf(g) ?? [], players = seated(g), p = players.find(x => x.id === edit.playerId)!, ref = edit.ref as string;
+  const total = scoreOf(g, ref, p.id);
+  const next = [...players.slice(players.indexOf(p) + 1), ...players.slice(0, players.indexOf(p))].find(x => scoreOf(g, ref, x.id) === null);
+  const a = act();
+  return (
+    <>
+      <div className="scrim" onClick={() => a.closeSheet()} />
+      <div className="bsheet" id="xsheet" role="dialog" aria-label={`${p.name}: Qwixx`}>
+        <div className="grab" />
+        <div className="sheet-body">
+          <div className="pad-head">
+            <span className="dot" style={{ ['--c' as string]: p.color, width: 14, height: 14 }} />
+            <div className="who"><b>{p.name}</b></div>
+            <div className="pad-display"><span className={'val' + (total === null ? ' ph' : '')}>{fmt(total ?? 0)}</span></div>
+            <button className="icon-btn" onClick={() => a.closeSheet()} aria-label="Schließen"><IconClose /></button>
+          </div>
+          <div className="xs-head" aria-hidden="true"><span /><span>Kreuze</span><span>Punkte</span></div>
+          <div className="xs-rows">
+            {rows.map(row => {
+              const n = fieldOf(g, ref, p.id, row.key) ?? 0;
+              return (
+                <div key={row.key} className="xs-row" data-row={row.key} style={css({ '--c': row.color })}>
+                  <span className="xs-lbl">{row.label}</span>
+                  <div className="xs-step">
+                    <button className="pt-btn" aria-label={`${row.label} weniger`} disabled={n <= 0} onClick={() => a.setSheet(row.key, n - 1)}>−</button>
+                    <b className="xs-n">{n}</b>
+                    <button className="pt-btn" aria-label={`${row.label} mehr`} disabled={n >= row.max} onClick={() => a.setSheet(row.key, n + 1)}>+</button>
+                  </div>
+                  <span className={'xs-pts' + (sheetPoints(row, n) < 0 ? ' neg' : '')}>{fmt(sheetPoints(row, n))}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="pad-actions">
+            <button className="primary" id="xsheet-next" disabled={total === null} onClick={() => a.sheetNext()}>{next ? `Weiter zu ${next.name}` : 'Fertig'}</button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

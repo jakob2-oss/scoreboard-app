@@ -3,6 +3,8 @@
  * Alles optional: wo der Browser es nicht kann, passiert einfach nichts.
  */
 
+import { nativeHaptic } from './native';
+
 const HAPTIC_KEY = 'pz:haptic';
 export const hapticOn = () => { try { return localStorage.getItem(HAPTIC_KEY) !== 'off'; } catch { return true; } };
 export const setHapticOn = (on: boolean) => { try { localStorage.setItem(HAPTIC_KEY, on ? 'on' : 'off'); } catch { /* privater Modus */ } };
@@ -23,6 +25,7 @@ function iosTick() {
 export function haptic(kind: 'tap' | 'success' = 'tap') {
   if (typeof window === 'undefined' || typeof document === 'undefined' || !hapticOn()) return;
   try {
+    if (nativeHaptic(kind)) return;
     if (typeof navigator.vibrate === 'function') { navigator.vibrate(kind === 'success' ? [16, 70, 28] : 10); return; }
     if (/iP(hone|ad|od)/.test(navigator.userAgent)) { iosTick(); if (kind === 'success') setTimeout(iosTick, 120); }
   } catch { /* egal */ }

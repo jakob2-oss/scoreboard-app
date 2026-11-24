@@ -8,7 +8,9 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
 
 (async () => {
   const b = await chromium.launch();
-  const c = await b.newContext({ ...devices['iPhone 13'] }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
+  // STORE=1: Bildschirmgröße für App-Store-Bilder (6,9 Zoll, 1320 × 2868)
+  const dev = process.env.STORE ? { ...devices['iPhone 13'], viewport: { width: 440, height: 956 }, screen: { width: 440, height: 956 }, deviceScaleFactor: 3 } : devices['iPhone 13'];
+  const c = await b.newContext({ ...dev }); await c.grantPermissions(['clipboard-read', 'clipboard-write']);
   const p = await c.newPage();
   const errors = [];
   p.on('pageerror', e => errors.push(e.message));
@@ -17,7 +19,12 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   const text = async sel => (await p.innerText(sel)).replace(/\s+/g, ' ').trim();
   const raw = async sel => (await p.textContent(sel)).replace(/\s+/g, ' ').trim();
   const page = () => p.evaluate(() => [...document.querySelectorAll('.pp-tab')].findIndex(t => t.getAttribute('aria-current') === 'true') - 1);
-  const shot = async n => { if (SHOTS) await p.screenshot({ path: `${SHOTS}/${n}.png` }); };
+  const shot = async n => {
+    if (!SHOTS) return;
+    // Store-Bilder: ohne Meldungen, Animationen fertig
+    if (process.env.STORE) { await p.addStyleTag({ content: '.toast{display:none!important}' }); await p.waitForTimeout(700); }
+    await p.screenshot({ path: `${SHOTS}/${n}.png` });
+  };
   const typeNum = async n => { for (const d of String(n)) await p.click(`.pp-keys .key >> text="${d}"`); };
 
   await p.goto(URL); await p.waitForSelector('.wordmark');
@@ -25,7 +32,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.evaluate(() => localStorage.setItem('pz:quip', 'brav'));
   check('Startseite lädt', true);
   check('keine laufende Partie am Anfang', !(await p.isVisible('.resume')));
-  check('19 Einträge (16 Spiele, Schnelles Spiel, Erstellen, Neue Strichliste), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 19 && (await p.locator('#my-games .row[data-own]').count()) === 0);
+  check('20 Einträge (17 Spiele, Schnelles Spiel, Erstellen, Neue Strichliste), noch keine eigenen Spiele', (await p.locator('.row.tpl').count()) === 20 && (await p.locator('#my-games .row[data-own]').count()) === 0);
   check('Schnelles Spiel oben, ein Knopf zum Erstellen', (await raw('#grp-favs + .list')).includes('Schnelles Spiel') && (await p.locator('#new-own').count()) === 1 && !(await raw('#s-home')).includes('Anderes Spiel'));
   await shot('01-home');
 
@@ -508,7 +515,7 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.goto(URL); await p.waitForSelector('.wordmark');
 
   // Startseite: Gruppen nach Spielart, aufklappbar, Favoriten oben
-  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('3'));
+  check('Startseite: Gruppen nach Spielart', await p.isVisible('#grp-karten') && await p.isVisible('#grp-wuerfel') && await p.isVisible('#grp-brett') && (await raw('#grp-wuerfel')).includes('4'));
   await p.click('#grp-karten'); await p.waitForTimeout(100);
   check('Gruppe zuklappbar', !(await p.isVisible('[data-game="wizard"]')) && (await p.getAttribute('#grp-karten', 'aria-expanded')) === 'false');
   await p.reload(); await p.waitForSelector('.wordmark');
@@ -719,6 +726,27 @@ const check = (name, ok, detail = '') => { console.log((ok ? '✓ ' : '✗ ') + 
   await p.click('#s-gamepage [aria-label="Zurück"]'); await p.waitForTimeout(150);
   check('Kopie steht bei den Kartenspielen, Original unverändert', (await raw('#grp-karten + .list')).includes('Rommé Hausregel') && (await raw('[data-game="romme"]')).includes('Rommé'));
   await p.click('.row[data-own] >> text=Rommé Hausregel'); await p.click('#tpl-delete'); await p.click('#tpl-delete-yes'); await p.waitForTimeout(200);
+
+  // Qwixx: Kreuze je Farbe und Fehlwürfe, Punkte rechnet die App (Beispiel aus der Anleitung: 70)
+  await p.goto(URL); await p.waitForSelector('.wordmark');
+  await p.click('[data-game="qwixx"]'); await p.waitForTimeout(200);
+  check('Qwixx: Spielseite mit Regeln', (await raw('#s-gamepage .rule-points')).includes('zwölf Kreuze bringen 78'));
+  if (await p.isVisible('#quick-start')) await p.click('#quick-start'); else { await p.click('#to-players'); await p.click('#start-btn'); }
+  await p.waitForTimeout(300);
+  const qxFirst = await p.getAttribute('.res-row >> nth=0', 'data-player');
+  await p.click('.res-row >> nth=0'); await p.waitForTimeout(200);
+  const qxPlus = async (k, n) => { for (let i = 0; i < n; i++) await p.click(`.xs-row[data-row="${k}"] [aria-label$="mehr"]`); };
+  await qxPlus('rot', 4); await qxPlus('gelb', 3); await qxPlus('gruen', 7); await qxPlus('blau', 8); await qxPlus('fehl', 2);
+  check('Qwixx: 4, 3, 7, 8 Kreuze und zwei Fehlwürfe ergeben 70', (await text('#xsheet .pad-display')) === '70' && (await text('.xs-row[data-row="fehl"] .xs-pts')) === '−10', await text('#xsheet .pad-display'));
+  await qxPlus('fehl', 2);
+  check('Qwixx: höchstens vier Fehlwürfe', (await text('.xs-row[data-row="fehl"] .xs-n')) === '4' && await p.isDisabled('.xs-row[data-row="fehl"] [aria-label$="mehr"]'));
+  await shot('50-qwixx-sheet');
+  for (let k = 0; k < 8 && await p.isVisible('#xsheet'); k++) { if (!(await p.isDisabled('#xsheet-next'))) { await p.click('#xsheet-next'); continue; } await qxPlus('blau', 2); }
+  await p.waitForTimeout(200);
+  check('Qwixx: alle eingetragen, Auswerten frei', !(await p.isVisible('#xsheet')) && !(await p.isDisabled('#evaluate')));
+  check('Qwixx: Ergebnis in der Liste', (await raw(`.res-row[data-player="${qxFirst}"]`)).includes('60'), await raw('.res-list'));
+  await p.click('#evaluate'); await p.click('.bsheet .pad-actions .primary'); await p.waitForTimeout(300);
+  check('Qwixx: Partie gespeichert', (await text('.toast')) === 'Partie gespeichert');
 
   // Eigene Endwertung erstellen
   await p.click('#new-own'); await p.click('#mode-result'); await p.fill('#setup-name', 'Azul'); await p.click('#unit-place');
