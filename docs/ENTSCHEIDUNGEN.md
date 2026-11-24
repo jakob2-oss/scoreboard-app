@@ -408,3 +408,8 @@ Statistik, Rekorde und Verlauf bleiben gleich.
   Voraussetzung für „Keine Daten erhoben“.
 - Datenschutz- und Hilfeseite als statische Seiten auf GitHub Pages (`public/datenschutz.html`, `public/hilfe.html`),
   Kontakt über GitHub-Projektseite und „Feedback geben“, keine persönlichen Daten im öffentlichen Repo.
+- Qwixx als festes Würfelspiel: Jeder kreuzt wie gewohnt auf dem eigenen Papierzettel, in der App werden am Ende nur
+  die Kreuze je Farbe (0 bis 12, Schloss zählt mit) und die Fehlwürfe (0 bis 4) eingetragen. Die App rechnet die
+  gestaffelten Punkte (Dreieckszahlen bis 78) und −5 je Fehlwurf. Kein digitaler Nachbau des Zettels.
+  Technisch: `params.sheet` (Reihen mit Farbe, Höchstwert, optional fester Wert je Kreuz), eigene Eingabe `XSheet`,
+  Kniffel bleibt unberührt.

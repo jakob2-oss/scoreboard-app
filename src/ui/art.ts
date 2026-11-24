@@ -239,6 +239,21 @@ Object.assign(GAME_ART, {
       + die(304, 174, 38, 22, 3, '#86cbb8', '#ffffff', '#6db3a0') + '</svg>'
   }
 });
+// Qwixx: Wertungszettel mit vier farbigen Reihen voller Kreuze, daneben weiße und farbige Würfel
+const xrow = (x: number, y: number, w: number, c: string, n: number) => `<rect x="${x}" y="${y}" width="${w}" height="14" rx="7" fill="${c}"/>`
+  + Array.from({ length: n }, (_, k) => `<path d="M${x + 10 + k * 13} ${y + 3.5}l7 7m0-7l-7 7" stroke="#fffaf2" stroke-width="2.4" stroke-linecap="round"/>`).join('');
+const QX = ['#ef7a5c', '#f0b13e', '#5fbf8f', '#6ea3e0'];
+Object.assign(GAME_ART, {
+  qwixx: {
+    icon: ICON(`<rect x="8" y="10" width="40" height="44" rx="9" fill="#fffaf2"/>${QX.map((c, k) => `<rect x="13" y="${15 + k * 9.5}" width="30" height="6" rx="3" fill="${c}"/>`).join('')}`
+      + die(48, 44, 20, 12, 2, '#ffffff', '#5b5a8f', '#e2ddd2')),
+    scene: sky('#fde8d6', '#fef1e4', '#f6d6b8', '#f5d58c', 'blocks')
+      + '<g transform="translate(96 82) rotate(-6)"><rect width="150" height="112" rx="16" fill="#fffaf2"/>'
+      + QX.map((c, k) => xrow(12, 12 + k * 23, 126, c, [5, 3, 7, 4][k])).join('') + '</g>'
+      + die(278, 120, 40, -14, 4, '#ffffff', '#5b5a8f', '#e2ddd2') + die(320, 168, 36, 12, 6, '#ffffff', '#5b5a8f', '#e2ddd2')
+      + die(262, 188, 30, 8, 3, '#ef7a5c', '#fffaf2', '#d65f45') + die(70, 196, 30, -12, 5, '#6ea3e0', '#fffaf2', '#5486c2') + '</svg>'
+  }
+});
 const coaster = (x: number, y: number) => `<g transform="translate(${x} ${y})"><circle r="38" fill="#fffaf2"/><circle r="31" fill="#f2cf86" opacity=".45"/>
   ${[0, 1, 2, 3].map(k => `<rect x="${-16 + k * 8}" y="-14" width="4" height="26" rx="2" fill="#5b5a8f"/>`).join('')}<rect x="-22" y="-3" width="40" height="4" rx="2" transform="rotate(-24)" fill="#5b5a8f"/></g>`;
 Object.assign(GAME_ART, {

@@ -86,6 +86,8 @@ export interface TemplateParams {
   base?: string;
   /** Nur das Endergebnis wird notiert (eine einzige Eingabe je Spieler), z. B. Siedler oder Monopoly */
   resultOnly?: boolean;
+  /** Wertungszettel mit Kreuzen je Reihe (Qwixx): eingetragen wird die Zahl der Kreuze, die Punkte rechnet die App */
+  sheet?: SheetRow[];
   /** Kategorien-Zettel (Kniffel); jede Kategorie ist eine Zeile */
   categories?: Category[];
   /** Bonus für die obere Hälfte, z. B. 35 ab 63 */
@@ -128,6 +130,8 @@ export interface Game extends Base {
 
 /** Kategorie eines Zettels (z. B. Kniffel): oben zählt für den Bonus */
 /** Kniffel-Kategorie. quick: erlaubte Werte, fixed: fester Wert, range: Augensumme von bis (Pasch). Ohne alles: freie Eingabe. */
+/** Reihe eines Wertungszettels: ohne `per` zählen Kreuze als Dreieckszahl (1, 3, 6, 10 …), mit `per` je Kreuz fest (Fehlwurf −5) */
+export interface SheetRow { key: string; label: string; color: string; max: number; per?: number }
 export interface Category { label: string; section: 'up' | 'low'; fixed?: number; quick?: number[]; range?: [number, number] }
 
 export interface Round extends Base { gameId: string; index: number; cat?: Category }
